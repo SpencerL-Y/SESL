@@ -1,0 +1,1408 @@
+SMACK program verifier version 2.6.3
+removing dead definition: llvm.dbg.declare
+ WARNING: inttoptr @ addr 0x17930b8 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x1791798 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x17930b8 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x1791798 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x1791798 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x17930b8 is (unsoundly) assumed to point to a fresh memory region.
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %15 = getelementptr inbounds %struct.cell, %struct.cell* %14, i32 0, i32 0, !dbg !74, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:i32>[0,4]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %21 = getelementptr inbounds %struct.cell, %struct.cell* %20, i32 0, i32 1, !dbg !77, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %28 = getelementptr inbounds %struct.cell, %struct.cell* %27, i32 0, i32 0, !dbg !81, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:i32>[0,4]{A}
+    found overlap at index 2: <Node:i32>[0,4]{A}
+ [regions]   merged region: <Node:i32>[0,4]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @push.t1 = internal global %struct.cell* null, align 8, !dbg !11
+   at instruction:   %51 = bitcast %struct.cell** @push.t1 to i8*, !dbg !94
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 5
+ 
+ [regions] for: @push.t1 = internal global %struct.cell* null, align 8, !dbg !11
+   at instruction:   %51 = bitcast %struct.cell** @push.t1 to i8*, !dbg !94
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 5: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 5
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %44 = getelementptr inbounds %struct.cell, %struct.cell* %43, i32 0, i32 1, !dbg !89, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @push.t1 = internal global %struct.cell* null, align 8, !dbg !11
+   at instruction:   %51 = bitcast %struct.cell** @push.t1 to i8*, !dbg !94
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 5: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 5
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for:   %26 = getelementptr inbounds %struct.cell, %struct.cell* %25, i32 0, i32 1, !dbg !82, !verifier.code !69
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for: @pop.x4 = internal global %struct.cell* null, align 8, !dbg !26
+   at instruction:   %41 = bitcast %struct.cell** @pop.x4 to i8*, !dbg !90
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 8
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @pop.x4 = internal global %struct.cell* null, align 8, !dbg !26
+   at instruction:   %41 = bitcast %struct.cell** @pop.x4 to i8*, !dbg !90
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 8: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 8
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for:   %54 = getelementptr inbounds %struct.cell, %struct.cell* %53, i32 0, i32 0, !dbg !96, !verifier.code !69
+   in function: pop
+ [regions]   using region: <Node:i32>[0,4]{A}
+    found overlap at index 2: <Node:i32>[0,4]{A}
+ [regions]   merged region: <Node:i32>[0,4]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for: @pop.res4 = internal global i32 0, align 4, !dbg !28
+   at instruction:   %58 = bitcast i32* @pop.res4 to i8*, !dbg !97
+   in function: pop
+ [regions]   using region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 9
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for:   %66 = getelementptr inbounds %struct.cell, %struct.cell* %65, i32 0, i32 1, !dbg !100, !verifier.code !69
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for:   %37 = getelementptr inbounds %struct.cell, %struct.cell* %36, i32 0, i32 1, !dbg !95, !verifier.code !72
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for: @push.t1 = internal global %struct.cell* null, align 8, !dbg !11
+   at instruction:   %51 = bitcast %struct.cell** @push.t1 to i8*, !dbg !94
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 5: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 5
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @pop.x4 = internal global %struct.cell* null, align 8, !dbg !26
+   at instruction:   %41 = bitcast %struct.cell** @pop.x4 to i8*, !dbg !90
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 8: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 8
+ 
+ We are now translating the program to boogie...
+ Analyzing globals...
+ -------INSERT: Global Variables pc1
+ -------INSERT: Global Variables pc4
+ -------INSERT: Global Variables S
+ -------INSERT: Global Variables garbage
+ -------INSERT: Global Variables push.x1
+ -------INSERT: Global Variables push.t1
+ -------INSERT: Global Variables pop.t4
+ -------INSERT: Global Variables pop.x4
+ -------INSERT: Global Variables pop.res4
+ -------INSERT: Global Variables .str.31
+ Analyzing functions...
+ Analyzing function: push
+ -------INSERT: Global Variables push
+ Analyzing function body: push
+ Generating body for push
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %15 = getelementptr inbounds %struct.cell, %struct.cell* %14, i32 0, i32 0, !dbg !74, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:i32>[0,4]{A}
+    found overlap at index 2: <Node:i32>[0,4]{A}
+ [regions]   merged region: <Node:i32>[0,4]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %15 = getelementptr inbounds %struct.cell, %struct.cell* %14, i32 0, i32 0, !dbg !74, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:i32>[0,4]{A}
+    found overlap at index 2: <Node:i32>[0,4]{A}
+ [regions]   merged region: <Node:i32>[0,4]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %21 = getelementptr inbounds %struct.cell, %struct.cell* %20, i32 0, i32 1, !dbg !77, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for:   %21 = getelementptr inbounds %struct.cell, %struct.cell* %20, i32 0, i32 1, !dbg !77, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %28 = getelementptr inbounds %struct.cell, %struct.cell* %27, i32 0, i32 0, !dbg !81, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:i32>[0,4]{A}
+    found overlap at index 2: <Node:i32>[0,4]{A}
+ [regions]   merged region: <Node:i32>[0,4]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %28 = getelementptr inbounds %struct.cell, %struct.cell* %27, i32 0, i32 0, !dbg !81, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:i32>[0,4]{A}
+    found overlap at index 2: <Node:i32>[0,4]{A}
+ [regions]   merged region: <Node:i32>[0,4]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @push.t1 = internal global %struct.cell* null, align 8, !dbg !11
+   at instruction:   %51 = bitcast %struct.cell** @push.t1 to i8*, !dbg !94
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 5: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 5
+ 
+ [regions] for: @push.t1 = internal global %struct.cell* null, align 8, !dbg !11
+   at instruction:   %51 = bitcast %struct.cell** @push.t1 to i8*, !dbg !94
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 5: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 5
+ 
+ [regions] for: @push.t1 = internal global %struct.cell* null, align 8, !dbg !11
+   at instruction:   %51 = bitcast %struct.cell** @push.t1 to i8*, !dbg !94
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 5: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 5
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %44 = getelementptr inbounds %struct.cell, %struct.cell* %43, i32 0, i32 1, !dbg !89, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for:   %44 = getelementptr inbounds %struct.cell, %struct.cell* %43, i32 0, i32 1, !dbg !89, !verifier.code !69
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @push.t1 = internal global %struct.cell* null, align 8, !dbg !11
+   at instruction:   %51 = bitcast %struct.cell** @push.t1 to i8*, !dbg !94
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 5: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 5
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ 
+ Finished analyzing function: push
+ 
+ Analyzing function: malloc
+ -------INSERT: Global Variables malloc
+ Analyzing function: pop
+ -------INSERT: Global Variables pop
+ Analyzing function body: pop
+ Generating body for pop
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for:   %26 = getelementptr inbounds %struct.cell, %struct.cell* %25, i32 0, i32 1, !dbg !82, !verifier.code !69
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for: @pop.x4 = internal global %struct.cell* null, align 8, !dbg !26
+   at instruction:   %41 = bitcast %struct.cell** @pop.x4 to i8*, !dbg !90
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 8: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 8
+ 
+ [regions] for: @pop.x4 = internal global %struct.cell* null, align 8, !dbg !26
+   at instruction:   %41 = bitcast %struct.cell** @pop.x4 to i8*, !dbg !90
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 8: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 8
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @pop.x4 = internal global %struct.cell* null, align 8, !dbg !26
+   at instruction:   %41 = bitcast %struct.cell** @pop.x4 to i8*, !dbg !90
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 8: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 8
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for:   %54 = getelementptr inbounds %struct.cell, %struct.cell* %53, i32 0, i32 0, !dbg !96, !verifier.code !69
+   in function: pop
+ [regions]   using region: <Node:i32>[0,4]{A}
+    found overlap at index 2: <Node:i32>[0,4]{A}
+ [regions]   merged region: <Node:i32>[0,4]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for: @pop.res4 = internal global i32 0, align 4, !dbg !28
+   at instruction:   %58 = bitcast i32* @pop.res4 to i8*, !dbg !97
+   in function: pop
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 9: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 9
+ 
+ [regions] for: @pop.res4 = internal global i32 0, align 4, !dbg !28
+   at instruction:   %58 = bitcast i32* @pop.res4 to i8*, !dbg !97
+   in function: pop
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 9: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 9
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for:   %66 = getelementptr inbounds %struct.cell, %struct.cell* %65, i32 0, i32 1, !dbg !100, !verifier.code !69
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for:   %66 = getelementptr inbounds %struct.cell, %struct.cell* %65, i32 0, i32 1, !dbg !100, !verifier.code !69
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ 
+ Finished analyzing function: pop
+ 
+ Analyzing function: main
+ -------INSERT: Global Variables main
+ Analyzing function body: main
+ Generating body for main
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for:   %37 = getelementptr inbounds %struct.cell, %struct.cell* %36, i32 0, i32 1, !dbg !95, !verifier.code !72
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[8,16]{A}
+    found overlap at index 3: <Node:%struct.cell*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.cell*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ 
+ Finished analyzing function: main
+ 
+ Analyzing function: free_
+ -------INSERT: Global Variables free_
+ Analyzing function: __SMACK_code
+ -------INSERT: Global Variables __SMACK_code
+ Analyzing function: __VERIFIER_assume
+ -------INSERT: Global Variables __VERIFIER_assume
+ Analyzing function body: __VERIFIER_assume
+ Generating body for __VERIFIER_assume
+ 
+ Finished analyzing function: __VERIFIER_assume
+ 
+ Analyzing function: __SMACK_dummy
+ -------INSERT: Global Variables __SMACK_dummy
+ Analyzing function body: __SMACK_dummy
+ Generating body for __SMACK_dummy
+ 
+ Finished analyzing function: __SMACK_dummy
+ 
+ Analyzing function: __SMACK_and32
+ -------INSERT: Global Variables __SMACK_and32
+ Analyzing function body: __SMACK_and32
+ Generating body for __SMACK_and32
+ 
+ Finished analyzing function: __SMACK_and32
+ 
+ Analyzing function: __SMACK_and64
+ -------INSERT: Global Variables __SMACK_and64
+ Analyzing function body: __SMACK_and64
+ Generating body for __SMACK_and64
+ 
+ Finished analyzing function: __SMACK_and64
+ 
+ Analyzing function: __SMACK_and16
+ -------INSERT: Global Variables __SMACK_and16
+ Analyzing function body: __SMACK_and16
+ Generating body for __SMACK_and16
+ 
+ Finished analyzing function: __SMACK_and16
+ 
+ Analyzing function: __SMACK_and8
+ -------INSERT: Global Variables __SMACK_and8
+ Analyzing function body: __SMACK_and8
+ Generating body for __SMACK_and8
+ 
+ Finished analyzing function: __SMACK_and8
+ 
+ Analyzing function: __SMACK_or32
+ -------INSERT: Global Variables __SMACK_or32
+ Analyzing function body: __SMACK_or32
+ Generating body for __SMACK_or32
+ 
+ Finished analyzing function: __SMACK_or32
+ 
+ Analyzing function: __SMACK_or64
+ -------INSERT: Global Variables __SMACK_or64
+ Analyzing function body: __SMACK_or64
+ Generating body for __SMACK_or64
+ 
+ Finished analyzing function: __SMACK_or64
+ 
+ Analyzing function: __SMACK_or16
+ -------INSERT: Global Variables __SMACK_or16
+ Analyzing function body: __SMACK_or16
+ Generating body for __SMACK_or16
+ 
+ Finished analyzing function: __SMACK_or16
+ 
+ Analyzing function: __SMACK_or8
+ -------INSERT: Global Variables __SMACK_or8
+ Analyzing function body: __SMACK_or8
+ Generating body for __SMACK_or8
+ 
+ Finished analyzing function: __SMACK_or8
+ 
+ Analyzing function: __SMACK_check_overflow
+ -------INSERT: Global Variables __SMACK_check_overflow
+ Analyzing function body: __SMACK_check_overflow
+ Generating body for __SMACK_check_overflow
+ 
+ Finished analyzing function: __SMACK_check_overflow
+ 
+ Analyzing function: __VERIFIER_nondet_int
+ -------INSERT: Global Variables __VERIFIER_nondet_int
+ Analyzing function body: __VERIFIER_nondet_int
+ Generating body for __VERIFIER_nondet_int
+ 
+ Finished analyzing function: __VERIFIER_nondet_int
+ 
+ Analyzing function: __SMACK_nondet_int
+ -------INSERT: Global Variables __SMACK_nondet_int
+ Analyzing function: __SMACK_decls
+ -------INSERT: Global Variables __SMACK_decls
+ Analyzing function body: __SMACK_decls
+ Generating body for __SMACK_decls
+ 
+ Finished analyzing function: __SMACK_decls
+ 
+ Analyzing function: __SMACK_top_decl
+ -------INSERT: Global Variables __SMACK_top_decl
+ Analyzing function: __SMACK_check_memory_safety
+ -------INSERT: Global Variables __SMACK_check_memory_safety
+ Analyzing function: __SMACK_check_memory_leak
+ -------INSERT: Global Variables __SMACK_check_memory_leak
+ Analyzing function body: __SMACK_check_memory_leak
+ Generating body for __SMACK_check_memory_leak
+ 
+ Finished analyzing function: __SMACK_check_memory_leak
+ 
+ Analyzing function: __SMACK_init_func_memory_model
+ -------INSERT: Global Variables __SMACK_init_func_memory_model
+ Analyzing function body: __SMACK_init_func_memory_model
+ Generating body for __SMACK_init_func_memory_model
+ 
+ Finished analyzing function: __SMACK_init_func_memory_model
+ 
+ Analyzing function: __SMACK_my_memory_check
+ -------INSERT: Global Variables __SMACK_my_memory_check
+ Analyzing function body: __SMACK_my_memory_check
+ Generating body for __SMACK_my_memory_check
+ 
+ Finished analyzing function: __SMACK_my_memory_check
+ 
+ Analyzing function: __SMACK_decl
+ -------INSERT: Global Variables __SMACK_decl
+ Analyzing function: __SMACK_whatIsThis
+ -------INSERT: Global Variables __SMACK_whatIsThis
+ Analyzing function body: __SMACK_whatIsThis
+ Generating body for __SMACK_whatIsThis
+ 
+ Finished analyzing function: __SMACK_whatIsThis
+ 
+ Analyzing function: __WHAT_code
+ -------INSERT: Global Variables __WHAT_code
+ Analyzing function: llvm.dbg.value
+ -------INSERT: Global Variables llvm.dbg.value
+ Analyzing function: __SMACK_static_init
+ -------INSERT: Global Variables __SMACK_static_init
+ Analyzing function body: __SMACK_static_init
+ Generating body for __SMACK_static_init
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc1 = internal global i32 1, align 4, !dbg !0
+   at instruction:   %7 = bitcast i32* @pc1 to i8*, !dbg !75
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 0: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 0
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @pc4 = internal global i32 1, align 4, !dbg !8
+   at instruction:   %12 = bitcast i32* @pc4 to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:i32>[0,4]{S}
+    found overlap at index 6: <Node:i32>[0,4]{S}
+ [regions]   merged region: <Node:i32>[0,4]{S}
+ [regions]   returning index: 6
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @S = internal global %struct.cell* null, align 8, !dbg !30
+   at instruction:   %2 = bitcast %struct.cell** @S to i8*, !dbg !73
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 4: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 4
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @garbage = internal global %struct.cell* null, align 8, !dbg !32
+   at instruction:   %48 = bitcast %struct.cell** @garbage to i8*, !dbg !103
+   in function: main
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 10: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 10
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for: @push.x1 = internal global %struct.cell* null, align 8, !dbg !21
+   at instruction:   %56 = bitcast %struct.cell** @push.x1 to i8*, !dbg !97
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 1: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 1
+ 
+ [regions] for: @push.t1 = internal global %struct.cell* null, align 8, !dbg !11
+   at instruction:   %51 = bitcast %struct.cell** @push.t1 to i8*, !dbg !94
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 5: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 5
+ 
+ [regions] for: @push.t1 = internal global %struct.cell* null, align 8, !dbg !11
+   at instruction:   %51 = bitcast %struct.cell** @push.t1 to i8*, !dbg !94
+   in function: push
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 5: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 5
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @pop.t4 = internal global %struct.cell* null, align 8, !dbg !23
+   at instruction:   %69 = bitcast %struct.cell** @pop.t4 to i8*, !dbg !102
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 7: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 7
+ 
+ [regions] for: @pop.x4 = internal global %struct.cell* null, align 8, !dbg !26
+   at instruction:   %41 = bitcast %struct.cell** @pop.x4 to i8*, !dbg !90
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 8: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 8
+ 
+ [regions] for: @pop.x4 = internal global %struct.cell* null, align 8, !dbg !26
+   at instruction:   %41 = bitcast %struct.cell** @pop.x4 to i8*, !dbg !90
+   in function: pop
+ [regions]   using region: <Node:%struct.cell*>[0,8]{S}
+    found overlap at index 8: <Node:%struct.cell*>[0,8]{S}
+ [regions]   merged region: <Node:%struct.cell*>[0,8]{S}
+ [regions]   returning index: 8
+ 
+ 
+ Finished analyzing function: __SMACK_static_init
+ 
+ Start Analyzing Prelude: push
+ 
+ Start Analyzing Prelude: malloc
+ 
+ Start Analyzing Prelude: pop
+ 
+ Start Analyzing Prelude: main
+ 
+ Start Analyzing Prelude: free_
+ 
+ Start Analyzing Prelude: __SMACK_code.ref
+ 
+ Start Analyzing Prelude: __SMACK_code.ref.i32
+ 
+ Start Analyzing Prelude: __VERIFIER_assume
+ 
+ Start Analyzing Prelude: __SMACK_dummy
+ 
+ Start Analyzing Prelude: __SMACK_and32
+ 
+ Start Analyzing Prelude: __SMACK_and64
+ 
+ Start Analyzing Prelude: __SMACK_and16
+ 
+ Start Analyzing Prelude: __SMACK_and8
+ 
+ Start Analyzing Prelude: __SMACK_or32
+ 
+ Start Analyzing Prelude: __SMACK_or64
+ 
+ Start Analyzing Prelude: __SMACK_or16
+ 
+ Start Analyzing Prelude: __SMACK_or8
+ 
+ Start Analyzing Prelude: __SMACK_check_overflow
+ 
+ Start Analyzing Prelude: __VERIFIER_nondet_int
+ 
+ Start Analyzing Prelude: __SMACK_nondet_int
+ 
+ Start Analyzing Prelude: __SMACK_top_decl.ref
+ 
+ Start Analyzing Prelude: __SMACK_check_memory_safety
+ 
+ Start Analyzing Prelude: __SMACK_check_memory_leak
+ 
+ Start Analyzing Prelude: __SMACK_init_func_memory_model
+ 
+ Start Analyzing Prelude: __SMACK_my_memory_check
+ 
+ Start Analyzing Prelude: __SMACK_decl.ref
+ 
+ Start Analyzing Prelude: __SMACK_whatIsThis
+ 
+ Start Analyzing Prelude: __WHAT_code.ref
+ 
+ Start Analyzing Prelude: llvm.dbg.value
+ 
+ Start Analyzing Prelude: __SMACK_static_init
+ 
+ Start Analyzing Prelude: boogie_si_record_i16
+ 
+ Start Analyzing Prelude: boogie_si_record_i32
+ 
+ Start Analyzing Prelude: boogie_si_record_i64
+ 
+ Start Analyzing Prelude: boogie_si_record_i8
+ 
+ Start Analyzing Prelude: boogie_si_record_ref
+ 
+ Start Analyzing Prelude: $initialize
+ 
+ SMACK found no errors with unroll bound 1.

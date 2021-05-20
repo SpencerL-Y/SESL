@@ -1,0 +1,369 @@
+SMACK program verifier version 2.6.3
+WARNING: inttoptr @ addr 0x18f6c68 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x18f6c68 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x18f6c68 is (unsoundly) assumed to point to a fresh memory region.
+ [regions] for:   %3 = getelementptr inbounds { i8*, i8* }, { i8*, i8* }* %2, i32 0, i32 0, !dbg !51, !verifier.code !41
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds { i8*, i8* }, { i8*, i8* }* %2, i32 0, i32 1, !dbg !51, !verifier.code !41
+   in function: main
+ [regions]   using region: <Node:i8*>[8,16]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.TData, %struct.TData* %0, i32 0, i32 0, !dbg !52, !verifier.code !50
+   in function: alloc_data
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.TData, %struct.TData* %0, i32 0, i32 1, !dbg !55, !verifier.code !50
+   in function: alloc_data
+ [regions]   using region: <Node:i8*>[8,16]{A}
+    found overlap at index 1: <Node:i8*>[8,16]{A}
+ [regions]   merged region: <Node:i8*>[8,16]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %5 = getelementptr inbounds { i8*, i8* }, { i8*, i8* }* %4, i32 0, i32 0, !verifier.code !47
+   in function: free_data
+ [regions]   using region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %8 = getelementptr inbounds { i8*, i8* }, { i8*, i8* }* %4, i32 0, i32 1, !verifier.code !47
+   in function: free_data
+ [regions]   using region: <Node:i8*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for:   %11 = getelementptr inbounds %struct.TData, %struct.TData* %3, i32 0, i32 0, !dbg !50, !verifier.code !47
+   in function: free_data
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 2: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %15 = getelementptr inbounds %struct.TData, %struct.TData* %3, i32 0, i32 1, !dbg !53, !verifier.code !47
+   in function: free_data
+ [regions]   using region: <Node:i8*>[8,16]{A}
+    found overlap at index 3: <Node:i8*>[8,16]{A}
+ [regions]   merged region: <Node:i8*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ We are now translating the program to boogie...
+ Analyzing globals...
+ -------INSERT: Global Variables .str.31
+ Analyzing functions...
+ Analyzing function: main
+ -------INSERT: Global Variables main
+ Analyzing function body: main
+ Generating body for main
+ [regions] for:   %3 = getelementptr inbounds { i8*, i8* }, { i8*, i8* }* %2, i32 0, i32 0, !dbg !51, !verifier.code !41
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds { i8*, i8* }, { i8*, i8* }* %2, i32 0, i32 1, !dbg !51, !verifier.code !41
+   in function: main
+ [regions]   using region: <Node:i8*>[8,16]{A}
+    found overlap at index 1: <Node:i8*>[8,16]{A}
+ [regions]   merged region: <Node:i8*>[8,16]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: main
+ 
+ Analyzing function: llvm.dbg.declare
+ -------INSERT: Global Variables llvm.dbg.declare
+ Analyzing function: alloc_data
+ -------INSERT: Global Variables alloc_data
+ Analyzing function body: alloc_data
+ Generating body for alloc_data
+ [regions] for:   %3 = getelementptr inbounds %struct.TData, %struct.TData* %0, i32 0, i32 0, !dbg !52, !verifier.code !50
+   in function: alloc_data
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.TData, %struct.TData* %0, i32 0, i32 0, !dbg !52, !verifier.code !50
+   in function: alloc_data
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.TData, %struct.TData* %0, i32 0, i32 1, !dbg !55, !verifier.code !50
+   in function: alloc_data
+ [regions]   using region: <Node:i8*>[8,16]{A}
+    found overlap at index 1: <Node:i8*>[8,16]{A}
+ [regions]   merged region: <Node:i8*>[8,16]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.TData, %struct.TData* %0, i32 0, i32 1, !dbg !55, !verifier.code !50
+   in function: alloc_data
+ [regions]   using region: <Node:i8*>[8,16]{A}
+    found overlap at index 1: <Node:i8*>[8,16]{A}
+ [regions]   merged region: <Node:i8*>[8,16]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: alloc_data
+ 
+ Analyzing function: free_data
+ -------INSERT: Global Variables free_data
+ Analyzing function body: free_data
+ Generating body for free_data
+ [regions] for:   %5 = getelementptr inbounds { i8*, i8* }, { i8*, i8* }* %4, i32 0, i32 0, !verifier.code !47
+   in function: free_data
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 2: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %5 = getelementptr inbounds { i8*, i8* }, { i8*, i8* }* %4, i32 0, i32 0, !verifier.code !47
+   in function: free_data
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 2: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %8 = getelementptr inbounds { i8*, i8* }, { i8*, i8* }* %4, i32 0, i32 1, !verifier.code !47
+   in function: free_data
+ [regions]   using region: <Node:i8*>[8,16]{A}
+    found overlap at index 3: <Node:i8*>[8,16]{A}
+ [regions]   merged region: <Node:i8*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for:   %8 = getelementptr inbounds { i8*, i8* }, { i8*, i8* }* %4, i32 0, i32 1, !verifier.code !47
+   in function: free_data
+ [regions]   using region: <Node:i8*>[8,16]{A}
+    found overlap at index 3: <Node:i8*>[8,16]{A}
+ [regions]   merged region: <Node:i8*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for:   %11 = getelementptr inbounds %struct.TData, %struct.TData* %3, i32 0, i32 0, !dbg !50, !verifier.code !47
+   in function: free_data
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 2: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %15 = getelementptr inbounds %struct.TData, %struct.TData* %3, i32 0, i32 1, !dbg !53, !verifier.code !47
+   in function: free_data
+ [regions]   using region: <Node:i8*>[8,16]{A}
+    found overlap at index 3: <Node:i8*>[8,16]{A}
+ [regions]   merged region: <Node:i8*>[8,16]{A}
+ [regions]   returning index: 3
+ 
+ 
+ Finished analyzing function: free_data
+ 
+ Analyzing function: free_
+ -------INSERT: Global Variables free_
+ Analyzing function: malloc
+ -------INSERT: Global Variables malloc
+ Analyzing function: __SMACK_code
+ -------INSERT: Global Variables __SMACK_code
+ Analyzing function: __VERIFIER_assume
+ -------INSERT: Global Variables __VERIFIER_assume
+ Analyzing function body: __VERIFIER_assume
+ Generating body for __VERIFIER_assume
+ 
+ Finished analyzing function: __VERIFIER_assume
+ 
+ Analyzing function: __SMACK_dummy
+ -------INSERT: Global Variables __SMACK_dummy
+ Analyzing function body: __SMACK_dummy
+ Generating body for __SMACK_dummy
+ 
+ Finished analyzing function: __SMACK_dummy
+ 
+ Analyzing function: __SMACK_and32
+ -------INSERT: Global Variables __SMACK_and32
+ Analyzing function body: __SMACK_and32
+ Generating body for __SMACK_and32
+ 
+ Finished analyzing function: __SMACK_and32
+ 
+ Analyzing function: __SMACK_and64
+ -------INSERT: Global Variables __SMACK_and64
+ Analyzing function body: __SMACK_and64
+ Generating body for __SMACK_and64
+ 
+ Finished analyzing function: __SMACK_and64
+ 
+ Analyzing function: __SMACK_and16
+ -------INSERT: Global Variables __SMACK_and16
+ Analyzing function body: __SMACK_and16
+ Generating body for __SMACK_and16
+ 
+ Finished analyzing function: __SMACK_and16
+ 
+ Analyzing function: __SMACK_and8
+ -------INSERT: Global Variables __SMACK_and8
+ Analyzing function body: __SMACK_and8
+ Generating body for __SMACK_and8
+ 
+ Finished analyzing function: __SMACK_and8
+ 
+ Analyzing function: __SMACK_or32
+ -------INSERT: Global Variables __SMACK_or32
+ Analyzing function body: __SMACK_or32
+ Generating body for __SMACK_or32
+ 
+ Finished analyzing function: __SMACK_or32
+ 
+ Analyzing function: __SMACK_or64
+ -------INSERT: Global Variables __SMACK_or64
+ Analyzing function body: __SMACK_or64
+ Generating body for __SMACK_or64
+ 
+ Finished analyzing function: __SMACK_or64
+ 
+ Analyzing function: __SMACK_or16
+ -------INSERT: Global Variables __SMACK_or16
+ Analyzing function body: __SMACK_or16
+ Generating body for __SMACK_or16
+ 
+ Finished analyzing function: __SMACK_or16
+ 
+ Analyzing function: __SMACK_or8
+ -------INSERT: Global Variables __SMACK_or8
+ Analyzing function body: __SMACK_or8
+ Generating body for __SMACK_or8
+ 
+ Finished analyzing function: __SMACK_or8
+ 
+ Analyzing function: __SMACK_check_overflow
+ -------INSERT: Global Variables __SMACK_check_overflow
+ Analyzing function body: __SMACK_check_overflow
+ Generating body for __SMACK_check_overflow
+ 
+ Finished analyzing function: __SMACK_check_overflow
+ 
+ Analyzing function: __SMACK_decls
+ -------INSERT: Global Variables __SMACK_decls
+ Analyzing function body: __SMACK_decls
+ Generating body for __SMACK_decls
+ 
+ Finished analyzing function: __SMACK_decls
+ 
+ Analyzing function: __SMACK_top_decl
+ -------INSERT: Global Variables __SMACK_top_decl
+ Analyzing function: __SMACK_check_memory_safety
+ -------INSERT: Global Variables __SMACK_check_memory_safety
+ Analyzing function: __SMACK_check_memory_leak
+ -------INSERT: Global Variables __SMACK_check_memory_leak
+ Analyzing function body: __SMACK_check_memory_leak
+ Generating body for __SMACK_check_memory_leak
+ 
+ Finished analyzing function: __SMACK_check_memory_leak
+ 
+ Analyzing function: __SMACK_init_func_memory_model
+ -------INSERT: Global Variables __SMACK_init_func_memory_model
+ Analyzing function body: __SMACK_init_func_memory_model
+ Generating body for __SMACK_init_func_memory_model
+ 
+ Finished analyzing function: __SMACK_init_func_memory_model
+ 
+ Analyzing function: __SMACK_my_memory_check
+ -------INSERT: Global Variables __SMACK_my_memory_check
+ Analyzing function body: __SMACK_my_memory_check
+ Generating body for __SMACK_my_memory_check
+ 
+ Finished analyzing function: __SMACK_my_memory_check
+ 
+ Analyzing function: __SMACK_decl
+ -------INSERT: Global Variables __SMACK_decl
+ Analyzing function: __SMACK_whatIsThis
+ -------INSERT: Global Variables __SMACK_whatIsThis
+ Analyzing function body: __SMACK_whatIsThis
+ Generating body for __SMACK_whatIsThis
+ 
+ Finished analyzing function: __SMACK_whatIsThis
+ 
+ Analyzing function: __WHAT_code
+ -------INSERT: Global Variables __WHAT_code
+ Analyzing function: llvm.dbg.value
+ -------INSERT: Global Variables llvm.dbg.value
+ Analyzing function: __SMACK_static_init
+ -------INSERT: Global Variables __SMACK_static_init
+ Analyzing function body: __SMACK_static_init
+ Generating body for __SMACK_static_init
+ 
+ Finished analyzing function: __SMACK_static_init
+ 
+ Start Analyzing Prelude: main
+ 
+ Start Analyzing Prelude: llvm.dbg.declare
+ 
+ Start Analyzing Prelude: alloc_data
+ 
+ Start Analyzing Prelude: free_data
+ 
+ Start Analyzing Prelude: free_
+ 
+ Start Analyzing Prelude: malloc
+ 
+ Start Analyzing Prelude: __SMACK_code.ref
+ 
+ Start Analyzing Prelude: __SMACK_code.ref.i32
+ 
+ Start Analyzing Prelude: __VERIFIER_assume
+ 
+ Start Analyzing Prelude: __SMACK_dummy
+ 
+ Start Analyzing Prelude: __SMACK_and32
+ 
+ Start Analyzing Prelude: __SMACK_and64
+ 
+ Start Analyzing Prelude: __SMACK_and16
+ 
+ Start Analyzing Prelude: __SMACK_and8
+ 
+ Start Analyzing Prelude: __SMACK_or32
+ 
+ Start Analyzing Prelude: __SMACK_or64
+ 
+ Start Analyzing Prelude: __SMACK_or16
+ 
+ Start Analyzing Prelude: __SMACK_or8
+ 
+ Start Analyzing Prelude: __SMACK_check_overflow
+ 
+ Start Analyzing Prelude: __SMACK_top_decl.ref
+ 
+ Start Analyzing Prelude: __SMACK_check_memory_safety
+ 
+ Start Analyzing Prelude: __SMACK_check_memory_leak
+ 
+ Start Analyzing Prelude: __SMACK_init_func_memory_model
+ 
+ Start Analyzing Prelude: __SMACK_my_memory_check
+ 
+ Start Analyzing Prelude: __SMACK_decl.ref
+ 
+ Start Analyzing Prelude: __SMACK_whatIsThis
+ 
+ Start Analyzing Prelude: __WHAT_code.ref
+ 
+ Start Analyzing Prelude: llvm.dbg.value
+ 
+ Start Analyzing Prelude: __SMACK_static_init
+ 
+ Start Analyzing Prelude: boogie_si_record_i16
+ 
+ Start Analyzing Prelude: boogie_si_record_i32
+ 
+ Start Analyzing Prelude: boogie_si_record_i64
+ 
+ Start Analyzing Prelude: boogie_si_record_i8
+ 
+ Start Analyzing Prelude: boogie_si_record_ref
+ 
+ Start Analyzing Prelude: $initialize
+ 
+ SMACK found no errors with unroll bound 1.

@@ -1,0 +1,1018 @@
+SMACK program verifier version 2.6.3
+removing dead definition: llvm.dbg.declare
+ WARNING: inttoptr @ addr 0x1703418 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x16aa468 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x16aa468 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x16aa468 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x16aa468 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x16aa468 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x16aa468 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x16aa468 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x16aa468 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x16aa468 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x16aa468 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x16aa468 is (unsoundly) assumed to point to a fresh memory region.
+ [regions] for: @main.list = internal global %struct.L0* null, align 8, !dbg !0
+   at instruction:   %6 = bitcast %struct.L0** @main.list to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.L0** %0
+   at instruction:   %16 = bitcast %struct.L0** %0 to i8*, !dbg !90
+   in function: l0_insert
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L0*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L0, %struct.L0* %3, i32 0, i32 0, !dbg !88, !verifier.code !77
+   in function: l0_insert
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L0** %0
+   at instruction:   %16 = bitcast %struct.L0** %0 to i8*, !dbg !90
+   in function: l0_insert
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L0*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.L0, %struct.L0* %.0, i32 0, i32 1, !dbg !78, !verifier.code !76
+   in function: l0_destroy
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.L0, %struct.L0* %.0, i32 0, i32 0, !dbg !81, !verifier.code !76
+   in function: l0_destroy
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 1: <Node:%struct.L0*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.L1, %struct.L1* %.0, i32 0, i32 0, !dbg !78, !verifier.code !76
+   in function: l1_destroy
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:%struct.L0*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.L1, %struct.L1* %.0, i32 0, i32 1, !dbg !81, !verifier.code !76
+   in function: l1_destroy
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+    found overlap at index 2: <Node:%struct.L1*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.L1*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.L2, %struct.L2* %.0, i32 0, i32 1, !dbg !78, !verifier.code !76
+   in function: l2_destroy
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 2: <Node:%struct.L1*>[8,16]{A}
+ [regions]   merged region: <Node:*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.L2, %struct.L2* %.0, i32 0, i32 0, !dbg !81, !verifier.code !76
+   in function: l2_destroy
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.L3, %struct.L3* %.0, i32 0, i32 0, !dbg !78, !verifier.code !76
+   in function: l3_destroy
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.L3, %struct.L3* %.0, i32 0, i32 1, !dbg !81, !verifier.code !76
+   in function: l3_destroy
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 2: <Node:*>[8,16]{A}
+ [regions]   merged region: <Node:*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.L4, %struct.L4* %.0, i32 0, i32 0, !dbg !78, !verifier.code !76
+   in function: l4_destroy
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L1** %0
+   at instruction:   %16 = bitcast %struct.L1** %0 to i8*, !dbg !90
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+    found overlap at index 2: <Node:*>[8,16]{A}
+ [regions]   merged region: <Node:*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L1, %struct.L1* %3, i32 0, i32 1, !dbg !88, !verifier.code !77
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+    found overlap at index 2: <Node:*>[8,16]{A}
+ [regions]   merged region: <Node:*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for: %struct.L1** %0
+   at instruction:   %16 = bitcast %struct.L1** %0 to i8*, !dbg !90
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+    found overlap at index 2: <Node:*>[8,16]{A}
+ [regions]   merged region: <Node:*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for: %struct.L2** %0
+   at instruction:   %16 = bitcast %struct.L2** %0 to i8*, !dbg !90
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L2, %struct.L2* %3, i32 0, i32 0, !dbg !88, !verifier.code !77
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L2** %0
+   at instruction:   %16 = bitcast %struct.L2** %0 to i8*, !dbg !90
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L3** %0
+   at instruction:   %16 = bitcast %struct.L3** %0 to i8*, !dbg !90
+   in function: l3_insert
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 2: <Node:*>[8,16]{A}
+ [regions]   merged region: <Node:*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L3, %struct.L3* %3, i32 0, i32 1, !dbg !88, !verifier.code !77
+   in function: l3_insert
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 2: <Node:*>[8,16]{A}
+ [regions]   merged region: <Node:*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for: %struct.L3** %0
+   at instruction:   %16 = bitcast %struct.L3** %0 to i8*, !dbg !90
+   in function: l3_insert
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 2: <Node:*>[8,16]{A}
+ [regions]   merged region: <Node:*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %6 = getelementptr inbounds %struct.L4, %struct.L4* %3, i32 0, i32 1, !dbg !81, !verifier.code !77
+   in function: l4_insert
+ [regions]   using region: <Node:%struct.L5*>[8,16]{A}
+    found overlap at index 2: <Node:*>[8,16]{A}
+ [regions]   merged region: <Node:*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for: %struct.L4** %0
+   at instruction:   %15 = bitcast %struct.L4** %0 to i8*, !dbg !86
+   in function: l4_insert
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %12 = getelementptr inbounds %struct.L4, %struct.L4* %3, i32 0, i32 0, !dbg !84, !verifier.code !77
+   in function: l4_insert
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L4** %0
+   at instruction:   %15 = bitcast %struct.L4** %0 to i8*, !dbg !86
+   in function: l4_insert
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %4 = call noalias i8* @malloc(i64 %3) #8, !dbg !83, !verifier.code !80 with length 4294967295
+   in function: calloc_model
+ [regions]   using region: <Node:i8>[0,4294967295]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   found extra overlap at index 2: <Node:*>[8,16]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: @main.list = internal global %struct.L0* null, align 8, !dbg !0
+   at instruction:   %6 = bitcast %struct.L0** @main.list to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L0*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ We are now translating the program to boogie...
+ Analyzing globals...
+ -------INSERT: Global Variables main.list
+ -------INSERT: Global Variables .str.31
+ Analyzing functions...
+ Analyzing function: main
+ -------INSERT: Global Variables main
+ Analyzing function body: main
+ Generating body for main
+ [regions] for: @main.list = internal global %struct.L0* null, align 8, !dbg !0
+   at instruction:   %6 = bitcast %struct.L0** @main.list to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L0*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ 
+ Finished analyzing function: main
+ 
+ Analyzing function: l0_insert
+ -------INSERT: Global Variables l0_insert
+ Analyzing function body: l0_insert
+ Generating body for l0_insert
+ [regions] for: %struct.L0** %0
+   at instruction:   %16 = bitcast %struct.L0** %0 to i8*, !dbg !90
+   in function: l0_insert
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L0*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L0, %struct.L0* %3, i32 0, i32 0, !dbg !88, !verifier.code !77
+   in function: l0_insert
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L0, %struct.L0* %3, i32 0, i32 0, !dbg !88, !verifier.code !77
+   in function: l0_insert
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L0** %0
+   at instruction:   %16 = bitcast %struct.L0** %0 to i8*, !dbg !90
+   in function: l0_insert
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L0*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.L0** %0
+   at instruction:   %16 = bitcast %struct.L0** %0 to i8*, !dbg !90
+   in function: l0_insert
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L0*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ 
+ Finished analyzing function: l0_insert
+ 
+ Analyzing function: l0_destroy
+ -------INSERT: Global Variables l0_destroy
+ Analyzing function body: l0_destroy
+ Generating body for l0_destroy
+ [regions] for:   %3 = getelementptr inbounds %struct.L0, %struct.L0* %.0, i32 0, i32 1, !dbg !78, !verifier.code !76
+   in function: l0_destroy
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.L0, %struct.L0* %.0, i32 0, i32 0, !dbg !81, !verifier.code !76
+   in function: l0_destroy
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: l0_destroy
+ 
+ Analyzing function: l1_destroy
+ -------INSERT: Global Variables l1_destroy
+ Analyzing function body: l1_destroy
+ Generating body for l1_destroy
+ [regions] for:   %3 = getelementptr inbounds %struct.L1, %struct.L1* %.0, i32 0, i32 0, !dbg !78, !verifier.code !76
+   in function: l1_destroy
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.L1, %struct.L1* %.0, i32 0, i32 1, !dbg !81, !verifier.code !76
+   in function: l1_destroy
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: l1_destroy
+ 
+ Analyzing function: free_
+ -------INSERT: Global Variables free_
+ Analyzing function: l2_destroy
+ -------INSERT: Global Variables l2_destroy
+ Analyzing function body: l2_destroy
+ Generating body for l2_destroy
+ [regions] for:   %3 = getelementptr inbounds %struct.L2, %struct.L2* %.0, i32 0, i32 1, !dbg !78, !verifier.code !76
+   in function: l2_destroy
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.L2, %struct.L2* %.0, i32 0, i32 0, !dbg !81, !verifier.code !76
+   in function: l2_destroy
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: l2_destroy
+ 
+ Analyzing function: l3_destroy
+ -------INSERT: Global Variables l3_destroy
+ Analyzing function body: l3_destroy
+ Generating body for l3_destroy
+ [regions] for:   %3 = getelementptr inbounds %struct.L3, %struct.L3* %.0, i32 0, i32 0, !dbg !78, !verifier.code !76
+   in function: l3_destroy
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.L3, %struct.L3* %.0, i32 0, i32 1, !dbg !81, !verifier.code !76
+   in function: l3_destroy
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: l3_destroy
+ 
+ Analyzing function: l4_destroy
+ -------INSERT: Global Variables l4_destroy
+ Analyzing function body: l4_destroy
+ Generating body for l4_destroy
+ [regions] for:   %3 = getelementptr inbounds %struct.L4, %struct.L4* %.0, i32 0, i32 0, !dbg !78, !verifier.code !76
+   in function: l4_destroy
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: l4_destroy
+ 
+ Analyzing function: zalloc_or_die
+ -------INSERT: Global Variables zalloc_or_die
+ Analyzing function body: zalloc_or_die
+ Generating body for zalloc_or_die
+ 
+ Finished analyzing function: zalloc_or_die
+ 
+ Analyzing function: l1_insert
+ -------INSERT: Global Variables l1_insert
+ Analyzing function body: l1_insert
+ Generating body for l1_insert
+ [regions] for: %struct.L1** %0
+   at instruction:   %16 = bitcast %struct.L1** %0 to i8*, !dbg !90
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L1, %struct.L1* %3, i32 0, i32 1, !dbg !88, !verifier.code !77
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L1, %struct.L1* %3, i32 0, i32 1, !dbg !88, !verifier.code !77
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L1** %0
+   at instruction:   %16 = bitcast %struct.L1** %0 to i8*, !dbg !90
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L1** %0
+   at instruction:   %16 = bitcast %struct.L1** %0 to i8*, !dbg !90
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: l1_insert
+ 
+ Analyzing function: l2_insert
+ -------INSERT: Global Variables l2_insert
+ Analyzing function body: l2_insert
+ Generating body for l2_insert
+ [regions] for: %struct.L2** %0
+   at instruction:   %16 = bitcast %struct.L2** %0 to i8*, !dbg !90
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L2, %struct.L2* %3, i32 0, i32 0, !dbg !88, !verifier.code !77
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L2, %struct.L2* %3, i32 0, i32 0, !dbg !88, !verifier.code !77
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L2** %0
+   at instruction:   %16 = bitcast %struct.L2** %0 to i8*, !dbg !90
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L2** %0
+   at instruction:   %16 = bitcast %struct.L2** %0 to i8*, !dbg !90
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: l2_insert
+ 
+ Analyzing function: l3_insert
+ -------INSERT: Global Variables l3_insert
+ Analyzing function body: l3_insert
+ Generating body for l3_insert
+ [regions] for: %struct.L3** %0
+   at instruction:   %16 = bitcast %struct.L3** %0 to i8*, !dbg !90
+   in function: l3_insert
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L3, %struct.L3* %3, i32 0, i32 1, !dbg !88, !verifier.code !77
+   in function: l3_insert
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %13 = getelementptr inbounds %struct.L3, %struct.L3* %3, i32 0, i32 1, !dbg !88, !verifier.code !77
+   in function: l3_insert
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L3** %0
+   at instruction:   %16 = bitcast %struct.L3** %0 to i8*, !dbg !90
+   in function: l3_insert
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L3** %0
+   at instruction:   %16 = bitcast %struct.L3** %0 to i8*, !dbg !90
+   in function: l3_insert
+ [regions]   using region: <Node:%struct.L3*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: l3_insert
+ 
+ Analyzing function: l4_insert
+ -------INSERT: Global Variables l4_insert
+ Analyzing function body: l4_insert
+ Generating body for l4_insert
+ [regions] for:   %6 = getelementptr inbounds %struct.L4, %struct.L4* %3, i32 0, i32 1, !dbg !81, !verifier.code !77
+   in function: l4_insert
+ [regions]   using region: <Node:%struct.L5*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %6 = getelementptr inbounds %struct.L4, %struct.L4* %3, i32 0, i32 1, !dbg !81, !verifier.code !77
+   in function: l4_insert
+ [regions]   using region: <Node:%struct.L5*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L4** %0
+   at instruction:   %15 = bitcast %struct.L4** %0 to i8*, !dbg !86
+   in function: l4_insert
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %12 = getelementptr inbounds %struct.L4, %struct.L4* %3, i32 0, i32 0, !dbg !84, !verifier.code !77
+   in function: l4_insert
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %12 = getelementptr inbounds %struct.L4, %struct.L4* %3, i32 0, i32 0, !dbg !84, !verifier.code !77
+   in function: l4_insert
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L4** %0
+   at instruction:   %15 = bitcast %struct.L4** %0 to i8*, !dbg !86
+   in function: l4_insert
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L4** %0
+   at instruction:   %15 = bitcast %struct.L4** %0 to i8*, !dbg !86
+   in function: l4_insert
+ [regions]   using region: <Node:%struct.L4*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: l4_insert
+ 
+ Analyzing function: calloc_model
+ -------INSERT: Global Variables calloc_model
+ Analyzing function body: calloc_model
+ Generating body for calloc_model
+ [regions] for:   %4 = call noalias i8* @malloc(i64 %3) #8, !dbg !83, !verifier.code !80 with length 4294967295
+   in function: calloc_model
+ [regions]   using region: <Node:i8>[0,4294967295]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ 
+ Finished analyzing function: calloc_model
+ 
+ Analyzing function: malloc
+ -------INSERT: Global Variables malloc
+ Analyzing function: llvm.memset.p0i8.i64
+ -------INSERT: Global Variables llvm.memset.p0i8.i64
+ Analyzing function: __SMACK_code
+ -------INSERT: Global Variables __SMACK_code
+ Analyzing function: __VERIFIER_assume
+ -------INSERT: Global Variables __VERIFIER_assume
+ Analyzing function body: __VERIFIER_assume
+ Generating body for __VERIFIER_assume
+ 
+ Finished analyzing function: __VERIFIER_assume
+ 
+ Analyzing function: __SMACK_dummy
+ -------INSERT: Global Variables __SMACK_dummy
+ Analyzing function body: __SMACK_dummy
+ Generating body for __SMACK_dummy
+ 
+ Finished analyzing function: __SMACK_dummy
+ 
+ Analyzing function: __SMACK_and32
+ -------INSERT: Global Variables __SMACK_and32
+ Analyzing function body: __SMACK_and32
+ Generating body for __SMACK_and32
+ 
+ Finished analyzing function: __SMACK_and32
+ 
+ Analyzing function: __SMACK_and64
+ -------INSERT: Global Variables __SMACK_and64
+ Analyzing function body: __SMACK_and64
+ Generating body for __SMACK_and64
+ 
+ Finished analyzing function: __SMACK_and64
+ 
+ Analyzing function: __SMACK_and16
+ -------INSERT: Global Variables __SMACK_and16
+ Analyzing function body: __SMACK_and16
+ Generating body for __SMACK_and16
+ 
+ Finished analyzing function: __SMACK_and16
+ 
+ Analyzing function: __SMACK_and8
+ -------INSERT: Global Variables __SMACK_and8
+ Analyzing function body: __SMACK_and8
+ Generating body for __SMACK_and8
+ 
+ Finished analyzing function: __SMACK_and8
+ 
+ Analyzing function: __SMACK_or32
+ -------INSERT: Global Variables __SMACK_or32
+ Analyzing function body: __SMACK_or32
+ Generating body for __SMACK_or32
+ 
+ Finished analyzing function: __SMACK_or32
+ 
+ Analyzing function: __SMACK_or64
+ -------INSERT: Global Variables __SMACK_or64
+ Analyzing function body: __SMACK_or64
+ Generating body for __SMACK_or64
+ 
+ Finished analyzing function: __SMACK_or64
+ 
+ Analyzing function: __SMACK_or16
+ -------INSERT: Global Variables __SMACK_or16
+ Analyzing function body: __SMACK_or16
+ Generating body for __SMACK_or16
+ 
+ Finished analyzing function: __SMACK_or16
+ 
+ Analyzing function: __SMACK_or8
+ -------INSERT: Global Variables __SMACK_or8
+ Analyzing function body: __SMACK_or8
+ Generating body for __SMACK_or8
+ 
+ Finished analyzing function: __SMACK_or8
+ 
+ Analyzing function: __SMACK_check_overflow
+ -------INSERT: Global Variables __SMACK_check_overflow
+ Analyzing function body: __SMACK_check_overflow
+ Generating body for __SMACK_check_overflow
+ 
+ Finished analyzing function: __SMACK_check_overflow
+ 
+ Analyzing function: __VERIFIER_nondet_int
+ -------INSERT: Global Variables __VERIFIER_nondet_int
+ Analyzing function body: __VERIFIER_nondet_int
+ Generating body for __VERIFIER_nondet_int
+ 
+ Finished analyzing function: __VERIFIER_nondet_int
+ 
+ Analyzing function: __SMACK_nondet_int
+ -------INSERT: Global Variables __SMACK_nondet_int
+ Analyzing function: __SMACK_decls
+ -------INSERT: Global Variables __SMACK_decls
+ Analyzing function body: __SMACK_decls
+ Generating body for __SMACK_decls
+ 
+ Finished analyzing function: __SMACK_decls
+ 
+ Analyzing function: __SMACK_top_decl
+ -------INSERT: Global Variables __SMACK_top_decl
+ Analyzing function: __SMACK_check_memory_safety
+ -------INSERT: Global Variables __SMACK_check_memory_safety
+ Analyzing function: __SMACK_check_memory_leak
+ -------INSERT: Global Variables __SMACK_check_memory_leak
+ Analyzing function body: __SMACK_check_memory_leak
+ Generating body for __SMACK_check_memory_leak
+ 
+ Finished analyzing function: __SMACK_check_memory_leak
+ 
+ Analyzing function: __SMACK_init_func_memory_model
+ -------INSERT: Global Variables __SMACK_init_func_memory_model
+ Analyzing function body: __SMACK_init_func_memory_model
+ Generating body for __SMACK_init_func_memory_model
+ 
+ Finished analyzing function: __SMACK_init_func_memory_model
+ 
+ Analyzing function: __SMACK_my_memory_check
+ -------INSERT: Global Variables __SMACK_my_memory_check
+ Analyzing function body: __SMACK_my_memory_check
+ Generating body for __SMACK_my_memory_check
+ 
+ Finished analyzing function: __SMACK_my_memory_check
+ 
+ Analyzing function: __SMACK_decl
+ -------INSERT: Global Variables __SMACK_decl
+ Analyzing function: __SMACK_whatIsThis
+ -------INSERT: Global Variables __SMACK_whatIsThis
+ Analyzing function body: __SMACK_whatIsThis
+ Generating body for __SMACK_whatIsThis
+ 
+ Finished analyzing function: __SMACK_whatIsThis
+ 
+ Analyzing function: __WHAT_code
+ -------INSERT: Global Variables __WHAT_code
+ Analyzing function: abort
+ -------INSERT: Global Variables abort
+ Analyzing function body: abort
+ Generating body for abort
+ 
+ Finished analyzing function: abort
+ 
+ Analyzing function: llvm.dbg.value
+ -------INSERT: Global Variables llvm.dbg.value
+ Analyzing function: __SMACK_static_init
+ -------INSERT: Global Variables __SMACK_static_init
+ Analyzing function body: __SMACK_static_init
+ Generating body for __SMACK_static_init
+ [regions] for: @main.list = internal global %struct.L0* null, align 8, !dbg !0
+   at instruction:   %6 = bitcast %struct.L0** @main.list to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L0*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: @main.list = internal global %struct.L0* null, align 8, !dbg !0
+   at instruction:   %6 = bitcast %struct.L0** @main.list to i8*, !dbg !78
+   in function: main
+ [regions]   using region: <Node:%struct.L0*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L0*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L0*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ 
+ Finished analyzing function: __SMACK_static_init
+ 
+ Start Analyzing Prelude: main
+ 
+ Start Analyzing Prelude: l0_insert
+ 
+ Start Analyzing Prelude: l0_destroy
+ 
+ Start Analyzing Prelude: l1_destroy
+ 
+ Start Analyzing Prelude: free_
+ 
+ Start Analyzing Prelude: l2_destroy
+ 
+ Start Analyzing Prelude: l3_destroy
+ 
+ Start Analyzing Prelude: l4_destroy
+ 
+ Start Analyzing Prelude: zalloc_or_die
+ 
+ Start Analyzing Prelude: l1_insert
+ 
+ Start Analyzing Prelude: l2_insert
+ 
+ Start Analyzing Prelude: l3_insert
+ 
+ Start Analyzing Prelude: l4_insert
+ 
+ Start Analyzing Prelude: calloc_model
+ 
+ Start Analyzing Prelude: malloc
+ 
+ Start Analyzing Prelude: llvm.memset.p0i8.i64
+ 
+ Start Analyzing Prelude: __SMACK_code.ref
+ 
+ Start Analyzing Prelude: __SMACK_code.ref.i32
+ 
+ Start Analyzing Prelude: __VERIFIER_assume
+ 
+ Start Analyzing Prelude: __SMACK_dummy
+ 
+ Start Analyzing Prelude: __SMACK_and32
+ 
+ Start Analyzing Prelude: __SMACK_and64
+ 
+ Start Analyzing Prelude: __SMACK_and16
+ 
+ Start Analyzing Prelude: __SMACK_and8
+ 
+ Start Analyzing Prelude: __SMACK_or32
+ 
+ Start Analyzing Prelude: __SMACK_or64
+ 
+ Start Analyzing Prelude: __SMACK_or16
+ 
+ Start Analyzing Prelude: __SMACK_or8
+ 
+ Start Analyzing Prelude: __SMACK_check_overflow
+ 
+ Start Analyzing Prelude: __VERIFIER_nondet_int
+ 
+ Start Analyzing Prelude: __SMACK_nondet_int
+ 
+ Start Analyzing Prelude: __SMACK_top_decl.ref
+ 
+ Start Analyzing Prelude: __SMACK_check_memory_safety
+ 
+ Start Analyzing Prelude: __SMACK_check_memory_leak
+ 
+ Start Analyzing Prelude: __SMACK_init_func_memory_model
+ 
+ Start Analyzing Prelude: __SMACK_my_memory_check
+ 
+ Start Analyzing Prelude: __SMACK_decl.ref
+ 
+ Start Analyzing Prelude: __SMACK_whatIsThis
+ 
+ Start Analyzing Prelude: __WHAT_code.ref
+ 
+ Start Analyzing Prelude: abort
+ 
+ Start Analyzing Prelude: llvm.dbg.value
+ 
+ Start Analyzing Prelude: __SMACK_static_init
+ 
+ Start Analyzing Prelude: boogie_si_record_i16
+ 
+ Start Analyzing Prelude: boogie_si_record_i32
+ 
+ Start Analyzing Prelude: boogie_si_record_i64
+ 
+ Start Analyzing Prelude: boogie_si_record_i8
+ 
+ Start Analyzing Prelude: boogie_si_record_ref
+ 
+ Start Analyzing Prelude: $initialize
+ 
+ /usr/local/share/smack/lib/smack.c(1879,1): This assertion might not hold.
+Execution trace:
+    ../testcases/svcomp/memsafety/test-0234-2.c(168,5): 
+    /usr/local/share/smack/lib/smack.c(1884,3): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(168,5): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(169,9): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(96,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(44,9): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(96,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(99,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(84,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(44,9): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(84,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(87,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(72,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(44,9): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(72,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(75,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(60,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(44,9): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(60,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(63,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(51,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(44,9): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(51,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(9,30): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(42,34): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(44,9): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(51,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(51,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(51,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(51,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(51,23): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(63,26): 
+    /usr/local/share/smack/lib/smack.c(1461,11): 
+    /usr/local/share/smack/lib/smack.c(1462,39): 
+    /usr/local/share/smack/lib/smack.c(0,0): 
+    /usr/local/share/smack/lib/smack.c(1604,29): 
+    /usr/local/share/smack/lib/smack.c(0,0): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(63,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(66,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(66,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(66,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(66,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(75,26): 
+    /usr/local/share/smack/lib/smack.c(1461,11): 
+    /usr/local/share/smack/lib/smack.c(1462,39): 
+    /usr/local/share/smack/lib/smack.c(0,0): 
+    /usr/local/share/smack/lib/smack.c(1604,29): 
+    /usr/local/share/smack/lib/smack.c(0,0): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(75,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(78,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(78,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(78,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(78,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(87,26): 
+    /usr/local/share/smack/lib/smack.c(1461,11): 
+    /usr/local/share/smack/lib/smack.c(1462,39): 
+    /usr/local/share/smack/lib/smack.c(0,0): 
+    /usr/local/share/smack/lib/smack.c(1604,29): 
+    /usr/local/share/smack/lib/smack.c(0,0): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(87,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(90,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(90,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(90,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(90,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(99,26): 
+    /usr/local/share/smack/lib/smack.c(1461,11): 
+    /usr/local/share/smack/lib/smack.c(1462,39): 
+    /usr/local/share/smack/lib/smack.c(0,0): 
+    /usr/local/share/smack/lib/smack.c(1604,29): 
+    /usr/local/share/smack/lib/smack.c(0,0): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(99,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(102,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(102,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(102,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(102,18): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(169,9): 
+    /usr/local/share/smack/lib/smack.c(1461,11): 
+    /usr/local/share/smack/lib/smack.c(1462,39): 
+    /usr/local/share/smack/lib/smack.c(0,0): 
+    /usr/local/share/smack/lib/smack.c(1604,29): 
+    /usr/local/share/smack/lib/smack.c(0,0): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(169,9): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(172,16): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(172,16): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(154,5): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(155,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(155,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(142,5): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(143,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(143,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(130,5): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(131,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(131,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(118,5): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(119,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(119,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(108,5): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(109,33): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(109,33): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(109,33): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(114,1): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(119,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(119,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(119,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(126,1): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(131,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(131,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(131,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(138,1): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(143,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(143,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(143,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(150,1): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(155,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(155,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(155,26): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(162,1): 
+    ../testcases/svcomp/memsafety/test-0234-2.c(172,16): 
+    /usr/local/share/smack/lib/smack.c(1878,3): 
+
+SMACK found an error.

@@ -1,0 +1,780 @@
+SMACK program verifier version 2.6.3
+removing dead definition: llvm.dbg.declare
+ WARNING: inttoptr @ addr 0x26ac1d8 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x25f4d88 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x26ac1d8 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x26ac1d8 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x26ac1d8 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x262e9c8 is (unsoundly) assumed to point to a fresh memory region.
+ WARNING: inttoptr @ addr 0x26ac1d8 is (unsoundly) assumed to point to a fresh memory region.
+ [regions] for:   %2 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 0, !dbg !72, !verifier.code !71
+   in function: is_empty
+ [regions]   using region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %9 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 1, !dbg !75, !verifier.code !71
+   in function: is_empty
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %.03 = phi [2 x i8*]** [ %1, %10 ], [ %37, %31 ], !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:[2 x i8*]*>[0,8]{A}
+    found overlap at index 0: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %.03 = phi [2 x i8*]** [ %1, %10 ], [ %37, %31 ], !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:[2 x i8*]*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %21 = getelementptr inbounds [2 x i8*], [2 x i8*]* %19, i64 0, i64 %20, !dbg !98, !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %.03 = phi [2 x i8*]** [ %1, %10 ], [ %37, %31 ], !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:[2 x i8*]*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %.03 = phi [2 x i8*]** [ %1, %10 ], [ %37, %31 ], !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:[2 x i8*]*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %45 = getelementptr inbounds %struct.anon, %struct.anon* %4, i32 0, i32 0, i64 %44
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %51 = getelementptr inbounds [2 x i8*], [2 x i8*]* %41, i64 0, i64 %50, !dbg !114, !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %60 = getelementptr inbounds %struct.anon, %struct.anon* %4, i32 0, i32 0, i64 %59
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %64 = getelementptr inbounds %struct.anon, %struct.anon* %4, i32 0, i32 1, i64 0
+   in function: create_item
+ [regions]   using region: <Node:i8>[0,1]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %72 = getelementptr inbounds [2 x i8*], [2 x i8*]* %41, i64 0, i64 %71, !dbg !126, !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %.03 = phi [2 x i8*]** [ %1, %10 ], [ %37, %31 ], !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:[2 x i8*]*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds [2 x i8*], [2 x i8*]* %6, i64 0, i64 0, !dbg !79, !verifier.code !72
+   in function: append_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %14 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 0, !dbg !84, !verifier.code !72
+   in function: append_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %18 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 1, !dbg !86, !verifier.code !72
+   in function: append_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %25 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 1, !dbg !91, !verifier.code !72
+   in function: append_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 0, !dbg !78, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %11 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 1, !dbg !80, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %17 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 0, !dbg !83, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: [2 x i8*]* %0 with length 16
+   at instruction:   %23 = bitcast [2 x i8*]* %0 to i8*, !dbg !86
+   in function: remove_one
+ [regions]   using region: <Node:[2 x i8*]>[0,16]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %31 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 %30, !dbg !96, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %37 = getelementptr inbounds [2 x i8*], [2 x i8*]* %35, i64 0, i64 %36, !dbg !98, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %43 = getelementptr inbounds [2 x i8*], [2 x i8*]* %41, i64 0, i64 %42, !dbg !100, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %48 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 %47, !dbg !103, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %24 = getelementptr inbounds [2 x i8*], [2 x i8*]* @main.list, i64 0, i64 %23, !dbg !94, !verifier.code !65
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %33 = getelementptr inbounds [2 x i8*], [2 x i8*]* %.0, i64 0, i64 %32, !dbg !97, !verifier.code !65
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 0)
+   at instruction:   store i8* null, i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 1)
+   at instruction:   store i8* null, i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ We are now translating the program to boogie...
+ Analyzing globals...
+ -------INSERT: Global Variables main.list
+ -------INSERT: Global Variables .str.31
+ Analyzing functions...
+ Analyzing function: is_empty
+ -------INSERT: Global Variables is_empty
+ Analyzing function body: is_empty
+ Generating body for is_empty
+ [regions] for:   %2 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 0, !dbg !72, !verifier.code !71
+   in function: is_empty
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %9 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 1, !dbg !75, !verifier.code !71
+   in function: is_empty
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ 
+ Finished analyzing function: is_empty
+ 
+ Analyzing function: free_
+ -------INSERT: Global Variables free_
+ Analyzing function: create_item
+ -------INSERT: Global Variables create_item
+ Analyzing function body: create_item
+ Generating body for create_item
+ [regions] for:   %.03 = phi [2 x i8*]** [ %1, %10 ], [ %37, %31 ], !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:[2 x i8*]*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %.03 = phi [2 x i8*]** [ %1, %10 ], [ %37, %31 ], !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:[2 x i8*]*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %21 = getelementptr inbounds [2 x i8*], [2 x i8*]* %19, i64 0, i64 %20, !dbg !98, !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %.03 = phi [2 x i8*]** [ %1, %10 ], [ %37, %31 ], !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:[2 x i8*]*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %.03 = phi [2 x i8*]** [ %1, %10 ], [ %37, %31 ], !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:[2 x i8*]*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %45 = getelementptr inbounds %struct.anon, %struct.anon* %4, i32 0, i32 0, i64 %44
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %45 = getelementptr inbounds %struct.anon, %struct.anon* %4, i32 0, i32 0, i64 %44
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %51 = getelementptr inbounds [2 x i8*], [2 x i8*]* %41, i64 0, i64 %50, !dbg !114, !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %60 = getelementptr inbounds %struct.anon, %struct.anon* %4, i32 0, i32 0, i64 %59
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %60 = getelementptr inbounds %struct.anon, %struct.anon* %4, i32 0, i32 0, i64 %59
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %64 = getelementptr inbounds %struct.anon, %struct.anon* %4, i32 0, i32 1, i64 0
+   in function: create_item
+ [regions]   using region: <Node:i8>[0,1]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %64 = getelementptr inbounds %struct.anon, %struct.anon* %4, i32 0, i32 1, i64 0
+   in function: create_item
+ [regions]   using region: <Node:i8>[0,1]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %72 = getelementptr inbounds [2 x i8*], [2 x i8*]* %41, i64 0, i64 %71, !dbg !126, !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %72 = getelementptr inbounds [2 x i8*], [2 x i8*]* %41, i64 0, i64 %71, !dbg !126, !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %.03 = phi [2 x i8*]** [ %1, %10 ], [ %37, %31 ], !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:[2 x i8*]*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %.03 = phi [2 x i8*]** [ %1, %10 ], [ %37, %31 ], !verifier.code !70
+   in function: create_item
+ [regions]   using region: <Node:[2 x i8*]*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ 
+ Finished analyzing function: create_item
+ 
+ Analyzing function: malloc
+ -------INSERT: Global Variables malloc
+ Analyzing function: append_one
+ -------INSERT: Global Variables append_one
+ Analyzing function body: append_one
+ Generating body for append_one
+ [regions] for:   %7 = getelementptr inbounds [2 x i8*], [2 x i8*]* %6, i64 0, i64 0, !dbg !79, !verifier.code !72
+   in function: append_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %14 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 0, !dbg !84, !verifier.code !72
+   in function: append_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %14 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 0, !dbg !84, !verifier.code !72
+   in function: append_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %18 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 1, !dbg !86, !verifier.code !72
+   in function: append_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %25 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 1, !dbg !91, !verifier.code !72
+   in function: append_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %25 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 1, !dbg !91, !verifier.code !72
+   in function: append_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ 
+ Finished analyzing function: append_one
+ 
+ Analyzing function: remove_one
+ -------INSERT: Global Variables remove_one
+ Analyzing function body: remove_one
+ Generating body for remove_one
+ [regions] for:   %7 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 0, !dbg !78, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %11 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 1, !dbg !80, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %17 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 0, !dbg !83, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %22 = bitcast i8** %21 to i8*, !dbg !86, !verifier.code !72 with length 16
+   in function: remove_one
+ [regions]   using region: <Node:i8>[0,16]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %31 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 %30, !dbg !96, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %37 = getelementptr inbounds [2 x i8*], [2 x i8*]* %35, i64 0, i64 %36, !dbg !98, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %43 = getelementptr inbounds [2 x i8*], [2 x i8*]* %41, i64 0, i64 %42, !dbg !100, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %43 = getelementptr inbounds [2 x i8*], [2 x i8*]* %41, i64 0, i64 %42, !dbg !100, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %48 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 %47, !dbg !103, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %48 = getelementptr inbounds [2 x i8*], [2 x i8*]* %0, i64 0, i64 %47, !dbg !103, !verifier.code !72
+   in function: remove_one
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ 
+ Finished analyzing function: remove_one
+ 
+ Analyzing function: llvm.memset.p0i8.i64
+ -------INSERT: Global Variables llvm.memset.p0i8.i64
+ Analyzing function: rand_end_point
+ -------INSERT: Global Variables rand_end_point
+ Analyzing function body: rand_end_point
+ Generating body for rand_end_point
+ 
+ Finished analyzing function: rand_end_point
+ 
+ Analyzing function: main
+ -------INSERT: Global Variables main
+ Analyzing function body: main
+ Generating body for main
+ [regions] for:   %24 = getelementptr inbounds [2 x i8*], [2 x i8*]* @main.list, i64 0, i64 %23, !dbg !94, !verifier.code !65
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %33 = getelementptr inbounds [2 x i8*], [2 x i8*]* %.0, i64 0, i64 %32, !dbg !97, !verifier.code !65
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ 
+ Finished analyzing function: main
+ 
+ Analyzing function: __SMACK_code
+ -------INSERT: Global Variables __SMACK_code
+ Analyzing function: __VERIFIER_assume
+ -------INSERT: Global Variables __VERIFIER_assume
+ Analyzing function body: __VERIFIER_assume
+ Generating body for __VERIFIER_assume
+ 
+ Finished analyzing function: __VERIFIER_assume
+ 
+ Analyzing function: __SMACK_dummy
+ -------INSERT: Global Variables __SMACK_dummy
+ Analyzing function body: __SMACK_dummy
+ Generating body for __SMACK_dummy
+ 
+ Finished analyzing function: __SMACK_dummy
+ 
+ Analyzing function: __SMACK_and32
+ -------INSERT: Global Variables __SMACK_and32
+ Analyzing function body: __SMACK_and32
+ Generating body for __SMACK_and32
+ 
+ Finished analyzing function: __SMACK_and32
+ 
+ Analyzing function: __SMACK_and64
+ -------INSERT: Global Variables __SMACK_and64
+ Analyzing function body: __SMACK_and64
+ Generating body for __SMACK_and64
+ 
+ Finished analyzing function: __SMACK_and64
+ 
+ Analyzing function: __SMACK_and16
+ -------INSERT: Global Variables __SMACK_and16
+ Analyzing function body: __SMACK_and16
+ Generating body for __SMACK_and16
+ 
+ Finished analyzing function: __SMACK_and16
+ 
+ Analyzing function: __SMACK_and8
+ -------INSERT: Global Variables __SMACK_and8
+ Analyzing function body: __SMACK_and8
+ Generating body for __SMACK_and8
+ 
+ Finished analyzing function: __SMACK_and8
+ 
+ Analyzing function: __SMACK_or32
+ -------INSERT: Global Variables __SMACK_or32
+ Analyzing function body: __SMACK_or32
+ Generating body for __SMACK_or32
+ 
+ Finished analyzing function: __SMACK_or32
+ 
+ Analyzing function: __SMACK_or64
+ -------INSERT: Global Variables __SMACK_or64
+ Analyzing function body: __SMACK_or64
+ Generating body for __SMACK_or64
+ 
+ Finished analyzing function: __SMACK_or64
+ 
+ Analyzing function: __SMACK_or16
+ -------INSERT: Global Variables __SMACK_or16
+ Analyzing function body: __SMACK_or16
+ Generating body for __SMACK_or16
+ 
+ Finished analyzing function: __SMACK_or16
+ 
+ Analyzing function: __SMACK_or8
+ -------INSERT: Global Variables __SMACK_or8
+ Analyzing function body: __SMACK_or8
+ Generating body for __SMACK_or8
+ 
+ Finished analyzing function: __SMACK_or8
+ 
+ Analyzing function: __SMACK_check_overflow
+ -------INSERT: Global Variables __SMACK_check_overflow
+ Analyzing function body: __SMACK_check_overflow
+ Generating body for __SMACK_check_overflow
+ 
+ Finished analyzing function: __SMACK_check_overflow
+ 
+ Analyzing function: __VERIFIER_nondet_int
+ -------INSERT: Global Variables __VERIFIER_nondet_int
+ Analyzing function body: __VERIFIER_nondet_int
+ Generating body for __VERIFIER_nondet_int
+ 
+ Finished analyzing function: __VERIFIER_nondet_int
+ 
+ Analyzing function: __SMACK_nondet_int
+ -------INSERT: Global Variables __SMACK_nondet_int
+ Analyzing function: __SMACK_decls
+ -------INSERT: Global Variables __SMACK_decls
+ Analyzing function body: __SMACK_decls
+ Generating body for __SMACK_decls
+ 
+ Finished analyzing function: __SMACK_decls
+ 
+ Analyzing function: __SMACK_top_decl
+ -------INSERT: Global Variables __SMACK_top_decl
+ Analyzing function: __SMACK_check_memory_safety
+ -------INSERT: Global Variables __SMACK_check_memory_safety
+ Analyzing function: __SMACK_check_memory_leak
+ -------INSERT: Global Variables __SMACK_check_memory_leak
+ Analyzing function body: __SMACK_check_memory_leak
+ Generating body for __SMACK_check_memory_leak
+ 
+ Finished analyzing function: __SMACK_check_memory_leak
+ 
+ Analyzing function: __SMACK_init_func_memory_model
+ -------INSERT: Global Variables __SMACK_init_func_memory_model
+ Analyzing function body: __SMACK_init_func_memory_model
+ Generating body for __SMACK_init_func_memory_model
+ 
+ Finished analyzing function: __SMACK_init_func_memory_model
+ 
+ Analyzing function: __SMACK_my_memory_check
+ -------INSERT: Global Variables __SMACK_my_memory_check
+ Analyzing function body: __SMACK_my_memory_check
+ Generating body for __SMACK_my_memory_check
+ 
+ Finished analyzing function: __SMACK_my_memory_check
+ 
+ Analyzing function: __SMACK_decl
+ -------INSERT: Global Variables __SMACK_decl
+ Analyzing function: __SMACK_whatIsThis
+ -------INSERT: Global Variables __SMACK_whatIsThis
+ Analyzing function body: __SMACK_whatIsThis
+ Generating body for __SMACK_whatIsThis
+ 
+ Finished analyzing function: __SMACK_whatIsThis
+ 
+ Analyzing function: __WHAT_code
+ -------INSERT: Global Variables __WHAT_code
+ Analyzing function: abort
+ -------INSERT: Global Variables abort
+ Analyzing function body: abort
+ Generating body for abort
+ 
+ Finished analyzing function: abort
+ 
+ Analyzing function: llvm.dbg.value
+ -------INSERT: Global Variables llvm.dbg.value
+ Analyzing function: __SMACK_static_init
+ -------INSERT: Global Variables __SMACK_static_init
+ Analyzing function body: __SMACK_static_init
+ Generating body for __SMACK_static_init
+ [regions] for: i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 0)
+   at instruction:   store i8* null, i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 0)
+   at instruction:   store i8* null, i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 1)
+   at instruction:   store i8* null, i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 1)
+   at instruction:   store i8* null, i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @main.list, i32 0, i64 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,16]{A}
+ [regions]   merged region: <Node:*>[0,16]{A}
+ [regions]   returning index: 0
+ 
+ 
+ Finished analyzing function: __SMACK_static_init
+ 
+ Start Analyzing Prelude: is_empty
+ 
+ Start Analyzing Prelude: free_
+ 
+ Start Analyzing Prelude: create_item
+ 
+ Start Analyzing Prelude: malloc
+ 
+ Start Analyzing Prelude: append_one
+ 
+ Start Analyzing Prelude: remove_one
+ 
+ Start Analyzing Prelude: llvm.memset.p0i8.i64
+ 
+ Start Analyzing Prelude: rand_end_point
+ 
+ Start Analyzing Prelude: main
+ 
+ Start Analyzing Prelude: __SMACK_code.ref
+ 
+ Start Analyzing Prelude: __SMACK_code.ref.i32
+ 
+ Start Analyzing Prelude: __VERIFIER_assume
+ 
+ Start Analyzing Prelude: __SMACK_dummy
+ 
+ Start Analyzing Prelude: __SMACK_and32
+ 
+ Start Analyzing Prelude: __SMACK_and64
+ 
+ Start Analyzing Prelude: __SMACK_and16
+ 
+ Start Analyzing Prelude: __SMACK_and8
+ 
+ Start Analyzing Prelude: __SMACK_or32
+ 
+ Start Analyzing Prelude: __SMACK_or64
+ 
+ Start Analyzing Prelude: __SMACK_or16
+ 
+ Start Analyzing Prelude: __SMACK_or8
+ 
+ Start Analyzing Prelude: __SMACK_check_overflow
+ 
+ Start Analyzing Prelude: __VERIFIER_nondet_int
+ 
+ Start Analyzing Prelude: __SMACK_nondet_int
+ 
+ Start Analyzing Prelude: __SMACK_top_decl.ref
+ 
+ Start Analyzing Prelude: __SMACK_check_memory_safety
+ 
+ Start Analyzing Prelude: __SMACK_check_memory_leak
+ 
+ Start Analyzing Prelude: __SMACK_init_func_memory_model
+ 
+ Start Analyzing Prelude: __SMACK_my_memory_check
+ 
+ Start Analyzing Prelude: __SMACK_decl.ref
+ 
+ Start Analyzing Prelude: __SMACK_whatIsThis
+ 
+ Start Analyzing Prelude: __WHAT_code.ref
+ 
+ Start Analyzing Prelude: abort
+ 
+ Start Analyzing Prelude: llvm.dbg.value
+ 
+ Start Analyzing Prelude: __SMACK_static_init
+ 
+ Start Analyzing Prelude: boogie_si_record_i16
+ 
+ Start Analyzing Prelude: boogie_si_record_i32
+ 
+ Start Analyzing Prelude: boogie_si_record_i64
+ 
+ Start Analyzing Prelude: boogie_si_record_i8
+ 
+ Start Analyzing Prelude: boogie_si_record_ref
+ 
+ Start Analyzing Prelude: $initialize
+ 
+ SMACK found no errors with unroll bound 3.

@@ -523,7 +523,6 @@ const SpatialLiteral* SpatialLiteral::emp(){
   return new EmpLit();
 }
 
-<<<<<<< HEAD
 const SpatialLiteral* SpatialLiteral::pt(const Expr* from, const Expr* to){
   return new PtLit(from, to);
 }
@@ -553,13 +552,6 @@ SymbolicHeapExpr* SymbolicHeapExpr::sh_and(SymbolicHeapExpr* first, SymbolicHeap
   }
   for(const SpatialLiteral* spl : second->getSpatialExpr()){
     result->addSpatialLit(spl);
-=======
-void SpatialExpr::print(std::ostream &os) const{
-  if(spConjuncts.size() > 0){
-    print_seq<const Expr*>(os, spConjuncts, "*");
-  } else {
-    os << "emp";
->>>>>>> 634af251b64a6cf1110b20ccf9640d8de477c7a0
   }
   return result;
 }

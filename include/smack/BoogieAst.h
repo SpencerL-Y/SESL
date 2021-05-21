@@ -54,18 +54,6 @@ public:
   static const Expr *bvExtract(std::string v, unsigned upper, unsigned lower);
   static const Expr *bvExtract(const Expr *v, unsigned upper, unsigned lower);
   static const Expr *bvConcat(const Expr *left, const Expr *right);
-<<<<<<< HEAD
-=======
-  // TODOsh: check
-  // return a sh expression (true || left |-> right)
-  static const Expr *pt(const Expr *left, const Expr *right);
-  // return a Symbolic heap with only one spatial literal SHBlkLit in separation logic
-  static const Expr *blk(const Expr *from, const Expr* to);
-  // return the conjunction of two symbolic heap by conjunct the pure part and symbolic part separately.
-  static const Expr *sh_and(const Expr *left, const Expr *right);
-  // create an (true || emp) symbolic heap expression
-  static const Expr *emp_sh();
->>>>>>> 634af251b64a6cf1110b20ccf9640d8de477c7a0
 };
 
 class BinExpr : public Expr {
@@ -277,7 +265,6 @@ public:
   void print(std::ostream &os) const;
 };
 
-<<<<<<< HEAD
 
 class SpatialLiteral : public Expr {
   int id;
@@ -294,28 +281,6 @@ class EmpLit : public SpatialLiteral {
 
 public: 
   EmpLit(){setId(0);}
-=======
-// TODOsh: spatial expression, add other operations
-class SpatialExpr : public Expr {
-  std::list<Expr*> spConjuncts;
-
-public:
-  SpatialExpr(){};
-  void addLit(Expr* lit);
-  std::list<Expr*> getSpConj() {return spConjuncts;};
-  void print(std::ostream &os) const;
-};
-
-// TODOsh: symbolic heap expression, add other operations
-class SymbolicHeapExpr : public Expr {
-  Expr *pure;
-  Expr *spatial;
-
-public: 
-  SymbolicHeapExpr(Expr* p, Expr* sp) : pure(p), spatial(sp){}
-  Expr* getPure() { return this->pure;}
-  Expr* getSpatial() { return this->spatial;}
->>>>>>> 634af251b64a6cf1110b20ccf9640d8de477c7a0
   void print(std::ostream &os) const;
 };
 

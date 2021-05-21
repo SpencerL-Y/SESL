@@ -16,6 +16,7 @@ int main(){
 */
 int j = 0;
 int *i = (int*)malloc(sizeof(int));
+char* k = (char*)malloc(sizeof(char));
 j = i;
 i = j;
 /*

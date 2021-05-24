@@ -11,9 +11,11 @@ namespace smack{
     {
     private:
         std::map<std::string, const Expr*> varsMap;
+        // TODOsh: need a map for storing the variables from string to vars
+
     public:
+        // TODOsh: get a new var if name does not exist in the map, or get the existing var from the map.
         const Expr* getVar(std::string name);
-        
         VarFactory(/* args */);
         ~VarFactory();
     };

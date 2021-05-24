@@ -13,12 +13,12 @@ We are now translating the program to boogie...
  SE CALL: malloc $p0 1
  EXECUTE MALLOC
  visitCast
- visitCast here 2
+ visitCast not vector
  SE: Bitcast
  EXECUTE BITCAST
  visitDbgValue
  visitCast
- visitCast here 2
+ visitCast not vector
  SE: Bitcast
  EXECUTE BITCAST
  visitCall

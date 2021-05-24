@@ -6,6 +6,7 @@
 #include "llvm/IR/Constants.h"
 #include <iostream>
 #include <set>
+#include <typeinfo>
 #include <sstream>
 
 namespace smack {
@@ -191,7 +192,7 @@ const Stmt *Stmt::assume(const Expr *e, const Attr *a) {
   return (const AssumeStmt *)s;
 }
 //TODOsh: stmt modify later
-const Stmt *Stmt::symbheap(const Expr *sh){
+const Stmt *Stmt::symbheap(SymbolicHeapExpr *sh){
   SHStmt *s = new SHStmt(sh);
   return s;
 }
@@ -544,7 +545,15 @@ void BlkLit::print(std::ostream &os) const {
 }
 
 SymbolicHeapExpr* SymbolicHeapExpr::sh_and(SymbolicHeapExpr* first, SymbolicHeapExpr* second){
-  const Expr* newPure = Expr::and_(first->getPure(), second->getPure());
+  const Expr* newPure;
+  if(second->getPure()->getType() == ExprType::BOOL){
+    if(((const BoolLit*)second->getPure())->getVal()){
+      newPure = first->getPure();
+    }
+  } else {
+    newPure = Expr::and_(first->getPure(), second->getPure());
+  }
+
   std::list<const SpatialLiteral*> splist;
   SymbolicHeapExpr* result = new SymbolicHeapExpr(newPure, splist);
   for(const SpatialLiteral* spl :  first->getSpatialExpr()){

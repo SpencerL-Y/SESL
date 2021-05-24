@@ -259,7 +259,8 @@ void SmackInstGenerator::visitReturnInst(llvm::ReturnInst &ri) {
   llvm::Value *v = ri.getReturnValue();
   if (v)
     emit(Stmt::assign(Expr::id(Naming::RET_VAR), rep->expr(v)));
-  emit(Stmt::assign(Expr::id(Naming::EXN_VAR), Expr::lit(false)));
+  
+  //emit(Stmt::assign(Expr::id(Naming::EXN_VAR), Expr::lit(false)));
   emit(Stmt::return_());
 }
 
@@ -621,13 +622,39 @@ void SmackInstGenerator::visitCastInst(llvm::CastInst &I) {
   processInstruction(I);
   const Expr *E;
   if (isa<VectorType>(I.getType())) {
+    SDEBUG(errs() << "visitCast vector" << "\n");
     auto X = I.getOperand(0);
     auto D = VectorOperations(rep).cast(&I);
     E = Expr::fn(D->getName(), rep->expr(X));
   } else {
+    SDEBUG(errs() << "visitCast not vector" << "\n");
     E = rep->cast(&I);
+  } 
+  const Stmt* assignStmt = Stmt::assign(rep->expr(&I), E);
+  emit(assignStmt);
+
+  if (I.getOpcode() == Instruction::BitCast){
+    SDEBUG(errs() << "SE: Bitcast" << "\n");
+    // TODOsh: only support int* to int*, extend to other sizes later.
+    const AssignStmt* as = (const AssignStmt*) assignStmt;
+    if(as->getLhs().size() == as->getRhs().size()){
+      SDEBUG(errs() << "EXECUTE BITCAST" << "\n");
+      //TODOsh: this may not be correct, since there might be other situations. We omitted the consideration currently.
+      std::list<std::string> leftNames;
+      std::list<std::string> rightNames;
+      se->executeCast(leftNames, rightNames);
+    } else {
+      se->executeOther();
+    }
+  } else if (I.getOpcode() == Instruction::PtrToInt){
+    SDEBUG(errs() << "SE: PtrToInt Cast" << "\n");
+    // TODOsh: add implementation 
+  } else if(I.getOpcode() == Instruction::IntToPtr){
+    SDEBUG(errs() << "SE: IntToPtr Cast" << "\n");
+    // TODOsh: add implementation 
+  } else {
+    
   }
-  emit(Stmt::assign(rep->expr(&I), E));
 
   if (I.getOpcode() == Instruction::BitCast) {
     if (const Stmt *inverseAssume =

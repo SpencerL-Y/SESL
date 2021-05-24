@@ -15,10 +15,34 @@ typedef std::pair<std::string, std::string> Binding;
 
 enum class RModeKind { RNE, RNA, RTP, RTN, RTZ };
 
+enum class ExprType {
+  BIN,
+  FUNC,
+  BOOL,
+  RMODE,
+  INT,
+  BV,
+  FP,
+  STR,
+  NEG,
+  NOT,
+  QUANT,
+  SEL,
+  UPD,
+  VAR,
+  ITE,
+  BVExtract,
+  BVConcat,
+  SpatialLit,
+  SH,
+  CODE
+};
+
 class Expr {
 public:
   virtual ~Expr() {}
   virtual void print(std::ostream &os) const = 0;
+  virtual ExprType getType() const = 0;
   static const Expr *exists(std::list<Binding>, const Expr *e);
   static const Expr *forall(std::list<Binding>, const Expr *e);
   static const Expr *and_(const Expr *l, const Expr *r);
@@ -87,6 +111,7 @@ public:
   BinExpr(const Binary b, const Expr *l, const Expr *r)
       : op(b), lhs(l), rhs(r) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::BIN;}
 };
 
 class FunExpr : public Expr {
@@ -96,6 +121,8 @@ class FunExpr : public Expr {
 public:
   FunExpr(std::string f, std::list<const Expr *> xs) : fun(f), args(xs) {}
   void print(std::ostream &os) const;
+  std::list<const Expr*> getArgs() const {return args;};
+  ExprType getType() const { return ExprType::FUNC;}
 };
 
 class BoolLit : public Expr {
@@ -103,7 +130,9 @@ class BoolLit : public Expr {
 
 public:
   BoolLit(bool b) : val(b) {}
+  bool getVal() const { return val;}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::BOOL;}
 };
 
 class RModeLit : public Expr {
@@ -112,6 +141,7 @@ class RModeLit : public Expr {
 public:
   RModeLit(RModeKind v) : val(v) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::RMODE;}
 };
 
 class IntLit : public Expr {
@@ -130,6 +160,7 @@ public:
     val = s.str();
   }
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::INT;}
 };
 
 class BvLit : public Expr {
@@ -144,6 +175,7 @@ public:
     val = s.str();
   }
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::BV;}
 };
 
 class FPLit : public Expr {
@@ -160,6 +192,7 @@ public:
   FPLit(std::string v, unsigned ss, unsigned es)
       : specialValue(v), sigSize(ss), expSize(es) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::FP;}
 };
 
 class StringLit : public Expr {
@@ -168,6 +201,7 @@ class StringLit : public Expr {
 public:
   StringLit(std::string v) : val(v) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::STR;}
 };
 
 class NegExpr : public Expr {
@@ -176,6 +210,7 @@ class NegExpr : public Expr {
 public:
   NegExpr(const Expr *e) : expr(e) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::NEG;}
 };
 
 class NotExpr : public Expr {
@@ -184,6 +219,7 @@ class NotExpr : public Expr {
 public:
   NotExpr(const Expr *e) : expr(e) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::NOT;}
 };
 
 class QuantExpr : public Expr {
@@ -199,6 +235,7 @@ public:
   QuantExpr(Quantifier q, std::list<Binding> vs, const Expr *e)
       : quant(q), vars(vs), expr(e) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::QUANT;}
 };
 
 class SelExpr : public Expr {
@@ -210,6 +247,7 @@ public:
   SelExpr(const Expr *a, const Expr *i)
       : base(a), idxs(std::list<const Expr *>(1, i)) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::SEL;}
 };
 
 class UpdExpr : public Expr {
@@ -223,6 +261,7 @@ public:
   UpdExpr(const Expr *a, const Expr *i, const Expr *v)
       : base(a), idxs(std::list<const Expr *>(1, i)), val(v) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::UPD;}
 };
 
 class VarExpr : public Expr {
@@ -232,6 +271,7 @@ public:
   VarExpr(std::string v) : var(v) {}
   std::string name() const { return var; }
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::VAR;}
 };
 
 class IfThenElseExpr : public Expr {
@@ -243,6 +283,7 @@ public:
   IfThenElseExpr(const Expr *c, const Expr *t, const Expr *e)
       : cond(c), trueValue(t), falseValue(e) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::ITE;}
 };
 
 class BvExtract : public Expr {
@@ -254,6 +295,7 @@ public:
   BvExtract(const Expr *var, const Expr *upper, const Expr *lower)
       : var(var), upper(upper), lower(lower) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::BVExtract;}
 };
 
 class BvConcat : public Expr {
@@ -263,6 +305,7 @@ class BvConcat : public Expr {
 public:
   BvConcat(const Expr *left, const Expr *right) : left(left), right(right) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::BVConcat;}
 };
 
 
@@ -275,6 +318,7 @@ public:
   static const SpatialLiteral* blk(const Expr* from, const Expr* to);
   int getId(){return id;}
   void setId(int i){id = i;}
+  ExprType getType() const { return ExprType::SpatialLit;}
 };
 
 class EmpLit : public SpatialLiteral {
@@ -319,6 +363,8 @@ public:
 
   static SymbolicHeapExpr* sh_and(SymbolicHeapExpr* first, SymbolicHeapExpr* second);
   static SymbolicHeapExpr* emp_sh();
+
+  ExprType getType() const { return ExprType::SH;}
 
 
 };
@@ -385,7 +431,7 @@ public:
   static const Stmt *assume(const Expr *e);
   static const Stmt *assume(const Expr *e, const Attr *attr);
   //TODOsh: add implementation for the function
-  static const Stmt *symbheap(const Expr *sh);
+  static const Stmt *symbheap(SymbolicHeapExpr *sh);
   static const Stmt *
   call(std::string p, std::list<const Expr *> args = std::list<const Expr *>(),
        std::list<std::string> rets = std::list<std::string>(),
@@ -420,6 +466,8 @@ public:
   AssignStmt(std::list<const Expr *> lhs, std::list<const Expr *> rhs)
       : Stmt(ASSIGN), lhs(lhs), rhs(rhs) {}
   void print(std::ostream &os) const;
+  std::list<const Expr*>  getLhs() const { return lhs;}
+  std::list<const Expr*>  getRhs() const { return rhs;}
   static bool classof(const Stmt *S) { return S->getKind() == ASSIGN; }
 };
 
@@ -444,10 +492,10 @@ public:
 // Symbolic Heap Statement
 // TODOsh: check
 class SHStmt : public Stmt {
-  Expr* symbheap;
+  SymbolicHeapExpr* symbheap;
 
 public:
-  SHStmt(Expr* sh) : Stmt(SH), symbheap(sh){}
+  SHStmt(SymbolicHeapExpr* sh) : Stmt(SH), symbheap(sh){}
   void print(std::ostream &os) const;
   static bool classof(const Stmt *S){
     return S->getKind() == SH;
@@ -677,6 +725,7 @@ class CodeExpr : public Expr, public CodeContainer {
 public:
   CodeExpr(DeclarationList ds, BlockList bs) : CodeContainer(ds, bs) {}
   void print(std::ostream &os) const;
+  ExprType getType() const { return ExprType::CODE;}
 };
 
 class ProcDecl : public Decl, public CodeContainer {

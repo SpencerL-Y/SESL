@@ -4,28 +4,11 @@
 #include "TestIncl.h"
 
 
-
-
-// } my_list_t;
-
 int main(){
-/*
-    int *i = malloc(sizeof(int));
-    *i = 0;
-    free(i);
-*/
-int j = 0;
 int *i = (int*)malloc(sizeof(int));
-char* k = (char*)malloc(sizeof(char));
-j = i;
-i = j;
-/*
-if(j == 0){
-    free(i);
-} else {
-    j = 0;
-}*/
+free(i);
 return 0;
+
 }
 
 

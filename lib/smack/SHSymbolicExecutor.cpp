@@ -1,7 +1,8 @@
 #include "smack/SHSymbolicExecutor.h"
-#include "smack/Debug.h"
+
 
 namespace smack{
+    using llvm::errs;
     void SHSymbolicExecutor::executeMalloc(std::string varName, const Expr* size){
         // TODOsh: need to use a map to store all pair of string, variable
         std::list<const SpatialLiteral*> mallocList;
@@ -20,10 +21,19 @@ namespace smack{
     }
 
     void SHSymbolicExecutor::executeFree(std::string varName){
-
+        
     }
 
-    void SHSymbolicExecutor::executeCast(std::string leftVarName, std::string rightVarName){
+    void SHSymbolicExecutor::executeCast(std::list<std::string> leftVarNames, std::list<std::string> rightVarNames){
+        //TODOsh: the assignment should only cast one variable to another instead of a bunch ( which is allowed in Boogie ). Check later.
+        if(leftVarNames.size() == 1 && rightVarNames.size() == 1){
+            // ONLY able to deal with bitcast between two reference variables
+            const Expr* addedPure = Expr::eq(new VarExpr(leftVarNames.front()), new VarExpr(rightVarNames.front()));
+            SymbolicHeapExpr* sh = new SymbolicHeapExpr(Expr::and_(this->currentSH->getPure(), addedPure), this->currentSH->getSpatialExpr());
+            this->currentSH = sh;
+        } else {
+            // current not solved.
+        }
         
     }
 

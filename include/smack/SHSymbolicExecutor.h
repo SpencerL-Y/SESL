@@ -2,19 +2,23 @@
 #define SHSYMBOLICEXECUTOR_H
 #include <z3++.h>
 #include "BoogieAst.h"
+#include "llvm/IR/DebugInfo.h"
+#include "smack/AddTiming.h"
+#include "smack/Debug.h"
 
 
 // This object is for dealing with symbolic execution
 // of symbolic heap at frontend
 namespace smack{
     
+    using llvm::errs;
     class SHSymbolicExecutor {
         SymbolicHeapExpr* currentSH;
     public:
         SHSymbolicExecutor(SymbolicHeapExpr* csh) : currentSH(csh){}
         void executeMalloc(std::string varName, const Expr* size);
         void executeFree(std::string varName);
-        void executeCast(std::string leftVarName, std::string rightVarName);
+        void executeCast(std::list<std::string> leftVarNames, std::list<std::string> rightVarNames);
         void executeOther();
         SymbolicHeapExpr* getCurrSH();
     };

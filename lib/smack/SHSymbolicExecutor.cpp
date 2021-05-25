@@ -21,7 +21,9 @@ namespace smack{
     }
 
     void SHSymbolicExecutor::executeFree(std::string varName){
+        // TODOsh: varName usually is not the initial malloc name, here we need to determine which one to free or there is no such free item.
         
+
     }
 
     void SHSymbolicExecutor::executeCast(std::list<std::string> leftVarNames, std::list<std::string> rightVarNames){

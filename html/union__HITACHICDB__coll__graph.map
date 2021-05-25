@@ -1,0 +1,9 @@
+<map id="_HITACHICDB" name="_HITACHICDB">
+<area shape="rect" id="node1" title=" " alt="" coords="469,307,580,384"/>
+<area shape="rect" id="node2" href="$struct__STOP__PLAY.html" title=" " alt="" coords="5,71,140,163"/>
+<area shape="rect" id="node3" href="$struct__EJECT.html" title=" " alt="" coords="164,5,317,229"/>
+<area shape="rect" id="node4" href="$struct__PAUSE.html" title=" " alt="" coords="341,27,495,207"/>
+<area shape="rect" id="node5" href="$struct____anonstruct__PLAY__AUDIO__127.html" title=" " alt="" coords="519,5,744,229"/>
+<area shape="rect" id="node6" href="$struct__READ__DISC__INFO.html" title=" " alt="" coords="769,20,931,215"/>
+<area shape="rect" id="node7" href="$struct__AUDIO__STATUS.html" title=" " alt="" coords="956,27,1109,207"/>
+</map>

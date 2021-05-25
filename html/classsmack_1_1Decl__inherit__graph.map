@@ -1,0 +1,10 @@
+<map id="smack::Decl" name="smack::Decl">
+<area shape="rect" id="node1" title=" " alt="" coords="507,5,619,347"/>
+<area shape="rect" id="node2" href="$classsmack_1_1AxiomDecl.html" title=" " alt="" coords="5,483,149,589"/>
+<area shape="rect" id="node3" href="$classsmack_1_1CodeDecl.html" title=" " alt="" coords="174,483,309,589"/>
+<area shape="rect" id="node4" href="$classsmack_1_1ConstDecl.html" title=" " alt="" coords="333,483,472,589"/>
+<area shape="rect" id="node5" href="$classsmack_1_1FuncDecl.html" title=" " alt="" coords="497,483,629,589"/>
+<area shape="rect" id="node6" href="$classsmack_1_1ProcDecl.html" title=" " alt="" coords="653,395,795,677"/>
+<area shape="rect" id="node7" href="$classsmack_1_1TypeDecl.html" title=" " alt="" coords="819,483,951,589"/>
+<area shape="rect" id="node8" href="$classsmack_1_1VarDecl.html" title=" " alt="" coords="976,483,1099,589"/>
+</map>

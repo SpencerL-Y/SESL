@@ -1,0 +1,7 @@
+<map id="_SUB_Q_CHANNEL_DATA" name="_SUB_Q_CHANNEL_DATA">
+<area shape="rect" id="node1" title=" " alt="" coords="205,403,389,480"/>
+<area shape="rect" id="node2" href="$struct__SUB__Q__TRACK__ISRC.html" title=" " alt="" coords="5,175,167,340"/>
+<area shape="rect" id="node3" href="$struct__SUB__Q__HEADER.html" title=" " alt="" coords="229,5,364,112"/>
+<area shape="rect" id="node4" href="$struct__SUB__Q__CURRENT__POSITION.html" title=" " alt="" coords="191,175,403,340"/>
+<area shape="rect" id="node5" href="$struct__SUB__Q__MEDIA__CATALOG__NUMBER.html" title=" " alt="" coords="427,182,617,333"/>
+</map>

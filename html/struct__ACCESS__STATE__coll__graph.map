@@ -1,0 +1,10 @@
+<map id="_ACCESS_STATE" name="_ACCESS_STATE">
+<area shape="rect" id="node1" title=" " alt="" coords="289,653,491,877"/>
+<area shape="rect" id="node2" href="$union____anonunion__Privileges__40.html" title=" " alt="" coords="115,477,313,554"/>
+<area shape="rect" id="node3" href="$struct__PRIVILEGE__SET.html" title=" " alt="" coords="148,300,280,392"/>
+<area shape="rect" id="node4" href="$struct__LUID__AND__ATTRIBUTES.html" title=" " alt="" coords="123,160,305,237"/>
+<area shape="rect" id="node6" href="$struct__INITIAL__PRIVILEGE__SET.html" title=" " alt="" coords="304,300,484,392"/>
+<area shape="rect" id="node5" href="$struct__LUID.html" title=" " alt="" coords="5,5,97,97"/>
+<area shape="rect" id="node7" href="$struct__SECURITY__SUBJECT__CONTEXT.html" title=" " alt="" coords="337,455,563,576"/>
+<area shape="rect" id="node8" href="$struct__UNICODE__STRING.html" title=" " alt="" coords="587,462,734,569"/>
+</map>

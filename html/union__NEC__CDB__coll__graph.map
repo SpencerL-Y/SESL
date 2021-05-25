@@ -1,0 +1,9 @@
+<map id="_NEC_CDB" name="_NEC_CDB">
+<area shape="rect" id="node1" title=" " alt="" coords="455,263,545,340"/>
+<area shape="rect" id="node2" href="$struct__NEC__PAUSE__AUDIO.html" title=" " alt="" coords="5,42,160,149"/>
+<area shape="rect" id="node3" href="$struct__NEC__READ__TOC.html" title=" " alt="" coords="193,20,327,171"/>
+<area shape="rect" id="node4" href="$struct__NEC__EJECT.html" title=" " alt="" coords="351,27,486,163"/>
+<area shape="rect" id="node5" href="$struct__NEC__READ__Q__CHANNEL.html" title=" " alt="" coords="511,27,697,163"/>
+<area shape="rect" id="node6" href="$struct__NEC__PLAY__AUDIO.html" title=" " alt="" coords="722,5,867,185"/>
+<area shape="rect" id="node7" href="$struct__NEC__SEEK__AUDIO.html" title=" " alt="" coords="892,5,1039,185"/>
+</map>

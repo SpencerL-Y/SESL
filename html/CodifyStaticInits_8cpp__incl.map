@@ -1,0 +1,52 @@
+<map id="lib/smack/CodifyStaticInits.cpp" name="lib/smack/CodifyStaticInits.cpp">
+<area shape="rect" id="node1" title=" " alt="" coords="2657,5,2880,32"/>
+<area shape="rect" id="node2" href="$CodifyStaticInits_8h.html" title=" " alt="" coords="293,80,479,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,155,164,181"/>
+<area shape="rect" id="node7" href="$DSAWrapper_8h.html" title=" " alt="" coords="1766,80,1929,107"/>
+<area shape="rect" id="node27" title=" " alt="" coords="2461,617,2668,644"/>
+<area shape="rect" id="node28" title=" " alt="" coords="2745,617,2808,644"/>
+<area shape="rect" id="node34" href="$include_2smack_2Debug_8h.html" title=" " alt="" coords="2502,304,2625,331"/>
+<area shape="rect" id="node35" href="$smack_2InitializePasses_8h.html" title=" " alt="" coords="2994,80,3175,107"/>
+<area shape="rect" id="node37" href="$Naming_8h.html" title=" " alt="" coords="2525,80,2657,107"/>
+<area shape="rect" id="node38" title=" " alt="" coords="2629,155,2791,181"/>
+<area shape="rect" id="node40" href="$SmackOptions_8h.html" title=" " alt="" coords="2744,80,2919,107"/>
+<area shape="rect" id="node47" title=" " alt="" coords="3200,80,3343,107"/>
+<area shape="rect" id="node48" title=" " alt="" coords="3367,80,3429,107"/>
+<area shape="rect" id="node49" title=" " alt="" coords="3453,80,3516,107"/>
+<area shape="rect" id="node50" title=" " alt="" coords="3541,80,3583,107"/>
+<area shape="rect" id="node4" title=" " alt="" coords="189,155,349,181"/>
+<area shape="rect" id="node5" title=" " alt="" coords="1016,453,1148,480"/>
+<area shape="rect" id="node6" title=" " alt="" coords="562,453,658,480"/>
+<area shape="rect" id="node8" title=" " alt="" coords="1503,453,1627,480"/>
+<area shape="rect" id="node9" title=" " alt="" coords="1837,155,1951,181"/>
+<area shape="rect" id="node10" href="$DsaAnalysis_8hh.html" title=" " alt="" coords="709,155,881,181"/>
+<area shape="rect" id="node13" href="$Global_8hh.html" title=" " alt="" coords="1067,229,1201,256"/>
+<area shape="rect" id="node17" href="$Graph_8hh.html" title=" " alt="" coords="1651,453,1782,480"/>
+<area shape="rect" id="node11" title=" " alt="" coords="834,453,991,480"/>
+<area shape="rect" id="node12" title=" " alt="" coords="562,535,701,562"/>
+<area shape="rect" id="node33" href="$Info_8hh.html" title=" " alt="" coords="677,379,794,405"/>
+<area shape="rect" id="node14" href="$BottomUp_8hh.html" title=" " alt="" coords="1099,304,1257,331"/>
+<area shape="rect" id="node16" href="$CallSite_8hh.html" title=" " alt="" coords="1224,379,1367,405"/>
+<area shape="rect" id="node19" title=" " alt="" coords="389,528,537,569"/>
+<area shape="rect" id="node31" href="$Mapper_8hh.html" title=" " alt="" coords="1443,379,1583,405"/>
+<area shape="rect" id="node32" href="$CallGraphWrapper_8hh.html" title=" " alt="" coords="1434,304,1645,331"/>
+<area shape="rect" id="node15" title=" " alt="" coords="893,535,1060,562"/>
+<area shape="rect" id="node21" title=" " alt="" coords="725,528,869,569"/>
+<area shape="rect" id="node18" title=" " alt="" coords="1084,528,1232,569"/>
+<area shape="rect" id="node20" title=" " alt="" coords="1633,535,1824,562"/>
+<area shape="rect" id="node22" title=" " alt="" coords="1849,528,2011,569"/>
+<area shape="rect" id="node23" title=" " alt="" coords="2036,535,2184,562"/>
+<area shape="rect" id="node24" title=" " alt="" coords="2162,617,2282,644"/>
+<area shape="rect" id="node25" title=" " alt="" coords="1256,535,1447,562"/>
+<area shape="rect" id="node26" href="$AllocSite_8hh.html" title=" " alt="" coords="2259,535,2409,562"/>
+<area shape="rect" id="node29" href="$FieldType_8hh.html" title=" " alt="" coords="2433,535,2587,562"/>
+<area shape="rect" id="node30" title=" " alt="" coords="1471,535,1557,562"/>
+<area shape="rect" id="node36" title=" " alt="" coords="3128,155,3295,181"/>
+<area shape="rect" id="node39" title=" " alt="" coords="2503,155,2554,181"/>
+<area shape="rect" id="node41" title=" " alt="" coords="2629,229,2844,256"/>
+<area shape="rect" id="node42" href="$SmackWarnings_8h.html" title=" " alt="" coords="2867,155,3052,181"/>
+<area shape="rect" id="node43" href="$BoogieAst_8h.html" title=" " alt="" coords="3055,229,3202,256"/>
+<area shape="rect" id="node44" title=" " alt="" coords="2945,304,2987,331"/>
+<area shape="rect" id="node45" title=" " alt="" coords="3227,229,3380,256"/>
+<area shape="rect" id="node46" title=" " alt="" coords="2920,229,3031,256"/>
+</map>

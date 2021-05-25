@@ -1,0 +1,10 @@
+<map id="smack::Gen" name="smack::Gen">
+<area shape="rect" id="node1" title=" " alt="" coords="387,5,493,112"/>
+<area shape="rect" id="node2" href="$structsmack_1_1ConstDeclGen.html" title=" " alt="" coords="5,182,187,303"/>
+<area shape="rect" id="node3" href="$structsmack_1_1MemDeclGen.html" title=" " alt="" coords="211,175,448,311"/>
+<area shape="rect" id="node4" href="$structsmack_1_1TypeDeclGen.html" title=" " alt="" coords="473,197,631,289"/>
+<area shape="rect" id="node5" href="$structsmack_1_1TypeGen.html" title=" " alt="" coords="656,160,880,325"/>
+<area shape="rect" id="node6" href="$structsmack_1_1FpOpGen.html" title=" " alt="" coords="408,373,632,568"/>
+<area shape="rect" id="node7" href="$structsmack_1_1IntOpGen.html" title=" " alt="" coords="656,381,880,561"/>
+<area shape="rect" id="node8" href="$structsmack_1_1PtrOpGen.html" title=" " alt="" coords="904,381,1128,561"/>
+</map>

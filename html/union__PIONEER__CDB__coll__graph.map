@@ -1,0 +1,12 @@
+<map id="_PIONEER_CDB" name="_PIONEER_CDB">
+<area shape="rect" id="node1" title=" " alt="" coords="785,351,906,428"/>
+<area shape="rect" id="node2" href="$struct__PNR__READ__Q__CHANNEL.html" title=" " alt="" coords="5,35,192,244"/>
+<area shape="rect" id="node3" href="$struct__PNR__PAUSE__AUDIO.html" title=" " alt="" coords="229,42,384,237"/>
+<area shape="rect" id="node4" href="$struct__PNR__SEEK__AUDIO.html" title=" " alt="" coords="408,13,555,266"/>
+<area shape="rect" id="node5" href="$struct__PNR__READ__STATUS.html" title=" " alt="" coords="579,20,752,259"/>
+<area shape="rect" id="node6" href="$struct__PNR__PLAY__AUDIO.html" title=" " alt="" coords="777,13,922,266"/>
+<area shape="rect" id="node7" href="$struct__PNR__READ__TOC.html" title=" " alt="" coords="946,27,1086,251"/>
+<area shape="rect" id="node8" href="$struct__PNR__START__STOP.html" title=" " alt="" coords="1111,5,1255,273"/>
+<area shape="rect" id="node9" href="$struct__PNR__AUDIO__STATUS.html" title=" " alt="" coords="1279,35,1441,244"/>
+<area shape="rect" id="node10" href="$struct__PNR__EJECT.html" title=" " alt="" coords="1477,42,1611,237"/>
+</map>

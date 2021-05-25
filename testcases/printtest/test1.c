@@ -1,7 +1,6 @@
 #include "smack.h"
 #include <stdlib.h>
 #include <memory.h>
-#include "TestIncl.h"
 
 
 int main(){

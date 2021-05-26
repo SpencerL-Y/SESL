@@ -162,7 +162,7 @@ void SmackInstGenerator::visitBasicBlock(llvm::BasicBlock &bb) {
   SDEBUG(errs() << "visitBasicBlock" << "\n");
   nextInst = bb.begin();
   currBlock = getBlock(&bb);
-  emit(Stmt::symbheap(se->getCurrSH()));
+  //emit(Stmt::symbheap(se->getCurrSH()));
   auto *F = bb.getParent();
   if (&bb == &F->getEntryBlock()) {
     for (auto &I : bb.getInstList()) {
@@ -235,6 +235,7 @@ void SmackInstGenerator::generateGotoStmts(
 
       } else {
         Block *b = createBlock();
+        // TODOsh: add the generation of CFG later
         annotate(inst, b);
         b->addStmt(Stmt::assume(condition));
         b->addStmt(Stmt::goto_({getBlock(target)->getName()}));
@@ -632,7 +633,7 @@ void SmackInstGenerator::visitCastInst(llvm::CastInst &I) {
   } 
   const Stmt* assignStmt = Stmt::assign(rep->expr(&I), E);
   emit(assignStmt);
-
+  /*
   if (I.getOpcode() == Instruction::BitCast){
     SDEBUG(errs() << "SE: Bitcast" << "\n");
     // TODOsh: only support int* to int*, extend to other sizes later.
@@ -654,7 +655,7 @@ void SmackInstGenerator::visitCastInst(llvm::CastInst &I) {
     // TODOsh: add implementation 
   } else {
     
-  }
+  }*/
 
   if (I.getOpcode() == Instruction::BitCast) {
     if (const Stmt *inverseAssume =
@@ -869,6 +870,7 @@ void SmackInstGenerator::visitCallInst(llvm::CallInst &ci) {
   } else {
     // TODOsh: check, add other function calls
     const Stmt* emitted = rep->call(f, ci);
+    /*
     const CallStmt* callstmt = (CallStmt*) emitted;
     if(!callstmt->getProc().compare("malloc")){
       SDEBUG(errs() << "SE CALL: malloc" << "\n");
@@ -891,7 +893,8 @@ void SmackInstGenerator::visitCallInst(llvm::CallInst &ci) {
     } else {
 
       emit(emitted);
-    }
+    }*/
+    emit(emitted);
   }
 
   if (f->isDeclaration()) {
@@ -924,8 +927,8 @@ bool isSourceLoc(const Stmt *stmt) {
 
 void SmackInstGenerator::visitDbgValueInst(llvm::DbgValueInst &dvi) {
   SDEBUG(errs() << "visitDbgValue" << "\n");
-  se->executeOther();
-  emit(Stmt::symbheap(se->getCurrSH()));
+  /*se->executeOther();
+  emit(Stmt::symbheap(se->getCurrSH()));*/
   processInstruction(dvi);
 
   if (SmackOptions::SourceLocSymbols) {

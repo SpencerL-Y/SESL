@@ -8,16 +8,24 @@ procedure {:entrypoint} main()
 {
   var $p0: ref;
   var $p1: ref;
-  var $p2: ref;
+  var $i2: i1;
+  var $p3: ref;
 $bb0:
-  SymbHeap(true|emp)
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
   call $p0 := malloc(4);
-  SymbHeap(true|emp # $p0 >--> 4 # Blk(($p0 + 1), (($p0 + 1) + 4)))
   $p1 := $bitcast.ref.ref($p0);
-  SymbHeap(true|emp # $p0 >--> 4 # Blk(($p0 + 1), (($p0 + 1) + 4)))
-  $p2 := $bitcast.ref.ref($p1);
-  call free_($p2);
+  $i2 := $eq.ref($p1, $0.ref);
+  assume {:branchcond $i2} true;
+  goto $bb1, $bb2;
+$bb1:
+  assume ($i2 == 1);
+  $p3 := $bitcast.ref.ref($p1);
+  call free_($p3);
+  goto $bb3;
+$bb2:
+  assume !(($i2 == 1));
+  goto $bb3;
+$bb3:
   $r := 0;
   return;
 }
@@ -45,7 +53,6 @@ axiom (__SMACK_static_init == $sub.ref(0, 6192));
 procedure  __SMACK_static_init()
 {
 $bb0:
-  SymbHeap(true|emp # $p0 >--> 4 # Blk(($p0 + 1), (($p0 + 1) + 4)))
   return;
 }
 procedure  boogie_si_record_ref(x: ref);

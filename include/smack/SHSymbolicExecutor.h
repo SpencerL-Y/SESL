@@ -5,6 +5,7 @@
 #include "llvm/IR/DebugInfo.h"
 #include "smack/AddTiming.h"
 #include "smack/Debug.h"
+#include "smack/BoogieAst.h"
 
 
 // This object is for dealing with symbolic execution
@@ -13,9 +14,10 @@ namespace smack{
     
     using llvm::errs;
     class SHSymbolicExecutor {
+        Program* program;
         SymbolicHeapExpr* currentSH;
     public:
-        SHSymbolicExecutor(SymbolicHeapExpr* csh) : currentSH(csh){}
+        SHSymbolicExecutor(SymbolicHeapExpr* csh, Program* p) : currentSH(csh), program(p){}
         void executeMalloc(std::string varName, const Expr* size);
         void executeFree(std::string varName);
         void executeCast(std::list<std::string> leftVarNames, std::list<std::string> rightVarNames);

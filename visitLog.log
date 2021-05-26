@@ -9,21 +9,18 @@ We are now translating the program to boogie...
  visitBasicBlock
  visitCall
  smackrep call
- SE CALL: malloc
- SE CALL: malloc $p0 1
- EXECUTE MALLOC
  visitCast
  visitCast not vector
- SE: Bitcast
- EXECUTE BITCAST
  visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
  visitCast
  visitCast not vector
- SE: Bitcast
- EXECUTE BITCAST
  visitCall
  smackrep call
- SE CALL: free_
+ visitBranch
+ visitBasicBlock
  visitReturn
  
  insert initial SH to main

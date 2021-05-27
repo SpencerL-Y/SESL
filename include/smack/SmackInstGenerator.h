@@ -28,7 +28,6 @@ private:
   SmackRep *rep;
   ProcDecl *proc;
   Naming *naming;
-  SHSymbolicExecutor *se;
 
   
 
@@ -57,8 +56,8 @@ public:
   void emit(const Stmt *s);
 
 public:
-  SmackInstGenerator(llvm::LoopInfo &LI, SmackRep *R, ProcDecl *P, Naming *N, SHSymbolicExecutor *SE)
-      : loops(LI), rep(R), proc(P), naming(N), se(SE) {}
+  SmackInstGenerator(llvm::LoopInfo &LI, SmackRep *R, ProcDecl *P, Naming *N)
+      : loops(LI), rep(R), proc(P), naming(N) {}
 
   void visitBasicBlock(llvm::BasicBlock &bb);
   void visitInstruction(llvm::Instruction &i);

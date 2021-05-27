@@ -138,8 +138,10 @@ add_library(smackTranslator STATIC
   include/smack/Prelude.h
   include/smack/SmackWarnings.h
   include/smack/SHSymbolicExecutor.h
-  include/smack/VarFactory.h
   include/smack/Solver.h
+  include/smack/CFG.h
+  include/smack/CFGState.h
+  include/smack/CFGEdge.h
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp
   lib/smack/BplFilePrinter.cpp
@@ -167,8 +169,10 @@ add_library(smackTranslator STATIC
   lib/smack/Prelude.cpp
   lib/smack/SmackWarnings.cpp
   lib/smack/SHSymbolicExecutor.cpp
-  lib/smack/VarFactory.cpp
   lib/smack/Solver.cpp
+  lib/smack/CFG.cpp
+  lib/smack/CFGState.cpp
+  lib/smack/CFGEdge.cpp
 )
 
 add_executable(llvm2bpl

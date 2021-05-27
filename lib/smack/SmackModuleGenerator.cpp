@@ -11,7 +11,6 @@
 #include "smack/SmackInstGenerator.h"
 #include "smack/SmackOptions.h"
 #include "smack/SmackRep.h"
-#include "smack/SHSymbolicExecutor.h"
 
 namespace smack {
 
@@ -38,9 +37,7 @@ void SmackModuleGenerator::generateProgram(llvm::Module &M) {
   SDEBUG(errs() << "We are now translating the program to boogie...\n");
   Naming naming;
   SmackRep rep(&M.getDataLayout(), &naming, program, &getAnalysis<Regions>());
-  //TODOsh: need to delete
-  SymbolicHeapExpr *initSH = SymbolicHeapExpr::emp_sh();
-  SHSymbolicExecutor* se = new SHSymbolicExecutor(initSH);
+
   std::list<Decl *> &decls = program->getDeclarations();
 
   SDEBUG(errs() << "Analyzing globals...\n");
@@ -78,7 +75,7 @@ void SmackModuleGenerator::generateProgram(llvm::Module &M) {
         
         SmackInstGenerator igen(
             getAnalysis<LoopInfoWrapperPass>(F).getLoopInfo(), &rep, P,
-            &naming, se);
+            &naming);
         SDEBUG(errs() << "Generating body for " << naming.get(F) << "\n");
         igen.visit(F);
         SDEBUG(errs() << "\n");

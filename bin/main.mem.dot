@@ -2,7 +2,4 @@ digraph unnamed {
 	graph [center=true, ratio=true, bgcolor=lightgray, fontname=Helvetica];
 	node  [fontname=Helvetica, fontsize=11];
 
-	Node0x2333b60 [shape=record,fillcolor=gray, style=filled,label="{\{void\}:H}"];
-	Node0x23074f0 [shape=plaintext, label ="  %1 = call noalias i8* @malloc(i64 4) #3, !dbg !13, !verifier.code !14"];
-	Node0x23074f0 -> Node0x2333b60[arrowtail=tee,label="0",fontsize=8,color=purple];
 }

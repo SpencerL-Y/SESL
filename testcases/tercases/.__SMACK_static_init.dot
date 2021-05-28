@@ -1,5 +1,5 @@
 digraph "CFG for '__SMACK_static_init' function" {
 	label="CFG for '__SMACK_static_init' function";
 
-	Node0x5628904b6260 [shape=record,label="{entry:\l  ret void\l}"];
+	Node0x559c672780d0 [shape=record,label="{entry:\l  ret void\l}"];
 }

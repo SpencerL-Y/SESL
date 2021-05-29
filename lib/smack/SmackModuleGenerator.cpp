@@ -96,6 +96,29 @@ void SmackModuleGenerator::generateProgram(llvm::Module &M) {
                     << "\n\n");
     }
 
+    // center_dev: generate CFG
+    for (auto &decl : program->getDeclarations()) {
+        SDEBUG(errs() << "center test decl: " << decl->getName() << " " << decl->getKind() << " " << Decl::Kind::PROCEDURE << "\n");
+        if (auto proc_decl = dyn_cast<ProcDecl>(decl)) {
+            for (auto& sb : proc_decl->getBlocks()) {
+                for (auto &stmt : sb->getStatements()) {
+                    if (stmt->getKind() != Stmt::Kind::GOTO) {
+                        continue;
+                    }
+                    if (auto goto_stmt = (GotoStmt*) stmt) {
+                        SDEBUG(errs() << "center test stmt： " << goto_stmt->getKind() << " " << Stmt::Kind::GOTO << "\n");
+                        auto& targets = goto_stmt->getTargets();
+                        SDEBUG(errs() << "from bb: " << sb->getName() << " to bb: ");
+                        for (auto &to_bb : targets) {
+                            SDEBUG(errs() << to_bb << " ");
+                        }
+                        SDEBUG(errs() << "\n");
+                    }
+                }
+            }
+        }
+    }
+
     // MODIFIES
     // ... to do below, after memory splitting is determined.
   }

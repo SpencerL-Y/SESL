@@ -533,6 +533,7 @@ class GotoStmt : public Stmt {
   std::list<std::string> targets;
 
 public:
+  std::list<std::string>& getTargets() {return targets;}
   GotoStmt(std::list<std::string> ts) : Stmt(GOTO), targets(ts) {}
   void print(std::ostream &os) const;
   static bool classof(const Stmt *S) { return S->getKind() == GOTO; }

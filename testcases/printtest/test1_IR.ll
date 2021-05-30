@@ -1,4 +1,4 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/bin/b-eqxk2vme.bc'
+; ModuleID = '/home/center/Documents/SmackBasedPrj/build/b-973_6f_d.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
@@ -46,13 +46,13 @@ attributes #3 = { nounwind }
 !llvm.ident = !{!6}
 !llvm.module.flags = !{!7, !8, !9}
 
-!0 = distinct !DICompileUnit(language: DW_LANG_C99, file: !1, producer: "clang version 10.0.0-4ubuntu1 ", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, enums: !2, retainedTypes: !3, splitDebugInlining: false, nameTableKind: None)
-!1 = !DIFile(filename: "../testcases/printtest/test1.c", directory: "/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/bin")
+!0 = distinct !DICompileUnit(language: DW_LANG_C99, file: !1, producer: "Ubuntu clang version 10.0.1-++20210313014558+ef32c611aa21-1~exp1~20210313125203.63", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, enums: !2, retainedTypes: !3, splitDebugInlining: false, nameTableKind: None)
+!1 = !DIFile(filename: "../testcases/printtest/test1.c", directory: "/home/center/Documents/SmackBasedPrj/build")
 !2 = !{}
 !3 = !{!4}
 !4 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !5, size: 64)
 !5 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
-!6 = !{!"clang version 10.0.0-4ubuntu1 "}
+!6 = !{!"Ubuntu clang version 10.0.1-++20210313014558+ef32c611aa21-1~exp1~20210313125203.63"}
 !7 = !{i32 7, !"Dwarf Version", i32 4}
 !8 = !{i32 2, !"Debug Info Version", i32 3}
 !9 = !{i32 1, !"wchar_size", i32 4}

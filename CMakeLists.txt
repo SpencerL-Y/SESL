@@ -203,8 +203,13 @@ set(CMAKE_BUILD_TYPE "Release")
 add_subdirectory(sea-dsa/lib/seadsa)
 set(CMAKE_BUILD_TYPE ${SMACK_BUILD_TYPE})
 
+set(SL_DIR ${PROJECT_SOURCE_DIR}/include)
+set(SL_LIB /usr/local/lib)
+include_directories(${SL_DIR})
+link_directories(${SL_LIB})
+
 target_link_libraries(smackTranslator ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS} ${Z3_LIBRARIES})
-target_link_libraries(llvm2bpl smackTranslator utils SeaDsaAnalysis)
+target_link_libraries(llvm2bpl smackTranslator utils SeaDsaAnalysis ${SL_LIB}/libslah.so ${SL_LIB}/libz3.so)
 
 INSTALL(TARGETS llvm2bpl
   RUNTIME DESTINATION bin

@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <map>
 #include <string>
+#include <algorithm>
+#include <unistd.h>
 #include "BoogieAst.h"
 #include "CFGState.h"
 #include "CFGEdge.h"

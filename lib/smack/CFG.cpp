@@ -4,7 +4,7 @@
 #include <iostream>
 #include <llvm/Support/Casting.h>
 
-#define CENTER_DEBUG 0
+#define CENTER_DEBUG 1
 using namespace std;
 namespace smack
 {
@@ -80,22 +80,43 @@ namespace smack
         buildCFG();
     }
 
+    // fengwz: 
+    // if no successor: print path and pop current bb state to find other path;
+    // else: if no loop, increase path; else, print path with duplicate bb state and pop current bb state.
     void CFG::printCFG(const std::string& start) {
         static vector<std::string> path;
         auto statePtr = getState(start);
         if (nullptr == statePtr) return;
+        std::cout << "push: " << start << endl;
         path.push_back(start);
-        for (const auto& it: statePtr->edges) {
-            printCFG(it.first);
-        }
         if (statePtr->edges.empty()) {
             cout << path[0];
             for (int i = 1; i < path.size(); ++ i) {
-                cout << " ->" << path[i];
+                cout << " -> " << path[i];
+                // sleep(1);
             }
             cout << endl;
+            path.pop_back();
         }
-        path.pop_back();
+        else {
+            for (const auto& it: statePtr->edges) {
+                vector<std::string>::iterator iter = find(path.begin(), path.end(), it.first);
+                if (iter == path.end()) {
+                    printCFG(it.first);
+                }
+                else {
+                    cout << path[0];
+                    for (int i = 1; i < path.size(); ++ i) {
+                        cout << " -> " << path[i];
+                        sleep(1);
+                    }
+                    cout << " -> " << it.first;
+                    cout << endl;
+                    path.pop_back();
+                    return;
+                } 
+            }
+        }
     }
 
 

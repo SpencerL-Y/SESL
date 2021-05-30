@@ -11,6 +11,7 @@
 #include "smack/SmackInstGenerator.h"
 #include "smack/SmackOptions.h"
 #include "smack/SmackRep.h"
+#include "smack/CFG.h"
 
 namespace smack {
 
@@ -33,7 +34,7 @@ bool SmackModuleGenerator::runOnModule(llvm::Module &m) {
 }
 
 void SmackModuleGenerator::generateProgram(llvm::Module &M) {
-  
+
   SDEBUG(errs() << "We are now translating the program to boogie...\n");
   Naming naming;
   SmackRep rep(&M.getDataLayout(), &naming, program, &getAnalysis<Regions>());
@@ -96,6 +97,19 @@ void SmackModuleGenerator::generateProgram(llvm::Module &M) {
     // MODIFIES
     // ... to do below, after memory splitting is determined.
   }
+
+    // center_dev: generate CFG
+    std::unordered_map<std::string, CFGPtr> CFGs;
+    for (auto &decl : program->getDeclarations()) {
+        if (auto proc_decl = dyn_cast<ProcDecl>(decl)) {
+            auto cfg = std::make_shared<CFG>(proc_decl);
+            CFGs[proc_decl->getName()] = cfg;
+        }
+    }
+    for (auto &it : CFGs) {
+        std::cout << "Printing cfg of procedure " << it.first << "\n";
+        it.second->printCFG();
+    }
 
   auto ds = rep.auxiliaryDeclarations();
   decls.insert(decls.end(), ds.begin(), ds.end());

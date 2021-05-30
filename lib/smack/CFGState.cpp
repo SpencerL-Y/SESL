@@ -1,12 +1,20 @@
 #include "smack/CFGState.h"
 
+#include <utility>
+
 namespace smack
 {
-    CFGState::CFGState(/* args */)
-    {
+
+    void CFGState::addEdge(const EdgePtr& edgePtr) {
+        auto blockName = edgePtr->getToState().lock()->getBlockName();
+        addEdge(blockName, edgePtr);
     }
-    
-    CFGState::~CFGState()
-    {
+
+    void CFGState::addEdge(const std::string& blockName, EdgePtr edgePtr) {
+        edges[blockName] = std::move(edgePtr);
+    }
+
+    std::string CFGState::getBlockName() {
+        return stateBlock->getName();
     }
 } // namespace smack

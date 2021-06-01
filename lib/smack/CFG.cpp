@@ -84,7 +84,6 @@ namespace smack
     // fengwz: 
     // if no successor: print path and pop current bb state to find other path;
     // else: if no loop, increase path; else, print path with duplicate bb state and pop current bb state.
-
     //center Modify: use unorderd_set to mark if the block was visited
     void CFG::printCFG(const std::string& start, bool fresh) {
         static vector<std::string> path;

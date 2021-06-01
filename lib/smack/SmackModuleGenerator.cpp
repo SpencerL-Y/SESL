@@ -12,6 +12,7 @@
 #include "smack/SmackOptions.h"
 #include "smack/SmackRep.h"
 #include "smack/CFG.h"
+#include "smack/Lasso.h"
 
 namespace smack {
 
@@ -109,6 +110,13 @@ void SmackModuleGenerator::generateProgram(llvm::Module &M) {
     for (auto &it : CFGs) {
         std::cout << "Printing cfg of procedure " << it.first << "\n";
         it.second->printCFG();
+
+        // fengwz: sample k traces
+        LassoPtr lpt = make_shared<Lasso>(it.second);
+        for (int i = 0; i < 5; i++) {
+          lpt->sampleLasso();
+          lpt->printLasso();
+        } 
     }
 
   auto ds = rep.auxiliaryDeclarations();

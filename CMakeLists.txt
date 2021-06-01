@@ -142,6 +142,7 @@ add_library(smackTranslator STATIC
   include/smack/CFG.h
   include/smack/CFGState.h
   include/smack/CFGEdge.h
+  include/smack/Lasso.h
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp
   lib/smack/BplFilePrinter.cpp
@@ -173,6 +174,7 @@ add_library(smackTranslator STATIC
   lib/smack/CFG.cpp
   lib/smack/CFGState.cpp
   lib/smack/CFGEdge.cpp
+  lib/smack/Lasso.cpp
 )
 
 add_executable(llvm2bpl

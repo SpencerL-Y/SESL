@@ -24,6 +24,7 @@ namespace smack
         explicit CFGState(Block* block = nullptr) : stateBlock(block) {}
         void addEdge(const EdgePtr& edgePtr);
         void addEdge(const std::string& blockName, EdgePtr edgePtr);
+        std::unordered_map<std::string, EdgePtr> getEdges() {return this->edges;};
         std::string getBlockName();
         ~CFGState() = default;
     };

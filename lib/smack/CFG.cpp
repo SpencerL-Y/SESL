@@ -127,6 +127,9 @@ namespace smack
         is_visited.erase(start);
     }
 
+    void CFG::printCFG() {
+        printCFG("$bb0", true);
+    }
 
 
 } // namespace name

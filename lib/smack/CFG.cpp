@@ -2,9 +2,10 @@
 #include "smack/CFG.h"
 #include "smack/SmackModuleGenerator.h"
 #include <iostream>
+#include <unordered_set>
 #include <llvm/Support/Casting.h>
 
-#define CENTER_DEBUG 1
+#define CENTER_DEBUG 0
 using namespace std;
 namespace smack
 {
@@ -83,40 +84,47 @@ namespace smack
     // fengwz: 
     // if no successor: print path and pop current bb state to find other path;
     // else: if no loop, increase path; else, print path with duplicate bb state and pop current bb state.
-    void CFG::printCFG(const std::string& start) {
+
+    //center Modify: use unorderd_set to mark if the block was visited
+    void CFG::printCFG(const std::string& start, bool fresh) {
         static vector<std::string> path;
+        static unordered_set<std::string> is_visited;
+        if (fresh) {
+            is_visited.clear();
+        }
         auto statePtr = getState(start);
         if (nullptr == statePtr) return;
-        std::cout << "push: " << start << endl;
         path.push_back(start);
+        is_visited.insert(start);
         if (statePtr->edges.empty()) {
             cout << path[0];
             for (int i = 1; i < path.size(); ++ i) {
                 cout << " -> " << path[i];
-                // sleep(1);
             }
             cout << endl;
-            path.pop_back();
-        }
-        else {
-            for (const auto& it: statePtr->edges) {
-                vector<std::string>::iterator iter = find(path.begin(), path.end(), it.first);
-                if (iter == path.end()) {
-                    printCFG(it.first);
-                }
-                else {
-                    cout << path[0];
-                    for (int i = 1; i < path.size(); ++ i) {
-                        cout << " -> " << path[i];
-                        sleep(1);
+        } else {
+            for (auto& to : statePtr->edges) {
+                if (is_visited.count(to.first)) {
+                    cout << "Found loop. " << endl;
+                    cout << "Standard: ";
+                    int i = 0;
+                    while(path[i] != to.first) {
+                        cout << path[i] << " ";
+                        i ++;
                     }
-                    cout << " -> " << it.first;
+                    cout << " Loop: ";
+                    while(i < path.size()) {
+                        cout << path[i] << " ";
+                        i ++;
+                    }
                     cout << endl;
-                    path.pop_back();
-                    return;
-                } 
+                    continue;
+                }
+                printCFG(to.first, false);
             }
         }
+        path.pop_back();
+        is_visited.erase(start);
     }
 
 

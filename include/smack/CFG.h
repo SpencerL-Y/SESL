@@ -20,6 +20,7 @@ namespace smack
         /* data */
         ProcDecl* proc;
         std::unordered_map<std::string, StatePtr> states;
+        void printCFG(const std::string& start, bool fresh = true);
     public:
         explicit CFG(ProcDecl* procDecl = nullptr);
         void setProc(ProcDecl* procDecl);
@@ -28,7 +29,7 @@ namespace smack
         StatePtr getState(const std::string& blockName, Block* block = nullptr);
         StatePtr createState(Block* block);
         static EdgePtr createEdge(const StatePtr& fromState, const StatePtr& toState);
-        void printCFG(const std::string& start = "$bb0");
+        void printCFG();
         ~CFG() = default;
     };
     typedef std::shared_ptr<CFG> CFGPtr;

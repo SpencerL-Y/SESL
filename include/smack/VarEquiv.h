@@ -1,7 +1,11 @@
 #ifndef VAREQUIV_H
 #define VAREQUIV_H
 #include "BoogieAst.h"
-
+#include <stdlib.h>
+#include <string>
+#include <map>
+#include <iostream>
+#include <cstdlib>
 
 namespace smack
 {
@@ -9,19 +13,17 @@ namespace smack
     class VarEquiv
     {
     private:
-        /* data */
+        std::map<std::string, std::string> name2Alloc;
     public:
-        VarEquiv(/* args */);
-        ~VarEquiv();
+        VarEquiv(/* args */){};
+        ~VarEquiv() {};
+        void addNewName(std::string name);
+        void linkName(std::string newname, std::string oldname);
+        std::string getAllocName(std::string name);
+
+
     };
-    
-    VarEquiv::VarEquiv(/* args */)
-    {
-    }
-    
-    VarEquiv::~VarEquiv()
-    {
-    }
+    typedef std::shared_ptr<VarEquiv> VarEquivPtr;
     
 } // namespace smack
 

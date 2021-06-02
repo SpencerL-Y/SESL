@@ -43,6 +43,7 @@
 #include "smack/SmackOptions.h"
 #include "smack/SplitAggregateValue.h"
 #include "smack/VerifierCodeMetadata.h"
+#include "smack/MemSafeVerifier.h"
 #include "utils/Devirt.h"
 #include "utils/InitializePasses.h"
 #include "utils/MergeGEP.h"
@@ -267,6 +268,7 @@ int main(int argc, char **argv) {
     files.push_back(F);
     // TODOsh: currently the symbolic execution is in this pass
     pass_manager.add(new smack::SmackModuleGenerator());
+    pass_manager.add(new smack::MemSafeVerifier());
     pass_manager.add(new smack::BplFilePrinter(F->os()));
   }
 

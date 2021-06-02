@@ -13,7 +13,7 @@ namespace smack
     public:
         static char ID;
         MemSafeVerifier(/* args */) : llvm::ModulePass(ID){};
-        ~MemSafeVerifier();
+        ~MemSafeVerifier(){};
         virtual bool runOnModule(llvm::Module &m);
         virtual llvm::StringRef getPassName() const { return "MemSafeVerifier"; }
         virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;

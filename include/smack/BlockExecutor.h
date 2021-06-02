@@ -19,8 +19,9 @@ namespace smack{
     class BlockExecutor {
         Program* program;
         Block* currentBlock;
+        VarEquivPtr varEquiv;
     public:
-        BlockExecutor(Program* p) : program(p), currentBlock(nullptr) {}
+        BlockExecutor(Program* p, Block* cb, VarEquivPtr vars) : program(p), currentBlock(cb), varEquiv(vars) {}
         std::shared_ptr<SymbolicHeapExpr>\
         executeMalloc\
         (std::shared_ptr<SymbolicHeapExpr> sh, Stmt* stmt);
@@ -47,6 +48,7 @@ namespace smack{
         void setBlock(Block* block){ currentBlock = block; }
 
     };
+    typedef std::shared_ptr<BlockExecutor> BlockExecutorPtr;
 }
 
 

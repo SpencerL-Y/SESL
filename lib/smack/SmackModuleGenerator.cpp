@@ -107,6 +107,7 @@ void SmackModuleGenerator::generateProgram(llvm::Module &M) {
             CFGs[proc_decl->getName()] = cfg;
         }
     }
+    // XIE LI: do not do the analysis here, the cfgs will be stored as an attribute into the class, use getAnalysis<Passname> method in the analysis pass of your own. See MemSafeVeriferPass
     for (auto &it : CFGs) {
         std::cout << "Printing cfg of procedure " << it.first << "\n";
         it.second->printCFG();

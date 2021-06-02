@@ -1,5 +1,5 @@
-#ifndef SHSYMBOLICEXECUTOR_H
-#define SHSYMBOLICEXECUTOR_H
+#ifndef BLOCKEXECUTOR_H
+#define BLOCKEXECUTOR_H
 #include <z3++.h>
 
 #include <utility>
@@ -16,11 +16,11 @@
 namespace smack{
     
     using llvm::errs;
-    class SHSymbolicExecutor {
+    class BlockExecutor {
         Program* program;
         Block* currentBlock;
     public:
-        SHSymbolicExecutor(Program* p) : program(p), currentBlock(nullptr) {}
+        BlockExecutor(Program* p) : program(p), currentBlock(nullptr) {}
         std::shared_ptr<SymbolicHeapExpr>\
         executeMalloc\
         (std::shared_ptr<SymbolicHeapExpr> sh, Stmt* stmt);
@@ -36,7 +36,13 @@ namespace smack{
         std::shared_ptr<SymbolicHeapExpr>\ 
         executeOther\
         (std::shared_ptr<SymbolicHeapExpr> sh, Stmt* stmt);
-        
+
+        // symbolic execution for current block and results in and symbolic heap.
+        std::shared_ptr<SymbolicHeapExpr>\
+        execute\
+        (std::shared_ptr<SymbolicHeapExpr> initialSh);
+
+
         Block* getBlock(){ return currentBlock; }
         void setBlock(Block* block){ currentBlock = block; }
 

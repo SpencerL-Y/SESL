@@ -137,7 +137,7 @@ add_library(smackTranslator STATIC
   include/smack/SplitAggregateValue.h
   include/smack/Prelude.h
   include/smack/SmackWarnings.h
-  include/smack/SHSymbolicExecutor.h
+  include/smack/BlockExecutor.h
   include/smack/Solver.h
   include/smack/CFG.h
   include/smack/CFGState.h
@@ -171,7 +171,7 @@ add_library(smackTranslator STATIC
   lib/smack/SplitAggregateValue.cpp
   lib/smack/Prelude.cpp
   lib/smack/SmackWarnings.cpp
-  lib/smack/SHSymbolicExecutor.cpp
+  lib/smack/BlockExecutor.cpp
   lib/smack/Solver.cpp
   lib/smack/CFG.cpp
   lib/smack/CFGState.cpp

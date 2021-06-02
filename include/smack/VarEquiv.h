@@ -5,7 +5,7 @@
 
 namespace smack
 {
-    // This is a data structure used to store the e
+    // This is a data structure used to store all the 
     class VarEquiv
     {
     private:

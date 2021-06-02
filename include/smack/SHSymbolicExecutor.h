@@ -1,6 +1,8 @@
 #ifndef SHSYMBOLICEXECUTOR_H
 #define SHSYMBOLICEXECUTOR_H
 #include <z3++.h>
+
+#include <utility>
 #include "BoogieAst.h"
 #include "llvm/IR/DebugInfo.h"
 #include "smack/AddTiming.h"
@@ -18,12 +20,26 @@ namespace smack{
         Program* program;
         Block* currentBlock;
     public:
-        // initially set the currentBlock to nullptr
-        SHSymbolicExecutor(Program* p) : program(p), currentBlock(nullptr){}
-        SymbolicHeapExprPtr executeMalloc(SymbolicHeapExprPtr sh, Stmt* stmt);
-        SymbolicHeapExprPtr executeFree(std::string varName);
-        void executeOther();
-        SymbolicHeapExpr* getCurrSH();
+        SHSymbolicExecutor(Program* p) : program(p), currentBlock(nullptr) {}
+        std::shared_ptr<SymbolicHeapExpr>\
+        executeMalloc\
+        (std::shared_ptr<SymbolicHeapExpr> sh, Stmt* stmt);
+
+        std::shared_ptr<SymbolicHeapExpr>\ 
+        executeFree\
+        (std::shared_ptr<SymbolicHeapExpr> sh, Stmt* stmt);
+
+        std::shared_ptr<SymbolicHeapExpr>\ 
+        executeCast\
+        (std::shared_ptr<SymbolicHeapExpr> sh, Stmt* stmt);
+
+        std::shared_ptr<SymbolicHeapExpr>\ 
+        executeOther\
+        (std::shared_ptr<SymbolicHeapExpr> sh, Stmt* stmt);
+        
+        Block* getBlock(){ return currentBlock; }
+        void setBlock(Block* block){ currentBlock = block; }
+
     };
 }
 

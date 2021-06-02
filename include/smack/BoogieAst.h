@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace smack {
 
@@ -353,19 +354,18 @@ public:
 class SymbolicHeapExpr : public Expr {
   const Expr *pure;
   std::list<const SpatialLiteral*> spatialExpr;
-
+  typedef std::shared_ptr<SymbolicHeapExpr> SHExprPtr;
 public: 
-  SymbolicHeapExpr(const Expr* p, std::list<const SpatialLiteral*> splist) : pure(p), spatialExpr(splist){}
+  SymbolicHeapExpr(const Expr* p, std::list<const SpatialLiteral*> splist) : pure(p), spatialExpr(std::move(splist)){}
   const Expr* getPure() const { return this->pure;}
   std::list<const SpatialLiteral*> getSpatialExpr() const { return this->spatialExpr;}
   void print(std::ostream &os) const;
   void addSpatialLit(const SpatialLiteral* spatialLit);
 
-  static SymbolicHeapExpr* sh_and(SymbolicHeapExpr* first, SymbolicHeapExpr* second);
-  static SymbolicHeapExpr* emp_sh();
+  static SHExprPtr sh_and(SHExprPtr first, SHExprPtr second);
+  static SHExprPtr emp_sh();
 
   ExprType getType() const { return ExprType::SH;}
-
 
 };
 

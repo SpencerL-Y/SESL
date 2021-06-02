@@ -14,10 +14,10 @@ namespace smack{
         const SpatialLiteral* blkLit = SpatialLiteral::blk(fromExpr, toExpr);
         mallocList.push_back(sizePt);
         mallocList.push_back(blkLit);
-        SymbolicHeapExpr* appendSH = new SymbolicHeapExpr(Expr::lit(true), mallocList);
-        SymbolicHeapExpr* sh = SymbolicHeapExpr::sh_and(this->currentSH, appendSH);
+        auto appendSH = std::make_shared<SymbolicHeapExpr>(Expr::lit(true), mallocList);
+        std::shared_ptr<SymbolicHeapExpr> sh = SymbolicHeapExpr::sh_and(this->currentSH, appendSH);
+        this->currentSH.reset();
         this->currentSH = sh;
-        
     }
 
     void SHSymbolicExecutor::executeFree(std::string varName){
@@ -31,7 +31,8 @@ namespace smack{
         if(leftVarNames.size() == 1 && rightVarNames.size() == 1){
             // ONLY able to deal with bitcast between two reference variables
             const Expr* addedPure = Expr::eq(new VarExpr(leftVarNames.front()), new VarExpr(rightVarNames.front()));
-            SymbolicHeapExpr* sh = new SymbolicHeapExpr(Expr::and_(this->currentSH->getPure(), addedPure), this->currentSH->getSpatialExpr());
+            std::shared_ptr<SymbolicHeapExpr> sh = std::make_shared<SymbolicHeapExpr>(Expr::and_(this->currentSH->getPure(), addedPure), this->currentSH->getSpatialExpr());
+            this->currentSH.reset();
             this->currentSH = sh;
         } else {
             // current not solved.
@@ -43,7 +44,7 @@ namespace smack{
         // do nothing
     }
 
-    SymbolicHeapExpr *SHSymbolicExecutor::getCurrSH(){
+    std::shared_ptr<SymbolicHeapExpr> SHSymbolicExecutor::getCurrSH(){
         return this->currentSH;
     }
 }

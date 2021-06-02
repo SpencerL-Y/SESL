@@ -544,7 +544,7 @@ void BlkLit::print(std::ostream &os) const {
   os << "Blk(" << from << ", " << to << ")";
 }
 
-SymbolicHeapExpr* SymbolicHeapExpr::sh_and(SymbolicHeapExpr* first, SymbolicHeapExpr* second){
+std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_and(SHExprPtr first, SHExprPtr second){
   const Expr* newPure;
   if(second->getPure()->getType() == ExprType::BOOL){
     if(((const BoolLit*)second->getPure())->getVal()){
@@ -555,7 +555,7 @@ SymbolicHeapExpr* SymbolicHeapExpr::sh_and(SymbolicHeapExpr* first, SymbolicHeap
   }
 
   std::list<const SpatialLiteral*> splist;
-  SymbolicHeapExpr* result = new SymbolicHeapExpr(newPure, splist);
+  auto result = std::make_shared<SymbolicHeapExpr>(newPure, splist);
   for(const SpatialLiteral* spl :  first->getSpatialExpr()){
     result->addSpatialLit(spl);
   }
@@ -565,10 +565,10 @@ SymbolicHeapExpr* SymbolicHeapExpr::sh_and(SymbolicHeapExpr* first, SymbolicHeap
   return result;
 }
 
-SymbolicHeapExpr* SymbolicHeapExpr::emp_sh(){
+std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::emp_sh(){
   const BoolLit* trueExpr = new BoolLit(true);
   std::list<const SpatialLiteral*> splist;
-  SymbolicHeapExpr* empsh = new SymbolicHeapExpr(trueExpr, splist);
+  SHExprPtr empsh = std::make_shared<SymbolicHeapExpr>(trueExpr, splist);
   empsh->addSpatialLit(SpatialLiteral::emp());
   return empsh;
 }

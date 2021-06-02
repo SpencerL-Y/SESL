@@ -14,6 +14,9 @@
 #include "smack/CFG.h"
 #include "smack/Lasso.h"
 
+#include <stdlib.h>
+#include <iostream>
+
 namespace smack {
 
 llvm::RegisterPass<SmackModuleGenerator> X("smack", "SMACK generator pass");

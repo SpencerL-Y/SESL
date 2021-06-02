@@ -12,7 +12,7 @@ namespace smack {
     char MemSafeVerifier::ID = 1;
 
     void MemSafeVerifier::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
-        AU.setPreserveAll();
+        AU.setPreservesAll();
         AU.addRequired<SmackModuleGenerator>();
     }
 

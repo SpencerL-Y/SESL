@@ -8,8 +8,6 @@
 #include "llvm/IR/InstVisitor.h"
 #include <set>
 #include <unordered_set>
-#include "SHSymbolicExecutor.h"
-
 namespace smack {
 
 class Naming;

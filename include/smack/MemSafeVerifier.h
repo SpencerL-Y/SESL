@@ -2,14 +2,14 @@
 #define MEMSAFEVERIFIER_H
 
 #include "llvm/Pass.h"
-#include "smack/SHSymbolicExecutor.h"
+#include "BlockExecutor.h"
 
 namespace smack
 {
     class MemSafeVerifier : public llvm::ModulePass
     {
     private:
-        SHSymbolicExecutor
+        
     public:
         static char ID;
         MemSafeVerifier(/* args */) : llvm::ModulePass(ID){};

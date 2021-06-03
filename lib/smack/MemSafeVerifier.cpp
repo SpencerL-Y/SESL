@@ -33,15 +33,42 @@ namespace smack {
         } 
         CFGPtr mainGraph = CFGs["main"];
         mainGraph->printCFG();
-        std::cout << "000000000 PRINT THE DETAILED STMTs" << std::endl;
+        std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
         Block* block = mainGraph->getState("$bb0")->getStateBlock();
         std::cout << "Block stmt num: " << block->getStatements().size() << std::endl;
         for(auto i : block->getStatements()){
             i->print(std::cout);
             std::cout << std::endl;
         }
-        
-        
+        std::cout << "=========== END PRINT THE DETAILED STMTs" << std::endl;
+        std::cout << "=========== DO SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
+        // Initialize the equivalent class for allocation
+        VarEquivPtr allocEquiv = std::make_shared<VarEquiv>();
+        // Initialize a block executor
+        BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, block, allocEquiv);
+        // initial pure formula 
+        const Expr* boolTrue = Expr::lit(true);
+        // initial list of spatial lits
+        std::list<const SpatialLiteral*> splist;
+        const SpatialLiteral* emp = SpatialLiteral::emp();
+        splist.push_back(emp);
+        // initialization for the symbolic heap
+        SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(boolTrue, splist);
+        // new Statementlist
+        StatementList newStmts;
+        // Add initial symbolic heap
+        newStmts.push_back(Stmt::symbheap(initSH));
+        SHExprPtr currSH = initSH;
+        for(const Stmt* i : block->getStatements()){
+            // for each stmt in the program, put it in the new list and execute to get resulting symbolic heap
+            newStmts.push_back(i);
+            SHExprPtr currSH = be->execute(currSH, i);
+
+        }
+
+        be->setBlock(block);
+
+        std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
         return false;
     }

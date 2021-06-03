@@ -432,7 +432,7 @@ public:
   static const Stmt *assume(const Expr *e);
   static const Stmt *assume(const Expr *e, const Attr *attr);
   //TODOsh: add implementation for the function
-  static const Stmt *symbheap(SymbolicHeapExpr *sh);
+  static const Stmt *symbheap(SHExprPtr sh);
   static const Stmt *
   call(std::string p, std::list<const Expr *> args = std::list<const Expr *>(),
        std::list<std::string> rets = std::list<std::string>(),
@@ -493,10 +493,10 @@ public:
 // Symbolic Heap Statement
 // TODOsh: check
 class SHStmt : public Stmt {
-  SymbolicHeapExpr* symbheap;
+  SHExprPtr symbheap;
 
 public:
-  SHStmt(SymbolicHeapExpr* sh) : Stmt(SH), symbheap(sh){}
+  SHStmt(SHExprPtr sh) : Stmt(SH), symbheap(sh){}
   void print(std::ostream &os) const;
   static bool classof(const Stmt *S){
     return S->getKind() == SH;
@@ -676,14 +676,14 @@ class Block {
   std::string name;
   typedef std::list<const Stmt *> StatementList;
   StatementList stmts;
-
+  bool executed;
 public:
   static Block *
   block(std::string n = "",
         std::list<const Stmt *> stmts = std::list<const Stmt *>()) {
     return new Block(n, stmts);
   }
-  Block(std::string n, std::list<const Stmt *> stmts) : name(n), stmts(stmts) {}
+  Block(std::string n, std::list<const Stmt *> stmts) : name(n), stmts(stmts) {executed = false;}
   void print(std::ostream &os) const;
   typedef StatementList::iterator iterator;
   iterator begin() { return stmts.begin(); }
@@ -692,7 +692,11 @@ public:
   void insert(const Stmt *s) { stmts.insert(stmts.begin(), s); }
   void addStmt(const Stmt *s) { stmts.push_back(s); }
   std::string getName() { return name; }
+  void setExecuted();
+  bool isExecuted() { return this->executed; };
 };
+
+typedef std::list<const Stmt*> StatementList;
 
 class CodeContainer {
 protected:

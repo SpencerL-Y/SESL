@@ -192,7 +192,7 @@ const Stmt *Stmt::assume(const Expr *e, const Attr *a) {
   return (const AssumeStmt *)s;
 }
 //TODOsh: stmt modify later
-const Stmt *Stmt::symbheap(SymbolicHeapExpr *sh){
+const Stmt *Stmt::symbheap(SHExprPtr sh){
   SHStmt *s = new SHStmt(sh);
   return s;
 }

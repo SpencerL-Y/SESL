@@ -22,16 +22,19 @@ namespace smack{
         VarEquivPtr varEquiv;
     public:
         BlockExecutor(Program* p, Block* cb, VarEquivPtr vars) : program(p), currentBlock(cb), varEquiv(vars) {}
-        SHExprPtr executeMalloc(SHExprPtr sh, Stmt* stmt);
 
-        SHExprPtr executeFree(SHExprPtr sh, Stmt* stmt);
+        SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
 
-        SHExprPtr executeCast(SHExprPtr sh, Stmt* stmt);
+        SHExprPtr executeMalloc(SHExprPtr sh, const Stmt* stmt);
 
-        SHExprPtr executeOther(SHExprPtr sh, Stmt* stmt);
+        SHExprPtr executeFree(SHExprPtr sh, const Stmt* stmt);
+
+        SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
+
+        SHExprPtr executeOther(SHExprPtr sh, const Stmt* stmt);
 
         // symbolic execution for current block and results in and symbolic heap.
-        SHExprPtr execute(SHExprPtr initialSh);
+        SHExprPtr execute(SHExprPtr initialSh, const Stmt* stmt);
 
 
         Block* getBlock(){ return currentBlock; }

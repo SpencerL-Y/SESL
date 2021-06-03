@@ -25,6 +25,7 @@ namespace smack
         void addEdge(const EdgePtr& edgePtr);
         void addEdge(const std::string& blockName, EdgePtr edgePtr);
         std::unordered_map<std::string, EdgePtr> getEdges() {return this->edges;};
+        Block* getStateBlock() { return this->stateBlock;}
         std::string getBlockName();
         ~CFGState() = default;
     };

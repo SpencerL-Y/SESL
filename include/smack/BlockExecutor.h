@@ -22,26 +22,16 @@ namespace smack{
         VarEquivPtr varEquiv;
     public:
         BlockExecutor(Program* p, Block* cb, VarEquivPtr vars) : program(p), currentBlock(cb), varEquiv(vars) {}
-        std::shared_ptr<SymbolicHeapExpr>\
-        executeMalloc\
-        (std::shared_ptr<SymbolicHeapExpr> sh, Stmt* stmt);
+        SHExprPtr executeMalloc(SHExprPtr sh, Stmt* stmt);
 
-        std::shared_ptr<SymbolicHeapExpr>\ 
-        executeFree\
-        (std::shared_ptr<SymbolicHeapExpr> sh, Stmt* stmt);
+        SHExprPtr executeFree(SHExprPtr sh, Stmt* stmt);
 
-        std::shared_ptr<SymbolicHeapExpr>\ 
-        executeCast\
-        (std::shared_ptr<SymbolicHeapExpr> sh, Stmt* stmt);
+        SHExprPtr executeCast(SHExprPtr sh, Stmt* stmt);
 
-        std::shared_ptr<SymbolicHeapExpr>\ 
-        executeOther\
-        (std::shared_ptr<SymbolicHeapExpr> sh, Stmt* stmt);
+        SHExprPtr executeOther(SHExprPtr sh, Stmt* stmt);
 
         // symbolic execution for current block and results in and symbolic heap.
-        std::shared_ptr<SymbolicHeapExpr>\
-        execute\
-        (std::shared_ptr<SymbolicHeapExpr> initialSh);
+        SHExprPtr execute(SHExprPtr initialSh);
 
 
         Block* getBlock(){ return currentBlock; }

@@ -356,7 +356,7 @@ class SymbolicHeapExpr : public Expr {
   std::list<const SpatialLiteral*> spatialExpr;
   typedef std::shared_ptr<SymbolicHeapExpr> SHExprPtr;
 public: 
-  SymbolicHeapExpr(const Expr* p, std::list<const SpatialLiteral*> splist) : pure(p), spatialExpr(std::move(splist)){}
+  SymbolicHeapExpr(const Expr* p, std::list<const SpatialLiteral*> splist) : pure(p), spatialExpr(splist){}
   const Expr* getPure() const { return this->pure;}
   std::list<const SpatialLiteral*> getSpatialExpr() const { return this->spatialExpr;}
   void print(std::ostream &os) const;
@@ -369,6 +369,7 @@ public:
 
 };
 
+typedef std::shared_ptr<SymbolicHeapExpr> SHExprPtr;
 
 
 class Attr {

@@ -18,6 +18,7 @@ namespace smack {
     }
 
     bool MemSafeVerifier::runOnModule(llvm::Module &m){
+        std::cout << "-----------------START MEMSAFE ANALYSIS---------------" << std::endl;
         SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
         Program* program = smackGen.getProgram();
         // TODO: add the checking here.
@@ -32,7 +33,16 @@ namespace smack {
         } 
         CFGPtr mainGraph = CFGs["main"];
         mainGraph->printCFG();
-        std::cout << "running module end" << std::endl;
+        std::cout << "000000000 PRINT THE DETAILED STMTs" << std::endl;
+        Block* block = mainGraph->getState("$bb0")->getStateBlock();
+        std::cout << "Block stmt num: " << block->getStatements().size() << std::endl;
+        for(auto i : block->getStatements()){
+            i->print(std::cout);
+            std::cout << std::endl;
+        }
+        
+        
+        std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
         return false;
     }
 }

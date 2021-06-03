@@ -16,7 +16,7 @@
 
 #include <stdlib.h>
 #include <iostream>
-
+#define CENTER_DEBUG 1
 namespace smack {
 
 llvm::RegisterPass<SmackModuleGenerator> X("smack", "SMACK generator pass");
@@ -108,6 +108,24 @@ void SmackModuleGenerator::generateProgram(llvm::Module &M) {
         if (auto proc_decl = dyn_cast<ProcDecl>(decl)) {
             auto cfg = std::make_shared<CFG>(proc_decl);
             CFGs[proc_decl->getName()] = cfg;
+#if CENTER_DEBUG
+            cfg->printCFG();
+#endif
+            auto v = cfg->getStates();
+            for (auto &sPtr : v) {
+                sPtr->setCFG(cfg);
+#if CENTER_DEBUG
+                std::cout << sPtr->getBlockName() << ": " << std::endl << "predecessor: ";
+                for (auto p : sPtr->getPredecessors()) {
+                    std::cout << p.lock()->getBlockName() << " ";
+                }
+                std::cout << std::endl << "successors： ";
+                for (auto p : sPtr->getSuccessors()) {
+                    std::cout << p.lock()->getBlockName() << " ";
+                }
+                std::cout << std::endl;
+#endif
+            }
         }
     }
     // XIE LI: do not do the analysis here, the cfgs will be stored as an attribute into the class, use getAnalysis<Passname> method in the analysis pass of your own. See MemSafeVeriferPass

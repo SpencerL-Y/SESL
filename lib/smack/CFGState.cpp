@@ -7,6 +7,10 @@ namespace smack
 
     void CFGState::addEdge(const EdgePtr& edgePtr) {
         auto blockName = edgePtr->getToState().lock()->getBlockName();
+        auto from = edgePtr->getFromState();
+        auto to = edgePtr->getToState();
+        from.lock()->successors.push_back(to);
+        to.lock()->predecessors.push_back(from);
         addEdge(blockName, edgePtr);
     }
 
@@ -16,5 +20,21 @@ namespace smack
 
     std::string CFGState::getBlockName() {
         return stateBlock->getName();
+    }
+
+    void CFGState::setCFG(const std::weak_ptr<CFG>& cfgWPtr) {
+        cfgPtr = cfgWPtr;
+    }
+
+    std::weak_ptr<CFG> CFGState::getCFGPtr() {
+        return cfgPtr;
+    }
+
+    std::vector<std::weak_ptr<CFGState>> CFGState::getPredecessors() {
+        return predecessors;
+    }
+
+    std::vector<std::weak_ptr<CFGState>> CFGState::getSuccessors() {
+        return successors;
     }
 } // namespace smack

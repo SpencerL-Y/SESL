@@ -26,6 +26,7 @@ namespace smack
         void setProc(ProcDecl* procDecl);
         void buildCFG();
         void buildCFG(ProcDecl* procDecl);
+        std::vector<StatePtr> getStates();
         StatePtr getState(const std::string& blockName, Block* block = nullptr);
         StatePtr createState(Block* block);
         static EdgePtr createEdge(const StatePtr& fromState, const StatePtr& toState);

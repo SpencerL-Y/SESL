@@ -16,7 +16,7 @@ typedef std::pair<std::string, std::string> Binding;
 
 enum class RModeKind { RNE, RNA, RTP, RTN, RTZ };
 
-enum class ExprType {
+enum ExprType {
   BIN,
   FUNC,
   BOOL,
@@ -123,6 +123,7 @@ public:
   FunExpr(std::string f, std::list<const Expr *> xs) : fun(f), args(xs) {}
   void print(std::ostream &os) const;
   std::list<const Expr*> getArgs() const {return args;};
+  std::string name() const { return fun; }
   ExprType getType() const { return ExprType::FUNC;}
 };
 
@@ -373,6 +374,8 @@ public:
   void addSpatialLit(const SpatialLiteral* spatialLit);
 
   static SHExprPtr sh_and(SHExprPtr first, SHExprPtr second);
+  static SHExprPtr sh_conj(SHExprPtr originSH, const Expr* conj);
+  static SHExprPtr sh_sep_conj(SHExprPtr originSH, std::list<const SpatialLiteral*> conjs);
   static SHExprPtr emp_sh();
 
   ExprType getType() const { return ExprType::SH;}

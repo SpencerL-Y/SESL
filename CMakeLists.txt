@@ -145,6 +145,7 @@ add_library(smackTranslator STATIC
   include/smack/Lasso.h
   include/smack/MemSafeVerifier.h
   include/smack/VarEquiv.h
+  include/smack/VarFactory.h
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp
   lib/smack/BplFilePrinter.cpp
@@ -179,6 +180,7 @@ add_library(smackTranslator STATIC
   lib/smack/Lasso.cpp
   lib/smack/MemSafeVerifier.cpp
   lib/smack/VarEquiv.cpp
+  lib/smack/VarFactory.cpp
 )
 
 add_executable(llvm2bpl

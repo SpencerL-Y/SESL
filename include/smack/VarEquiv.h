@@ -20,6 +20,7 @@ namespace smack
         void addNewName(std::string name);
         void linkName(std::string newname, std::string oldname);
         std::string getAllocName(std::string name);
+        bool hasName(std::string name);
 
 
     };

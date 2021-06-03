@@ -9,19 +9,24 @@
 #include "smack/Debug.h"
 #include "smack/BoogieAst.h"
 #include "smack/VarEquiv.h"
-
+#include "smack/VarFactory.h"
 
 // This object is for dealing with symbolic execution
 // of symbolic heap at frontend
 namespace smack{
-    
     using llvm::errs;
     class BlockExecutor {
         Program* program;
         Block* currentBlock;
         VarEquivPtr varEquiv;
+        VarFactoryPtr varFactory;
+
+
+        bool isAssignFuncName(std::string name);
+        bool isPtrCastFuncName(std::string name);
+
     public:
-        BlockExecutor(Program* p, Block* cb, VarEquivPtr vars) : program(p), currentBlock(cb), varEquiv(vars) {}
+        BlockExecutor(Program* p, Block* cb, VarEquivPtr vars, VarFactoryPtr vf) : program(p), currentBlock(cb), varEquiv(vars), varFactory(vf) {}
 
         SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
@@ -40,6 +45,9 @@ namespace smack{
 
         Block* getBlock(){ return currentBlock; }
         void setBlock(Block* block){ currentBlock = block; }
+        VarEquivPtr getVarEquiv() { return varEquiv;}
+        VarFactoryPtr getVarFactory() { return varFactory;}
+
 
     };
     typedef std::shared_ptr<BlockExecutor> BlockExecutorPtr;

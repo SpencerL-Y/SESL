@@ -22,6 +22,18 @@ namespace smack
 
     std::string VarEquiv::getAllocName(std::string name){
         // return the name first used when do the allocation
-        return name2Alloc[name];
+        if(name2Alloc.find(name) != name2Alloc.end()){
+            return name2Alloc[name];
+        } else {
+            return nullptr; 
+        }
+    }
+
+    bool VarEquiv::hasName(std::string name){
+        if(name2Alloc.find(name) == name2Alloc.end()){
+            return false;
+        } else {
+            return true;
+        }
     }
 } // namespace smack

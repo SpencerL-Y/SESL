@@ -573,6 +573,26 @@ std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_and(SHExprPtr first, SHEx
   return result;
 }
 
+std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_conj(SHExprPtr originSH, const Expr* conj){
+  const Expr* newPureExpr = Expr::and_(originSH->getPure(), conj);
+  std::list<const SpatialLiteral*> spatialExpr = originSH->getSpatialExpr();
+  SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPureExpr, spatialExpr);
+  return newSH;
+}
+
+std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_sep_conj(SHExprPtr originSH, std::list<const SpatialLiteral*> conjs){
+  const Expr* pureExpr = originSH->getPure();
+  std::list<const SpatialLiteral*> newSpatialExpr;
+  for(const SpatialLiteral* sp : originSH->getSpatialExpr()){
+    newSpatialExpr.push_back(sp);
+  }
+  for(const SpatialLiteral* sp : conjs){
+    newSpatialExpr.push_back(sp);
+  }
+  SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(pureExpr, newSpatialExpr);
+  return newSH;
+}
+
 std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::emp_sh(){
   const BoolLit* trueExpr = new BoolLit(true);
   std::list<const SpatialLiteral*> splist;

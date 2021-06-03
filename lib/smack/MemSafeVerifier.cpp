@@ -3,6 +3,9 @@
 #include "smack/BoogieAst.h"
 #include "smack/SmackModuleGenerator.h"
 #include "smack/CFG.h"
+#include "smack/VarEquiv.h"
+#include "smack/VarFactory.h"
+#include "smack/BlockExecutor.h"
 
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/GraphWriter.h" 
@@ -44,8 +47,10 @@ namespace smack {
         std::cout << "=========== DO SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
         // Initialize the equivalent class for allocation
         VarEquivPtr allocEquiv = std::make_shared<VarEquiv>();
+        // Initialize the varFactory class for variable remembering
+        VarFactoryPtr varFac = std::make_shared<VarFactory>();
         // Initialize a block executor
-        BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, block, allocEquiv);
+        BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, block, allocEquiv, varFac);
         // initial pure formula 
         const Expr* boolTrue = Expr::lit(true);
         // initial list of spatial lits
@@ -62,11 +67,11 @@ namespace smack {
         for(const Stmt* i : block->getStatements()){
             // for each stmt in the program, put it in the new list and execute to get resulting symbolic heap
             newStmts.push_back(i);
-            SHExprPtr currSH = be->execute(currSH, i);
-
+            SHExprPtr newSH = be->execute(currSH, i);
+            currSH = newSH;
         }
-
         be->setBlock(block);
+
 
         std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;

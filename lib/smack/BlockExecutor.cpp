@@ -5,7 +5,54 @@ namespace smack{
     using llvm::errs;   
     // ---------------------- Execution for Assign stmts ---------------
     SHExprPtr BlockExecutor::executeAssign(SHExprPtr sh, const Stmt* assignStmt){
-        return nullptr;
+        if(Stmt::ASSIGN == assignStmt->getKind()){
+            const AssignStmt* stmt = (const AssignStmt*) assignStmt;
+            // TODOsh: here the assignment is restricted to the single assignment, may cause problem for boogie assignment.
+            const Expr* lhs = stmt->getLhs().front();
+            const Expr* rhs = stmt->getRhs().front();
+            const VarExpr* lhsVar = NULL;
+            const FunExpr* rhsFun = NULL;
+            std::string lhsVarName;
+            if(ExprType::VAR == lhs->getType()){
+                // lhs is a single var
+                lhsVar = (const VarExpr* ) lhs;
+                lhsVarName = lhsVar->name();
+            }
+            if(ExprType::FUNC == rhs->getType()){
+                rhsFun = (const FunExpr* ) rhs;
+                if(this->isAssignFuncName(rhsFun->name())){
+                    const Expr* arg1 = rhsFun->getArgs().front();
+                    std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
+                    const Expr* equality = Expr::eq(this->varFactory->getVar(lhsVarName), arg1);
+                    //TODOsh: Problems here need to decide whether the argument is also a variable or a constant.
+                } else if(this->isPtrCastFuncName(rhsFun->name())){
+
+                }
+            }
+        } else {
+            std::cout << "ERROR: stmt type error" << std::endl;
+        }
+        return sh;
+    }
+
+    bool BlockExecutor::isAssignFuncName(std::string name){
+        // TODO: only consider one type of the assignment here
+        // later we should add other similar function expression here
+        if(!name.compare("$sext.i32.i64")){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool BlockExecutor::isPtrCastFuncName(std::string name){
+        // TODO: only consider the bitcast function here
+        // later we should add the ptr to int and int to ptr cast
+        if(!name.compare("$bitcast.ref.ref")){
+            return true;
+        } else {
+            return false;
+        }
     }
 
 
@@ -70,6 +117,6 @@ namespace smack{
             std::cout << "INFO: stmt kind " << stmt->getKind() << std::endl;
             return this->executeOther(initialSh, stmt);
         }
-        return nullptr;
+        return initialSh;
     }
 }

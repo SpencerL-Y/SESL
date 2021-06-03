@@ -532,6 +532,10 @@ const SpatialLiteral* SpatialLiteral::blk(const Expr* from, const Expr* to){
   return new BlkLit(from, to);
 }
 
+const SpatialLiteral* SpatialLiteral::spt(const Expr* var, const Expr* size) {
+  return new SizePtLit(var, size);
+}
+
 void EmpLit::print(std::ostream &os) const{
   os << "emp";
 }
@@ -542,6 +546,10 @@ void PtLit::print(std::ostream &os) const {
 
 void BlkLit::print(std::ostream &os) const {
   os << "Blk(" << from << ", " << to << ")";
+}
+
+void SizePtLit::print(std::ostream &os) const {
+  os << var << " >-s-> " << size;
 }
 
 std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_and(SHExprPtr first, SHExprPtr second){

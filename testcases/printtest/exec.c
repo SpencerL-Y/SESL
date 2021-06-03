@@ -2,7 +2,8 @@
 #include <stdlib.h>
 
 int main(){
-    int *i = (int*)malloc(sizeof(int));
+    int num = 1;
+    int *i = (int*)malloc(num*sizeof(int));
     free(i);
     
 }

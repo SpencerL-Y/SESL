@@ -6,18 +6,25 @@ namespace smack{
     
     SHExprPtr BlockExecutor::executeCall(SHExprPtr sh, const Stmt* callstmt){
         if(Stmt::CALL == callstmt->getKind()){
-            
+            const CallStmt* call = (const CallStmt*) callstmt;
+            if(!call->getProc().compare("malloc")){
+                return this->executeMalloc(sh, call);
+            } else if(!call->getProc().compare("free_")){
+
+            } else {
+                std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl;
+            }
         } else {
             std::cout << "ERROR: execute call stmt kind error" << std::endl;
         }
         return sh;
     }
-
+    // ---------------------- Execution for Call stmts -----------------
     SHExprPtr  
     BlockExecutor::executeMalloc
-    (SHExprPtr sh, const Stmt* stmt){
+    (SHExprPtr sh, const CallStmt* stmt){
         // TODOsh: need to use a map to store all pair of string, variable
-        return nullptr;
+        return sh;
     }
 
     SHExprPtr 
@@ -27,17 +34,20 @@ namespace smack{
         return nullptr;
     }
 
+    // ---------------------- Execution for Casting stmt -----------------
     SHExprPtr 
     BlockExecutor::executeCast(SHExprPtr sh, const Stmt* stmt){
         return nullptr;
     }
 
+    // --------------------- Execution for Other stmt -------------------
     SHExprPtr 
     BlockExecutor::executeOther(SHExprPtr sh, const Stmt* stmt){
         
         return sh;
     }
 
+    // -------------------- General Interface -------------------
     SHExprPtr 
     BlockExecutor::execute
     (SHExprPtr initialSh, const Stmt* stmt){
@@ -45,8 +55,10 @@ namespace smack{
         stmt->print(std::cout);
         std::cout << std::endl;
         if(Stmt::CALL == stmt->getKind()){
+            std::cout << "INFO: stmt kind CALL" << std::endl;
             return this->executeCall(initialSh, stmt);
         } else {
+            std::cout << "INFO: stmt kind " << stmt->getKind() << std::endl;
             return this->executeOther(initialSh, stmt);
         }
         return nullptr;

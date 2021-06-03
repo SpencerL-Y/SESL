@@ -25,7 +25,7 @@ namespace smack{
 
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
 
-        SHExprPtr executeMalloc(SHExprPtr sh, const Stmt* stmt);
+        SHExprPtr executeMalloc(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeFree(SHExprPtr sh, const Stmt* stmt);
 

@@ -6,15 +6,19 @@ axiom (main == $sub.ref(0, 1032));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
-  var $p0: ref;
-  var $p1: ref;
+  var $i0: i64;
+  var $i1: i64;
   var $p2: ref;
+  var $p3: ref;
+  var $p4: ref;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  call $p0 := malloc(4);
-  $p1 := $bitcast.ref.ref($p0);
-  $p2 := $bitcast.ref.ref($p1);
-  call free_($p2);
+  $i0 := $sext.i32.i64(1);
+  $i1 := $mul.i64($i0, 4);
+  call $p2 := malloc($i1);
+  $p3 := $bitcast.ref.ref($p2);
+  $p4 := $bitcast.ref.ref($p3);
+  call free_($p4);
   $r := 0;
   return;
 }

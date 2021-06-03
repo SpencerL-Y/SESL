@@ -2,8 +2,14 @@
 
 
 namespace smack{
-    using llvm::errs;
-    
+    using llvm::errs;   
+    // ---------------------- Execution for Assign stmts ---------------
+    SHExprPtr BlockExecutor::executeAssign(SHExprPtr sh, const Stmt* assignStmt){
+        return nullptr;
+    }
+
+
+    // ---------------------- Execution for Call stmts -----------------
     SHExprPtr BlockExecutor::executeCall(SHExprPtr sh, const Stmt* callstmt){
         if(Stmt::CALL == callstmt->getKind()){
             const CallStmt* call = (const CallStmt*) callstmt;
@@ -19,7 +25,6 @@ namespace smack{
         }
         return sh;
     }
-    // ---------------------- Execution for Call stmts -----------------
     SHExprPtr  
     BlockExecutor::executeMalloc
     (SHExprPtr sh, const CallStmt* stmt){
@@ -57,7 +62,11 @@ namespace smack{
         if(Stmt::CALL == stmt->getKind()){
             std::cout << "INFO: stmt kind CALL" << std::endl;
             return this->executeCall(initialSh, stmt);
-        } else {
+        } else if(Stmt::ASSIGN == stmt->getKind()){
+            std::cout << "INFO: stmt kind ASSIGN" << std::endl;
+            return this->executeAssign(initialSh, stmt);
+        } 
+        else {
             std::cout << "INFO: stmt kind " << stmt->getKind() << std::endl;
             return this->executeOther(initialSh, stmt);
         }

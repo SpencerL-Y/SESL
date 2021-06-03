@@ -23,6 +23,7 @@ namespace smack{
     public:
         BlockExecutor(Program* p, Block* cb, VarEquivPtr vars) : program(p), currentBlock(cb), varEquiv(vars) {}
 
+        SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
 
         SHExprPtr executeMalloc(SHExprPtr sh, const CallStmt* stmt);

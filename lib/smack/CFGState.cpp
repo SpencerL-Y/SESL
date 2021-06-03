@@ -7,6 +7,10 @@ namespace smack
 
     void CFGState::addEdge(const EdgePtr& edgePtr) {
         auto blockName = edgePtr->getToState().lock()->getBlockName();
+        auto from = edgePtr->getFromState();
+        auto to = edgePtr->getToState();
+        from.lock()->successors.push_back(to);
+        to.lock()->predecessors.push_back(from);
         addEdge(blockName, edgePtr);
     }
 

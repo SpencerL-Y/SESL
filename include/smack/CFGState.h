@@ -19,6 +19,7 @@ namespace smack
         /* data */
         Block* stateBlock;
         std::unordered_map<std::string, EdgePtr> edges;
+        std::vector<std::weak_ptr<CFGState>> predecessors, successors;
         friend class CFG;
     public:
         explicit CFGState(Block* block = nullptr) : stateBlock(block) {}

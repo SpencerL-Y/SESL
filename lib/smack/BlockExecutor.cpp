@@ -24,6 +24,14 @@ namespace smack{
                     const Expr* arg1 = rhsFun->getArgs().front();
                     std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
                     const Expr* equality = Expr::eq(this->varFactory->getVar(lhsVarName), arg1);
+                    if(ExprType::INT == arg1->getType()){
+                        SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, equality);
+                        newSH->print(std::cout);
+                        std::cout << std::endl;
+                        return newSH;
+                    } else {
+                        std::cout << "WARNING: UNSOLVED CASE !!!!!!!!!!!!!" << std::endl;
+                    }
                     //TODOsh: Problems here need to decide whether the argument is also a variable or a constant.
                 } else if(this->isPtrCastFuncName(rhsFun->name())){
 

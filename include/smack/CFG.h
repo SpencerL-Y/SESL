@@ -14,7 +14,7 @@
 // Currently only support the intraprocedural conversion for main function.
 namespace smack
 {
-    class CFG : std::enable_shared_from_this<CFG>
+    class CFG
     {
     private:
         /* data */

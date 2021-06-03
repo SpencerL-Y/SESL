@@ -22,10 +22,6 @@ namespace smack
     StatePtr CFG::createState(Block *block) {
         auto blockName = block->getName();
         auto statePtr = make_shared<CFGState>(block);
-        {
-//            std::weak_ptr<CFG> ths = shared_from_this();
-        }
-//        statePtr->setCFG(ths);
         states[blockName] = statePtr;
         return statePtr;
     }

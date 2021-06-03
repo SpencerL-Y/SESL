@@ -21,4 +21,20 @@ namespace smack
     std::string CFGState::getBlockName() {
         return stateBlock->getName();
     }
+
+    void CFGState::setCFG(const std::weak_ptr<CFG>& cfgWPtr) {
+        cfgPtr = cfgWPtr;
+    }
+
+    std::weak_ptr<CFG> CFGState::getCFGPtr() {
+        return cfgPtr;
+    }
+
+    std::vector<std::weak_ptr<CFGState>> CFGState::getPredecessors() {
+        return predecessors;
+    }
+
+    std::vector<std::weak_ptr<CFGState>> CFGState::getSuccessors() {
+        return successors;
+    }
 } // namespace smack

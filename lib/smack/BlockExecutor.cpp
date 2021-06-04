@@ -22,7 +22,7 @@ namespace smack{
             }
             if(ExprType::FUNC == rhs->getType()){
                 rhsFun = (const FunExpr* ) rhs;
-                if(this->isAssignFuncName(rhsFun->name())){
+                if(this->isUnaryAssignFuncName(rhsFun->name())){\
                     // TODOsh: only support a single parameter here
                     const Expr* arg1 = rhsFun->getArgs().front();
                     std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
@@ -54,7 +54,7 @@ namespace smack{
                         std::cout << "RHS TYPE: " << rhs->getType() << std::endl; 
                         return sh;
                     }
-                } else if(this->isPtrCastFuncName(rhsFun->name())){
+                } else if(this->isUnaryPtrCastFuncName(rhsFun->name())){
                     const Expr* arg1 = rhsFun->getArgs().front();
                     std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
                     
@@ -76,7 +76,10 @@ namespace smack{
                         std::cout << "RHS TYPE: " << rhs->getType() << std::endl; 
                         return sh;
                     }
-                } else {
+                } else if(this->isBinaryArithFuncName(rhsFun->name())){
+
+                }
+                else {
                     std::cout << "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl;
                     std::cout << "FUNC NAME: " << rhsFun->name() << std::endl; 
                     return sh;
@@ -88,17 +91,18 @@ namespace smack{
         return sh;
     }
 
-    bool BlockExecutor::isAssignFuncName(std::string name){
+    bool BlockExecutor::isUnaryAssignFuncName(std::string name){
         // TODO: only consider one type of the assignment here
         // later we should add other similar function expression here
-        if(!name.compare("$sext.i32.i64")){
+        if(name.find("$zext") != std::string::npos ||
+           name.find("$sext") != std::string::npos ){
             return true;
         } else {
             return false;
         }
     }
 
-    bool BlockExecutor::isPtrCastFuncName(std::string name){
+    bool BlockExecutor::isUnaryPtrCastFuncName(std::string name){
         // TODO: only consider the bitcast function here
         // later we should add the ptr to int and int to ptr cast
         if(!name.compare("$bitcast.ref.ref")){
@@ -106,6 +110,40 @@ namespace smack{
         } else {
             return false;
         }
+    }
+
+    const Expr* BlockExecutor::computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right){
+        // TODO: add later
+        if(name.find("$add") != std::string::npos){
+
+        } else if(name.find("$sub") != std::string::npos){
+
+        } else if(name.find("$mul") != std::string::npos){
+
+        } else if(name.find("$add") != std::string::npos){
+
+        } else {
+            std::cout << "ERROR: UNKNWON BINARY ARITHMETIC FUNCTION" << std::endl;
+            return NULL;
+        }
+    }
+
+
+    bool BlockExecutor::isUnaryBooleanFuncName(std::string name){
+        return false;
+    }
+
+    bool BlockExecutor::isBinaryBooleanFuncName(std::string name){
+        return false;
+    }
+
+    bool BlockExecutor::isBinaryArithFuncName(std::string name){
+        if(name.find("$add") != std::string::npos||
+           name.find("$sub") != std::string::npos||name.find("$mul") != std::string::npos||name.find("$sdiv") != std::string::npos||name.find("$udiv") != std::string::npos||){
+                return true;
+           } else {
+                return false;
+           }
     }
 
 
@@ -157,7 +195,7 @@ namespace smack{
                     Expr::add(
                         this->varFactory->getVar(retVarName),
                         this->varFactory->getVar(paramVarName)
-                    );
+                    )
                 );
                 newSpatialExpr.push_back(sizePt);
                 newSpatialExpr.push_back(allocBlk);
@@ -165,7 +203,31 @@ namespace smack{
                 return newSH;
             } else if(param->isValue()){
                 const Expr* sizeExpr = param;
-                
+                this->varEquiv->addNewName(retVarName);
+                const Expr* pureConj = Expr::eq(
+                    this->varFactory->getVar(retVarName),
+                    sizeExpr
+                );
+                const Expr* newPure = Expr::and_(sh->getPure(), pureConj);
+                std::list<const SpatialLiteral*> newSpatialExpr;
+                for(const SpatialLiteral* sp : sh->getSpatialExpr()){
+                    newSpatialExpr.push_back(sp);
+                }
+                const SpatialLiteral* sizePt = SpatialLiteral::spt(
+                    this->varFactory->getVar(retVarName),
+                    sizeExpr
+                );
+                const SpatialLiteral* allocBlk = SpatialLiteral::blk(
+                    this->varFactory->getVar(retVarName),
+                    Expr::add(
+                        this->varFactory->getVar(retVarName),
+                        sizeExpr
+                    )
+                );
+                newSpatialExpr.push_back(sizePt);
+                newSpatialExpr.push_back(allocBlk);
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                return newSH;
             } else {
                 std::cout << "ERROR: UNSOLVED SITUATION!!" << std::endl;
                 return sh;

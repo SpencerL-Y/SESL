@@ -115,7 +115,7 @@ namespace smack{
             if(!call->getProc().compare("malloc")){
                 return this->executeMalloc(sh, call);
             } else if(!call->getProc().compare("free_")){
-
+                return this->executeFree(sh, call);
             } else {
                 std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl;
             }
@@ -127,13 +127,33 @@ namespace smack{
     SHExprPtr  
     BlockExecutor::executeMalloc
     (SHExprPtr sh, const CallStmt* stmt){
-        // TODOsh: need to use a map to store all pair of string, variable
+        
+        std::string funcName = stmt->getProc();
+        if(!funcName.compare("malloc")){
+            std::cout << "INFO: TESTING Call Stmt print" << std::endl;
+            std::string retVarName = stmt->getReturns().front();
+            // TODOsh: check, we assume there is only one parameter.
+            const Expr* param = stmt->getParams().front();
+            if(param->isVar()){
+                const VarExpr* paramVar = (const VarExpr*)param;
+                std::string paramVarName = paramVar->name();
+                this->varEquiv->linkName(retVarName, paramVarName);
+            } else if(param->isValue()){
+
+            } else {
+                std::cout << "ERROR: UNSOLVED SITUATION!!" << std::endl;
+                return sh;
+            }
+        } else {
+            std::cout << "ERROR: this should not happen" << std::endl;
+            return nullptr;
+        }
         return sh;
     }
 
     SHExprPtr 
     BlockExecutor::executeFree
-    (SHExprPtr sh, const Stmt* stmt){
+    (SHExprPtr sh, const CallStmt* stmt){
         // TODOsh: varName usually is not the initial malloc name, here we need to determine which one to free or there is no such free item.
         return nullptr;
     }

@@ -242,6 +242,7 @@ public:
   NotExpr(const Expr *e) : expr(e) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::NOT;}
+  const Expr* getExpr() const {return expr;}
   bool isVar() const {return false;}
   bool isValue() const {return false;}
 };
@@ -569,6 +570,7 @@ public:
 
   void print(std::ostream &os) const;
   std::string getProc() const { return this->proc; }
+  std::list<const Attr*> getAttrs() const { return this->attrs; }
   std::list<std::string> getReturns() const{ return this->returns; }
   std::list<const Expr *> getParams() const{ return this->params; }
   static bool classof(const Stmt *S) { return S->getKind() == CALL; }

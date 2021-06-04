@@ -13,10 +13,11 @@
 #include "smack/SmackRep.h"
 #include "smack/CFG.h"
 #include "smack/Lasso.h"
+#include "smack/Translator.h"
 
 #include <stdlib.h>
 #include <iostream>
-#define CENTER_DEBUG 1
+#define CENTER_DEBUG 0
 namespace smack {
 
 llvm::RegisterPass<SmackModuleGenerator> X("smack", "SMACK generator pass");

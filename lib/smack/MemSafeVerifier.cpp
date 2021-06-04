@@ -6,6 +6,7 @@
 #include "smack/VarEquiv.h"
 #include "smack/VarFactory.h"
 #include "smack/BlockExecutor.h"
+#include "smack/Translator.h"
 
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/GraphWriter.h" 
@@ -72,7 +73,8 @@ namespace smack {
         }
         be->setBlock(block);
 
-
+        auto trans = std::make_shared<smack::TransToZ3>(currSH);
+        trans->translate();
         std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
         return false;

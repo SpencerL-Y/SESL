@@ -13,28 +13,72 @@ namespace smack{
             const VarExpr* lhsVar = NULL;
             const FunExpr* rhsFun = NULL;
             std::string lhsVarName;
-            if(ExprType::VAR == lhs->getType()){
+            if(lhs->isVar()){
                 // lhs is a single var
                 lhsVar = (const VarExpr* ) lhs;
                 lhsVarName = lhsVar->name();
+            } else {
+                std::cout << "ERROR: This should not happen." << std::endl;
             }
             if(ExprType::FUNC == rhs->getType()){
                 rhsFun = (const FunExpr* ) rhs;
                 if(this->isAssignFuncName(rhsFun->name())){
+                    // TODOsh: only support a single parameter here
                     const Expr* arg1 = rhsFun->getArgs().front();
                     std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
-                    const Expr* equality = Expr::eq(this->varFactory->getVar(lhsVarName), arg1);
-                    if(ExprType::INT == arg1->getType()){
-                        SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, equality);
+                    
+                    if(arg1->isValue()){
+                        const Expr* valEquality = Expr::eq(this->varFactory->getVar(lhsVarName), arg1);
+                        SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, valEquality);
+                        // TODOsh: DEBUG print
+                        newSH->print(std::cout);
+                        std::cout << std::endl;
+                        return newSH;
+                    } else if(arg1->isVar()){
+                        const VarExpr* rhsVar = (const VarExpr*) arg1;
+                        std::string rhsVarName = rhsVar->name();
+                        const Expr* varEquality = Expr::eq(
+                            this->varFactory->getVar(lhsVarName),
+                            this->varFactory->getVar(rhsVarName)
+                        );
+                        SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
+                        // TODOsh: DEBUG print
+                        newSH->print(std::cout);
+                        std::cout << std::endl;
+                        varEquiv->linkName(lhsVarName, rhsVarName);
+                        return newSH;
+                    } else {
+                        std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl;
+                        std::cout << "LHS TYPE: " << lhs->getType() << std::endl;
+                        std::cout << "RHS TYPE: " << rhs->getType() << std::endl; 
+                        return sh;
+                    }
+                } else if(this->isPtrCastFuncName(rhsFun->name())){
+                    const Expr* arg1 = rhsFun->getArgs().front();
+                    std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
+                    
+                    if(arg1->isVar()){
+                        const VarExpr* rhsVar = (const VarExpr*) arg1;
+                        std::string rhsVarName = rhsVar->name();
+                        const Expr* varEquality = Expr::eq(
+                            this->varFactory->getVar(lhsVarName),
+                            this->varFactory->getVar(rhsVarName)
+                        );
+                        SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
+                        // TODOsh: DEBUG print
                         newSH->print(std::cout);
                         std::cout << std::endl;
                         return newSH;
                     } else {
-                        std::cout << "WARNING: UNSOLVED CASE !!!!!!!!!!!!!" << std::endl;
+                        std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl;
+                        std::cout << "LHS TYPE: " << lhs->getType() << std::endl;
+                        std::cout << "RHS TYPE: " << rhs->getType() << std::endl; 
+                        return sh;
                     }
-                    //TODOsh: Problems here need to decide whether the argument is also a variable or a constant.
-                } else if(this->isPtrCastFuncName(rhsFun->name())){
-
+                } else {
+                    std::cout << "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl;
+                    std::cout << "FUNC NAME: " << rhsFun->name() << std::endl; 
+                    return sh;
                 }
             }
         } else {

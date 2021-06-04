@@ -44,6 +44,8 @@ public:
   virtual ~Expr() {}
   virtual void print(std::ostream &os) const = 0;
   virtual ExprType getType() const = 0;
+  virtual bool isVar() const = 0;
+  virtual bool isValue() const = 0;
   static const Expr *exists(std::list<Binding>, const Expr *e);
   static const Expr *forall(std::list<Binding>, const Expr *e);
   static const Expr *and_(const Expr *l, const Expr *r);
@@ -113,6 +115,8 @@ public:
       : op(b), lhs(l), rhs(r) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BIN;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class FunExpr : public Expr {
@@ -125,6 +129,8 @@ public:
   std::list<const Expr*> getArgs() const {return args;};
   std::string name() const { return fun; }
   ExprType getType() const { return ExprType::FUNC;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class BoolLit : public Expr {
@@ -135,6 +141,8 @@ public:
   bool getVal() const { return val;}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BOOL;}
+  bool isVar() const {return false;}
+  bool isValue() const {return true;}
 };
 
 class RModeLit : public Expr {
@@ -144,6 +152,8 @@ public:
   RModeLit(RModeKind v) : val(v) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::RMODE;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class IntLit : public Expr {
@@ -163,6 +173,8 @@ public:
   }
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::INT;}
+  bool isVar() const {return false;}
+  bool isValue() const {return true;}
 };
 
 class BvLit : public Expr {
@@ -178,6 +190,8 @@ public:
   }
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BV;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class FPLit : public Expr {
@@ -195,6 +209,8 @@ public:
       : specialValue(v), sigSize(ss), expSize(es) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::FP;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class StringLit : public Expr {
@@ -204,6 +220,8 @@ public:
   StringLit(std::string v) : val(v) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::STR;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class NegExpr : public Expr {
@@ -213,6 +231,8 @@ public:
   NegExpr(const Expr *e) : expr(e) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::NEG;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class NotExpr : public Expr {
@@ -222,6 +242,8 @@ public:
   NotExpr(const Expr *e) : expr(e) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::NOT;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class QuantExpr : public Expr {
@@ -238,6 +260,8 @@ public:
       : quant(q), vars(vs), expr(e) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::QUANT;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class SelExpr : public Expr {
@@ -250,6 +274,8 @@ public:
       : base(a), idxs(std::list<const Expr *>(1, i)) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::SEL;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class UpdExpr : public Expr {
@@ -264,6 +290,8 @@ public:
       : base(a), idxs(std::list<const Expr *>(1, i)), val(v) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::UPD;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class VarExpr : public Expr {
@@ -274,6 +302,8 @@ public:
   std::string name() const { return var; }
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::VAR;}
+  bool isVar() const {return true;}
+  bool isValue() const {return false;}
 };
 
 class IfThenElseExpr : public Expr {
@@ -286,6 +316,8 @@ public:
       : cond(c), trueValue(t), falseValue(e) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::ITE;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class BvExtract : public Expr {
@@ -298,6 +330,8 @@ public:
       : var(var), upper(upper), lower(lower) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BVExtract;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class BvConcat : public Expr {
@@ -308,6 +342,8 @@ public:
   BvConcat(const Expr *left, const Expr *right) : left(left), right(right) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BVConcat;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 
@@ -322,6 +358,8 @@ public:
   int getId(){return id;}
   void setId(int i){id = i;}
   ExprType getType() const { return ExprType::SpatialLit;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class EmpLit : public SpatialLiteral {
@@ -379,6 +417,8 @@ public:
   static SHExprPtr emp_sh();
 
   ExprType getType() const { return ExprType::SH;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 
 };
 
@@ -745,6 +785,8 @@ public:
   CodeExpr(DeclarationList ds, BlockList bs) : CodeContainer(ds, bs) {}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::CODE;}
+  bool isVar() const {return false;}
+  bool isValue() const {return false;}
 };
 
 class ProcDecl : public Decl, public CodeContainer {

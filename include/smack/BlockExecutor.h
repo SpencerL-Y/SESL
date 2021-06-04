@@ -21,9 +21,10 @@ namespace smack{
         VarEquivPtr varEquiv;
         VarFactoryPtr varFactory;
 
-
+        // funcexpr name judgement functions
         bool isAssignFuncName(std::string name);
         bool isPtrCastFuncName(std::string name);
+
 
     public:
         BlockExecutor(Program* p, Block* cb, VarEquivPtr vars, VarFactoryPtr vf) : program(p), currentBlock(cb), varEquiv(vars), varFactory(vf) {}

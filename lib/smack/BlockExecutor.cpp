@@ -138,8 +138,32 @@ namespace smack{
                 const VarExpr* paramVar = (const VarExpr*)param;
                 std::string paramVarName = paramVar->name();
                 this->varEquiv->linkName(retVarName, paramVarName);
+                const Expr* pureConj = Expr::eq(
+                    this->varFactory->getVar(retVarName),
+                    this->varFactory->getVar(paramVarName)
+                );
+                const Expr* newPure = Expr::and_(sh->getPure(), pureConj);
+                std::list<const SpatialLiteral *> newSpatialExpr;
+                for(const SpatialLiteral* sp : sh->getSpatialExpr()){
+                    newSpatialExpr.push_back(sp);
+                }
+                const SpatialLiteral* sizePt = SpatialLiteral::spt(
+                    this->varFactory->getVar(retVarName),
+                    this->varFactory->getVar(paramVarName)
+                ); 
+                const SpatialLiteral* allocBlk = SpatialLiteral::blk(
+                    this->varFactory->getVar(retVarName),
+                    Expr::add(
+                        this->varFactory->getVar(retVarName),
+                        this->varFactory->getVar(paramVarName)
+                    );
+                );
+                newSpatialExpr.push_back(sizePt);
+                newSpatialExpr.push_back(allocBlk);
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                return newSH;
             } else if(param->isValue()){
-
+                
             } else {
                 std::cout << "ERROR: UNSOLVED SITUATION!!" << std::endl;
                 return sh;

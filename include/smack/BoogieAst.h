@@ -81,6 +81,7 @@ public:
   static const Expr *bvExtract(std::string v, unsigned upper, unsigned lower);
   static const Expr *bvExtract(const Expr *v, unsigned upper, unsigned lower);
   static const Expr *bvConcat(const Expr *left, const Expr *right);
+  static const Expr *add(const Expr *left, const Expr* right);
 };
 
 class BinExpr : public Expr {

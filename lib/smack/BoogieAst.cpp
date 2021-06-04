@@ -132,6 +132,10 @@ const Expr *Expr::bvConcat(const Expr *left, const Expr *right) {
   return new BvConcat(left, right);
 }
 
+const Expr *Expr::add(const Expr *left, const Expr* right){
+  return new BinExpr(BinExpr::Plus, left, right);
+}
+
 const Attr *Attr::attr(std::string s, std::initializer_list<const Expr *> vs) {
   return new Attr(s, vs);
 }

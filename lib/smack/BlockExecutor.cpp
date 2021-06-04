@@ -28,6 +28,7 @@ namespace smack{
                     std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
                     
                     if(arg1->isValue()){
+                        this->varEquiv->addNewName(lhsVarName);
                         const Expr* valEquality = Expr::eq(this->varFactory->getVar(lhsVarName), arg1);
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, valEquality);
                         // TODOsh: DEBUG print
@@ -163,6 +164,7 @@ namespace smack{
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
                 return newSH;
             } else if(param->isValue()){
+                const Expr* sizeExpr = param;
                 
             } else {
                 std::cout << "ERROR: UNSOLVED SITUATION!!" << std::endl;

@@ -8,24 +8,21 @@ procedure {:entrypoint} main()
 {
   var $p0: ref;
   var $p1: ref;
-  var $i2: i1;
+  var $i2: i32;
   var $p3: ref;
+  var $i4: i32;
+  var $i5: i32;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
   call $p0 := malloc(4);
   $p1 := $bitcast.ref.ref($p0);
-  $i2 := $eq.ref($p1, $0.ref);
-  assume {:branchcond $i2} true;
-  goto $bb1, $bb2;
-$bb1:
-  assume ($i2 == 1);
-  $p3 := $bitcast.ref.ref($p1);
-  call free_($p3);
-  goto $bb3;
-$bb2:
-  assume !(($i2 == 1));
-  goto $bb3;
-$bb3:
+  $i2 := $load.i32($M.0, $p1);
+  call {:cexpr "p"} boogie_si_record_i32($i2);
+  $p3 := $add.ref($p1, $mul.ref(1, 4));
+  $i4 := $add.i32(3, 1);
+  call {:cexpr "a"} boogie_si_record_i32($i4);
+  $i5 := $add.i32($i4, 1);
+  call {:cexpr "a"} boogie_si_record_i32($i5);
   $r := 0;
   return;
 }
@@ -39,22 +36,17 @@ procedure  malloc($i0: i64)
 {
   call $r := $malloc($i0);
 }
-const free_: ref;
-axiom (free_ == $sub.ref(0, 4128));
-procedure  free_($p0: ref)
-{
-  call $free($p0);
-}
 const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 5160));
+axiom (llvm.dbg.value == $sub.ref(0, 4128));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 6192));
+axiom (__SMACK_static_init == $sub.ref(0, 5160));
 procedure  __SMACK_static_init()
 {
 $bb0:
   return;
 }
+procedure  boogie_si_record_i32(x: i32);
 procedure  boogie_si_record_ref(x: ref);
 procedure  $initialize()
 {

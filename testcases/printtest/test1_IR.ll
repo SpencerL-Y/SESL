@@ -1,4 +1,4 @@
-; ModuleID = '/home/center/Documents/SmackBasedPrj/build/b-973_6f_d.bc'
+; ModuleID = '/home/center/Documents/SmackBasedPrj/build/b-s92qakch.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
@@ -8,16 +8,20 @@ define dso_local i32 @main() #0 !dbg !10 {
   %1 = call noalias i8* @malloc(i64 4) #3, !dbg !13, !verifier.code !14
   %2 = bitcast i8* %1 to i32*, !dbg !15, !verifier.code !14
   call void @llvm.dbg.value(metadata i32* %2, metadata !16, metadata !DIExpression()), !dbg !17, !verifier.code !14
-  %3 = icmp eq i32* %2, null, !dbg !18, !verifier.code !14
-  br i1 %3, label %4, label %6, !dbg !20, !verifier.code !14
-
-4:                                                ; preds = %0
-  %5 = bitcast i32* %2 to i8*, !dbg !21, !verifier.code !14
-  call void @free(i8* %5) #3, !dbg !23, !verifier.code !14
-  br label %6, !dbg !24, !verifier.code !14
-
-6:                                                ; preds = %4, %0
-  ret i32 0, !dbg !25, !verifier.code !14
+  call void @llvm.dbg.value(metadata i32 2, metadata !18, metadata !DIExpression()), !dbg !17, !verifier.code !14
+  call void @llvm.dbg.value(metadata i32 2, metadata !19, metadata !DIExpression()), !dbg !17, !verifier.code !14
+  call void @llvm.dbg.value(metadata i32 2, metadata !20, metadata !DIExpression()), !dbg !17, !verifier.code !14
+  call void @llvm.dbg.value(metadata i32 3, metadata !21, metadata !DIExpression()), !dbg !17, !verifier.code !14
+  call void @llvm.dbg.value(metadata i32 3, metadata !18, metadata !DIExpression()), !dbg !17, !verifier.code !14
+  %3 = load i32, i32* %2, align 4, !dbg !22, !verifier.code !14
+  call void @llvm.dbg.value(metadata i32 %3, metadata !23, metadata !DIExpression()), !dbg !17, !verifier.code !14
+  %4 = getelementptr inbounds i32, i32* %2, i32 1, !dbg !24, !verifier.code !14
+  call void @llvm.dbg.value(metadata i32* %4, metadata !16, metadata !DIExpression()), !dbg !17, !verifier.code !14
+  %5 = add nsw i32 3, 1, !dbg !25, !verifier.code !14
+  call void @llvm.dbg.value(metadata i32 %5, metadata !18, metadata !DIExpression()), !dbg !17, !verifier.code !14
+  %6 = add nsw i32 %5, 1, !dbg !26, !verifier.code !14
+  call void @llvm.dbg.value(metadata i32 %6, metadata !18, metadata !DIExpression()), !dbg !17, !verifier.code !14
+  ret i32 0, !dbg !27, !verifier.code !14
 }
 
 ; Function Attrs: nounwind readnone speculatable willreturn
@@ -25,9 +29,6 @@ declare void @llvm.dbg.declare(metadata, metadata, metadata) #1
 
 ; Function Attrs: nounwind
 declare dso_local noalias i8* @malloc(i64) #2
-
-; Function Attrs: nounwind
-declare dso_local void @free(i8*) #2
 
 ; Function Attrs: nounwind readnone speculatable willreturn
 declare void @llvm.dbg.value(metadata, metadata, metadata) #1
@@ -59,16 +60,18 @@ attributes #3 = { nounwind }
 !10 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 6, type: !11, scopeLine: 6, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
 !11 = !DISubroutineType(types: !12)
 !12 = !{!5}
-!13 = !DILocation(line: 7, column: 16, scope: !10)
+!13 = !DILocation(line: 7, column: 20, scope: !10)
 !14 = !{i1 false}
-!15 = !DILocation(line: 7, column: 10, scope: !10)
+!15 = !DILocation(line: 7, column: 14, scope: !10)
 !16 = !DILocalVariable(name: "i", scope: !10, file: !1, line: 7, type: !4)
 !17 = !DILocation(line: 0, scope: !10)
-!18 = !DILocation(line: 8, column: 6, scope: !19)
-!19 = distinct !DILexicalBlock(scope: !10, file: !1, line: 8, column: 4)
-!20 = !DILocation(line: 8, column: 4, scope: !10)
-!21 = !DILocation(line: 10, column: 6, scope: !22)
-!22 = distinct !DILexicalBlock(scope: !19, file: !1, line: 8, column: 11)
-!23 = !DILocation(line: 10, column: 1, scope: !22)
-!24 = !DILocation(line: 11, column: 1, scope: !22)
-!25 = !DILocation(line: 12, column: 1, scope: !10)
+!18 = !DILocalVariable(name: "a", scope: !10, file: !1, line: 8, type: !5)
+!19 = !DILocalVariable(name: "b", scope: !10, file: !1, line: 9, type: !5)
+!20 = !DILocalVariable(name: "c", scope: !10, file: !1, line: 10, type: !5)
+!21 = !DILocalVariable(name: "d", scope: !10, file: !1, line: 11, type: !5)
+!22 = !DILocation(line: 13, column: 13, scope: !10)
+!23 = !DILocalVariable(name: "p", scope: !10, file: !1, line: 13, type: !5)
+!24 = !DILocation(line: 14, column: 7, scope: !10)
+!25 = !DILocation(line: 15, column: 11, scope: !10)
+!26 = !DILocation(line: 16, column: 7, scope: !10)
+!27 = !DILocation(line: 18, column: 5, scope: !10)

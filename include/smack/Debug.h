@@ -39,3 +39,4 @@ llvm::raw_ostream &dbgs();
 } // namespace smack
 
 #endif
+

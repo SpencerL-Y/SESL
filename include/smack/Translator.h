@@ -27,13 +27,13 @@ namespace smack{
         z3::context z3_ctx;
         z3::expr pure;
         z3::expr spatial;
-
+        void DFSPure(Expr* expr);
     public:
         void setSymbolicHeapHExpr(const std::shared_ptr<SymbolicHeapExpr>& shExprPtr);
         explicit TransToZ3(std::shared_ptr<SymbolicHeapExpr> shExprPtr = nullptr) : shExpr(std::move(shExprPtr)), pure(z3_ctx), spatial(z3_ctx) {}
         z3::expr getPure();
         z3::expr getSpatial();
-        z3::expr getFinal();
+        z3::expr getFinalExpr();
         void translatePure();
         void translateSpatial();
         void translate() override;

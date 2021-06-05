@@ -75,6 +75,7 @@ namespace smack {
 
         auto trans = std::make_shared<smack::TransToZ3>(currSH);
         trans->translate();
+
         std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
         return false;

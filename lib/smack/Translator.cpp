@@ -3,7 +3,7 @@
 //
 
 #include "smack/Translator.h"
-
+#include "utils/CenterDebug.h"
 namespace smack{
 
     z3::expr TransToZ3::getPure() {
@@ -16,9 +16,9 @@ namespace smack{
 
     void TransToZ3::translatePure() {
         auto pExprPtr = shExpr->getPure();
-        std::cout << "======center test: in translate process=======\n";
-        pExprPtr->print(std::cout);
-        std::cout << std::endl;
+        CDEBUG(std::cout << "======center test: in translate process=======\n";)
+        auto exp = pExprPtr->translateToZ3(z3_ctx);
+        CDEBUG(std::cout << exp.to_string() << std::endl; pExprPtr->print(cout); cout << "\n";)
     }
 
     void TransToZ3::translateSpatial() {
@@ -30,11 +30,14 @@ namespace smack{
         translateSpatial();
     }
 
-    z3::expr TransToZ3::getFinal() {
+    z3::expr TransToZ3::getFinalExpr() {
         return pure && spatial;
     }
 
     void TransToZ3::setSymbolicHeapHExpr(const std::shared_ptr<SymbolicHeapExpr>& shExprPtr) {
         shExpr = shExprPtr;
+    }
+
+    void TransToZ3::DFSPure(Expr *expr) {
     }
 }

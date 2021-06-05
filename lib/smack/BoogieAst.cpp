@@ -8,6 +8,8 @@
 #include <set>
 #include <typeinfo>
 #include <sstream>
+#include <cstring>
+#include "utils/CenterDebug.h"
 
 namespace smack {
 
@@ -130,6 +132,11 @@ const Expr *Expr::bvExtract(std::string v, unsigned u, unsigned l) {
 
 const Expr *Expr::bvConcat(const Expr *left, const Expr *right) {
   return new BvConcat(left, right);
+}
+
+z3::expr Expr::translateToZ3(z3::context& z3Ctx) const {
+    auto res = z3Ctx.bool_val(true);
+    return res;
 }
 
 const Attr *Attr::attr(std::string s, std::initializer_list<const Expr *> vs) {
@@ -426,7 +433,77 @@ void BinExpr::print(std::ostream &os) const {
   os << " " << rhs << ")";
 }
 
-void FunExpr::print(std::ostream &os) const {
+z3::expr BinExpr::translateToZ3(z3::context &z3Ctx) const{
+    z3::expr res = z3Ctx.bool_val(true);
+    const z3::expr left = lhs->translateToZ3(z3Ctx);
+    const z3::expr right = rhs->translateToZ3(z3Ctx);
+    CDEBUG(std::cout << "In equal function!" << std::endl);
+    CDEBUG(std::cout << "left: " << left.to_string() << " right: " << right.to_string() << std::endl);
+    switch (op) {
+        case Iff:
+            // Q: correct?
+            res = z3::implies(left, right) && z3::implies(right, left);
+            break;
+        case Imp:
+            // Q: correct
+            res = z3::implies(left, right);
+            break;
+        case Or:
+            res = (left or right);
+            break;
+        case And:
+            res = (left and right);
+            break;
+        case Eq:
+            res = (left == right);
+            CDEBUG(std::cout << "in eq func!: " << res.to_string() << std::endl);
+            break;
+        case Neq:
+            res = (left != right);
+            break;
+        case Lt:
+            res = (left < right);
+            break;
+        case Gt:
+            res = (left > right);
+            break;
+        case Lte:
+            res = (left <= right);
+            break;
+        case Gte:
+            res = (left >= right);
+            break;
+        case Sub:
+            //Q: os << "<:";
+            break;
+        case Conc:
+            // Q: os << "++";
+            break;
+        case Plus:
+            res = (left + right);
+            break;
+        case Minus:
+            //Q： os << "-";
+            res = (left - right);
+            break;
+        case Times:
+//            os << "*";
+            res = (left * right);
+            break;
+        case Div:
+//            os << "/";
+            res = (left / right);
+            break;
+        case Mod:
+            res = z3::mod(left, right);
+//            os << "%";
+            break;
+    }
+//    os << " " << rhs << ")";
+    return res;
+}
+
+    void FunExpr::print(std::ostream &os) const {
   os << fun;
   print_seq<const Expr *>(os, args, "(", ", ", ")");
 }
@@ -470,6 +547,11 @@ void NegExpr::print(std::ostream &os) const { os << "-(" << expr << ")"; }
 
 void NotExpr::print(std::ostream &os) const { os << "!(" << expr << ")"; }
 
+z3::expr NotExpr::translateToZ3(z3::context &z3Ctx) const {
+    auto exp = expr->translateToZ3(z3Ctx);
+    return not exp;
+}
+
 void QuantExpr::print(std::ostream &os) const {
   os << "(";
   switch (quant) {
@@ -496,6 +578,12 @@ void UpdExpr::print(std::ostream &os) const {
 }
 
 void VarExpr::print(std::ostream &os) const { os << var; }
+
+z3::expr VarExpr::translateToZ3(z3::context &z3Ctx) const {
+    z3::expr res = z3Ctx.int_const(var.c_str());
+    CDEBUG(std::cout << "in varExpr! " << res.to_string() << std::endl;);
+    return res;
+}
 
 void CodeExpr::print(std::ostream &os) const {
   os << "|{"
@@ -551,6 +639,11 @@ void BlkLit::print(std::ostream &os) const {
 void SizePtLit::print(std::ostream &os) const {
   os << var << " >-s-> " << size;
 }
+
+z3::expr BoolLit::translateToZ3(z3::context& z3Ctx) const {
+    return z3Ctx.bool_val(val);
+}
+
 
 std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_and(SHExprPtr first, SHExprPtr second){
   const Expr* newPure;

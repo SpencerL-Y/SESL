@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "z3++.h"
 
 namespace smack {
 
@@ -46,6 +47,7 @@ public:
   virtual ExprType getType() const = 0;
   virtual bool isVar() const = 0;
   virtual bool isValue() const = 0;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const;
   static const Expr *exists(std::list<Binding>, const Expr *e);
   static const Expr *forall(std::list<Binding>, const Expr *e);
   static const Expr *and_(const Expr *l, const Expr *r);
@@ -113,6 +115,7 @@ private:
 public:
   BinExpr(const Binary b, const Expr *l, const Expr *r)
       : op(b), lhs(l), rhs(r) {}
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BIN;}
   bool isVar() const {return false;}
@@ -138,6 +141,7 @@ class BoolLit : public Expr {
 
 public:
   BoolLit(bool b) : val(b) {}
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   bool getVal() const { return val;}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BOOL;}
@@ -240,6 +244,7 @@ class NotExpr : public Expr {
 
 public:
   NotExpr(const Expr *e) : expr(e) {}
+  z3::expr translateToZ3(z3::context& z3Ctx) const;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::NOT;}
   const Expr* getExpr() const {return expr;}
@@ -301,6 +306,7 @@ class VarExpr : public Expr {
 public:
   VarExpr(std::string v) : var(v) {}
   std::string name() const { return var; }
+  z3::expr translateToZ3(z3::context& z3Ctx) const;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::VAR;}
   bool isVar() const {return true;}

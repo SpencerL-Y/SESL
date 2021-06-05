@@ -111,6 +111,7 @@ add_library(utils STATIC
 )
 
 add_library(smackTranslator STATIC
+  include/smack/Translator.h
   include/smack/AddTiming.h
   include/smack/BoogieAst.h
   include/smack/BplFilePrinter.h
@@ -146,6 +147,7 @@ add_library(smackTranslator STATIC
   include/smack/MemSafeVerifier.h
   include/smack/VarEquiv.h
   include/smack/VarFactory.h
+  lib/smack/Translator.cpp
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp
   lib/smack/BplFilePrinter.cpp

@@ -139,7 +139,7 @@ namespace smack{
 
     bool BlockExecutor::isBinaryArithFuncName(std::string name){
         if(name.find("$add") != std::string::npos||
-           name.find("$sub") != std::string::npos||name.find("$mul") != std::string::npos||name.find("$sdiv") != std::string::npos||name.find("$udiv") != std::string::npos||){
+           name.find("$sub") != std::string::npos||name.find("$mul") != std::string::npos||name.find("$sdiv") != std::string::npos||name.find("$udiv") != std::string::npos){
                 return true;
            } else {
                 return false;

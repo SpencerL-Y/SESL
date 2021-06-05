@@ -536,6 +536,11 @@ void RModeLit::print(std::ostream &os) const {
 }
 
 void IntLit::print(std::ostream &os) const { os << val; }
+z3::expr IntLit::translateToZ3(z3::context& z3Ctx) const {
+    CDEBUG(std::cout << "In intLint : " <<  val << std::endl;)
+    return z3Ctx.int_val(val.c_str());
+}
+
 
 void BvLit::print(std::ostream &os) const { os << val << "bv" << width; }
 

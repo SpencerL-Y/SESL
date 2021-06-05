@@ -6,19 +6,26 @@ axiom (main == $sub.ref(0, 1032));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
-  var $i0: i64;
-  var $i1: i64;
-  var $p2: ref;
-  var $p3: ref;
-  var $p4: ref;
+  var $i0: i1;
+  var $i1: i1;
+  var $i2: i8;
+  var $i3: i64;
+  var $i4: i64;
+  var $p5: ref;
+  var $p6: ref;
+  var $p7: ref;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  $i0 := $sext.i32.i64(1);
-  $i1 := $mul.i64($i0, 4);
-  call $p2 := malloc($i1);
-  $p3 := $bitcast.ref.ref($p2);
-  $p4 := $bitcast.ref.ref($p3);
-  call free_($p4);
+  $i0 := $trunc.i8.i1(1);
+  $i1 := $xor.i1($i0, 1);
+  $i2 := $zext.i1.i8($i1);
+  call {:cexpr "na"} boogie_si_record_i8($i2);
+  $i3 := $sext.i32.i64(1);
+  $i4 := $mul.i64($i3, 4);
+  call $p5 := malloc($i4);
+  $p6 := $bitcast.ref.ref($p5);
+  $p7 := $bitcast.ref.ref($p6);
+  call free_($p7);
   $r := 0;
   return;
 }
@@ -48,6 +55,7 @@ procedure  __SMACK_static_init()
 $bb0:
   return;
 }
+procedure  boogie_si_record_i8(x: i8);
 procedure  boogie_si_record_ref(x: ref);
 procedure  $initialize()
 {

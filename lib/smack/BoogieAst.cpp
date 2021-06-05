@@ -134,9 +134,14 @@ const Expr *Expr::bvConcat(const Expr *left, const Expr *right) {
   return new BvConcat(left, right);
 }
 
+
 z3::expr Expr::translateToZ3(z3::context& z3Ctx) const {
     auto res = z3Ctx.bool_val(true);
     return res;
+}
+
+const Expr *Expr::add(const Expr *left, const Expr* right){
+  return new BinExpr(BinExpr::Plus, left, right);
 }
 
 const Attr *Attr::attr(std::string s, std::initializer_list<const Expr *> vs) {

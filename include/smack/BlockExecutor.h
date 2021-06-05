@@ -22,8 +22,13 @@ namespace smack{
         VarFactoryPtr varFactory;
 
         // funcexpr name judgement functions
-        bool isAssignFuncName(std::string name);
-        bool isPtrCastFuncName(std::string name);
+        bool isUnaryAssignFuncName(std::string name);
+        bool isUnaryPtrCastFuncName(std::string name);
+        bool isUnaryBooleanFuncName(std::string name);
+        bool isBinaryBooleanFuncName(std::string name);
+        bool isBinaryArithFuncName(std::string name);
+        // compute expression according to the operator types
+        const Expr* computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right);
 
 
     public:

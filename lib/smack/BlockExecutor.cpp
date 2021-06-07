@@ -280,7 +280,13 @@ namespace smack{
     BlockExecutor::executeFree
     (SHExprPtr sh, const CallStmt* stmt){
         // TODOsh: varName usually is not the initial malloc name, here we need to determine which one to free or there is no such free item.
-        return nullptr;
+        if(!stmt->getProc().compare("free_")){
+            const Expr* freedVar = stmt->getParams().front();
+        } else {
+            std::cout << "ERROR: this should not happen." << std::endl;
+            return nullptr;
+        }
+        return sh;
     }
 
     // ---------------------- Execution for Casting stmt -----------------

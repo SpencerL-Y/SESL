@@ -22,7 +22,7 @@ namespace smack{
             }
             if(ExprType::FUNC == rhs->getType()){
                 rhsFun = (const FunExpr* ) rhs;
-                if(this->isUnaryAssignFuncName(rhsFun->name())){\
+                if(this->isUnaryAssignFuncName(rhsFun->name())){
                     // TODOsh: only support a single parameter here
                     const Expr* arg1 = rhsFun->getArgs().front();
                     std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
@@ -59,6 +59,7 @@ namespace smack{
                     std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
                     
                     if(arg1->isVar()){
+                        this->varEquiv->addNewName(lhsVarName);
                         const VarExpr* rhsVar = (const VarExpr*) arg1;
                         std::string rhsVarName = rhsVar->name();
                         const Expr* varEquality = Expr::eq(
@@ -77,6 +78,7 @@ namespace smack{
                         return sh;
                     }
                 } else if(this->isBinaryArithFuncName(rhsFun->name())){
+                    this->varEquiv->addNewName(lhsVarName);
                     const Expr* arg1 = rhsFun->getArgs().front();
                     const Expr* arg2 = rhsFun->getArgs().back();
                     if(arg1->isVar()){
@@ -95,6 +97,13 @@ namespace smack{
                         this->varFactory->getVar(lhsVarName),
                         rhsExpr
                     );
+                    const Expr* newPureExpr = Expr::and_(
+                        sh->getPure(),
+                        equality
+                    );
+                    std::list<const SpatialLiteral*> newSpatialExpr = sh->getSpatialExpr();
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPureExpr, newSpatialExpr);
+                    return newSH;
                 }
                 else {
                     std::cout << "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl;
@@ -104,6 +113,7 @@ namespace smack{
             }
         } else {
             std::cout << "ERROR: stmt type error" << std::endl;
+            return sh;
         }
         return sh;
     }
@@ -130,7 +140,6 @@ namespace smack{
     }
 
     const Expr* BlockExecutor::computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right){
-        
         if(name.find("$add") != std::string::npos){
             const Expr* addition = Expr::add(left, right);
             return addition;
@@ -139,9 +148,11 @@ namespace smack{
             return substraction;
         } else if(name.find("$mul") != std::string::npos){
             const Expr* multiplication = Expr::multiply(left, right);
+            return multiplication;
         } else if(name.find("$sdiv") != std::string::npos 
                || name.find("$udiv") != std::string::npos){
             const Expr* division = Expr::divide(left, right);
+            return division;
         } else {
             std::cout << "ERROR: UNKNWON BINARY ARITHMETIC FUNCTION" << std::endl;
             return NULL;
@@ -199,6 +210,7 @@ namespace smack{
             if(param->isVar()){
                 const VarExpr* paramVar = (const VarExpr*)param;
                 std::string paramVarName = paramVar->name();
+                std::cout << "HERE" << std::endl;
                 this->varEquiv->linkName(retVarName, paramVarName);
                 const Expr* pureConj = Expr::eq(
                     this->varFactory->getVar(retVarName),

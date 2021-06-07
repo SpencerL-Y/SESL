@@ -16,7 +16,7 @@ namespace smack
            name2Alloc.find(oldname) != name2Alloc.end()){
             name2Alloc[newname] = name2Alloc[oldname];
         } else {
-            std::cout << "ERROR: VarEquiv new name exists" << std::endl;
+            std::cout << "ERROR: VarEquiv new name exists "  << (name2Alloc.find(newname) == name2Alloc.end()) << " " << (name2Alloc.find(oldname) != name2Alloc.end()) << std::endl;
         }
     }
 

@@ -38,6 +38,4 @@ namespace smack{
         shExpr = shExprPtr;
     }
 
-    void TransToZ3::DFSPure(Expr *expr) {
-    }
 }

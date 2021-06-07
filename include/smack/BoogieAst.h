@@ -84,6 +84,9 @@ public:
   static const Expr *bvExtract(const Expr *v, unsigned upper, unsigned lower);
   static const Expr *bvConcat(const Expr *left, const Expr *right);
   static const Expr *add(const Expr *left, const Expr* right);
+  static const Expr *substract(const Expr* left, const Expr* right);
+  static const Expr *multiply(const Expr* left, const Expr* right);
+  static const Expr *divide(const Expr* left, const Expr* right);
 };
 
 class BinExpr : public Expr {

@@ -77,7 +77,24 @@ namespace smack{
                         return sh;
                     }
                 } else if(this->isBinaryArithFuncName(rhsFun->name())){
+                    const Expr* arg1 = rhsFun->getArgs().front();
+                    const Expr* arg2 = rhsFun->getArgs().back();
+                    if(arg1->isVar()){
+                        const VarExpr* var1 = (const VarExpr*) arg1;
+                        std::string name1 = var1->name();
+                        arg1 = this->varFactory->getVar(name1);
+                    }
 
+                    if(arg2->isVar()){
+                        const VarExpr* var2 = (const VarExpr*) arg2;
+                        std::string name2 = var2->name();
+                        arg2 = this->varFactory->getVar(name2);
+                    }
+                    const Expr* rhsExpr = this->computeBinaryArithmeticExpr(rhsFun->name(), arg1, arg2);
+                    const Expr* equality = Expr::eq(
+                        this->varFactory->getVar(lhsVarName),
+                        rhsExpr
+                    );
                 }
                 else {
                     std::cout << "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl;
@@ -113,15 +130,18 @@ namespace smack{
     }
 
     const Expr* BlockExecutor::computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right){
-        // TODO: add later
+        
         if(name.find("$add") != std::string::npos){
-
+            const Expr* addition = Expr::add(left, right);
+            return addition;
         } else if(name.find("$sub") != std::string::npos){
-
+            const Expr* substraction = Expr::substract(left, right);
+            return substraction;
         } else if(name.find("$mul") != std::string::npos){
-
-        } else if(name.find("$add") != std::string::npos){
-
+            const Expr* multiplication = Expr::multiply(left, right);
+        } else if(name.find("$sdiv") != std::string::npos 
+               || name.find("$udiv") != std::string::npos){
+            const Expr* division = Expr::divide(left, right);
         } else {
             std::cout << "ERROR: UNKNWON BINARY ARITHMETIC FUNCTION" << std::endl;
             return NULL;
@@ -139,7 +159,10 @@ namespace smack{
 
     bool BlockExecutor::isBinaryArithFuncName(std::string name){
         if(name.find("$add") != std::string::npos||
-           name.find("$sub") != std::string::npos||name.find("$mul") != std::string::npos||name.find("$sdiv") != std::string::npos||name.find("$udiv") != std::string::npos||){
+           name.find("$sub") != std::string::npos||
+           name.find("$mul") != std::string::npos||
+           name.find("$sdiv") != std::string::npos||
+           name.find("$udiv") != std::string::npos){
                 return true;
            } else {
                 return false;

@@ -144,9 +144,23 @@ const Expr *Expr::add(const Expr *left, const Expr* right){
   return new BinExpr(BinExpr::Plus, left, right);
 }
 
+const Expr *Expr::substract(const Expr* left, const Expr* right){
+  return new BinExpr(BinExpr::Minus, left, right);
+}
+
+const Expr *Expr::multiply(const Expr* left, const Expr* right){
+  return new BinExpr(BinExpr::Times, left, right);
+}
+
+const Expr *Expr::divide(const Expr* left, const Expr* right){
+  return new BinExpr(BinExpr::Div, left, right);
+}
+
 const Attr *Attr::attr(std::string s, std::initializer_list<const Expr *> vs) {
   return new Attr(s, vs);
 }
+
+
 
 const Attr *Attr::attr(std::string s, std::list<const Expr *> vs) {
   return new Attr(s, vs);

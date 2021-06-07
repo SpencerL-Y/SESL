@@ -59,9 +59,9 @@ namespace smack{
                     std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
                     
                     if(arg1->isVar()){
-                        this->varEquiv->addNewName(lhsVarName);
                         const VarExpr* rhsVar = (const VarExpr*) arg1;
                         std::string rhsVarName = rhsVar->name();
+                        this->varEquiv->linkName(lhsVarName, rhsVarName);
                         const Expr* varEquality = Expr::eq(
                             this->varFactory->getVar(lhsVarName),
                             this->varFactory->getVar(rhsVarName)
@@ -212,7 +212,7 @@ namespace smack{
             if(param->isVar()){
                 const VarExpr* paramVar = (const VarExpr*)param;
                 std::string paramVarName = paramVar->name();
-                this->varEquiv->linkName(retVarName, paramVarName);
+                this->varEquiv->addNewName(retVarName);
                 /*const Expr* pureConj = Expr::eq(
                     this->varFactory->getVar(retVarName),
                     this->varFactory->getVar(paramVarName)
@@ -281,8 +281,16 @@ namespace smack{
     (SHExprPtr sh, const CallStmt* stmt){
         // TODOsh: varName usually is not the initial malloc name, here we need to determine which one to free or there is no such free item.
         if(!stmt->getProc().compare("free_")){
-            const Expr* freedVar = stmt->getParams().front();
-            
+            const Expr* arg1 = stmt->getParams().front();
+            if(ExprType::VAR == arg1->getType()){
+                const VarExpr* freedVar = (const VarExpr*) arg1;
+                std::string allocVarName = this->varEquiv->getAllocName(freedVar->name());
+                std::cout << "Freed varname: " << freedVar->name() << std::endl;
+                std::cout << "Alloced varname: " << allocVarName << std::endl;
+            } else {
+                std::cout << "ERROR: UNsolved situation" << std::endl;
+                return sh;
+            }
         } else {
             std::cout << "ERROR: this should not happen." << std::endl;
             return nullptr;

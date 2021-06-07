@@ -10,7 +10,7 @@
 #include <vector>
 #include <memory>
 #include "z3++.h"
-#include "Translator.h"
+#include "utils/TranslatorUtil.h"
 namespace smack {
 
 

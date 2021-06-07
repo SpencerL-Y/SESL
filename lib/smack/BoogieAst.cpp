@@ -607,7 +607,7 @@ void UpdExpr::print(std::ostream &os) const {
 void VarExpr::print(std::ostream &os) const { os << var; }
 
 z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const {
-    z3::expr res = TransToZ3::getZ3Var(this->name(), z3VarMap, z3Ctx);
+    z3::expr res = TranslatorUtil::getZ3Var(this->name(), z3VarMap, z3Ctx);
     z3Ctx.int_const(var.c_str());
     CDEBUG(std::cout << "in varExpr! " << res.to_string() << std::endl;);
     return res;

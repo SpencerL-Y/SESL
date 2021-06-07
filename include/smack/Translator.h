@@ -33,12 +33,7 @@ namespace smack{
         void setSymbolicHeapHExpr(const std::shared_ptr<SymbolicHeapExpr>& shExprPtr);
         explicit TransToZ3(std::shared_ptr<SymbolicHeapExpr> shExprPtr = nullptr) : shExpr(std::move(shExprPtr)), pure(z3_ctx), spatial(z3_ctx) {}
 
-        static z3::expr getZ3Var(
-            std::string name, 
-            std::unordered_map<std::string, z3::expr>& z3VarMap,
-            z3::context& ctx
-        );
-
+        
         z3::expr getPure();
         z3::expr getSpatial();
         z3::expr getFinalExpr();

@@ -10,6 +10,7 @@
 #include "smack/BoogieAst.h"
 #include "smack/VarEquiv.h"
 #include "smack/VarFactory.h"
+#include "utils/CenterDebug.h"
 
 // This object is for dealing with symbolic execution
 // of symbolic heap at frontend

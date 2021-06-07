@@ -16,3 +16,11 @@
         std::cout<<"\033[0m"; \
     }\
 } while(false);
+
+#define CFDEBUG(X) do {\
+    if (CENTER_DEBUG) {\
+        std::cout<<"\033[34m";\
+        X;                    \
+        std::cout<<"\033[0m";\
+    }\
+} while(false);

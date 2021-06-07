@@ -367,7 +367,7 @@ public:
   static const SpatialLiteral* pt(const Expr* from, const Expr* to);
   static const SpatialLiteral* blk(const Expr* from, const Expr* to);
   static const SpatialLiteral* spt(const Expr* var, const Expr* size);
-  int getId(){return id;}
+  int getId() const {return id;}
   void setId(int i){id = i;}
   ExprType getType() const { return ExprType::SpatialLit;}
   bool isVar() const {return false;}
@@ -407,6 +407,7 @@ class SizePtLit : public SpatialLiteral {
 
 public:
   SizePtLit(const Expr* v, const Expr* s) : var(v), size(s) {setId(3);}
+  std::string getVarName() const;
   void print(std::ostream &os) const;
 };
 

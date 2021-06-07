@@ -282,6 +282,7 @@ namespace smack{
         // TODOsh: varName usually is not the initial malloc name, here we need to determine which one to free or there is no such free item.
         if(!stmt->getProc().compare("free_")){
             const Expr* freedVar = stmt->getParams().front();
+            
         } else {
             std::cout << "ERROR: this should not happen." << std::endl;
             return nullptr;
@@ -292,7 +293,7 @@ namespace smack{
     // ---------------------- Execution for Casting stmt -----------------
     SHExprPtr 
     BlockExecutor::executeCast(SHExprPtr sh, const Stmt* stmt){
-        return nullptr;
+        return sh;
     }
 
     // --------------------- Execution for Other stmt -------------------

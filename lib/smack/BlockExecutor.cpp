@@ -103,6 +103,8 @@ namespace smack{
                     );
                     std::list<const SpatialLiteral*> newSpatialExpr = sh->getSpatialExpr();
                     SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPureExpr, newSpatialExpr);
+                    newSH->print(std::cout);
+                    std::cout << std::endl;
                     return newSH;
                 }
                 else {
@@ -210,13 +212,12 @@ namespace smack{
             if(param->isVar()){
                 const VarExpr* paramVar = (const VarExpr*)param;
                 std::string paramVarName = paramVar->name();
-                std::cout << "HERE" << std::endl;
                 this->varEquiv->linkName(retVarName, paramVarName);
-                const Expr* pureConj = Expr::eq(
+                /*const Expr* pureConj = Expr::eq(
                     this->varFactory->getVar(retVarName),
                     this->varFactory->getVar(paramVarName)
-                );
-                const Expr* newPure = Expr::and_(sh->getPure(), pureConj);
+                );*/
+                const Expr* newPure = sh->getPure();
                 std::list<const SpatialLiteral *> newSpatialExpr;
                 for(const SpatialLiteral* sp : sh->getSpatialExpr()){
                     newSpatialExpr.push_back(sp);
@@ -235,6 +236,7 @@ namespace smack{
                 newSpatialExpr.push_back(sizePt);
                 newSpatialExpr.push_back(allocBlk);
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                newSH->print(std::cout);
                 return newSH;
             } else if(param->isValue()){
                 const Expr* sizeExpr = param;

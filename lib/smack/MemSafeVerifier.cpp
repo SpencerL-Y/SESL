@@ -66,7 +66,7 @@ namespace smack {
         newStmts.push_back(Stmt::symbheap(initSH));
         SHExprPtr currSH = initSH;
         for(const Stmt* i : block->getStatements()){
-            // for each stmt in the program, put it in the new list and execute to get resulting symbolic heap
+            // for each stmt in the program, put it in the new list and execute to get resulting symboligetPurec heap
             newStmts.push_back(i);
             SHExprPtr newSH = be->execute(currSH, i);
             currSH = newSH;

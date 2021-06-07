@@ -22,4 +22,5 @@ namespace smack
             return this->intsMap[i];
         }
     }
+
 } // namespace smack

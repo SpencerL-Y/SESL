@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <map>
 #include <unordered_map>
+#include "z3++.h"
 
 #include "BoogieAst.h"
 

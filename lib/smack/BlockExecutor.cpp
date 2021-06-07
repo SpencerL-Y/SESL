@@ -293,7 +293,7 @@ namespace smack{
                     if(3 == l->getId()){
                         candSizePt = (const SizePtLit*) l;
                         if(!candSizePt->getVarName().compare(allocVarName)){
-
+                            
                         }
                     }
                 }

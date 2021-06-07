@@ -11,6 +11,7 @@
 #include <cstring>
 #include "utils/CenterDebug.h"
 
+#include "slah_api.h"
 namespace smack {
 
 unsigned Decl::uniqueId = 0;
@@ -461,10 +462,12 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx) const{
     switch (op) {
         case Iff:
             // Q: correct?
+            // A: correct.
             res = z3::implies(left, right) && z3::implies(right, left);
             break;
         case Imp:
-            // Q: correct
+            // Q: correct?
+            // A: correct.
             res = z3::implies(left, right);
             break;
         case Or:
@@ -678,6 +681,11 @@ z3::expr BoolLit::translateToZ3(z3::context& z3Ctx) const {
     return z3Ctx.bool_val(val);
 }
 
+z3::expr EmpLit::translateToZ3(z3::context &z3Ctx) const {
+    z3::expr res = slah_api::newEmp();
+    CDEBUG(std::cout << "create emp" << res.to_string() << std::endl;);
+    return res;
+}
 
 std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_and(SHExprPtr first, SHExprPtr second){
   const Expr* newPure;

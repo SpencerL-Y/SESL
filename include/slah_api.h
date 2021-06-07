@@ -9,7 +9,7 @@
 #include "component/Predicate_SLAH.h"
 
 
-class slah_api{
+class slah_api {
 private:
 	static HeapChunk* setHck();
 	static Predicate* setHls();

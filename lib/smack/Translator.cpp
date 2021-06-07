@@ -22,7 +22,7 @@ namespace smack{
     }
 
     void TransToZ3::translateSpatial() {
-
+        
     }
 
     void TransToZ3::translate() {

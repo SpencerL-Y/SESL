@@ -10,8 +10,8 @@
 #include <vector>
 #include <memory>
 #include "z3++.h"
-
 namespace smack {
+
 
 typedef std::pair<std::string, std::string> Binding;
 
@@ -249,7 +249,7 @@ class NotExpr : public Expr {
 
 public:
   NotExpr(const Expr *e) : expr(e) {}
-  z3::expr translateToZ3(z3::context& z3Ctx) const;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::NOT;}
   const Expr* getExpr() const {return expr;}
@@ -311,7 +311,7 @@ class VarExpr : public Expr {
 public:
   VarExpr(std::string v) : var(v) {}
   std::string name() const { return var; }
-  z3::expr translateToZ3(z3::context& z3Ctx) const;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::VAR;}
   bool isVar() const {return true;}
@@ -379,6 +379,7 @@ class EmpLit : public SpatialLiteral {
 public: 
   EmpLit(){setId(0);}
   void print(std::ostream &os) const;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
 };
 
 
@@ -389,6 +390,7 @@ class PtLit : public SpatialLiteral {
 public:
   PtLit(const Expr* f, const Expr* t) : from(f), to(t){setId(1);}
   void print(std::ostream &os) const;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
 };
 
 // TODOsh: blk literal
@@ -399,6 +401,7 @@ class BlkLit : public SpatialLiteral {
 public:
   BlkLit(const Expr* f, const Expr* t) : from(f), to(t){setId(2);}
   void print(std::ostream &os) const;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
 };
 
 class SizePtLit : public SpatialLiteral {
@@ -409,6 +412,7 @@ public:
   SizePtLit(const Expr* v, const Expr* s) : var(v), size(s) {setId(3);}
   std::string getVarName() const;
   void print(std::ostream &os) const;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
 };
 
 

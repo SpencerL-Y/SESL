@@ -664,6 +664,16 @@ void SizePtLit::print(std::ostream &os) const {
   os << var << " >-s-> " << size;
 }
 
+std::string SizePtLit::getVarName() const {
+  if(var->isVar()){
+    const VarExpr* varExpr = (const VarExpr*) var;
+    return varExpr->name();
+  } else {
+    CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl);
+    return nullptr;
+  }
+}
+
 z3::expr BoolLit::translateToZ3(z3::context& z3Ctx) const {
     return z3Ctx.bool_val(val);
 }

@@ -3,6 +3,7 @@
 
 #include "llvm/Pass.h"
 #include "BlockExecutor.h"
+#include "utils/CenterDebug.h"
 
 namespace smack
 {

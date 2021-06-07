@@ -18,14 +18,14 @@ namespace smack{
                 lhsVar = (const VarExpr* ) lhs;
                 lhsVarName = lhsVar->name();
             } else {
-                std::cout << "ERROR: This should not happen." << std::endl;
+                CFDEBUG(std::cout << "ERROR: This should not happen.");
             }
             if(ExprType::FUNC == rhs->getType()){
                 rhsFun = (const FunExpr* ) rhs;
                 if(this->isUnaryAssignFuncName(rhsFun->name())){
                     // TODOsh: only support a single parameter here
                     const Expr* arg1 = rhsFun->getArgs().front();
-                    std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
+                    CFDEBUG(std::cout << "Arg1 Type: " << arg1->getType() << std::endl);
                     
                     if(arg1->isValue()){
                         this->varEquiv->addNewName(lhsVarName);
@@ -33,7 +33,7 @@ namespace smack{
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, valEquality);
                         // TODOsh: DEBUG print
                         newSH->print(std::cout);
-                        std::cout << std::endl;
+                        CFDEBUG(std::cout << std::endl);
                         return newSH;
                     } else if(arg1->isVar()){
                         const VarExpr* rhsVar = (const VarExpr*) arg1;
@@ -45,23 +45,23 @@ namespace smack{
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
                         // TODOsh: DEBUG print
                         newSH->print(std::cout);
-                        std::cout << std::endl;
+                        CFDEBUG(std::cout << std::endl);
                         varEquiv->linkName(lhsVarName, rhsVarName);
                         return newSH;
                     } else {
-                        std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl;
-                        std::cout << "LHS TYPE: " << lhs->getType() << std::endl;
-                        std::cout << "RHS TYPE: " << rhs->getType() << std::endl; 
+                        CFDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
+                        CFDEBUG(std::cout << "LHS TYPE: " << lhs->getType() << std::endl);
+                        CFDEBUG(std::cout << "RHS TYPE: " << rhs->getType() << std::endl); 
                         return sh;
                     }
                 } else if(this->isUnaryPtrCastFuncName(rhsFun->name())){
                     const Expr* arg1 = rhsFun->getArgs().front();
-                    std::cout << "Arg1 Type: " << arg1->getType() << std::endl;
+                    CFDEBUG(std::cout << "Arg1 Type: " << arg1->getType() << std::endl);
                     
                     if(arg1->isVar()){
-                        this->varEquiv->addNewName(lhsVarName);
                         const VarExpr* rhsVar = (const VarExpr*) arg1;
                         std::string rhsVarName = rhsVar->name();
+                        this->varEquiv->linkName(lhsVarName, rhsVarName);
                         const Expr* varEquality = Expr::eq(
                             this->varFactory->getVar(lhsVarName),
                             this->varFactory->getVar(rhsVarName)
@@ -69,12 +69,12 @@ namespace smack{
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
                         // TODOsh: DEBUG print
                         newSH->print(std::cout);
-                        std::cout << std::endl;
+                        CFDEBUG(std::cout << std::endl);
                         return newSH;
                     } else {
-                        std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl;
-                        std::cout << "LHS TYPE: " << lhs->getType() << std::endl;
-                        std::cout << "RHS TYPE: " << rhs->getType() << std::endl; 
+                        CFDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
+                        CFDEBUG(std::cout << "LHS TYPE: " << lhs->getType() << std::endl);
+                        CFDEBUG(std::cout << "RHS TYPE: " << rhs->getType() << std::endl); 
                         return sh;
                     }
                 } else if(this->isBinaryArithFuncName(rhsFun->name())){
@@ -104,17 +104,17 @@ namespace smack{
                     std::list<const SpatialLiteral*> newSpatialExpr = sh->getSpatialExpr();
                     SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPureExpr, newSpatialExpr);
                     newSH->print(std::cout);
-                    std::cout << std::endl;
+                    CFDEBUG(std::cout << std::endl);
                     return newSH;
                 }
                 else {
-                    std::cout << "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl;
-                    std::cout << "FUNC NAME: " << rhsFun->name() << std::endl; 
+                    CFDEBUG(std::cout <<  "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl);
+                    CFDEBUG(std::cout <<  "FUNC NAME: " << rhsFun->name() << std::endl); 
                     return sh;
                 }
             }
         } else {
-            std::cout << "ERROR: stmt type error" << std::endl;
+            CFDEBUG(std::cout << "ERROR: stmt type error" << std::endl);
             return sh;
         }
         return sh;
@@ -156,7 +156,7 @@ namespace smack{
             const Expr* division = Expr::divide(left, right);
             return division;
         } else {
-            std::cout << "ERROR: UNKNWON BINARY ARITHMETIC FUNCTION" << std::endl;
+            CFDEBUG(std::cout << "ERROR: UNKNWON BINARY ARITHMETIC FUNCTION");
             return NULL;
         }
     }
@@ -192,10 +192,10 @@ namespace smack{
             } else if(!call->getProc().compare("free_")){
                 return this->executeFree(sh, call);
             } else {
-                std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl;
+                CFDEBUG(std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl);
             }
         } else {
-            std::cout << "ERROR: execute call stmt kind error" << std::endl;
+            CFDEBUG(std::cout << "ERROR: execute call stmt kind error" << std::endl);
         }
         return sh;
     }
@@ -205,14 +205,14 @@ namespace smack{
         
         std::string funcName = stmt->getProc();
         if(!funcName.compare("malloc")){
-            std::cout << "INFO: TESTING Call Stmt print" << std::endl;
+            CFDEBUG(std::cout << "INFO: TESTING Call Stmt print" << std::endl);
             std::string retVarName = stmt->getReturns().front();
             // TODOsh: check, we assume there is only one parameter.
             const Expr* param = stmt->getParams().front();
             if(param->isVar()){
                 const VarExpr* paramVar = (const VarExpr*)param;
                 std::string paramVarName = paramVar->name();
-                this->varEquiv->linkName(retVarName, paramVarName);
+                this->varEquiv->addNewName(retVarName);
                 /*const Expr* pureConj = Expr::eq(
                     this->varFactory->getVar(retVarName),
                     this->varFactory->getVar(paramVarName)
@@ -237,6 +237,7 @@ namespace smack{
                 newSpatialExpr.push_back(allocBlk);
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
                 newSH->print(std::cout);
+                CFDEBUG(std::cout << std::endl)
                 return newSH;
             } else if(param->isValue()){
                 const Expr* sizeExpr = param;
@@ -266,11 +267,11 @@ namespace smack{
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
                 return newSH;
             } else {
-                std::cout << "ERROR: UNSOLVED SITUATION!!" << std::endl;
+                CFDEBUG(std::cout << "ERROR: UNSOLVED SITUATION!!" << std::endl);
                 return sh;
             }
         } else {
-            std::cout << "ERROR: this should not happen" << std::endl;
+            CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl);
             return nullptr;
         }
         return sh;
@@ -281,10 +282,27 @@ namespace smack{
     (SHExprPtr sh, const CallStmt* stmt){
         // TODOsh: varName usually is not the initial malloc name, here we need to determine which one to free or there is no such free item.
         if(!stmt->getProc().compare("free_")){
-            const Expr* freedVar = stmt->getParams().front();
-            
+            const Expr* arg1 = stmt->getParams().front();
+            if(ExprType::VAR == arg1->getType()){
+                const VarExpr* freedVar = (const VarExpr*) arg1;
+                std::string allocVarName = this->varEquiv->getAllocName(freedVar->name());
+                CFDEBUG(std::cout << "Freed varname: " << freedVar->name() << std::endl);
+                CFDEBUG(std::cout << "Alloced varname: " << allocVarName << std::endl);
+                const SizePtLit* candSizePt;
+                for(const SpatialLiteral* l : sh->getSpatialExpr()){
+                    if(3 == l->getId()){
+                        candSizePt = (const SizePtLit*) l;
+                        if(!candSizePt->getVarName().compare(allocVarName)){
+
+                        }
+                    }
+                }
+            } else {
+                CFDEBUG(std::cout << "ERROR: UNsolved situation" << std::endl);
+                return sh;
+            }
         } else {
-            std::cout << "ERROR: this should not happen." << std::endl;
+            CFDEBUG(std::cout << "ERROR: this should not happen." << std::endl);
             return nullptr;
         }
         return sh;
@@ -307,18 +325,18 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::execute
     (SHExprPtr initialSh, const Stmt* stmt){
-        std::cout << "INFO: executing for stmt: " << std::endl;
+        CFDEBUG(std::cout << "INFO: executing for stmt: " << std::endl);
         stmt->print(std::cout);
-        std::cout << std::endl;
+        CFDEBUG(std::cout << std::endl);
         if(Stmt::CALL == stmt->getKind()){
-            std::cout << "INFO: stmt kind CALL" << std::endl;
+            CFDEBUG(std::cout << "INFO: stmt kind CALL" << std::endl);
             return this->executeCall(initialSh, stmt);
         } else if(Stmt::ASSIGN == stmt->getKind()){
-            std::cout << "INFO: stmt kind ASSIGN" << std::endl;
+            CFDEBUG(std::cout << "INFO: stmt kind ASSIGN" << std::endl);
             return this->executeAssign(initialSh, stmt);
         } 
         else {
-            std::cout << "INFO: stmt kind " << stmt->getKind() << std::endl;
+            CFDEBUG(std::cout << "INFO: stmt kind " << stmt->getKind() << std::endl);
             return this->executeOther(initialSh, stmt);
         }
         return initialSh;

@@ -17,6 +17,14 @@
     }\
 } while(false);
 
+#define CFDEBUG(X) do {\
+    if (CENTER_DEBUG) {\
+        std::cout<<"\033[34m";\
+        X;                    \
+        std::cout<<"\033[0m";\
+    }\
+} while(false);
+
 namespace color {
     const std::string red = "\033[31m";
     const std::string green = "\033[32m";

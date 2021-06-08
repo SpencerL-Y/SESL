@@ -6,41 +6,65 @@ axiom (main == $sub.ref(0, 1032));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
-  var $p0: ref;
-  var $p1: ref;
+  var $i0: i32;
+  var $i1: i32;
   var $i2: i32;
-  var $p3: ref;
+  var $i3: i1;
   var $i4: i32;
+  var $i6: i32;
   var $i5: i32;
+  var $i7: i32;
+  var $i8: i32;
+  var $i9: i32;
+  var $i10: i1;
+  var $i11: i32;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  call $p0 := malloc(4);
-  $p1 := $bitcast.ref.ref($p0);
-  $i2 := $load.i32($M.0, $p1);
-  call {:cexpr "p"} boogie_si_record_i32($i2);
-  $p3 := $add.ref($p1, $mul.ref(1, 4));
-  $i4 := $add.i32(3, 1);
-  call {:cexpr "a"} boogie_si_record_i32($i4);
-  $i5 := $add.i32($i4, 1);
-  call {:cexpr "a"} boogie_si_record_i32($i5);
+  $i0 := $add.i32(0, 1);
+  call {:cexpr "a"} boogie_si_record_i32($i0);
+  $i1 := $add.i32(0, 1);
+  call {:cexpr "b"} boogie_si_record_i32($i1);
+  $i2 := $add.i32($i1, 2);
+  $i3 := $slt.i32($i2, 3);
+  assume {:branchcond $i3} true;
+  goto $bb1, $bb2;
+$bb1:
+  assume ($i3 == 1);
+  $i4 := $sub.i32($i1, 2);
+  $i5 := $i4;
+  goto $bb3;
+$bb2:
+  assume !(($i3 == 1));
+  $i6 := $sub.i32($i0, 1);
+  $i5 := $i6;
+  goto $bb3;
+$bb3:
+  $i7 := $add.i32($i5, $i5);
+  $i8 := $mul.i32(2, $i5);
+  $i9 := $add.i32($i8, $i5);
+  $i10 := $slt.i32($i7, $i9);
+  assume {:branchcond $i10} true;
+  goto $bb4, $bb5;
+$bb4:
+  assume ($i10 == 1);
+  $i11 := $add.i32($i5, $sub.i32(0, 1));
+  call {:cexpr "a"} boogie_si_record_i32($i11);
+  goto $bb6;
+$bb5:
+  assume !(($i10 == 1));
+  goto $bb6;
+$bb6:
   $r := 0;
   return;
 }
 const llvm.dbg.declare: ref;
 axiom (llvm.dbg.declare == $sub.ref(0, 2064));
 procedure  llvm.dbg.declare($p0: ref, $p1: ref, $p2: ref);
-const malloc: ref;
-axiom (malloc == $sub.ref(0, 3096));
-procedure  malloc($i0: i64)
-  returns ($r: ref)
-{
-  call $r := $malloc($i0);
-}
 const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 4128));
+axiom (llvm.dbg.value == $sub.ref(0, 3096));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 5160));
+axiom (__SMACK_static_init == $sub.ref(0, 4128));
 procedure  __SMACK_static_init()
 {
 $bb0:

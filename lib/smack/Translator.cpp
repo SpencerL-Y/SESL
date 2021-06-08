@@ -17,7 +17,7 @@ namespace smack{
     void TransToZ3::translatePure() {
         auto pExprPtr = shExpr->getPure();
         CDEBUG(std::cout << "======center test: in pure translate process=======\n";)
-        auto exp = pExprPtr->translateToZ3(z3_ctx);
+        auto exp = pExprPtr->translateToZ3(*z3Ctx);
         CDEBUG(std::cout << exp.to_string() << std::endl; pExprPtr->print(cout); cout << "\n";)
         pure = exp;
     }
@@ -25,10 +25,10 @@ namespace smack{
     void TransToZ3::translateSpatial() {
         std::list<const SpatialLiteral*> spatialList = shExpr->getSpatialExpr();
         CDEBUG(std::cout << "======center test: in spatial translate process======\n");
-        z3::expr_vector z3SpatialAtoms(z3_ctx);
+        z3::expr_vector z3SpatialAtoms(*z3Ctx);
         for(const SpatialLiteral* sp : spatialList){
             z3SpatialAtoms.push_back(
-                sp->translateToZ3(z3_ctx)
+                sp->translateToZ3(*z3Ctx)
             );
         }
         z3::expr exp = slah_api::newSep(z3SpatialAtoms);

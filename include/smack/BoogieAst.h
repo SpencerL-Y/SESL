@@ -374,6 +374,7 @@ public:
   ExprType getType() const { return ExprType::SpatialLit;}
   bool isVar() const {return false;}
   bool isValue() const {return false;}
+  
 };
 
 class EmpLit : public SpatialLiteral {

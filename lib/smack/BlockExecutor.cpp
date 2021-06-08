@@ -48,7 +48,8 @@ namespace smack{
                         CFDEBUG(std::cout << std::endl);
                         varEquiv->linkName(lhsVarName, rhsVarName);
                         return newSH;
-                    } else {
+                    } 
+                    else {
                         CFDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
                         CFDEBUG(std::cout << "LHS TYPE: " << lhs->getType() << std::endl);
                         CFDEBUG(std::cout << "RHS TYPE: " << rhs->getType() << std::endl); 
@@ -106,6 +107,24 @@ namespace smack{
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl);
                     return newSH;
+                } else if(this->isStoreLoadFuncName(rhsFun->name())){
+                    if(rhsFun->name().find("$store") != std::string::npos){
+                        const Expr* arg1 = NULL;
+                        const Expr* arg2 = NULL;
+                        int i = 0;
+                        for(const Expr* temp : rhsFun->getArgs()){
+                            if(i == 1){
+                                arg1 = temp;
+                            } else if(i == 2){
+                                arg2 = temp;
+                            }
+                            i++;
+                        }
+                        CFDEBUG(std::cout << "STORE ARG1: " << arg1 << " ARG2: " << arg2 << std::endl;)
+                        return sh;
+                    } else {
+                        return sh;
+                    }
                 }
                 else {
                     CFDEBUG(std::cout <<  "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl);
@@ -182,6 +201,15 @@ namespace smack{
            }
     }
 
+    bool BlockExecutor::isStoreLoadFuncName(std::string name){
+        if(name.find("$store") != std::string::npos ||
+           name.find("$load") != std::string::npos){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
     // ---------------------- Execution for Call stmts -----------------
     SHExprPtr BlockExecutor::executeCall(SHExprPtr sh, const Stmt* callstmt){
@@ -191,7 +219,8 @@ namespace smack{
                 return this->executeMalloc(sh, call);
             } else if(!call->getProc().compare("free_")){
                 return this->executeFree(sh, call);
-            } else {
+            } 
+            else {
                 CFDEBUG(std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl);
             }
         } else {
@@ -289,14 +318,7 @@ namespace smack{
                 CFDEBUG(std::cout << "Freed varname: " << freedVar->name() << std::endl);
                 CFDEBUG(std::cout << "Alloced varname: " << allocVarName << std::endl);
                 const SizePtLit* candSizePt;
-                for(const SpatialLiteral* l : sh->getSpatialExpr()){
-                    if(3 == l->getId()){
-                        candSizePt = (const SizePtLit*) l;
-                        if(!candSizePt->getVarName().compare(allocVarName)){
-                            
-                        }
-                    }
-                }
+                
             } else {
                 CFDEBUG(std::cout << "ERROR: UNsolved situation" << std::endl);
                 return sh;
@@ -307,6 +329,35 @@ namespace smack{
         }
         return sh;
     }
+
+    SHExprPtr 
+    BlockExecutor::executeStore
+    (SHExprPtr sh, const CallStmt* stmt){
+        if(stmt->getProc().find("$store") != std::string::npos){
+            int i = 0;
+            const Expr* arg1 = nullptr;
+            const Expr* arg2 = nullptr;
+            for(const Expr* temp : stmt->getParams()){
+                if(1 == i){
+                    arg1 = temp;
+                } else if(2 == i){
+                    arg2 = temp;
+                }
+                i = i + 1;
+            }
+            CFDEBUG(std::cout << "STORE: arg1 " << arg1 << " arg2: " << arg2 << std::endl;);
+            return sh;
+        } else {
+            CFDEBUG(std::cout << "ERROR: this should not happen.");
+        }
+    }
+
+    SHExprPtr
+    BlockExecutor::executeLoad
+    (SHExprPtr sh, const CallStmt* stmt){
+        return sh;
+    }
+
 
     // ---------------------- Execution for Casting stmt -----------------
     SHExprPtr 

@@ -455,9 +455,9 @@ void BinExpr::print(std::ostream &os) const {
 
 z3::expr BinExpr::translateToZ3(z3::context &z3Ctx) const{
     z3::expr res = z3Ctx.bool_val(true);
-    z3::expr left = lhs->translateToZ3(z3Ctx);
-    z3::expr right = rhs->translateToZ3(z3Ctx);
-    CDEBUG(std::cout << "In equal function!" << std::endl);
+    const z3::expr left = lhs->translateToZ3(z3Ctx);
+    const z3::expr right = rhs->translateToZ3(z3Ctx);
+    CDEBUG(std::cout << "In binExpr function!" << std::endl);
     CDEBUG(std::cout << "left: " << left.to_string() << " right: " << right.to_string() << " op: " << op << std::endl);
     switch (op) {
         case Iff:
@@ -503,6 +503,7 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx) const{
             break;
         case Plus:
             res = (left + right);
+            CDEBUG(std::cout << "in plus func!: " << res.to_string() << std::endl);
             break;
         case Minus:
             //Q： os << "-";
@@ -686,13 +687,12 @@ void BlkLit::print(std::ostream &os) const {
 }
 
 z3::expr BlkLit::translateToZ3(z3::context& z3Ctx) const{
-  z3::expr fromExpr = from->translateToZ3(z3Ctx);
-  z3::expr toExpr =  to->translateToZ3(z3Ctx);
-  z3::expr res = slah_api::newBlk(
-    fromExpr, toExpr
-  );
-  CDEBUG(std::cout << "in blk! " << res.to_string() << std::endl);
-  return res;
+    auto f = from->translateToZ3(z3Ctx);
+    auto t = to->translateToZ3(z3Ctx);
+    z3::expr ex = z3Ctx.bool_val(true);
+    DEBUG_WITH_COLOR(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl, color::red);
+    z3::expr res = slah_api::newBlk(f,t);
+    return res;
 }
 
 void SizePtLit::print(std::ostream &os) const {

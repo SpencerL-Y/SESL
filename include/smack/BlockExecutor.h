@@ -28,6 +28,7 @@ namespace smack{
         bool isUnaryBooleanFuncName(std::string name);
         bool isBinaryBooleanFuncName(std::string name);
         bool isBinaryArithFuncName(std::string name);
+        bool isStoreLoadFuncName(std::string name);
         // compute expression according to the operator types
         const Expr* computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right);
 
@@ -43,6 +44,10 @@ namespace smack{
         SHExprPtr executeFree(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
+
+        SHExprPtr executeLoad(SHExprPtr sh, const CallStmt* stmt);
+
+        SHExprPtr executeStore(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeOther(SHExprPtr sh, const Stmt* stmt);
 

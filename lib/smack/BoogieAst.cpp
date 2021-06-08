@@ -687,17 +687,12 @@ void BlkLit::print(std::ostream &os) const {
 }
 
 z3::expr BlkLit::translateToZ3(z3::context& z3Ctx) const{
-//    DEBUG_WITH_COLOR(std::cout << "in blk!!! " << from->translateToZ3(z3Ctx).to_string() << " " << to->translateToZ3(z3Ctx).to_string() << std::endl, color::red);
-    auto a = z3Ctx.int_const("$p2");
-    auto p = z3Ctx.bool_val(true);
-    auto p2 = z3Ctx.int_const("$p2");
-    auto p1 = z3Ctx.int_const("$p1");
+    auto f = from->translateToZ3(z3Ctx);
+    auto t = to->translateToZ3(z3Ctx);
     z3::expr ex = z3Ctx.bool_val(true);
-    ex = (p1 + p2);
-    z3::expr res = slah_api::newBlk(
-    a, ex
-  );
-  return res;
+    DEBUG_WITH_COLOR(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl, color::red);
+    z3::expr res = slah_api::newBlk(f,t);
+    return res;
 }
 
 void SizePtLit::print(std::ostream &os) const {

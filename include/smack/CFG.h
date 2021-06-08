@@ -19,10 +19,14 @@ namespace smack
     private:
         /* data */
         ProcDecl* proc;
+        std::unordered_map<std::string, std::string> varType;
         std::unordered_map<std::string, StatePtr> states;
         void printCFG(const std::string& start, bool fresh = true);
+        void generateTypeInfo();
     public:
+        void printVarInfo();
         explicit CFG(ProcDecl* procDecl = nullptr);
+        std::string getVarType(std::string& varName);
         void setProc(ProcDecl* procDecl);
         void buildCFG();
         void buildCFG(ProcDecl* procDecl);

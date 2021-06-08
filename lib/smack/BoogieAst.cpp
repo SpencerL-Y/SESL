@@ -891,7 +891,11 @@ void VarDecl::print(std::ostream &os) const {
   os << "var " << name << ": " << type << ";";
 }
 
-void ProcDecl::print(std::ostream &os) const {
+    std::string VarDecl::getType() {
+        return type;
+    }
+
+    void ProcDecl::print(std::ostream &os) const {
   os << "procedure ";
   if (attrs.size() > 0)
     print_seq<const Attr *>(os, attrs, "", " ", " ");

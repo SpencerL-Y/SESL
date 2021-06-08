@@ -740,6 +740,7 @@ class VarDecl : public Decl {
   std::string type;
 
 public:
+  std::string getType();
   VarDecl(std::string n, std::string t) : Decl(VARIABLE, n, {}), type(t) {}
   void print(std::ostream &os) const;
   static bool classof(const Decl *D) { return D->getKind() == VARIABLE; }

@@ -34,8 +34,11 @@ namespace smack
         proc = procDecl;
     }
 
+
+
     void CFG::buildCFG() {
         if (!proc) return;
+        generateTypeInfo();
         for (auto& sb : proc->getBlocks()) {
             auto fromState = getState(sb->getName(), sb);
         }
@@ -137,6 +140,25 @@ namespace smack
             v.push_back(i.second);
         }
         return std::move(v);
+    }
+
+    std::string CFG::getVarType(string &varName) {
+        return varType.at(varName);
+    }
+
+    void CFG::generateTypeInfo() {
+        for (auto i = proc->decl_begin(); i != proc->decl_end(); ++ i) {
+            if ((*i)->getKind() == Decl::Kind::VARIABLE) {
+                VarDecl* varDecl = (VarDecl*)(*i);
+                varType[varDecl->getName()] = varDecl->getType();
+            }
+        }
+    }
+
+    void CFG::printVarInfo() {
+        for (auto &i : varType) {
+            std::cout << i.first << " " << i.second << std::endl;
+        }
     }
 
 } // namespace name

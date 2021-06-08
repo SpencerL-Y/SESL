@@ -48,7 +48,7 @@ public:
   virtual ExprType getType() const = 0;
   virtual bool isVar() const = 0;
   virtual bool isValue() const = 0;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const;
   static const Expr *exists(std::list<Binding>, const Expr *e);
   static const Expr *forall(std::list<Binding>, const Expr *e);
   static const Expr *and_(const Expr *l, const Expr *r);
@@ -120,7 +120,7 @@ private:
 public:
   BinExpr(const Binary b, const Expr *l, const Expr *r)
       : op(b), lhs(l), rhs(r) {}
-  virtual z3::expr translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BIN;}
   bool isVar() const {return false;}
@@ -146,7 +146,7 @@ class BoolLit : public Expr {
 
 public:
   BoolLit(bool b) : val(b) {}
-  virtual z3::expr translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   bool getVal() const { return val;}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BOOL;}
@@ -181,7 +181,7 @@ public:
     val = s.str();
   }
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   ExprType getType() const { return ExprType::INT;}
   bool isVar() const {return false;}
   bool isValue() const {return true;}
@@ -250,7 +250,7 @@ class NotExpr : public Expr {
 
 public:
   NotExpr(const Expr *e) : expr(e) {}
-  virtual z3::expr translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::NOT;}
   const Expr* getExpr() const {return expr;}
@@ -312,7 +312,7 @@ class VarExpr : public Expr {
 public:
   VarExpr(std::string v) : var(v) {}
   std::string name() const { return var; }
-  virtual z3::expr translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::VAR;}
   bool isVar() const {return true;}
@@ -328,7 +328,7 @@ public:
   IfThenElseExpr(const Expr *c, const Expr *t, const Expr *e)
       : cond(c), trueValue(t), falseValue(e) {}
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   ExprType getType() const { return ExprType::ITE;}
   bool isVar() const {return false;}
   bool isValue() const {return false;}
@@ -381,7 +381,7 @@ class EmpLit : public SpatialLiteral {
 public: 
   EmpLit(){setId(0);}
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
 };
 
 
@@ -392,7 +392,7 @@ class PtLit : public SpatialLiteral {
 public:
   PtLit(const Expr* f, const Expr* t) : from(f), to(t){setId(1);}
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
 };
 
 // TODOsh: blk literal
@@ -403,7 +403,7 @@ class BlkLit : public SpatialLiteral {
 public:
   BlkLit(const Expr* f, const Expr* t) : from(f), to(t){setId(2);}
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
 };
 
 class SizePtLit : public SpatialLiteral {
@@ -414,7 +414,7 @@ public:
   SizePtLit(const Expr* v, const Expr* s) : var(v), size(s) {setId(3);}
   std::string getVarName() const;
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
 };
 
 

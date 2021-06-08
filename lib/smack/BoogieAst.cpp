@@ -136,7 +136,7 @@ const Expr *Expr::bvConcat(const Expr *left, const Expr *right) {
 }
 
 
-z3::expr Expr::translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const {
+z3::expr Expr::translateToZ3(z3::context& z3Ctx) const {
     auto res = z3Ctx.bool_val(true);
     return res;
 }
@@ -453,10 +453,10 @@ void BinExpr::print(std::ostream &os) const {
   os << " " << rhs << ")";
 }
 
-z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const{
+z3::expr BinExpr::translateToZ3(z3::context &z3Ctx) const{
     z3::expr res = z3Ctx.bool_val(true);
-    const z3::expr left = lhs->translateToZ3(z3Ctx, z3VarMap);
-    const z3::expr right = rhs->translateToZ3(z3Ctx, z3VarMap);
+    const z3::expr left = lhs->translateToZ3(z3Ctx);
+    const z3::expr right = rhs->translateToZ3(z3Ctx);
     CDEBUG(std::cout << "In equal function!" << std::endl);
     CDEBUG(std::cout << "left: " << left.to_string() << " right: " << right.to_string() << " op: " << op << std::endl);
     switch (op) {
@@ -553,7 +553,7 @@ void RModeLit::print(std::ostream &os) const {
 }
 
 void IntLit::print(std::ostream &os) const { os << val; }
-z3::expr IntLit::translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const {
+z3::expr IntLit::translateToZ3(z3::context& z3Ctx) const {
     CDEBUG(std::cout << "In intLint : " <<  val << std::endl;)
     return z3Ctx.int_val(val.c_str());
 }
@@ -574,8 +574,8 @@ void NegExpr::print(std::ostream &os) const { os << "-(" << expr << ")"; }
 
 void NotExpr::print(std::ostream &os) const { os << "!(" << expr << ")"; }
 
-z3::expr NotExpr::translateToZ3(z3::context &z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const {
-    auto exp = expr->translateToZ3(z3Ctx, z3VarMap);
+z3::expr NotExpr::translateToZ3(z3::context &z3Ctx) const {
+    auto exp = expr->translateToZ3(z3Ctx);
     return not exp;
 }
 
@@ -606,8 +606,8 @@ void UpdExpr::print(std::ostream &os) const {
 
 void VarExpr::print(std::ostream &os) const { os << var; }
 
-z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const {
-    z3::expr res = TranslatorUtil::getZ3Var(this->name(), z3VarMap, z3Ctx);
+z3::expr VarExpr::translateToZ3(z3::context &z3Ctx) const {
+    z3::expr res = //TranslatorUtil::getZ3Var(this->name(), z3VarMap, z3Ctx);
     z3Ctx.int_const(var.c_str());
     CDEBUG(std::cout << "in varExpr! " << res.to_string() << std::endl;);
     return res;
@@ -629,9 +629,9 @@ void IfThenElseExpr::print(std::ostream &os) const {
 }
 
 
-z3::expr IfThenElseExpr::translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const {
-  auto res = ((cond->translateToZ3(z3Ctx, z3VarMap) and trueValue->translateToZ3(z3Ctx, z3VarMap)) or
-              (not cond->translateToZ3(z3Ctx, z3VarMap) and falseValue->translateToZ3(z3Ctx, z3VarMap)));
+z3::expr IfThenElseExpr::translateToZ3(z3::context& z3Ctx) const {
+  auto res = ((cond->translateToZ3(z3Ctx) and trueValue->translateToZ3(z3Ctx)) or
+              (not cond->translateToZ3(z3Ctx) and falseValue->translateToZ3(z3Ctx)));
 }
 
 void BvExtract::print(std::ostream &os) const {
@@ -662,7 +662,7 @@ void EmpLit::print(std::ostream &os) const{
   os << "emp";
 }
 
-z3::expr EmpLit::translateToZ3(z3::context &z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const {
+z3::expr EmpLit::translateToZ3(z3::context &z3Ctx) const {
     z3::expr res = slah_api::newEmp();
     CDEBUG(std::cout << "in emp! " << res.to_string() << std::endl;);
     return res;
@@ -672,10 +672,10 @@ void PtLit::print(std::ostream &os) const {
   os << from << " >--> " << to;
 }
 
-z3::expr PtLit::translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const{
+z3::expr PtLit::translateToZ3(z3::context& z3Ctx) const{
   z3::expr res = slah_api::newPto(
-    from->translateToZ3(z3Ctx, z3VarMap),
-    to->translateToZ3(z3Ctx, z3VarMap)
+    from->translateToZ3(z3Ctx),
+    to->translateToZ3(z3Ctx)
   );
   CDEBUG(std::cout << "in ptlit!" << res.to_string() << std::endl;);
   return res;
@@ -685,10 +685,10 @@ void BlkLit::print(std::ostream &os) const {
   os << "Blk(" << from << ", " << to << ")";
 }
 
-z3::expr BlkLit::translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const{
+z3::expr BlkLit::translateToZ3(z3::context& z3Ctx) const{
   z3::expr res = slah_api::newBlk(
-    from->translateToZ3(z3Ctx, z3VarMap),
-    to->translateToZ3(z3Ctx, z3VarMap)
+    from->translateToZ3(z3Ctx),
+    to->translateToZ3(z3Ctx)
   );
   CDEBUG(std::cout << "in blk! " << res.to_string() << std::endl);
   return res;
@@ -698,7 +698,7 @@ void SizePtLit::print(std::ostream &os) const {
   os << var << " >-s-> " << size;
 }
 
-z3::expr SizePtLit::translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const {
+z3::expr SizePtLit::translateToZ3(z3::context& z3Ctx) const {
   //CDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
   // TODOsh: later changed to above one
   CDEBUG(std::cout << "sizeptlit" << std::endl;);
@@ -715,7 +715,7 @@ std::string SizePtLit::getVarName() const {
   }
 }
 
-z3::expr BoolLit::translateToZ3(z3::context& z3Ctx, std::unordered_map<std::string, z3::expr>& z3VarMap) const {
+z3::expr BoolLit::translateToZ3(z3::context& z3Ctx) const {
     return z3Ctx.bool_val(val);
 }
 

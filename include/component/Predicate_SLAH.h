@@ -29,7 +29,7 @@ private:
 	int m_z_size;
 	int m_v_size; 
 public:
-	Predicate_SLAH(z3::func_decl fun, z3::expr_vector pars, z3::expr base, z3::expr rec);
+	Predicate_SLAH(z3::context& ctx, z3::func_decl fun, z3::expr_vector pars, z3::expr base, z3::expr rec);
 	virtual ~Predicate_SLAH();
 	
 	std::string get_name() {return m_fun.name().str();}

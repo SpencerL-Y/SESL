@@ -123,6 +123,7 @@ namespace smack{
                         CFDEBUG(std::cout << "STORE ARG1: " << arg1 << " ARG2: " << arg2 << std::endl;)
                         return sh;
                     } else {
+
                         return sh;
                     }
                 }

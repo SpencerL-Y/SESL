@@ -19,16 +19,14 @@ using HeapType = pair<SortType*, SortType*>;
 
 class Problem {
 public:
-    Problem();
+	z3::context& z3_ctx;
+    Problem(z3::context& ctx);
     virtual ~Problem();
     void setLogic(string logic) {m_logic = logic;}
     void setPredicate(Predicate* pred) {m_pred = pred;}
     void setHeapChunk(HeapChunk* hck) {m_hck = hck;}
     void setPhi(z3::expr phi){m_phi = phi;}
     void setPsi(z3::expr psi){m_psi = psi;}
-
-//    void setSolver(SepSolver* ss);
-
     void setHeap(SortType* src, SortType* dst) {m_heap.first = src; m_heap.second = dst;}
 
     string getLogic(){return m_logic;}

@@ -39,7 +39,8 @@ private:
         int max_bound;
         std::vector<int> v_index_set;//实际上应该存不出现在sigma中，只出现在pi约束中的index ，这里简化了 
 public:
-HeapChunk(z3::func_decl fun, z3::expr_vector pars, z3::expr exp, int ex_size);
+z3::context& z3_ctx;
+HeapChunk(z3::context& ctx, z3::func_decl fun, z3::expr_vector pars, z3::expr exp, int ex_size);
 	
 		std::string get_name() {return m_fun.name().str();}
 		z3::func_decl get_fun() {return m_fun;}

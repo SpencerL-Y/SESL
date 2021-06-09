@@ -664,7 +664,7 @@ void EmpLit::print(std::ostream &os) const{
 }
 
 z3::expr EmpLit::translateToZ3(z3::context &z3Ctx) const {
-    z3::expr res = slah_api::newEmp();
+    z3::expr res = slah_api::newEmp(z3Ctx);
     CDEBUG(std::cout << "in emp! " << res.to_string() << std::endl;);
     return res;
 }
@@ -703,7 +703,7 @@ z3::expr SizePtLit::translateToZ3(z3::context& z3Ctx) const {
   //CDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
   // TODOsh: later changed to above one
   CDEBUG(std::cout << "sizeptlit" << std::endl;);
-  return slah_api::newEmp();
+  return slah_api::newEmp(z3Ctx);
 }
 
 std::string SizePtLit::getVarName() const {

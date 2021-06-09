@@ -25,7 +25,7 @@ private:
     z3::solver sol;
 
 public:
-	Relation();
+	Relation(z3::context& z3_ctx);
 	
 	void init(z3::expr_vector adds,z3::expr cons);
 	void init(z3::expr_vector adds);

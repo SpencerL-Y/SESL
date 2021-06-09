@@ -13,7 +13,6 @@
 #include "slah_api.h"
 #include "smack/BoogieAst.h"
 #include <unordered_map>
-extern z3::context z3_ctx;
 
 namespace smack{
     class Translator{
@@ -31,7 +30,7 @@ namespace smack{
         z3::expr spatial;
     public:
         void setSymbolicHeapHExpr(const std::shared_ptr<SymbolicHeapExpr>& shExprPtr);
-        explicit TransToZ3(std::shared_ptr<SymbolicHeapExpr> shExprPtr = nullptr) :z3Ctx(&z3_ctx), shExpr(std::move(shExprPtr)), pure(*z3Ctx), spatial(*z3Ctx) {}
+        explicit TransToZ3(z3::context& ctx, std::shared_ptr<SymbolicHeapExpr> shExprPtr = nullptr) :z3Ctx(&ctx), shExpr(std::move(shExprPtr)), pure(*z3Ctx), spatial(*z3Ctx) {}
 
         
         z3::expr getPure();

@@ -23,8 +23,9 @@ using namespace z3;
 class SortType
 {
 public:
-    SortType(string sort_name, int sort_size)
-        : m_sort_name(sort_name), m_sort_size(sort_size) {}
+	z3::context& z3_ctx;
+    SortType(z3::context& ctx, string sort_name, int sort_size)
+        : z3_ctx(ctx), m_sort_name(sort_name), m_sort_size(sort_size) {}
     virtual ~SortType() {}
     string getName() const {return m_sort_name;}
 

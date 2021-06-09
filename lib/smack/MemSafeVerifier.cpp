@@ -72,8 +72,8 @@ namespace smack {
             currSH = newSH;
         }
         be->setBlock(block);
-
-        auto trans = std::make_shared<smack::TransToZ3>(currSH);
+        z3::context ctx;
+        auto trans = std::make_shared<smack::TransToZ3>(ctx, currSH);
         trans->translate();
 
         std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;

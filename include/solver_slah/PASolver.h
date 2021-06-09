@@ -23,7 +23,8 @@ private:
 	int ex_newvar_index;//change_hck of B
 	Relation rel;
 public:
-	PASolver();
+	z3::context& z3_ctx;
+	PASolver(z3::context& ctx);
 	~PASolver(){}
 	void setProblem(Problem* problem){m_problem = problem;}
     void solve();
@@ -33,6 +34,8 @@ public:
     z3::model get_model();
     z3::check_result check_entl();
     
+    z3::expr_vector get_disjunctive_normal_form(z3::expr_vector formula_set);
+    z3::expr_vector get_conjunct(z3::expr formula);
     void get_data_space(z3::expr &formula, z3::expr &data, z3::expr &space); 
     void remove_emp(z3::expr& space);
     z3::expr head(z3::expr atom);

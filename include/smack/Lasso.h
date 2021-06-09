@@ -30,6 +30,8 @@ namespace smack
         explicit Lasso(CFGPtr CFG) : cfg(CFG) {};
         void sampleLasso();
         void printLasso();
+        std::vector<std::string> getStem() {return this->stem;}
+        std::vector<std::string> getLoop() {return this->loop;}
         ~Lasso() = default;
     };
     typedef std::shared_ptr<Lasso> LassoPtr;

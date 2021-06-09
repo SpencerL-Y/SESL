@@ -4,6 +4,7 @@
 #include <iostream>
 #include <llvm/Support/Casting.h>
 #include <unordered_set>
+#include <time.h>
 
 #define FENGWZ_DEBUG 1
 using namespace std;
@@ -12,6 +13,7 @@ namespace smack
     // fengwz: 
     void Lasso::sampleLasso(const std::string& start, bool fresh) {
         
+        srand(time(NULL)); 
         static vector<std::string> successor;
         static unordered_set<std::string> is_visited;
 

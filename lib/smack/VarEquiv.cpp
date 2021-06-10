@@ -2,6 +2,7 @@
 
 namespace smack
 {
+    // name2Alloc operations
     void VarEquiv::addNewName(std::string name){
         if(name2Alloc.find(name) == name2Alloc.end()){
             // if the name is not found, then we add the name to it
@@ -25,7 +26,7 @@ namespace smack
         if(name2Alloc.find(name) != name2Alloc.end()){
             return name2Alloc[name];
         } else {
-            return nullptr; 
+            return "$none"; 
         }
     }
 
@@ -36,4 +37,43 @@ namespace smack
             return true;
         }
     }
+
+    void VarEquiv::debugPrint(){
+        DEBUG_WITH_COLOR(std::cout << "Debug VarEquiv: " << std::endl, color::green);
+        for(auto i : this->name2Alloc){
+            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Val: " << i.second << std::endl, color::green);
+        }
+        DEBUG_WITH_COLOR(std::cout << "Debug BlkLinkName: " << std::endl, color::green);
+        for(auto i : this->name2Blk){
+            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Val: " << i.second << std::endl, color::green);
+        }
+    }
+    // name2blk operations
+
+
+    void VarEquiv::addNewBlkName(std::string name){
+        if(name2Blk.find(name) == name2Blk.end()){
+            name2Blk[name] = name;
+        } else {
+            std::cout << "ERROR: VarEquiv blk new blkvarname exists. " << std::endl;
+        }
+    }
+
+    void VarEquiv::linkBlkName(std::string newname, std::string blkname){
+        if(name2Blk.find(newname) == name2Blk.end() && 
+           name2Blk.find(blkname) != name2Blk.end()){
+            name2Blk[newname] = name2Blk[blkname];
+        } else {
+            std::cout << "ERROR: VarEquiv new name exists "  << (name2Blk.find(newname) == name2Blk.end()) << " " << (name2Blk.find(blkname) != name2Blk.end()) << std::endl;
+        }
+    }
+
+    std::string VarEquiv::getBlkName(std::string name){
+        if(name2Blk.find(name) != name2Blk.end()){
+            return name2Blk[name];
+        } else {
+            return nullptr;
+        }
+    }
+
 } // namespace smack

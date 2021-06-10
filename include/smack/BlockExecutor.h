@@ -14,6 +14,11 @@
 
 // This object is for dealing with symbolic execution
 // of symbolic heap at frontend
+
+// About pointer arithmetic: currently support the pointer arithmetic of the form:
+// p = p + c 
+// where p is of pointer variable type and c is a constant
+
 namespace smack{
     using llvm::errs;
     class BlockExecutor {
@@ -29,6 +34,7 @@ namespace smack{
         bool isBinaryBooleanFuncName(std::string name);
         bool isBinaryArithFuncName(std::string name);
         bool isStoreLoadFuncName(std::string name);
+        bool isPtrArithFuncName(std::string name);
         // compute expression according to the operator types
         const Expr* computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right);
 

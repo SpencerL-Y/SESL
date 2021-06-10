@@ -28,7 +28,6 @@ namespace smack{
                 rhsFun = (const FunExpr* ) rhs;
                 //1. Deal with pointer first
                 if(this->isUnaryPtrCastFuncName(rhsFun->name())){
-
                     CFDEBUG(std::cout << "ASSIGN: rhs Unary ptr cast" << std::endl;);
                     const Expr* arg1 = rhsFun->getArgs().front();
                     CFDEBUG(std::cout << "Arg1 Type: " << arg1->getType() << std::endl);
@@ -36,8 +35,8 @@ namespace smack{
                     if(arg1->isVar()){
                         const VarExpr* rhsVar = (const VarExpr*) arg1;
                         std::string rhsVarName = rhsVar->name();
-                        // Link name only when both are pointer variables or related blk
                         this->varEquiv->linkName(lhsVarName, rhsVarName);
+                        this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
                         const Expr* varEquality = Expr::eq(
                             this->varFactory->getVar(lhsVarName),
                             this->varFactory->getVar(rhsVarName)
@@ -56,9 +55,15 @@ namespace smack{
                     }
                 } else if(this->isPtrArithFuncName(rhsFun->name())){
                     CFDEBUG(std::cout << "ASSIGN: rhs ptr arithmetic" << std::endl;);
-                    const Expr* arg1 = rhsFun->getArgs().front();
-                    const Expr* arg2 = rhsFun->getArgs().back();
-
+                    const Expr* rhsExpr = this->parsePtrArithmeticExpr(rhsFun, lhsVarName);
+                    const Expr* varEquality = Expr::eq(
+                        this->varFactory->getVar(lhsVarName),
+                        rhsExpr
+                    );
+                    SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
+                    newSH->print(std::cout);
+                    CFDEBUG(std::cout << std::endl;);
+                    return newSH;
                 } 
                 else if(this->isUnaryAssignFuncName(rhsFun->name())){
                     // TODOsh: only support a single parameter here
@@ -85,6 +90,7 @@ namespace smack{
                         newSH->print(std::cout);
                         CFDEBUG(std::cout << std::endl);
                         varEquiv->linkName(lhsVarName, rhsVarName);
+                        varEquiv->linkBlkName(lhsVarName, rhsVarName);
                         return newSH;
                     } 
                     else {
@@ -96,61 +102,12 @@ namespace smack{
                 } else if(this->isBinaryArithFuncName(rhsFun->name())){
                     CFDEBUG(std::cout << "ASSIGN: rhs binary arithmetic" << std::endl;);
                     this->varEquiv->addNewName(lhsVarName);
-                    const Expr* arg1 = rhsFun->getArgs().front();
-                    const Expr* arg2 = rhsFun->getArgs().back();
-                    if(arg1->isVar()){
-                        const VarExpr* var1 = (const VarExpr*) arg1;
-                        std::string name1 = var1->name();
-                        arg1 = this->varFactory->getVar(name1);
-                    } else if(ExprType::FUNC == arg2->getType()){
-                        CFDEBUG(std::cout << "ASSIGNRHSARG2: FUNC" << std::endl;);
-                        const FunExpr* rhsArg1 = (FunExpr*)arg1;
-                        std::string rhsArg1FunName = rhsArg1->name();
-                        if(this->isBinaryArithFuncName(rhsArg1FunName)){
-                            arg1 = this->computeBinaryArithmeticExpr(rhsArg1FunName, rhsArg1->getArgs().front(), rhsArg1->getArgs().back());
-                        } else {
-                            CFDEBUG(std::cout << "ERROR: UNSOLVED CASE!!!" << std::endl;);
-                            return sh;
-                        }
-                    }
-                    else {
-                        CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
-                        return sh;
-                    }
-
-                    if(arg2->isVar()){
-                        const VarExpr* var2 = (const VarExpr*) arg2;
-                        std::string name2 = var2->name();
-                        arg2 = this->varFactory->getVar(name2);
-                    } else if(arg2->isValue()){
-                        CFDEBUG(std::cout << "VAL2: " << arg2 << std::endl;);
-                    }
-                    else if(ExprType::FUNC == arg2->getType()){
-                        CFDEBUG(std::cout << "ASSIGNRHS ARG2: FUNC" << std::endl;);
-                        const FunExpr* rhsArg2 = (FunExpr*)arg2;
-                        std::string rhsArg2FunName = rhsArg2->name();
-                        if(this->isBinaryArithFuncName(rhsArg2FunName)){
-                            arg2 = this->computeBinaryArithmeticExpr(rhsArg2FunName, rhsArg2->getArgs().front(), rhsArg2->getArgs().back());
-                        } else {
-                            CFDEBUG(std::cout << "ERROR: UNSOLVED CASE!!!" << std::endl;);
-                            return sh;
-                        }
-                    }
-                    else {
-                        CFDEBUG(std::cout << "ERROR: UNSOLVED CASE !!!" << std::endl;);
-                        return sh;
-                    }
-                    const Expr* rhsExpr = this->computeBinaryArithmeticExpr(rhsFun->name(), arg1, arg2);
+                    const Expr* rhsExpr = this->parseVarArithmeticExpr(rhsFun);
                     const Expr* equality = Expr::eq(
                         this->varFactory->getVar(lhsVarName),
                         rhsExpr
                     );
-                    const Expr* newPureExpr = Expr::and_(
-                        sh->getPure(),
-                        equality
-                    );
-                    std::list<const SpatialLiteral*> newSpatialExpr = sh->getSpatialExpr();
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPureExpr, newSpatialExpr);
+                    SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, equality);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl);
                     return newSH;
@@ -188,6 +145,7 @@ namespace smack{
         }
         return sh;
     }
+    // ----------- Util functions for assignment symbolic execution ----------- 
 
     bool BlockExecutor::isUnaryAssignFuncName(std::string name){
         // TODO: only consider one type of the assignment here
@@ -241,7 +199,8 @@ namespace smack{
 
     bool BlockExecutor::isPtrArithFuncName(std::string name){
         // ptr arithmetic, currently only support the addition
-        if(name.find("$add.ref") != std::string::npos){
+        if(name.find("$add.ref") != std::string::npos||
+           name.find("$mul.ref") != std::string::npos){
                 return true;
            } else {
                 return false;
@@ -269,6 +228,56 @@ namespace smack{
         }
     }
 
+
+    const Expr* BlockExecutor::parseVarArithmeticExpr(const Expr* arithExpr){
+        if(ExprType::FUNC == arithExpr->getType()){
+            const FunExpr* funcExpr = (const FunExpr*) arithExpr;
+            if(this->isBinaryArithFuncName(funcExpr->name())){
+                const Expr* resultExpr = NULL;
+                const Expr* arg1 = funcExpr->getArgs().front();
+                const Expr* arg2 = funcExpr->getArgs().back();
+                resultExpr = this->computeBinaryArithmeticExpr(
+                    funcExpr->name(), 
+                    this->parseVarArithmeticExpr(arg1), 
+                    this->parseVarArithmeticExpr(arg2));
+                return resultExpr;
+            } else {
+                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function !!!!" << std::endl;);
+                return funcExpr;
+            }
+        } else {
+            if(arithExpr->)
+            return arithExpr;
+        }
+    }
+
+    const Expr* BlockExecutor::parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName){
+        if(ExprType::FUNC == arithExpr->getType()){
+            const FunExpr* funcExpr = (const FunExpr*) arithExpr;
+            if(this->isPtrArithFuncName(funcExpr->name())){
+                const Expr* resultExpr = NULL;
+                const Expr* arg1 = funcExpr->getArgs().front();
+                const Expr* arg2 = funcExpr->getArgs().back();
+                resultExpr = this->computeBinaryArithmeticExpr(
+                    funcExpr->name(),
+                    parsePtrArithmeticExpr(arg1, lhsName),
+                    parsePtrArithmeticExpr(arg2, lhsName)
+                );
+                return resultExpr;
+            } else {
+                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function !!!!" << std::endl;);
+                return arithExpr;
+            }
+        } else {
+            if(arithExpr->isVar()){
+                CFDEBUG(std::cout << "Link arithmetic operation: " <<  lhsName << " " << ((const VarExpr*) arithExpr)->name() << std::endl;);
+                this->varEquiv->linkBlkName(lhsName, ((const VarExpr*) arithExpr)->name());  
+                return this->varFactory->getVar(((const VarExpr*) arithExpr)->name());
+            } 
+            return arithExpr;
+        }
+    }
+    //----------------------- Assign execution utils end ---------------
 
     // ---------------------- Execution for Call stmts -----------------
     SHExprPtr BlockExecutor::executeCall(SHExprPtr sh, const Stmt* callstmt){
@@ -300,6 +309,7 @@ namespace smack{
                 const VarExpr* paramVar = (const VarExpr*)param;
                 std::string paramVarName = paramVar->name();
                 this->varEquiv->addNewName(retVarName);
+                this->varEquiv->addNewBlkName(retVarName);
                 /*const Expr* pureConj = Expr::eq(
                     this->varFactory->getVar(retVarName),
                     this->varFactory->getVar(paramVarName)
@@ -329,6 +339,7 @@ namespace smack{
             } else if(param->isValue()){
                 const Expr* sizeExpr = param;
                 this->varEquiv->addNewName(retVarName);
+                this->varEquiv->addNewBlkName(retVarName);
                 const Expr* pureConj = Expr::eq(
                     this->varFactory->getVar(retVarName),
                     sizeExpr
@@ -451,4 +462,5 @@ namespace smack{
         }
         return initialSh;
     }
+    
 }

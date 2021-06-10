@@ -64,7 +64,7 @@ namespace smack
            name2Blk.find(blkname) != name2Blk.end()){
             name2Blk[newname] = name2Blk[blkname];
         } else {
-            std::cout << "ERROR: VarEquiv new name exists "  << (name2Blk.find(newname) == name2Blk.end()) << " " << (name2Blk.find(blkname) != name2Blk.end()) << std::endl;
+            CFDEBUG(std::cout << "ERROR: VarEquiv new blk name exists "  << (name2Blk.find(newname) == name2Blk.end()) << " " << (name2Blk.find(blkname) != name2Blk.end()) << std::endl);
         }
     }
 

@@ -35,6 +35,9 @@ namespace smack{
         bool isBinaryArithFuncName(std::string name);
         bool isStoreLoadFuncName(std::string name);
         bool isPtrArithFuncName(std::string name);
+
+        const Expr* parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName);
+        const Expr* parseVarArithmeticExpr(const Expr* arithExpr);
         // compute expression according to the operator types
         const Expr* computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right);
 

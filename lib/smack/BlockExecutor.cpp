@@ -246,7 +246,9 @@ namespace smack{
                 return funcExpr;
             }
         } else {
-            if(arithExpr->)
+            if(arithExpr->isVar()){
+                return this->varFactory->getVar(((const VarExpr*)arithExpr)->name());
+            }
             return arithExpr;
         }
     }

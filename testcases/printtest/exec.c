@@ -6,8 +6,8 @@ int main(){
     *(i+1) = 101;
     int nnum = *(i+1) + (-1);
     //*(i+1) = num;
-    //int a[11][11][11];
-    //a[2][num][4] = 0;
+    long long a[11][11][11];
+    a[2][num][4] = 0;
     free(i);
     
 }

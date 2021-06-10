@@ -1,25 +1,32 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-uz247t58.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-7pkgipol.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
 ; Function Attrs: noinline nounwind uwtable
 define dso_local i32 @main() #0 !dbg !10 {
-  call void @llvm.dbg.value(metadata i32 3, metadata !13, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  %1 = sext i32 3 to i64, !dbg !16, !verifier.code !15
-  %2 = mul i64 %1, 4, !dbg !17, !verifier.code !15
-  %3 = call noalias i8* @malloc(i64 %2) #3, !dbg !18, !verifier.code !15
-  %4 = bitcast i8* %3 to i32*, !dbg !19, !verifier.code !15
-  call void @llvm.dbg.value(metadata i32* %4, metadata !20, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  %5 = getelementptr inbounds i32, i32* %4, i64 1, !dbg !21, !verifier.code !15
-  store i32 101, i32* %5, align 4, !dbg !22, !verifier.code !15
-  %6 = getelementptr inbounds i32, i32* %4, i64 1, !dbg !23, !verifier.code !15
-  %7 = load i32, i32* %6, align 4, !dbg !24, !verifier.code !15
-  %8 = add nsw i32 %7, -1, !dbg !25, !verifier.code !15
-  call void @llvm.dbg.value(metadata i32 %8, metadata !26, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  %9 = bitcast i32* %4 to i8*, !dbg !27, !verifier.code !15
-  call void @free(i8* %9) #3, !dbg !28, !verifier.code !15
-  ret i32 0, !dbg !29, !verifier.code !15
+  %1 = alloca [11 x [11 x [11 x i64]]], align 16, !verifier.code !13
+  call void @llvm.dbg.value(metadata i32 3, metadata !14, metadata !DIExpression()), !dbg !15, !verifier.code !13
+  %2 = sext i32 3 to i64, !dbg !16, !verifier.code !13
+  %3 = mul i64 %2, 4, !dbg !17, !verifier.code !13
+  %4 = call noalias i8* @malloc(i64 %3) #3, !dbg !18, !verifier.code !13
+  %5 = bitcast i8* %4 to i32*, !dbg !19, !verifier.code !13
+  call void @llvm.dbg.value(metadata i32* %5, metadata !20, metadata !DIExpression()), !dbg !15, !verifier.code !13
+  %6 = getelementptr inbounds i32, i32* %5, i64 1, !dbg !21, !verifier.code !13
+  store i32 101, i32* %6, align 4, !dbg !22, !verifier.code !13
+  %7 = getelementptr inbounds i32, i32* %5, i64 1, !dbg !23, !verifier.code !13
+  %8 = load i32, i32* %7, align 4, !dbg !24, !verifier.code !13
+  %9 = add nsw i32 %8, -1, !dbg !25, !verifier.code !13
+  call void @llvm.dbg.value(metadata i32 %9, metadata !26, metadata !DIExpression()), !dbg !15, !verifier.code !13
+  call void @llvm.dbg.declare(metadata [11 x [11 x [11 x i64]]]* %1, metadata !27, metadata !DIExpression()), !dbg !32, !verifier.code !13
+  %10 = getelementptr inbounds [11 x [11 x [11 x i64]]], [11 x [11 x [11 x i64]]]* %1, i64 0, i64 2, !dbg !33, !verifier.code !13
+  %11 = sext i32 3 to i64, !dbg !33, !verifier.code !13
+  %12 = getelementptr inbounds [11 x [11 x [11 x i64]]], [11 x [11 x [11 x i64]]]* %1, i64 0, i64 2, i64 %11
+  %13 = getelementptr inbounds [11 x [11 x [11 x i64]]], [11 x [11 x [11 x i64]]]* %1, i64 0, i64 2, i64 %11, i64 4
+  store i64 0, i64* %13, align 8, !dbg !34, !verifier.code !13
+  %14 = bitcast i32* %5 to i8*, !dbg !35, !verifier.code !13
+  call void @free(i8* %14) #3, !dbg !36, !verifier.code !13
+  ret i32 0, !dbg !37, !verifier.code !13
 }
 
 ; Function Attrs: nounwind readnone speculatable willreturn
@@ -61,9 +68,9 @@ attributes #3 = { nounwind }
 !10 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 3, type: !11, scopeLine: 3, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
 !11 = !DISubroutineType(types: !12)
 !12 = !{!5}
-!13 = !DILocalVariable(name: "num", scope: !10, file: !1, line: 4, type: !5)
-!14 = !DILocation(line: 0, scope: !10)
-!15 = !{i1 false}
+!13 = !{i1 false}
+!14 = !DILocalVariable(name: "num", scope: !10, file: !1, line: 4, type: !5)
+!15 = !DILocation(line: 0, scope: !10)
 !16 = !DILocation(line: 5, column: 27, scope: !10)
 !17 = !DILocation(line: 5, column: 30, scope: !10)
 !18 = !DILocation(line: 5, column: 20, scope: !10)
@@ -75,6 +82,14 @@ attributes #3 = { nounwind }
 !24 = !DILocation(line: 7, column: 16, scope: !10)
 !25 = !DILocation(line: 7, column: 23, scope: !10)
 !26 = !DILocalVariable(name: "nnum", scope: !10, file: !1, line: 7, type: !5)
-!27 = !DILocation(line: 11, column: 10, scope: !10)
-!28 = !DILocation(line: 11, column: 5, scope: !10)
-!29 = !DILocation(line: 13, column: 1, scope: !10)
+!27 = !DILocalVariable(name: "a", scope: !10, file: !1, line: 9, type: !28)
+!28 = !DICompositeType(tag: DW_TAG_array_type, baseType: !29, size: 85184, elements: !30)
+!29 = !DIBasicType(name: "long long int", size: 64, encoding: DW_ATE_signed)
+!30 = !{!31, !31, !31}
+!31 = !DISubrange(count: 11)
+!32 = !DILocation(line: 9, column: 15, scope: !10)
+!33 = !DILocation(line: 10, column: 5, scope: !10)
+!34 = !DILocation(line: 10, column: 18, scope: !10)
+!35 = !DILocation(line: 11, column: 10, scope: !10)
+!36 = !DILocation(line: 11, column: 5, scope: !10)
+!37 = !DILocation(line: 13, column: 1, scope: !10)

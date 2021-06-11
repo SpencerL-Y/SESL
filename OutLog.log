@@ -1,0 +1,1339 @@
+[1/2] Linking CXX executable llvm2bpl
+[1/2] Install the project...
+-- Install configuration: "Debug"
+-- Installing: /usr/local/bin/llvm2bpl
+-- Set runtime path of "/usr/local/bin/llvm2bpl" to ""
+-- Up-to-date: /usr/local/bin/smack
+-- Up-to-date: /usr/local/bin/smack-doctor
+-- Up-to-date: /usr/local/bin/smack-svcomp-wrapper.sh
+-- Up-to-date: /usr/local/share/smack
+-- Up-to-date: /usr/local/share/smack/doctor.py
+-- Up-to-date: /usr/local/share/smack/errtrace.py
+-- Up-to-date: /usr/local/share/smack/frontend.py
+-- Up-to-date: /usr/local/share/smack/include
+-- Up-to-date: /usr/local/share/smack/include/bits
+-- Up-to-date: /usr/local/share/smack/include/bits/gthr-default.h
+-- Up-to-date: /usr/local/share/smack/include/bits/pthreadtypes.h
+-- Up-to-date: /usr/local/share/smack/include/bits/types
+-- Up-to-date: /usr/local/share/smack/include/bits/types/struct_timespec.h
+-- Up-to-date: /usr/local/share/smack/include/fenv.h
+-- Up-to-date: /usr/local/share/smack/include/math.h
+-- Up-to-date: /usr/local/share/smack/include/pthread.h
+-- Up-to-date: /usr/local/share/smack/include/smack-contracts.h
+-- Up-to-date: /usr/local/share/smack/include/smack.di
+-- Up-to-date: /usr/local/share/smack/include/smack.h
+-- Up-to-date: /usr/local/share/smack/include/string.h
+-- Up-to-date: /usr/local/share/smack/include/TestIncl.h
+-- Up-to-date: /usr/local/share/smack/lib
+-- Up-to-date: /usr/local/share/smack/lib/errno.c
+-- Up-to-date: /usr/local/share/smack/lib/fenv.c
+-- Up-to-date: /usr/local/share/smack/lib/Makefile
+-- Up-to-date: /usr/local/share/smack/lib/math.c
+-- Up-to-date: /usr/local/share/smack/lib/pthread.c
+-- Up-to-date: /usr/local/share/smack/lib/smack
+-- Up-to-date: /usr/local/share/smack/lib/smack/build.rs
+-- Up-to-date: /usr/local/share/smack/lib/smack/Cargo.toml
+-- Up-to-date: /usr/local/share/smack/lib/smack-rust.c
+-- Up-to-date: /usr/local/share/smack/lib/smack.c
+-- Up-to-date: /usr/local/share/smack/lib/smack.f90
+-- Up-to-date: /usr/local/share/smack/lib/smack.rs
+-- Up-to-date: /usr/local/share/smack/lib/stdlib.c
+-- Up-to-date: /usr/local/share/smack/lib/string.c
+-- Up-to-date: /usr/local/share/smack/lib/TestIncl.c
+-- Up-to-date: /usr/local/share/smack/reach.py
+-- Up-to-date: /usr/local/share/smack/replay.py
+-- Up-to-date: /usr/local/share/smack/svcomp
+-- Up-to-date: /usr/local/share/smack/svcomp/token_replace.py
+-- Up-to-date: /usr/local/share/smack/svcomp/toSVCOMPformat.py
+-- Up-to-date: /usr/local/share/smack/svcomp/utils.py
+-- Up-to-date: /usr/local/share/smack/svcomp/__init__.py
+-- Up-to-date: /usr/local/share/smack/top.py
+-- Up-to-date: /usr/local/share/smack/utils.py
+-- Up-to-date: /usr/local/share/smack/__init__.py
+-- Up-to-date: /usr/local/share/smack/versions.py
+-- Up-to-date: /usr/local/share/smack/lib/Cargo.toml
+-- Up-to-date: /usr/local/share/smack/lib/build.rs
+-- Up-to-date: /usr/local/share/smack/lib/src/smack-rust.c
+-- Up-to-date: /usr/local/share/smack/lib/src/lib.rs
+-- Up-to-date: /usr/local/lib/libSeaDsaAnalysis.a
+SMACK program verifier version 2.6.3
+[regions] for:   %10 = getelementptr inbounds i32, i32* %5, i64 1, !dbg !26, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[4,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %11 = getelementptr inbounds i32, i32* %5, i64 3, !dbg !28, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[12,16]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %12 = getelementptr inbounds i32, i32* %5, i64 2, !dbg !30, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %13 = getelementptr inbounds i32, i32* %9, i64 2, !dbg !32, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for:   %17 = getelementptr inbounds [11 x [11 x [11 x i64]]], [11 x [11 x [11 x i64]]]* %1, i64 0, i64 2, i64 %15, i64 4
+   in function: main
+ [regions]   using region: <Node:i64>[32,40]{A}
+ [regions]   returning index: 4
+ 
+ We are now translating the program to boogie...
+ Analyzing globals...
+ Analyzing functions...
+ Analyzing function: main
+ -------INSERT: Global Variables main
+ Analyzing function body: main
+ Generating body for main
+ visitBasicBlock
+ visitAlloca
+ visitDbgValue
+ visitCast
+ visitCast not vector
+ visitBinary
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitDbgValue
+ visitCast
+ visitCast not vector
+ visitBinary
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitDbgValue
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %10 = getelementptr inbounds i32, i32* %5, i64 1, !dbg !26, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[4,8]{A}
+    found overlap at index 0: <Node:i32>[4,8]{A}
+ [regions]   merged region: <Node:i32>[4,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %10 = getelementptr inbounds i32, i32* %5, i64 1, !dbg !26, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[4,8]{A}
+    found overlap at index 0: <Node:i32>[4,8]{A}
+ [regions]   merged region: <Node:i32>[4,8]{A}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %11 = getelementptr inbounds i32, i32* %5, i64 3, !dbg !28, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[12,16]{A}
+    found overlap at index 1: <Node:i32>[12,16]{A}
+ [regions]   merged region: <Node:i32>[12,16]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %11 = getelementptr inbounds i32, i32* %5, i64 3, !dbg !28, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[12,16]{A}
+    found overlap at index 1: <Node:i32>[12,16]{A}
+ [regions]   merged region: <Node:i32>[12,16]{A}
+ [regions]   returning index: 1
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %12 = getelementptr inbounds i32, i32* %5, i64 2, !dbg !30, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+    found overlap at index 2: <Node:i32>[8,12]{A}
+ [regions]   merged region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %12 = getelementptr inbounds i32, i32* %5, i64 2, !dbg !30, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+    found overlap at index 2: <Node:i32>[8,12]{A}
+ [regions]   merged region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 2
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %13 = getelementptr inbounds i32, i32* %9, i64 2, !dbg !32, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+    found overlap at index 3: <Node:i32>[8,12]{A}
+ [regions]   merged region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for:   %13 = getelementptr inbounds i32, i32* %9, i64 2, !dbg !32, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+    found overlap at index 3: <Node:i32>[8,12]{A}
+ [regions]   merged region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 3
+ 
+ visitIntrinsic
+ visitGetElementPtr
+ visitCast
+ visitCast not vector
+ visitGetElementPtr
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %17 = getelementptr inbounds [11 x [11 x [11 x i64]]], [11 x [11 x [11 x i64]]]* %1, i64 0, i64 2, i64 %15, i64 4
+   in function: main
+ [regions]   using region: <Node:i64>[32,40]{A}
+    found overlap at index 4: <Node:i64>[32,40]{A}
+ [regions]   merged region: <Node:i64>[32,40]{A}
+ [regions]   returning index: 4
+ 
+ [regions] for:   %17 = getelementptr inbounds [11 x [11 x [11 x i64]]], [11 x [11 x [11 x i64]]]* %1, i64 0, i64 2, i64 %15, i64 4
+   in function: main
+ [regions]   using region: <Node:i64>[32,40]{A}
+    found overlap at index 4: <Node:i64>[32,40]{A}
+ [regions]   merged region: <Node:i64>[32,40]{A}
+ [regions]   returning index: 4
+ 
+ visitCast
+ visitCast not vector
+ visitCall
+ smackrep call
+ visitReturn
+ 
+ insert initial SH to main
+ Finished analyzing function: main
+ 
+ Analyzing function: llvm.dbg.declare
+ -------INSERT: Global Variables llvm.dbg.declare
+ Analyzing function: malloc
+ -------INSERT: Global Variables malloc
+ Analyzing function: free_
+ -------INSERT: Global Variables free_
+ Analyzing function: llvm.dbg.value
+ -------INSERT: Global Variables llvm.dbg.value
+ Analyzing function: __SMACK_static_init
+ -------INSERT: Global Variables __SMACK_static_init
+ Analyzing function body: __SMACK_static_init
+ Generating body for __SMACK_static_init
+ visitBasicBlock
+ visitReturn
+ 
+ Finished analyzing function: __SMACK_static_init
+ 
+ Start Analyzing Prelude: main
+ 
+ Start Analyzing Prelude: llvm.dbg.declare
+ 
+ Start Analyzing Prelude: malloc
+ 
+ Start Analyzing Prelude: free_
+ 
+ Start Analyzing Prelude: llvm.dbg.value
+ 
+ Start Analyzing Prelude: __SMACK_static_init
+ 
+ Start Analyzing Prelude: boogie_si_record_ref
+ 
+ Start Analyzing Prelude: $initialize
+ 
+ -----------------START MEMSAFE ANALYSIS---------------
+ Begin verifying
+ main
+ llvm.dbg.declare
+ malloc
+ free_
+ llvm.dbg.value
+ __SMACK_static_init
+ boogie_si_record_ref
+ $initialize
+ $bb0
+ =========== PRINT THE DETAILED STMTs
+ Block stmt num: 28
+ call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
+ call $p0 := $alloc($mul.ref(10648, $zext.i32.i64(1)));
+ $i1 := $sext.i32.i64(5);
+ $i2 := $mul.i64($i1, 4);
+ call $p3 := malloc($i2);
+ $p4 := $bitcast.ref.ref($p3);
+ $i5 := $sext.i32.i64(5);
+ $i6 := $mul.i64($i5, 4);
+ call $p7 := malloc($i6);
+ $p8 := $bitcast.ref.ref($p7);
+ $p9 := $add.ref($p4, $mul.ref(1, 4));
+ $M.0 := $store.i32($M.0, $p9, 101);
+ $p10 := $add.ref($p4, $mul.ref(3, 4));
+ $M.1 := $store.i32($M.1, $p10, 1111);
+ $p11 := $add.ref($p4, $mul.ref(2, 4));
+ $M.2 := $store.i32($M.2, $p11, 123);
+ $p12 := $add.ref($p8, $mul.ref(2, 4));
+ $M.3 := $store.i32($M.3, $p12, 1110);
+ assume true;
+ $p13 := $add.ref($add.ref($p0, $mul.ref(0, 10648)), $mul.ref(2, 968));
+ $i14 := $sext.i32.i64(5);
+ $p15 := $add.ref($add.ref($add.ref($p0, $mul.ref(0, 10648)), $mul.ref(2, 968)), $mul.ref($i14, 88));
+ $p16 := $add.ref($add.ref($add.ref($add.ref($p0, $mul.ref(0, 10648)), $mul.ref(2, 968)), $mul.ref($i14, 88)), $mul.ref(4, 8));
+ $M.4 := $store.i64($M.4, $p16, 0);
+ $p17 := $bitcast.ref.ref($p4);
+ call free_($p17);
+ $r := 0;
+ return;
+ =========== END PRINT THE DETAILED STMTs
+ =========== DO SYMBOLIC EXECUTION FOR ONE BLOCk
+ [32mDebug VarEquiv: 
+ [0m[32mDebug BlkLinkName: 
+ [0m[34mINFO: executing for stmt: 
+ [0mcall {:cexpr "smack:entry:main"} boogie_si_record_ref(main);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: UNsolved proc call: boogie_si_record_ref
+ [0m[32mDebug VarEquiv: 
+ [0m[32mDebug BlkLinkName: 
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $p0 := $alloc($mul.ref(10648, $zext.i32.i64(1)));[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: UNsolved proc call: $alloc
+ [0m[32mDebug VarEquiv: 
+ [0m[32mDebug BlkLinkName: 
+ [0m[34mINFO: executing for stmt: 
+ [0m$i1 := $sext.i32.i64(5);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mArg1 Type: 4
+ [0mSymbHeap((true && ($i1 == 5))|emp)[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mDebug BlkLinkName: 
+ [0m[34mINFO: executing for stmt: 
+ [0m$i2 := $mul.i64($i1, 4);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs binary arithmetic
+ [0mSymbHeap(((true && ($i1 == 5)) && ($i2 == ($i1 * 4)))|emp)[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mDebug BlkLinkName: 
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $p3 := malloc($i2);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0mSymbHeap(((true && ($i1 == 5)) && ($i2 == ($i1 * 4)))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p3| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$p4 := $bitcast.ref.ref($p3);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs Unary ptr cast
+ [0m[34mArg1 Type: 13
+ [0mSymbHeap((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$i5 := $sext.i32.i64(5);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mArg1 Type: 4
+ [0mSymbHeap(((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$i6 := $mul.i64($i5, 4);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs binary arithmetic
+ [0mSymbHeap((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4)))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $p7 := malloc($i6);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0mSymbHeap((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4)))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)) # $p7 >-s-> $i6 # Blk($p7, ($p7 + $i6)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[34mINFO: executing for stmt: 
+ [0m$p8 := $bitcast.ref.ref($p7);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs Unary ptr cast
+ [0m[34mArg1 Type: 13
+ [0mSymbHeap(((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4))) && ($p8 == $p7))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)) # $p7 >-s-> $i6 # Blk($p7, ($p7 + $i6)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[34mINFO: executing for stmt: 
+ [0m$p9 := $add.ref($p4, $mul.ref(1, 4));[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs ptr arithmetic
+ [0m[34mLink arithmetic operation: $p9 $p4
+ [0mSymbHeap((((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4))) && ($p8 == $p7)) && ($p9 == ($p4 + (1 * 4))))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)) # $p7 >-s-> $i6 # Blk($p7, ($p7 + $i6)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$M.0 := $store.i32($M.0, $p9, 101);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs store or load
+ [0m[34mSTORE ARG1: $p9 ARG2: 101
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$p10 := $add.ref($p4, $mul.ref(3, 4));[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs ptr arithmetic
+ [0m[34mLink arithmetic operation: $p10 $p4
+ [0mSymbHeap(((((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4))) && ($p8 == $p7)) && ($p9 == ($p4 + (1 * 4)))) && ($p10 == ($p4 + (3 * 4))))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)) # $p7 >-s-> $i6 # Blk($p7, ($p7 + $i6)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$M.1 := $store.i32($M.1, $p10, 1111);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs store or load
+ [0m[34mSTORE ARG1: $p10 ARG2: 1111
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$p11 := $add.ref($p4, $mul.ref(2, 4));[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs ptr arithmetic
+ [0m[34mLink arithmetic operation: $p11 $p4
+ [0mSymbHeap((((((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4))) && ($p8 == $p7)) && ($p9 == ($p4 + (1 * 4)))) && ($p10 == ($p4 + (3 * 4)))) && ($p11 == ($p4 + (2 * 4))))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)) # $p7 >-s-> $i6 # Blk($p7, ($p7 + $i6)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$M.2 := $store.i32($M.2, $p11, 123);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs store or load
+ [0m[34mSTORE ARG1: $p11 ARG2: 123
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$p12 := $add.ref($p8, $mul.ref(2, 4));[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs ptr arithmetic
+ [0m[34mLink arithmetic operation: $p12 $p8
+ [0mSymbHeap(((((((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4))) && ($p8 == $p7)) && ($p9 == ($p4 + (1 * 4)))) && ($p10 == ($p4 + (3 * 4)))) && ($p11 == ($p4 + (2 * 4)))) && ($p12 == ($p8 + (2 * 4))))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)) # $p7 >-s-> $i6 # Blk($p7, ($p7 + $i6)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p12| Val: $p7
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$M.3 := $store.i32($M.3, $p12, 1110);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs store or load
+ [0m[34mSTORE ARG1: $p12 ARG2: 1110
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p12| Val: $p7
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0massume true;[34m
+ [0m[34mINFO: stmt kind 1
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p12| Val: $p7
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$p13 := $add.ref($add.ref($p0, $mul.ref(0, 10648)), $mul.ref(2, 968));[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs ptr arithmetic
+ [0m[34mLink arithmetic operation: $p13 $p0
+ [0m[34mERROR: VarEquiv new blk name exists 1 0
+ [0mSymbHeap((((((((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4))) && ($p8 == $p7)) && ($p9 == ($p4 + (1 * 4)))) && ($p10 == ($p4 + (3 * 4)))) && ($p11 == ($p4 + (2 * 4)))) && ($p12 == ($p8 + (2 * 4)))) && ($p13 == (($p0 + (0 * 10648)) + (2 * 968))))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)) # $p7 >-s-> $i6 # Blk($p7, ($p7 + $i6)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p12| Val: $p7
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$i14 := $sext.i32.i64(5);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mArg1 Type: 4
+ [0mSymbHeap(((((((((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4))) && ($p8 == $p7)) && ($p9 == ($p4 + (1 * 4)))) && ($p10 == ($p4 + (3 * 4)))) && ($p11 == ($p4 + (2 * 4)))) && ($p12 == ($p8 + (2 * 4)))) && ($p13 == (($p0 + (0 * 10648)) + (2 * 968)))) && ($i14 == 5))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)) # $p7 >-s-> $i6 # Blk($p7, ($p7 + $i6)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i14| Val: $i14
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p12| Val: $p7
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$p15 := $add.ref($add.ref($add.ref($p0, $mul.ref(0, 10648)), $mul.ref(2, 968)), $mul.ref($i14, 88));[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs ptr arithmetic
+ [0m[34mLink arithmetic operation: $p15 $p0
+ [0m[34mERROR: VarEquiv new blk name exists 1 0
+ [0m[34mLink arithmetic operation: $p15 $i14
+ [0m[34mERROR: VarEquiv new blk name exists 1 0
+ [0mSymbHeap((((((((((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4))) && ($p8 == $p7)) && ($p9 == ($p4 + (1 * 4)))) && ($p10 == ($p4 + (3 * 4)))) && ($p11 == ($p4 + (2 * 4)))) && ($p12 == ($p8 + (2 * 4)))) && ($p13 == (($p0 + (0 * 10648)) + (2 * 968)))) && ($i14 == 5)) && ($p15 == ((($p0 + (0 * 10648)) + (2 * 968)) + ($i14 * 88))))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)) # $p7 >-s-> $i6 # Blk($p7, ($p7 + $i6)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i14| Val: $i14
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p12| Val: $p7
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$p16 := $add.ref($add.ref($add.ref($add.ref($p0, $mul.ref(0, 10648)), $mul.ref(2, 968)), $mul.ref($i14, 88)), $mul.ref(4, 8));[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs ptr arithmetic
+ [0m[34mLink arithmetic operation: $p16 $p0
+ [0m[34mERROR: VarEquiv new blk name exists 1 0
+ [0m[34mLink arithmetic operation: $p16 $i14
+ [0m[34mERROR: VarEquiv new blk name exists 1 0
+ [0mSymbHeap(((((((((((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4))) && ($p8 == $p7)) && ($p9 == ($p4 + (1 * 4)))) && ($p10 == ($p4 + (3 * 4)))) && ($p11 == ($p4 + (2 * 4)))) && ($p12 == ($p8 + (2 * 4)))) && ($p13 == (($p0 + (0 * 10648)) + (2 * 968)))) && ($i14 == 5)) && ($p15 == ((($p0 + (0 * 10648)) + (2 * 968)) + ($i14 * 88)))) && ($p16 == (((($p0 + (0 * 10648)) + (2 * 968)) + ($i14 * 88)) + (4 * 8))))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)) # $p7 >-s-> $i6 # Blk($p7, ($p7 + $i6)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i14| Val: $i14
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p12| Val: $p7
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$M.4 := $store.i64($M.4, $p16, 0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs store or load
+ [0m[34mSTORE ARG1: $p16 ARG2: 0
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i14| Val: $i14
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p12| Val: $p7
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$p17 := $bitcast.ref.ref($p4);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs Unary ptr cast
+ [0m[34mArg1 Type: 13
+ [0mSymbHeap((((((((((((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4))) && ($p8 == $p7)) && ($p9 == ($p4 + (1 * 4)))) && ($p10 == ($p4 + (3 * 4)))) && ($p11 == ($p4 + (2 * 4)))) && ($p12 == ($p8 + (2 * 4)))) && ($p13 == (($p0 + (0 * 10648)) + (2 * 968)))) && ($i14 == 5)) && ($p15 == ((($p0 + (0 * 10648)) + (2 * 968)) + ($i14 * 88)))) && ($p16 == (((($p0 + (0 * 10648)) + (2 * 968)) + ($i14 * 88)) + (4 * 8)))) && ($p17 == $p4))|emp # $p3 >-s-> $i2 # Blk($p3, ($p3 + $i2)) # $p7 >-s-> $i6 # Blk($p7, ($p7 + $i6)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i14| Val: $i14
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p17| Val: $p3
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p12| Val: $p7
+ [0m[32mKey: $p17| Val: $p3
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0mcall free_($p17);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mFreed varname: $p17
+ [0m[34mAlloced varname: $p3
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i14| Val: $i14
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p17| Val: $p3
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p12| Val: $p7
+ [0m[32mKey: $p17| Val: $p3
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0m$r := 0;[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $i1| Val: $i1
+ [0m[32mKey: $i14| Val: $i14
+ [0m[32mKey: $i2| Val: $i2
+ [0m[32mKey: $i5| Val: $i5
+ [0m[32mKey: $i6| Val: $i6
+ [0m[32mKey: $p17| Val: $p3
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $p10| Val: $p3
+ [0m[32mKey: $p11| Val: $p3
+ [0m[32mKey: $p12| Val: $p7
+ [0m[32mKey: $p17| Val: $p3
+ [0m[32mKey: $p3| Val: $p3
+ [0m[32mKey: $p4| Val: $p3
+ [0m[32mKey: $p7| Val: $p7
+ [0m[32mKey: $p8| Val: $p7
+ [0m[32mKey: $p9| Val: $p3
+ [0m[34mINFO: executing for stmt: 
+ [0mreturn;[34m
+ [0m[34mINFO: stmt kind 7
+ [0m[33m======center test: in pure translate process=======
+ [0m[33min varExpr! $i1
+ [0m[33mIn intLint : 5
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $i1 right: 5 op: 4
+ [0m[33min eq func!: (= $i1 5)
+ [0m[33mIn binExpr function!
+ [0m[33mleft: true right: (= $i1 5) op: 3
+ [0m[33min varExpr! $i2
+ [0m[33min varExpr! $i1
+ [0m[33mIn intLint : 4
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $i1 right: 4 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $i2 right: (* $i1 4) op: 4
+ [0m[33min eq func!: (= $i2 (* $i1 4))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true (= $i1 5)) right: (= $i2 (* $i1 4)) op: 3
+ [0m[33min varExpr! $p4
+ [0m[33min varExpr! $p3
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p4 right: $p3 op: 4
+ [0m[33min eq func!: (= $p4 $p3)
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true (= $i1 5) (= $i2 (* $i1 4))) right: (= $p4 $p3) op: 3
+ [0m[33min varExpr! $i5
+ [0m[33mIn intLint : 5
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $i5 right: 5 op: 4
+ [0m[33min eq func!: (= $i5 5)
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true (= $i1 5) (= $i2 (* $i1 4)) (= $p4 $p3)) right: (= $i5 5) op: 3
+ [0m[33min varExpr! $i6
+ [0m[33min varExpr! $i5
+ [0m[33mIn intLint : 4
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $i5 right: 4 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $i6 right: (* $i5 4) op: 4
+ [0m[33min eq func!: (= $i6 (* $i5 4))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true (= $i1 5) (= $i2 (* $i1 4)) (= $p4 $p3) (= $i5 5)) right: (= $i6 (* $i5 4)) op: 3
+ [0m[33min varExpr! $p8
+ [0m[33min varExpr! $p7
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p8 right: $p7 op: 4
+ [0m[33min eq func!: (= $p8 $p7)
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true (= $i1 5) (= $i2 (* $i1 4)) (= $p4 $p3) (= $i5 5) (= $i6 (* $i5 4))) right: (= $p8 $p7) op: 3
+ [0m[33min varExpr! $p9
+ [0m[33min varExpr! $p4
+ [0m[33mIn intLint : 1
+ [0m[33mIn intLint : 4
+ [0m[33mIn binExpr function!
+ [0m[33mleft: 1 right: 4 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p4 right: (* 1 4) op: 12
+ [0m[33min plus func!: (+ $p4 (* 1 4))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p9 right: (+ $p4 (* 1 4)) op: 4
+ [0m[33min eq func!: (= $p9 (+ $p4 (* 1 4)))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true
+      (= $i1 5)
+      (= $i2 (* $i1 4))
+      (= $p4 $p3)
+      (= $i5 5)
+      (= $i6 (* $i5 4))
+      (= $p8 $p7)) right: (= $p9 (+ $p4 (* 1 4))) op: 3
+ [0m[33min varExpr! $p10
+ [0m[33min varExpr! $p4
+ [0m[33mIn intLint : 3
+ [0m[33mIn intLint : 4
+ [0m[33mIn binExpr function!
+ [0m[33mleft: 3 right: 4 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p4 right: (* 3 4) op: 12
+ [0m[33min plus func!: (+ $p4 (* 3 4))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p10 right: (+ $p4 (* 3 4)) op: 4
+ [0m[33min eq func!: (= $p10 (+ $p4 (* 3 4)))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true
+      (= $i1 5)
+      (= $i2 (* $i1 4))
+      (= $p4 $p3)
+      (= $i5 5)
+      (= $i6 (* $i5 4))
+      (= $p8 $p7)
+      (= $p9 (+ $p4 (* 1 4)))) right: (= $p10 (+ $p4 (* 3 4))) op: 3
+ [0m[33min varExpr! $p11
+ [0m[33min varExpr! $p4
+ [0m[33mIn intLint : 2
+ [0m[33mIn intLint : 4
+ [0m[33mIn binExpr function!
+ [0m[33mleft: 2 right: 4 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p4 right: (* 2 4) op: 12
+ [0m[33min plus func!: (+ $p4 (* 2 4))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p11 right: (+ $p4 (* 2 4)) op: 4
+ [0m[33min eq func!: (= $p11 (+ $p4 (* 2 4)))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true
+      (= $i1 5)
+      (= $i2 (* $i1 4))
+      (= $p4 $p3)
+      (= $i5 5)
+      (= $i6 (* $i5 4))
+      (= $p8 $p7)
+      (= $p9 (+ $p4 (* 1 4)))
+      (= $p10 (+ $p4 (* 3 4)))) right: (= $p11 (+ $p4 (* 2 4))) op: 3
+ [0m[33min varExpr! $p12
+ [0m[33min varExpr! $p8
+ [0m[33mIn intLint : 2
+ [0m[33mIn intLint : 4
+ [0m[33mIn binExpr function!
+ [0m[33mleft: 2 right: 4 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p8 right: (* 2 4) op: 12
+ [0m[33min plus func!: (+ $p8 (* 2 4))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p12 right: (+ $p8 (* 2 4)) op: 4
+ [0m[33min eq func!: (= $p12 (+ $p8 (* 2 4)))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true
+      (= $i1 5)
+      (= $i2 (* $i1 4))
+      (= $p4 $p3)
+      (= $i5 5)
+      (= $i6 (* $i5 4))
+      (= $p8 $p7)
+      (= $p9 (+ $p4 (* 1 4)))
+      (= $p10 (+ $p4 (* 3 4)))
+      (= $p11 (+ $p4 (* 2 4)))) right: (= $p12 (+ $p8 (* 2 4))) op: 3
+ [0m[33min varExpr! $p13
+ [0m[33min varExpr! $p0
+ [0m[33mIn intLint : 0
+ [0m[33mIn intLint : 10648
+ [0m[33mIn binExpr function!
+ [0m[33mleft: 0 right: 10648 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p0 right: (* 0 10648) op: 12
+ [0m[33min plus func!: (+ $p0 (* 0 10648))
+ [0m[33mIn intLint : 2
+ [0m[33mIn intLint : 968
+ [0m[33mIn binExpr function!
+ [0m[33mleft: 2 right: 968 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (+ $p0 (* 0 10648)) right: (* 2 968) op: 12
+ [0m[33min plus func!: (+ $p0 (* 0 10648) (* 2 968))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p13 right: (+ $p0 (* 0 10648) (* 2 968)) op: 4
+ [0m[33min eq func!: (= $p13 (+ $p0 (* 0 10648) (* 2 968)))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true
+      (= $i1 5)
+      (= $i2 (* $i1 4))
+      (= $p4 $p3)
+      (= $i5 5)
+      (= $i6 (* $i5 4))
+      (= $p8 $p7)
+      (= $p9 (+ $p4 (* 1 4)))
+      (= $p10 (+ $p4 (* 3 4)))
+      (= $p11 (+ $p4 (* 2 4)))
+      (= $p12 (+ $p8 (* 2 4)))) right: (= $p13 (+ $p0 (* 0 10648) (* 2 968))) op: 3
+ [0m[33min varExpr! $i14
+ [0m[33mIn intLint : 5
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $i14 right: 5 op: 4
+ [0m[33min eq func!: (= $i14 5)
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true
+      (= $i1 5)
+      (= $i2 (* $i1 4))
+      (= $p4 $p3)
+      (= $i5 5)
+      (= $i6 (* $i5 4))
+      (= $p8 $p7)
+      (= $p9 (+ $p4 (* 1 4)))
+      (= $p10 (+ $p4 (* 3 4)))
+      (= $p11 (+ $p4 (* 2 4)))
+      (= $p12 (+ $p8 (* 2 4)))
+      (= $p13 (+ $p0 (* 0 10648) (* 2 968)))) right: (= $i14 5) op: 3
+ [0m[33min varExpr! $p15
+ [0m[33min varExpr! $p0
+ [0m[33mIn intLint : 0
+ [0m[33mIn intLint : 10648
+ [0m[33mIn binExpr function!
+ [0m[33mleft: 0 right: 10648 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p0 right: (* 0 10648) op: 12
+ [0m[33min plus func!: (+ $p0 (* 0 10648))
+ [0m[33mIn intLint : 2
+ [0m[33mIn intLint : 968
+ [0m[33mIn binExpr function!
+ [0m[33mleft: 2 right: 968 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (+ $p0 (* 0 10648)) right: (* 2 968) op: 12
+ [0m[33min plus func!: (+ $p0 (* 0 10648) (* 2 968))
+ [0m[33min varExpr! $i14
+ [0m[33mIn intLint : 88
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $i14 right: 88 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (+ $p0 (* 0 10648) (* 2 968)) right: (* $i14 88) op: 12
+ [0m[33min plus func!: (+ $p0 (* 0 10648) (* 2 968) (* $i14 88))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p15 right: (+ $p0 (* 0 10648) (* 2 968) (* $i14 88)) op: 4
+ [0m[33min eq func!: (= $p15 (+ $p0 (* 0 10648) (* 2 968) (* $i14 88)))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (and true
+      (= $i1 5)
+      (= $i2 (* $i1 4))
+      (= $p4 $p3)
+      (= $i5 5)
+      (= $i6 (* $i5 4))
+      (= $p8 $p7)
+      (= $p9 (+ $p4 (* 1 4)))
+      (= $p10 (+ $p4 (* 3 4)))
+      (= $p11 (+ $p4 (* 2 4)))
+      (= $p12 (+ $p8 (* 2 4)))
+      (= $p13 (+ $p0 (* 0 10648) (* 2 968)))
+      (= $i14 5)) right: (= $p15 (+ $p0 (* 0 10648) (* 2 968) (* $i14 88))) op: 3
+ [0m[33min varExpr! $p16
+ [0m[33min varExpr! $p0
+ [0m[33mIn intLint : 0
+ [0m[33mIn intLint : 10648
+ [0m[33mIn binExpr function!
+ [0m[33mleft: 0 right: 10648 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p0 right: (* 0 10648) op: 12
+ [0m[33min plus func!: (+ $p0 (* 0 10648))
+ [0m[33mIn intLint : 2
+ [0m[33mIn intLint : 968
+ [0m[33mIn binExpr function!
+ [0m[33mleft: 2 right: 968 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (+ $p0 (* 0 10648)) right: (* 2 968) op: 12
+ [0m[33min plus func!: (+ $p0 (* 0 10648) (* 2 968))
+ [0m[33min varExpr! $i14
+ [0m[33mIn intLint : 88
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $i14 right: 88 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (+ $p0 (* 0 10648) (* 2 968)) right: (* $i14 88) op: 12
+ [0m[33min plus func!: (+ $p0 (* 0 10648) (* 2 968) (* $i14 88))
+ [0m[33mIn intLint : 4
+ [0m[33mIn intLint : 8
+ [0m[33mIn binExpr function!
+ [0m[33mleft: 4 right: 8 op: 14
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (+ $p0 (* 0 10648) (* 2 968) (* $i14 88)) right: (* 4 8) op: 12
+ [0m[33min plus func!: (+ $p0 (* 0 10648) (* 2 968) (* $i14 88) (* 4 8))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p16 right: (+ $p0 (* 0 10648) (* 2 968) (* $i14 88) (* 4 8)) op: 4
+ [0m[33min eq func!: (= $p16 (+ $p0 (* 0 10648) (* 2 968) (* $i14 88) (* 4 8)))
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (let ((a!1 (= $p15 (+ (+ $p0 (* 0 10648) (* 2 968)) (* $i14 88)))))
+   (and true
+        (= $i1 5)
+        (= $i2 (* $i1 4))
+        (= $p4 $p3)
+        (= $i5 5)
+        (= $i6 (* $i5 4))
+        (= $p8 $p7)
+        (= $p9 (+ $p4 (* 1 4)))
+        (= $p10 (+ $p4 (* 3 4)))
+        (= $p11 (+ $p4 (* 2 4)))
+        (= $p12 (+ $p8 (* 2 4)))
+        (= $p13 (+ $p0 (* 0 10648) (* 2 968)))
+        (= $i14 5)
+        a!1)) right: (= $p16 (+ $p0 (* 0 10648) (* 2 968) (* $i14 88) (* 4 8))) op: 3
+ [0m[33min varExpr! $p17
+ [0m[33min varExpr! $p4
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p17 right: $p4 op: 4
+ [0m[33min eq func!: (= $p17 $p4)
+ [0m[33mIn binExpr function!
+ [0m[33mleft: (let ((a!1 (+ (+ $p0 (* 0 10648) (* 2 968)) (* $i14 88))))
+   (and true
+        (= $i1 5)
+        (= $i2 (* $i1 4))
+        (= $p4 $p3)
+        (= $i5 5)
+        (= $i6 (* $i5 4))
+        (= $p8 $p7)
+        (= $p9 (+ $p4 (* 1 4)))
+        (= $p10 (+ $p4 (* 3 4)))
+        (= $p11 (+ $p4 (* 2 4)))
+        (= $p12 (+ $p8 (* 2 4)))
+        (= $p13 (+ $p0 (* 0 10648) (* 2 968)))
+        (= $i14 5)
+        (= $p15 a!1)
+        (= $p16 (+ a!1 (* 4 8))))) right: (= $p17 $p4) op: 3
+ [0m[33m(let ((a!1 (+ (+ $p0 (* 0 10648) (* 2 968)) (* $i14 88))))
+   (and true
+        (= $i1 5)
+        (= $i2 (* $i1 4))
+        (= $p4 $p3)
+        (= $i5 5)
+        (= $i6 (* $i5 4))
+        (= $p8 $p7)
+        (= $p9 (+ $p4 (* 1 4)))
+        (= $p10 (+ $p4 (* 3 4)))
+        (= $p11 (+ $p4 (* 2 4)))
+        (= $p12 (+ $p8 (* 2 4)))
+        (= $p13 (+ $p0 (* 0 10648) (* 2 968)))
+        (= $i14 5)
+        (= $p15 a!1)
+        (= $p16 (+ a!1 (* 4 8)))
+        (= $p17 $p4)))
+ (((((((((((((((true && ($i1 == 5)) && ($i2 == ($i1 * 4))) && ($p4 == $p3)) && ($i5 == 5)) && ($i6 == ($i5 * 4))) && ($p8 == $p7)) && ($p9 == ($p4 + (1 * 4)))) && ($p10 == ($p4 + (3 * 4)))) && ($p11 == ($p4 + (2 * 4)))) && ($p12 == ($p8 + (2 * 4)))) && ($p13 == (($p0 + (0 * 10648)) + (2 * 968)))) && ($i14 == 5)) && ($p15 == ((($p0 + (0 * 10648)) + (2 * 968)) + ($i14 * 88)))) && ($p16 == (((($p0 + (0 * 10648)) + (2 * 968)) + ($i14 * 88)) + (4 * 8)))) && ($p17 == $p4))
+ [0m[33m======center test: in spatial translate process======
+ [0m[33min emp! emp
+ [0m[33msizeptlit
+ [0m[33min varExpr! $p3
+ [0m[33min varExpr! $p3
+ [0m[33min varExpr! $i2
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p3 right: $i2 op: 12
+ [0m[33min plus func!: (+ $p3 $i2)
+ [0m[31min blk!!! $p3 (+ $p3 $i2)
+ [0m[33msizeptlit
+ [0m[33min varExpr! $p7
+ [0m[33min varExpr! $p7
+ [0m[33min varExpr! $i6
+ [0m[33mIn binExpr function!
+ [0m[33mleft: $p7 right: $i6 op: 12
+ [0m[33min plus func!: (+ $p7 $i6)
+ [0m[31min blk!!! $p7 (+ $p7 $i6)
+ [0m[33m(sep emp emp (blk $p3 (+ $p3 $i2)) emp (blk $p7 (+ $p7 $i6)))
+ [0m=========== END SYMBOLIC EXECUTION FOR ONE BLOCk
+ -----------------END MEMSAFE ANALYSIS---------------
+ [regions] for:   %10 = getelementptr inbounds i32, i32* %5, i64 1, !dbg !26, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[4,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %11 = getelementptr inbounds i32, i32* %5, i64 3, !dbg !28, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[12,16]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %12 = getelementptr inbounds i32, i32* %5, i64 2, !dbg !30, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %13 = getelementptr inbounds i32, i32* %9, i64 2, !dbg !32, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for:   %17 = getelementptr inbounds [11 x [11 x [11 x i64]]], [11 x [11 x [11 x i64]]]* %1, i64 0, i64 2, i64 %15, i64 4
+   in function: main
+ [regions]   using region: <Node:i64>[32,40]{A}
+ [regions]   returning index: 4
+ 
+ We are now translating the program to boogie...
+ Analyzing globals...
+ Analyzing functions...
+ Analyzing function: main
+ -------INSERT: Global Variables main
+ Analyzing function body: main
+ Generating body for main
+ visitBasicBlock
+ visitAlloca
+ visitDbgValue
+ visitCast
+ visitCast not vector
+ visitBinary
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitDbgValue
+ visitCast
+ visitCast not vector
+ visitBinary
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitDbgValue
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %10 = getelementptr inbounds i32, i32* %5, i64 1, !dbg !26, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[4,8]{A}
+    found overlap at index 0: <Node:i32>[4,8]{A}
+ [regions]   merged region: <Node:i32>[4,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %10 = getelementptr inbounds i32, i32* %5, i64 1, !dbg !26, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[4,8]{A}
+    found overlap at index 0: <Node:i32>[4,8]{A}
+ [regions]   merged region: <Node:i32>[4,8]{A}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %11 = getelementptr inbounds i32, i32* %5, i64 3, !dbg !28, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[12,16]{A}
+    found overlap at index 1: <Node:i32>[12,16]{A}
+ [regions]   merged region: <Node:i32>[12,16]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %11 = getelementptr inbounds i32, i32* %5, i64 3, !dbg !28, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[12,16]{A}
+    found overlap at index 1: <Node:i32>[12,16]{A}
+ [regions]   merged region: <Node:i32>[12,16]{A}
+ [regions]   returning index: 1
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %12 = getelementptr inbounds i32, i32* %5, i64 2, !dbg !30, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+    found overlap at index 2: <Node:i32>[8,12]{A}
+ [regions]   merged region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %12 = getelementptr inbounds i32, i32* %5, i64 2, !dbg !30, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+    found overlap at index 2: <Node:i32>[8,12]{A}
+ [regions]   merged region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 2
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %13 = getelementptr inbounds i32, i32* %9, i64 2, !dbg !32, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+    found overlap at index 3: <Node:i32>[8,12]{A}
+ [regions]   merged region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 3
+ 
+ [regions] for:   %13 = getelementptr inbounds i32, i32* %9, i64 2, !dbg !32, !verifier.code !13
+   in function: main
+ [regions]   using region: <Node:i32>[8,12]{A}
+    found overlap at index 3: <Node:i32>[8,12]{A}
+ [regions]   merged region: <Node:i32>[8,12]{A}
+ [regions]   returning index: 3
+ 
+ visitIntrinsic
+ visitGetElementPtr
+ visitCast
+ visitCast not vector
+ visitGetElementPtr
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %17 = getelementptr inbounds [11 x [11 x [11 x i64]]], [11 x [11 x [11 x i64]]]* %1, i64 0, i64 2, i64 %15, i64 4
+   in function: main
+ [regions]   using region: <Node:i64>[32,40]{A}
+    found overlap at index 4: <Node:i64>[32,40]{A}
+ [regions]   merged region: <Node:i64>[32,40]{A}
+ [regions]   returning index: 4
+ 
+ [regions] for:   %17 = getelementptr inbounds [11 x [11 x [11 x i64]]], [11 x [11 x [11 x i64]]]* %1, i64 0, i64 2, i64 %15, i64 4
+   in function: main
+ [regions]   using region: <Node:i64>[32,40]{A}
+    found overlap at index 4: <Node:i64>[32,40]{A}
+ [regions]   merged region: <Node:i64>[32,40]{A}
+ [regions]   returning index: 4
+ 
+ visitCast
+ visitCast not vector
+ visitCall
+ smackrep call
+ visitReturn
+ 
+ insert initial SH to main
+ Finished analyzing function: main
+ 
+ Analyzing function: llvm.dbg.declare
+ -------INSERT: Global Variables llvm.dbg.declare
+ Analyzing function: malloc
+ -------INSERT: Global Variables malloc
+ Analyzing function: free_
+ -------INSERT: Global Variables free_
+ Analyzing function: llvm.dbg.value
+ -------INSERT: Global Variables llvm.dbg.value
+ Analyzing function: __SMACK_static_init
+ -------INSERT: Global Variables __SMACK_static_init
+ Analyzing function body: __SMACK_static_init
+ Generating body for __SMACK_static_init
+ visitBasicBlock
+ visitReturn
+ 
+ Finished analyzing function: __SMACK_static_init
+ 
+ Start Analyzing Prelude: main
+ 
+ Start Analyzing Prelude: llvm.dbg.declare
+ 
+ Start Analyzing Prelude: malloc
+ 
+ Start Analyzing Prelude: free_
+ 
+ Start Analyzing Prelude: llvm.dbg.value
+ 
+ Start Analyzing Prelude: __SMACK_static_init
+ 
+ Start Analyzing Prelude: boogie_si_record_ref
+ 
+ Start Analyzing Prelude: $initialize
+ 
+ SMACK generated ../testcases/printtest/exec.bpl

@@ -21,7 +21,7 @@ namespace smack{
             } else {
                 CFDEBUG(std::cout << "ERROR: This should not happen.");
             }
-
+            
             
             if(ExprType::FUNC == rhs->getType()){
                 CFDEBUG(std::cout << "ASSIGN: rhs ExprType::FUNC" << std::endl;);
@@ -188,6 +188,10 @@ namespace smack{
         }
     }
 
+    int BlockExecutor::computeArithmeticOffsetValue(const Expr* expression){
+
+    }
+    
 
     bool BlockExecutor::isUnaryBooleanFuncName(std::string name){
         return false;
@@ -323,14 +327,16 @@ namespace smack{
                 }
                 const SpatialLiteral* sizePt = SpatialLiteral::spt(
                     this->varFactory->getVar(retVarName),
-                    this->varFactory->getVar(paramVarName)
+                    this->varFactory->getVar(paramVarName),
+                    retVarName
                 ); 
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
                     this->varFactory->getVar(retVarName),
                     Expr::add(
                         this->varFactory->getVar(retVarName),
                         this->varFactory->getVar(paramVarName)
-                    )
+                    ),
+                    retVarName
                 );
                 newSpatialExpr.push_back(sizePt);
                 newSpatialExpr.push_back(allocBlk);
@@ -353,14 +359,16 @@ namespace smack{
                 }
                 const SpatialLiteral* sizePt = SpatialLiteral::spt(
                     this->varFactory->getVar(retVarName),
-                    sizeExpr
+                    sizeExpr,
+                    retVarName
                 );
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
                     this->varFactory->getVar(retVarName),
                     Expr::add(
                         this->varFactory->getVar(retVarName),
                         sizeExpr
-                    )
+                    ),
+                    retVarName
                 );
                 newSpatialExpr.push_back(sizePt);
                 newSpatialExpr.push_back(allocBlk);

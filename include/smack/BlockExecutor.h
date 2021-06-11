@@ -40,6 +40,8 @@ namespace smack{
         const Expr* parseVarArithmeticExpr(const Expr* arithExpr);
         // compute expression according to the operator types
         const Expr* computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right);
+        
+        int computeArithmeticOffsetValue(const Expr* expression);
 
 
     public:

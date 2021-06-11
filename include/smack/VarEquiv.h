@@ -20,6 +20,7 @@ namespace smack
     private:
         std::map<std::string, std::string> name2Alloc;
         std::map<std::string, std::string> name2Blk;
+        std::map<std::string, int> name2BlkOffset;
     public:
         VarEquiv(/* args */){};
         ~VarEquiv() {};
@@ -33,6 +34,10 @@ namespace smack
         void addNewBlkName(std::string name);
         void linkBlkName(std::string newname, std::string blkname);
         std::string getBlkName(std::string name);
+
+        // name2BlkOffset
+        void addNewOffset(std::string name, int offset);
+        int getOffset(std::string name);
 
         void debugPrint();
 

@@ -41,11 +41,15 @@ namespace smack
     void VarEquiv::debugPrint(){
         DEBUG_WITH_COLOR(std::cout << "Debug VarEquiv: " << std::endl, color::green);
         for(auto i : this->name2Alloc){
-            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Val: " << i.second << std::endl, color::green);
+            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
         }
         DEBUG_WITH_COLOR(std::cout << "Debug BlkLinkName: " << std::endl, color::green);
         for(auto i : this->name2Blk){
-            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Val: " << i.second << std::endl, color::green);
+            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
+        }
+        DEBUG_WITH_COLOR(std::cout << "Debug Offset:" << std::endl, color::green);
+        for(auto i : this->name2BlkOffset) {
+            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << " Val: " << i.second << std::endl, color::green);
         }
     }
     // name2blk operations
@@ -73,6 +77,25 @@ namespace smack
             return name2Blk[name];
         } else {
             return nullptr;
+        }
+    }
+
+    // name2blk offset operations
+
+    void VarEquiv::addNewOffset(std::string name, int offset){
+        if(this->name2BlkOffset.find(name) != this->name2BlkOffset.end()){
+            DEBUG_WITH_COLOR(std::cout << "name,offset: " << name << ", " << offset << " already exists. " << std::endl, color::green);
+        } else {
+            this->name2BlkOffset[name] = offset;
+        }
+    }
+
+    int VarEquiv::getOffset(std::string name){
+        if(this->name2BlkOffset.find(name) != this->name2BlkOffset.end()){
+            return name2BlkOffset[name];
+        } else {
+            std::cout << "ERROR: VarEquiv blkoffset no name exists. " << std::endl;
+            return -1;
         }
     }
 

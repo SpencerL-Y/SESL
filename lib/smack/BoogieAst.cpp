@@ -644,19 +644,19 @@ void BvConcat::print(std::ostream &os) const {
 }
 
 const SpatialLiteral* SpatialLiteral::emp(){
-  return new EmpLit();
+  return new EmpLit("");
 }
 
-const SpatialLiteral* SpatialLiteral::pt(const Expr* from, const Expr* to){
-  return new PtLit(from, to);
+const SpatialLiteral* SpatialLiteral::pt(const Expr* from, const Expr* to, std::string blkName){
+  return new PtLit(from, to, blkName);
 }
 
-const SpatialLiteral* SpatialLiteral::blk(const Expr* from, const Expr* to){
-  return new BlkLit(from, to);
+const SpatialLiteral* SpatialLiteral::blk(const Expr* from, const Expr* to, std::string blkName){
+  return new BlkLit(from, to, blkName);
 }
 
-const SpatialLiteral* SpatialLiteral::spt(const Expr* var, const Expr* size) {
-  return new SizePtLit(var, size);
+const SpatialLiteral* SpatialLiteral::spt(const Expr* var, const Expr* size, std::string blkName) {
+  return new SizePtLit(var, size, blkName);
 }
 
 void EmpLit::print(std::ostream &os) const{

@@ -50,6 +50,8 @@ namespace smack {
         VarEquivPtr allocEquiv = std::make_shared<VarEquiv>();
         // Initialize the varFactory class for variable remembering
         VarFactoryPtr varFac = std::make_shared<VarFactory>();
+        // Initialize int translator
+        ConstTranslatorPtr transToConstant = std::make_shared<TransToConstant>(allocEquiv);
         // Initialize a block executor
         BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, block, allocEquiv, varFac);
         // initial pure formula 
@@ -69,6 +71,10 @@ namespace smack {
             // for each stmt in the program, put it in the new list and execute to get resulting symboligetPurec heap
             newStmts.push_back(i);
             SHExprPtr newSH = be->execute(currSH, i);
+            auto const pure = newSH->getPure();
+            transToConstant->setExpr(const_cast<Expr *>(pure));
+            transToConstant->translate();
+            transToConstant->getAns();
             currSH = newSH;
         }
         be->setBlock(block);

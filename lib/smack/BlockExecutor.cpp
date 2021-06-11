@@ -111,8 +111,15 @@ namespace smack{
                 } else if(this->isBinaryArithFuncName(rhsFun->name())){
                     CFDEBUG(std::cout << "ASSIGN: rhs binary arithmetic" << std::endl;);
                     this->varEquiv->addNewName(lhsVarName);
-                    if(ExprType::INT == )
+                    
                     const Expr* rhsExpr = this->parseVarArithmeticExpr(rhsFun);
+                    CFDEBUG(std::cout << "RIGHT HAND SIDE ARITHMETIC FORMULA: " << rhsFun << std::endl;);
+                    auto rhsExprVal = rhsExpr->translateToInt(this->varEquiv);
+                    if(rhsExprVal.first){
+                        this->varEquiv->addNewVal(lhsVarName, rhsExprVal.second);
+                    } else {
+                        CFDEBUG(std::cout << "INFO: cannot compute int value." <<std::endl;);
+                    }
                     const Expr* equality = Expr::eq(
                         this->varFactory->getVar(lhsVarName),
                         rhsExpr

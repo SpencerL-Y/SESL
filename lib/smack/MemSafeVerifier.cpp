@@ -72,9 +72,6 @@ namespace smack {
             newStmts.push_back(i);
             SHExprPtr newSH = be->execute(currSH, i);
             auto const pure = newSH->getPure();
-            transToConstant->setExpr(const_cast<Expr *>(pure));
-            transToConstant->translate();
-            transToConstant->getAns();
             currSH = newSH;
         }
         be->setBlock(block);

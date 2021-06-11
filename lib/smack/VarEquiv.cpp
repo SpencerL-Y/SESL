@@ -49,7 +49,11 @@ namespace smack
         }
         DEBUG_WITH_COLOR(std::cout << "Debug Offset:" << std::endl, color::green);
         for(auto i : this->pointsToBlkOffset) {
-            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << " Val: " << i.second << std::endl, color::green);
+            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
+        }
+        DEBUG_WITH_COLOR(std::cout << "Debug IntVal: " << std::endl, color::green);
+        for(auto i : this->varToIntVal){
+            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Val: " << i.second << std::endl, color::green);
         }
     }
     // name2blk operations

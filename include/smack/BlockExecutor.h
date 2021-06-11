@@ -74,6 +74,10 @@ namespace smack{
 
     };
     typedef std::shared_ptr<BlockExecutor> BlockExecutorPtr;
+
+    class blkSplitUtil{
+        
+    };
 }
 
 

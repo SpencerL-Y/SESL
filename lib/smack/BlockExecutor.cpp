@@ -73,6 +73,10 @@ namespace smack{
                     
                     if(arg1->isValue()){
                         this->varEquiv->addNewName(lhsVarName);
+                        if(ExprType::INT ==  arg1->getType()){
+                            const IntLit* intValExpr =(const IntLit*)arg1;
+                            this->varEquiv->addNewVal(lhsVarName, intValExpr->getVal());
+                        }
                         const Expr* valEquality = Expr::eq(this->varFactory->getVar(lhsVarName), arg1);
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, valEquality);
                         // TODOsh: DEBUG print
@@ -82,6 +86,12 @@ namespace smack{
                     } else if(arg1->isVar()){
                         const VarExpr* rhsVar = (const VarExpr*) arg1;
                         std::string rhsVarName = rhsVar->name();
+                        varEquiv->linkName(lhsVarName, rhsVarName);
+                        varEquiv->linkBlkName(lhsVarName, rhsVarName);
+                        if(ExprType::INT == arg1->getType()){
+                            const IntLit* intValExpr = (const IntLit*) arg1;
+                            this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
+                        }
                         const Expr* varEquality = Expr::eq(
                             this->varFactory->getVar(lhsVarName),
                             this->varFactory->getVar(rhsVarName)
@@ -90,8 +100,6 @@ namespace smack{
                         // TODOsh: DEBUG print
                         newSH->print(std::cout);
                         CFDEBUG(std::cout << std::endl);
-                        varEquiv->linkName(lhsVarName, rhsVarName);
-                        varEquiv->linkBlkName(lhsVarName, rhsVarName);
                         return newSH;
                     } 
                     else {
@@ -103,6 +111,7 @@ namespace smack{
                 } else if(this->isBinaryArithFuncName(rhsFun->name())){
                     CFDEBUG(std::cout << "ASSIGN: rhs binary arithmetic" << std::endl;);
                     this->varEquiv->addNewName(lhsVarName);
+                    if(ExprType::INT == )
                     const Expr* rhsExpr = this->parseVarArithmeticExpr(rhsFun);
                     const Expr* equality = Expr::eq(
                         this->varFactory->getVar(lhsVarName),

@@ -183,6 +183,7 @@ public:
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   ExprType getType() const { return ExprType::INT;}
+  int getVal() const { return atoi(val.c_str());} 
   bool isVar() const {return false;}
   bool isValue() const {return true;}
 };

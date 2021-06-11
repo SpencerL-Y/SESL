@@ -21,7 +21,7 @@ namespace smack{
             } else {
                 CFDEBUG(std::cout << "ERROR: This should not happen.");
             }
-            
+
             
             if(ExprType::FUNC == rhs->getType()){
                 CFDEBUG(std::cout << "ASSIGN: rhs ExprType::FUNC" << std::endl;);
@@ -56,6 +56,7 @@ namespace smack{
                 } else if(this->isPtrArithFuncName(rhsFun->name())){
                     CFDEBUG(std::cout << "ASSIGN: rhs ptr arithmetic" << std::endl;);
                     const Expr* rhsExpr = this->parsePtrArithmeticExpr(rhsFun, lhsVarName);
+                    this->varEquiv->addNewName(lhsVarName);
                     const Expr* varEquality = Expr::eq(
                         this->varFactory->getVar(lhsVarName),
                         rhsExpr

@@ -42,7 +42,7 @@ namespace smack
 
         // varToIntVal operations
         void addNewVal(std::string name, int val);
-        void addNewLink(std::string newname, std::string oldname);
+        void linkIntVar(std::string newname, std::string oldname);
         std::pair<bool, int> getIntVal(std::string name);
 
         void debugPrint();

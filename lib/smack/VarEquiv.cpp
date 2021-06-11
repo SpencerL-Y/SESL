@@ -108,7 +108,7 @@ namespace smack
         }
     }
 
-    void VarEquiv::addNewLink(std::string newname, std::string oldname){
+    void VarEquiv::linkIntVar(std::string newname, std::string oldname){
         if(this->varToIntVal.find(newname) == this->varToIntVal.end() &&
            this->varToIntVal.find(oldname) != this->varToIntVal.end()){
             this->varToIntVal[newname] = this->varToIntVal[oldname];

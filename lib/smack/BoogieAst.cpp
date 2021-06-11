@@ -141,6 +141,10 @@ z3::expr Expr::translateToZ3(z3::context& z3Ctx) const {
     return res;
 }
 
+std::pair<bool, int>  Expr::translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const {
+    return {false, 0};
+}
+
 const Expr *Expr::add(const Expr *left, const Expr* right){
   return new BinExpr(BinExpr::Plus, left, right);
 }
@@ -526,6 +530,39 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx) const{
     return res;
 }
 
+std::pair<bool, int> BinExpr::translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const {
+    const auto left = lhs->translateToInt(varEquivPtr);
+    const auto right = rhs->translateToInt(varEquivPtr);
+    DEBUG_WITH_COLOR(std::cout << "In binExpr TransToInt function!" << std::endl, color::red);
+    CDEBUG(std::cout << "left: " << left.second << " right: " << right.second << " op: " << op << std::endl);
+    if (!(left.first && right.first)) {
+        DEBUG_WITH_COLOR(std::cout << "Can not translate " ;this->print(std::cout); std::cout << endl;, color::red);
+        return {false, 0};
+    }
+    int res = 0;
+    switch (op) {
+        case Plus:
+            res = (left.second + right.second);
+            break;
+        case Minus:
+            res = (left.second - right.second);
+            break;
+        case Times:
+            res = (left.second * right.second);
+            break;
+        case Div:
+            res = (left.second / right.second);
+            break;
+        case Mod:
+            res = left.second & right.second;
+            break;
+        default:
+            DEBUG_WITH_COLOR(std::cout << "Can not translate " ;this->print(std::cout); std::cout << endl;, color::red);
+            break;
+    }
+    return {true, res};
+}
+
     void FunExpr::print(std::ostream &os) const {
   os << fun;
   print_seq<const Expr *>(os, args, "(", ", ", ")");
@@ -559,6 +596,12 @@ z3::expr IntLit::translateToZ3(z3::context& z3Ctx) const {
     return z3Ctx.int_val(val.c_str());
 }
 
+std::pair<bool, int> IntLit::translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const {
+    int ans = 0;
+    for (auto& i : val) {ans = ans * 10 + i - '0';}
+    CDEBUG(std::cout << "In intLint : " <<  ans << std::endl;)
+    return {true, ans};
+}
 
 void BvLit::print(std::ostream &os) const { os << val << "bv" << width; }
 
@@ -611,6 +654,12 @@ z3::expr VarExpr::translateToZ3(z3::context &z3Ctx) const {
     z3::expr res = //TranslatorUtil::getZ3Var(this->name(), z3VarMap, z3Ctx);
     z3Ctx.int_const(var.c_str());
     CDEBUG(std::cout << "in varExpr! " << res.to_string() << std::endl;);
+    return res;
+}
+
+std::pair<bool, int> VarExpr::translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const {
+    auto res = varEquivPtr->getIntVal(var);
+    CDEBUG(std::cout << "in varExpr! " << res.first << " " << res.second << std::endl;);
     return res;
 }
 

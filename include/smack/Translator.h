@@ -13,6 +13,7 @@
 #include "slah_api.h"
 #include "smack/BoogieAst.h"
 #include <unordered_map>
+#include "smack/VarEquiv.h"
 
 namespace smack{
     class Translator{
@@ -31,8 +32,6 @@ namespace smack{
     public:
         void setSymbolicHeapHExpr(const std::shared_ptr<SymbolicHeapExpr>& shExprPtr);
         explicit TransToZ3(z3::context& ctx, std::shared_ptr<SymbolicHeapExpr> shExprPtr = nullptr) :z3Ctx(&ctx), shExpr(std::move(shExprPtr)), pure(*z3Ctx), spatial(*z3Ctx) {}
-
-        
         z3::expr getPure();
         z3::expr getSpatial();
         z3::expr getFinalExpr();
@@ -41,6 +40,19 @@ namespace smack{
         void translate() override;
     };
 
+    class TransToConstant : Translator {
+    private:
+        VarEquivPtr varEquivPtr;
+        Expr* expr;
+        std::pair<bool, int> ans;
+    public:
+        explicit TransToConstant(VarEquivPtr varEquiv, Expr* expr = nullptr) : expr(expr), varEquivPtr(std::move(varEquiv)), ans({false, 0}) {}
+        void translate() override;
+        std::pair<bool, int> getAns();
+        void setExpr(Expr* exp);
+    };
+
+    typedef std::shared_ptr<TransToConstant> ConstTranslatorPtr;
 }
 
 

@@ -45,8 +45,15 @@ namespace smack{
         return pure && spatial;
     }
 
-    void TransToZ3::setSymbolicHeapHExpr(const std::shared_ptr<SymbolicHeapExpr>& shExprPtr) {
-        shExpr = shExprPtr;
+    void TransToConstant::translate() {
+        ans = expr->translateToInt(varEquivPtr);
     }
 
+    std::pair<bool, int> TransToConstant::getAns() {
+        return ans;
+    }
+
+    void TransToConstant::setExpr(Expr* exp) {
+        expr = exp;
+    }
 }

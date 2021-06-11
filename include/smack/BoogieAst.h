@@ -11,9 +11,10 @@
 #include <memory>
 #include "z3++.h"
 #include "utils/TranslatorUtil.h"
+#include "smack/VarEquiv.h"
 namespace smack {
 
-
+class VarEquiv;
 typedef std::pair<std::string, std::string> Binding;
 
 enum class RModeKind { RNE, RNA, RTP, RTN, RTZ };
@@ -48,6 +49,7 @@ public:
   virtual ExprType getType() const = 0;
   virtual bool isVar() const = 0;
   virtual bool isValue() const = 0;
+  virtual std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx) const;
   static const Expr *exists(std::list<Binding>, const Expr *e);
   static const Expr *forall(std::list<Binding>, const Expr *e);
@@ -121,6 +123,7 @@ public:
   BinExpr(const Binary b, const Expr *l, const Expr *r)
       : op(b), lhs(l), rhs(r) {}
   virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const override;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BIN;}
   bool isVar() const {return false;}
@@ -182,6 +185,7 @@ public:
   }
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const override;
   ExprType getType() const { return ExprType::INT;}
   int getVal() const { return atoi(val.c_str());} 
   bool isVar() const {return false;}
@@ -313,7 +317,8 @@ class VarExpr : public Expr {
 public:
   VarExpr(std::string v) : var(v) {}
   std::string name() const { return var; }
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const override;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::VAR;}
   bool isVar() const {return true;}

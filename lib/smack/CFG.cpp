@@ -161,4 +161,16 @@ namespace smack
         }
     }
 
+    std::pair<std::string, int> CFG::getVarDetailType(std::string& varName) {
+        auto type = getVarType(varName);
+        if (type[0] == 'i') {
+            int ans = 0;
+            for (int i = 1; i < type.length(); ++ i) {
+                ans += type[i] - '0';
+            }
+            return {type, ans};
+        }
+        return {type, 0};
+    }
+
 } // namespace name

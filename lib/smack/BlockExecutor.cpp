@@ -453,8 +453,21 @@ namespace smack{
                 std::string allocVarName = this->varEquiv->getAllocName(freedVar->name());
                 CFDEBUG(std::cout << "Freed varname: " << freedVar->name() << std::endl);
                 CFDEBUG(std::cout << "Alloced varname: " << allocVarName << std::endl);
-                const SizePtLit* candSizePt;
                 
+
+
+                const Expr* newPure = sh->getPure();
+                std::list<const SpatialLiteral*> newSpatial;
+                for(const SpatialLiteral* sp : sh->getSpatialExpr()){
+                    if(!sp->getBlkName().compare(allocVarName)){
+
+                    } else {
+                        newSpatial.push_back(sp);
+                    }
+                }
+
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+                return newSH;
             } else {
                 CFDEBUG(std::cout << "ERROR: UNsolved situation" << std::endl);
                 return sh;

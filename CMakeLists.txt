@@ -149,6 +149,7 @@ add_library(smackTranslator STATIC
   include/smack/MemSafeVerifier.h
   include/smack/VarEquiv.h
   include/smack/VarFactory.h
+  include/smack/StoreSplitter.h
   lib/smack/Translator.cpp
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp
@@ -185,6 +186,7 @@ add_library(smackTranslator STATIC
   lib/smack/MemSafeVerifier.cpp
   lib/smack/VarEquiv.cpp
   lib/smack/VarFactory.cpp
+  lib/smack/StoreSplitter.cpp
 )
 
 add_executable(llvm2bpl

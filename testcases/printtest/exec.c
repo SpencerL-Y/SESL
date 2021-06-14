@@ -10,8 +10,6 @@ int main(){
     //*(j+2) = 1110;
     //int nnum = *(i+1) + (-1);
     *(i+1) = num;
-    //long long a[11][11][num];
-   // a[2][num][4] = 0;
     free(i);
     
 }

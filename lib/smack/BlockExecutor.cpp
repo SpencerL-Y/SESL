@@ -37,6 +37,13 @@ namespace smack{
                         std::string rhsVarName = rhsVar->name();
                         this->varEquiv->linkName(lhsVarName, rhsVarName);
                         this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
+                        if(this->varEquiv->getOffset(rhsVarName) >= 0){
+                            this->varEquiv->addNewOffset(
+                                lhsVarName, 
+                                this->varEquiv->getOffset(rhsVarName)
+                            );
+                        }
+                        
                         const Expr* varEquality = Expr::eq(
                             this->varFactory->getVar(lhsVarName),
                             this->varFactory->getVar(rhsVarName)
@@ -56,6 +63,32 @@ namespace smack{
                 } else if(this->isPtrArithFuncName(rhsFun->name())){
                     CFDEBUG(std::cout << "ASSIGN: rhs ptr arithmetic" << std::endl;);
                     const Expr* rhsExpr = this->parsePtrArithmeticExpr(rhsFun, lhsVarName);
+                    // TODOsh: this currently is the ptr arithmetic offset computing for malloc, extend to array later.
+                    if(ExprType::BIN == rhsExpr->getType()){
+                        const BinExpr* arithExpr = (const BinExpr*) rhsExpr;
+                        if(BinExpr::Binary::Plus == arithExpr->getOp()){
+                            const Expr* arithLhs = arithExpr->getLhs();
+                            const Expr* arithRhs = arithExpr->getRhs();
+                            if(arithLhs->isVar()){
+                                const VarExpr* ptrVar = (const VarExpr*) arithLhs;
+                                int lhsOffset = this->varEquiv->getOffset(ptrVar->name());
+                                int rhsOffset = 0;
+                                assert(lhsOffset >= 0);
+                                auto rhsComputeResult = arithRhs->translateToInt(this->varEquiv);
+                                if(rhsComputeResult.first){
+                                    rhsOffset = rhsComputeResult.second;
+                                    this->varEquiv->addNewOffset(lhsVarName, (lhsOffset + rhsOffset));
+                                } else {
+                                    CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET !!!" << std::endl; rhsExpr->print(std::cout););
+                                }
+                            } else {
+                                CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET !!!" << std::endl; rhsExpr->print(std::cout));
+                            }
+                        }
+                    } else {
+                        CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET !!!" << std::endl; rhsExpr->print(std::cout));
+                    }
+
                     this->varEquiv->addNewName(lhsVarName);
                     const Expr* varEquality = Expr::eq(
                         this->varFactory->getVar(lhsVarName),
@@ -114,9 +147,9 @@ namespace smack{
                     
                     const Expr* rhsExpr = this->parseVarArithmeticExpr(rhsFun);
                     CFDEBUG(std::cout << "RIGHT HAND SIDE ARITHMETIC FORMULA: " << rhsFun << std::endl;);
-                    auto rhsExprVal = rhsExpr->translateToInt(this->varEquiv);
-                    if(rhsExprVal.first){
-                        this->varEquiv->addNewVal(lhsVarName, rhsExprVal.second);
+                    auto computeIntResult = rhsExpr->translateToInt(this->varEquiv);
+                    if(computeIntResult.first){
+                        this->varEquiv->addNewVal(lhsVarName, computeIntResult.second);
                     } else {
                         CFDEBUG(std::cout << "INFO: cannot compute int value." <<std::endl;);
                     }
@@ -319,6 +352,7 @@ namespace smack{
         }
         return sh;
     }
+
     SHExprPtr  
     BlockExecutor::executeMalloc
     (SHExprPtr sh, const CallStmt* stmt){
@@ -333,6 +367,9 @@ namespace smack{
                 std::string paramVarName = paramVar->name();
                 this->varEquiv->addNewName(retVarName);
                 this->varEquiv->addNewBlkName(retVarName);
+                this->varEquiv->addNewOffset(retVarName, 0);
+                this->storeSplit->createAxis(retVarName);
+
                 /*const Expr* pureConj = Expr::eq(
                     this->varFactory->getVar(retVarName),
                     this->varFactory->getVar(paramVarName)
@@ -365,6 +402,9 @@ namespace smack{
                 const Expr* sizeExpr = param;
                 this->varEquiv->addNewName(retVarName);
                 this->varEquiv->addNewBlkName(retVarName);
+                this->varEquiv->addNewOffset(retVarName, 0);
+                this->storeSplit->createAxis(retVarName);
+
                 const Expr* pureConj = Expr::eq(
                     this->varFactory->getVar(retVarName),
                     sizeExpr
@@ -442,9 +482,55 @@ namespace smack{
                 i = i + 1;
             }
             CFDEBUG(std::cout << "STORE: arg1 " << arg1 << " arg2: " << arg2 << std::endl;);
-            return sh;
+            const VarExpr* varArg1 = (const VarExpr*) arg1;
+            int offset = this->varEquiv->getOffset(varArg1->name());
+            int splitBlkIndex = this->storeSplit->addSplit(offset);
+            int currentIndex = 1;
+            std::string mallocName = this->varEquiv->getBlkName(varArg1->name());
+            const Expr* newPure = sh->getPure();
+            std::list<const SpatialLiteral*> newSpatial;
+
+            for(const SpatialLiteral* i : sh->getSpatialExpr()){
+                if(!i->getBlkName().compare(mallocName) && 
+                    2 == i->getId() && 
+                    currentIndex == splitBlkIndex){
+                    const BlkLit* breakBlk = (const BlkLit*) i;
+                    const SpatialLiteral* leftBlk = SpatialLiteral::blk(
+                        breakBlk->getFrom(),
+                        arg1
+                        breakBlk->getBlkName()
+                    );
+                    const SpatialLiteral* storedPt = SpatialLiteral::pt(
+                        arg1,
+                        arg2
+                    );
+                    // TODOsh: size information need to be obtained here
+                    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    long long size = 1;
+                    const SpatialLiteral* rightBlk = SpatialLiteral::blk(
+                        Expr::add(arg1, Expr::lit(size)),
+                        breakBlk->getTo(),
+                        breakBlk->getBlkName()
+                    );
+                    newSpatial.push_back(leftBlk);
+                    newSpatial.push_back(storedPt);
+                    newSpatial.push_back(rightBlk);
+
+                    currentIndex += 1;
+                } else if(!i->getBlkName().compare(mallocName) && 2 == i->getId() && currentIndex != splitBlkIndex){
+                    newSpatial.push_back(i);
+                    currentIndex += 1;
+                } else {
+                    newSpatial.push_back(i);
+                }
+            }
+
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+
+            return newSH;
         } else {
             CFDEBUG(std::cout << "ERROR: this should not happen.");
+            return sh;
         }
     }
 

@@ -533,7 +533,7 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx) const{
 std::pair<bool, int> BinExpr::translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const {
     const auto left = lhs->translateToInt(varEquivPtr);
     const auto right = rhs->translateToInt(varEquivPtr);
-    DEBUG_WITH_COLOR(std::cout << "In binExpr TransToInt function!" << std::endl, color::red);
+    DEBUG_WITH_COLOR(std::cout << "In binExpr TransToInt function!" << std::endl, color::yellow);
     CDEBUG(std::cout << "left: " << left.second << " right: " << right.second << " op: " << op << std::endl);
     if (!(left.first && right.first)) {
         DEBUG_WITH_COLOR(std::cout << "Can not translate " ;this->print(std::cout); std::cout << endl;, color::red);
@@ -739,7 +739,7 @@ z3::expr BlkLit::translateToZ3(z3::context& z3Ctx) const{
     auto f = from->translateToZ3(z3Ctx);
     auto t = to->translateToZ3(z3Ctx);
     z3::expr ex = z3Ctx.bool_val(true);
-    DEBUG_WITH_COLOR(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl, color::red);
+    DEBUG_WITH_COLOR(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl, color::yellow);
     z3::expr res = slah_api::newBlk(f,t);
     return res;
 }
@@ -763,6 +763,15 @@ std::string SizePtLit::getVarName() const {
     CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl);
     return nullptr;
   }
+}
+
+void ErrorLit::print(std::ostream &os) const{
+  os << " XXXXXXX ";
+}
+
+z3::expr ErrorLit::translateToZ3(z3::context& z3Ctx) const {
+  CDEBUG(std::cout << "errorLit" << std::endl;);
+  return slah_api::newEmp(z3Ctx);
 }
 
 z3::expr BoolLit::translateToZ3(z3::context& z3Ctx) const {

@@ -10,6 +10,7 @@
 #include "smack/BoogieAst.h"
 #include "smack/VarEquiv.h"
 #include "smack/VarFactory.h"
+#include "smack/StoreSplitter.h"
 #include "utils/CenterDebug.h"
 
 // This object is for dealing with symbolic execution
@@ -26,6 +27,8 @@ namespace smack{
         Block* currentBlock;
         VarEquivPtr varEquiv;
         VarFactoryPtr varFactory;
+        StoreSplitterPtr storeSplit;
+
 
         // funcexpr name judgement functions
         bool isUnaryAssignFuncName(std::string name);
@@ -45,9 +48,10 @@ namespace smack{
 
 
     public:
-        BlockExecutor(Program* p, Block* cb, VarEquivPtr vars, VarFactoryPtr vf) : program(p), currentBlock(cb), varEquiv(vars), varFactory(vf) {}
+        BlockExecutor(Program* p, Block* cb, VarEquivPtr vars, VarFactoryPtr vf, StoreSplitterPtr split) : program(p), currentBlock(cb), varEquiv(vars), varFactory(vf), storeSplit(split) {}
 
         SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
+        
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
 
         SHExprPtr executeMalloc(SHExprPtr sh, const CallStmt* stmt);
@@ -70,14 +74,13 @@ namespace smack{
         void setBlock(Block* block){ currentBlock = block; }
         VarEquivPtr getVarEquiv() { return varEquiv;}
         VarFactoryPtr getVarFactory() { return varFactory;}
+        StoreSplitterPtr getStoreSplit() { return storeSplit;}
 
 
     };
     typedef std::shared_ptr<BlockExecutor> BlockExecutorPtr;
 
-    class blkSplitUtil{
-        
-    };
+    
 }
 
 

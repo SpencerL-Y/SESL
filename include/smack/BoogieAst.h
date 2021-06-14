@@ -128,6 +128,9 @@ public:
   ExprType getType() const { return ExprType::BIN;}
   bool isVar() const {return false;}
   bool isValue() const {return false;}
+  Binary getOp() const { return op;}
+  const Expr* getLhs() const {return lhs;}
+  const Expr* getRhs() const {return rhs;};
 };
 
 class FunExpr : public Expr {
@@ -413,6 +416,8 @@ public:
   BlkLit(const Expr* f, const Expr* t, std::string blkName) : from(f), to(t){setId(2); setBlkName(blkName);}
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  const Expr* getFrom() const { return from;}
+  const Expr* getTo() const { return to;}
 };
 
 class SizePtLit : public SpatialLiteral {
@@ -425,6 +430,14 @@ public:
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
 };
+
+class ErrorLit : public SpatialLiteral {
+  
+  public:
+  ErrorLit();
+  void print(std::ostream &os) const;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+}
 
 
 // TODOsh: symbolic heap expression, add other operations

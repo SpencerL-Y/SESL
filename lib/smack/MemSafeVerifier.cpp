@@ -7,6 +7,7 @@
 #include "smack/VarFactory.h"
 #include "smack/BlockExecutor.h"
 #include "smack/Translator.h"
+#include "smack/StoreSplitter.h"
 
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/GraphWriter.h" 
@@ -52,8 +53,10 @@ namespace smack {
         VarFactoryPtr varFac = std::make_shared<VarFactory>();
         // Initialize int translator
         ConstTranslatorPtr transToConstant = std::make_shared<TransToConstant>(allocEquiv);
+        // Initialize store splitter
+        StoreSplitterPtr storeSplit = std::make_shared<StoreSplitter>();
         // Initialize a block executor
-        BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, block, allocEquiv, varFac);
+        BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, block, allocEquiv, varFac, storeSplit);
         // initial pure formula 
         const Expr* boolTrue = Expr::lit(true);
         // initial list of spatial lits

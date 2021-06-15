@@ -39,7 +39,7 @@ namespace smack
     void CFG::buildCFG() {
         if (!proc) return;
         generateTypeInfo();
-        printVarInfo();
+//        printVarInfo();
         for (auto& sb : proc->getBlocks()) {
             auto fromState = getState(sb->getName(), sb);
         }

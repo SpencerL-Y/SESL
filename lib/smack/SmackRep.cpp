@@ -233,8 +233,14 @@ std::string SmackRep::type(const llvm::Type *t) {
   else if (t->isIntegerTy())
     return intType(t->getIntegerBitWidth());
 
-  else if (t->isPointerTy())
-    return Naming::PTR_TYPE;
+  else if (t->isPointerTy()) {
+      if (auto p = dyn_cast<PointerType>(t)) {
+          if (auto sonType = dyn_cast<IntegerType>(p->getElementType())) {
+              return Naming::PTR_TYPE + std::to_string(storageSize(p->getElementType()));
+          }
+      }
+      return Naming::PTR_TYPE;
+  }
 
   else if (auto VT = dyn_cast<VectorType>(t))
     return vectorType(VT->getNumElements(), VT->getElementType());

@@ -437,7 +437,7 @@ class ErrorLit : public SpatialLiteral {
   ErrorLit();
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
-}
+};
 
 
 // TODOsh: symbolic heap expression, add other operations

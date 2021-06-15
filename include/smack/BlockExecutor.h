@@ -51,7 +51,7 @@ namespace smack{
         BlockExecutor(Program* p, Block* cb, VarEquivPtr vars, VarFactoryPtr vf, StoreSplitterPtr split) : program(p), currentBlock(cb), varEquiv(vars), varFactory(vf), storeSplit(split) {}
 
         SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
-        
+
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
 
         SHExprPtr executeMalloc(SHExprPtr sh, const CallStmt* stmt);
@@ -62,7 +62,7 @@ namespace smack{
 
         SHExprPtr executeLoad(SHExprPtr sh, const CallStmt* stmt);
 
-        SHExprPtr executeStore(SHExprPtr sh, const CallStmt* stmt);
+        SHExprPtr executeStore(SHExprPtr sh, const FunExpr* rhsFun);
 
         SHExprPtr executeOther(SHExprPtr sh, const Stmt* stmt);
 

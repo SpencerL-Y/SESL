@@ -165,19 +165,20 @@ namespace smack{
                     CFDEBUG(std::cout << "ASSIGN: rhs store or load" << std::endl;);
                     // This may contain the pointer arithmetic
                     if(rhsFun->name().find("$store") != std::string::npos){
-                        const Expr* arg1 = NULL;
-                        const Expr* arg2 = NULL;
-                        int i = 0;
-                        for(const Expr* temp : rhsFun->getArgs()){
-                            if(i == 1){
-                                arg1 = temp;
-                            } else if(i == 2){
-                                arg2 = temp;
-                            }
-                            i++;
-                        }
-                        CFDEBUG(std::cout << "STORE ARG1: " << arg1 << " ARG2: " << arg2 << std::endl;)
-                        return sh;
+                        // const Expr* arg1 = NULL;
+                        // const Expr* arg2 = NULL;
+                        // int i = 0;
+                        // for(const Expr* temp : rhsFun->getArgs()){
+                        //     if(i == 1){
+                        //         arg1 = temp;
+                        //     } else if(i == 2){
+                        //         arg2 = temp;
+                        //     }
+                        //     i++;
+                        // }
+                        // CFDEBUG(std::cout << "STORE ARG1: " << arg1 << " ARG2: " << arg2 << std::endl;)
+                        
+                        return this->executeStore(sh, rhsFun);
                     } else {
                         const Expr* storedValExpr = rhsFun->getArgs().back();
                         return sh;
@@ -467,6 +468,9 @@ namespace smack{
                 }
 
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+
+                newSH->print(std::cout);
+                std::cout << std::endl;
                 return newSH;
             } else {
                 CFDEBUG(std::cout << "ERROR: UNsolved situation" << std::endl);
@@ -481,25 +485,28 @@ namespace smack{
 
     SHExprPtr 
     BlockExecutor::executeStore
-    (SHExprPtr sh, const CallStmt* stmt){
-        if(stmt->getProc().find("$store") != std::string::npos){
-            int i = 0;
+    (SHExprPtr sh, const FunExpr* rhsFun){
+        if(rhsFun->name().find("$store") != std::string::npos){
             const Expr* arg1 = nullptr;
             const Expr* arg2 = nullptr;
-            for(const Expr* temp : stmt->getParams()){
-                if(1 == i){
+            int i = 0;
+            for(const Expr* temp : rhsFun->getArgs()){
+                if(i == 1){
                     arg1 = temp;
-                } else if(2 == i){
+                } else if(i == 2){
                     arg2 = temp;
                 }
-                i = i + 1;
+                i++;
             }
             CFDEBUG(std::cout << "STORE: arg1 " << arg1 << " arg2: " << arg2 << std::endl;);
             const VarExpr* varArg1 = (const VarExpr*) arg1;
             int offset = this->varEquiv->getOffset(varArg1->name());
-            int splitBlkIndex = this->storeSplit->addSplit(offset);
-            int currentIndex = 1;
             std::string mallocName = this->varEquiv->getBlkName(varArg1->name());
+            
+            int splitBlkIndex = this->storeSplit->addSplit(mallocName, offset);
+            CFDEBUG(std::cout << "malloc name: " << mallocName << "splitIndex: " << splitBlkIndex <<  std::endl);
+            int currentIndex = 1;
+            
             const Expr* newPure = sh->getPure();
             std::list<const SpatialLiteral*> newSpatial;
 
@@ -510,12 +517,13 @@ namespace smack{
                     const BlkLit* breakBlk = (const BlkLit*) i;
                     const SpatialLiteral* leftBlk = SpatialLiteral::blk(
                         breakBlk->getFrom(),
-                        arg1
+                        arg1,
                         breakBlk->getBlkName()
                     );
                     const SpatialLiteral* storedPt = SpatialLiteral::pt(
                         arg1,
-                        arg2
+                        arg2,
+                        breakBlk->getBlkName()
                     );
                     // TODOsh: size information need to be obtained here
                     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -539,7 +547,8 @@ namespace smack{
             }
 
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-
+            newSH->print(std::cout);
+            std::cout << std::endl;
             return newSH;
         } else {
             CFDEBUG(std::cout << "ERROR: this should not happen.");

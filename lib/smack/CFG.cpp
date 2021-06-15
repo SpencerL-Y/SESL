@@ -39,6 +39,7 @@ namespace smack
     void CFG::buildCFG() {
         if (!proc) return;
         generateTypeInfo();
+//        printVarInfo();
         for (auto& sb : proc->getBlocks()) {
             auto fromState = getState(sb->getName(), sb);
         }
@@ -157,8 +158,26 @@ namespace smack
 
     void CFG::printVarInfo() {
         for (auto &i : varType) {
-            std::cout << i.first << " " << i.second << std::endl;
+            std::cout << i.first << " " << i.second << " " << getVarDetailType(const_cast<string &>(i.first)).first << " " << getVarDetailType(const_cast<string &>(i.first)).second << std::endl;
         }
+    }
+
+    std::pair<std::string, int> CFG::getVarDetailType(std::string& varName) {
+        auto type = getVarType(varName);
+        if (type[0] == 'i') {
+            int ans = 0;
+            for (int i = 1; i < type.length(); ++ i) {
+                ans = ans * 10 + type[i] - '0';
+            }
+            return {type, ans};
+        } else if (type[0] == 'r') {
+            int ans = 0;
+            for (int i = 3; i < type.length(); ++ i) {
+                ans = ans * 10 + type[i] - '0';
+            }
+            return {type, ans};
+        }
+        return {type, 0};
     }
 
 } // namespace name

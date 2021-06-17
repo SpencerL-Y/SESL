@@ -20,10 +20,10 @@ $bb0:
   $i1 := $mul.i64($i0, 4);
   call $p2 := malloc($i1);
   $p3 := $bitcast.ref.ref($p2);
-  $p4 := $add.ref($p3, $mul.ref(2, 4));
+  $p4 := $add.ref($p3, $mul.ref(1, 4));
   $M.0 := $store.i32($M.0, $p4, 1110);
   $p5 := $add.ref($p3, $mul.ref(1, 4));
-  $i6 := $load.i32($M.1, $p5);
+  $i6 := $load.i32($M.0, $p5);
   $i7 := $add.i32($i6, $sub.i32(0, 1));
   call {:cexpr "nnum"} boogie_si_record_i32($i7);
   $r := 0;

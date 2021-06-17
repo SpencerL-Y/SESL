@@ -19,7 +19,7 @@
             public:
 
             BlkSplitUtil(std::vector<int> axis) : splitAxis(axis) {}
-            BlkSplitUtil() {splitAxis.push_back(0);}
+            BlkSplitUtil() {splitAxis.push_back(-1);}
 
             void print();
             int addSplit(int offset);

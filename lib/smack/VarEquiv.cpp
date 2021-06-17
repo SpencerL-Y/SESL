@@ -129,5 +129,6 @@ namespace smack
             return std::pair<bool, int>(false, 0);
         }
     }
+    // name2stepName operations
 
 } // namespace smack

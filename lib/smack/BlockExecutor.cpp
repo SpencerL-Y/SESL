@@ -503,7 +503,7 @@ namespace smack{
             // Find the correct blk predicate to break
             for(const SpatialLiteral* i : sh->getSpatialExpr()){
                 if(!i->getBlkName().compare(mallocName) && 
-                    2 == i->getId() && 
+                    SpatialLiteral::Kind::BLK == i->getId() && 
                     currentIndex == splitBlkIndex){
                     const BlkLit* breakBlk = (const BlkLit*) i;
                     const SpatialLiteral* leftBlk = SpatialLiteral::blk(
@@ -516,7 +516,7 @@ namespace smack{
                         arg2,
                         breakBlk->getBlkName()
                     );
-                    std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(mallocName);
+                    std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varArg1->name());
                     CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
                     long long size = stepSize.second;
                     const SpatialLiteral* rightBlk = SpatialLiteral::blk(
@@ -529,7 +529,9 @@ namespace smack{
                     newSpatial.push_back(rightBlk);
 
                     currentIndex += 1;
-                } else if(!i->getBlkName().compare(mallocName) && 2 == i->getId() && currentIndex != splitBlkIndex){
+                } else if(!i->getBlkName().compare(mallocName) && 
+                       SpatialLiteral::Kind::BLK == i->getId() && 
+                       currentIndex != splitBlkIndex){
                     newSpatial.push_back(i);
                     currentIndex += 1;
                 } else {
@@ -552,22 +554,81 @@ namespace smack{
     (SHExprPtr sh, std::string lhsVarName, const FunExpr* rhsFun){ 
         if(rhsFun->name().find("$load") != std::string::npos){
             const VarExpr* ldPtr = (const VarExpr*)rhsFun->getArgs().back();
-            CFDEBUG(std::cout << "INFO: Load " << ldPtr->name() << " to " << lhsVarName << std::endl;);
-            int loadPosOffset = this->varEquiv->getOffset(ldPtr->name());
+            std::string ldPtrName = ldPtr->name();
+            CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
+            int loadPosOffset = this->varEquiv->getOffset(ldPtrName);
             std::pair<bool, int> posResult = this->storeSplit->getOffsetPos(
-                this->varEquiv->getAllocName(ldPtr->name()),
+                this->varEquiv->getBlkName(ldPtrName),
                 loadPosOffset
             );
+            CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
             if(posResult.first){
                 // spt * blk * pt * blk * pt
                 //              1          2
                 //              2*1+1      2*2+1
-                int loadIndex = 2*posResult + 1;
+                
+                int loadIndex = 2*posResult.second + 1;
+                bool startCounting = false;
+                int countIndex = 1;
+                for(const SpatialLiteral* spl : sh->getSpatialExpr()){
+                    if(SpatialLiteral::Kind::SPT == spl->getId()){
+                        const SizePtLit* sizePt = (const SizePtLit*) spl;
+                        if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
+                            startCounting = true;
+                        }
+                    }
+                    if(countIndex == loadIndex){
+                        if(SpatialLiteral::Kind::PT == spl->getId()){
+                            const PtLit* pt = (const PtLit*) spl;
+                            const Expr* toExpr = pt->getTo();
 
+                            CFDEBUG(std::cout << "INFO: loaded expr: " << toExpr << std::endl;);
+                            if(toExpr->isVar()){
+                                std::string loadedVarName = ((const VarExpr*)toExpr)->name();
+                                const Expr* newPure = Expr::and_(
+                                     sh->getPure(),
+                                     Expr::eq(
+                                        this->varFactory->getVar(lhsVarName), 
+                                        this->varFactory->getVar(loadedVarName)     
+                                    )
+                                );
+                                this->varEquiv->linkName(lhsVarName, loadedVarName);
+                                this->varEquiv->linkIntVar(lhsVarName, loadedVarName);
+                                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure,   sh->getSpatialExpr());
+                                newSH->print(std::cout);
+                                std::cout << std::endl;
+                                return newSH;
+                            } else if(toExpr->isValue()){
+                                const IntLit* intToExpr = (const IntLit*) toExpr;
+                                const Expr* newPure = Expr::and_(
+                                    sh->getPure(),
+                                    Expr::eq(
+                                        this->varFactory->getVar(lhsVarName), 
+                                        toExpr    
+                                    )
+                                );
+                                this->varEquiv->addNewName(lhsVarName);
+                                this->varEquiv->addNewVal(lhsVarName, intToExpr->getVal());
+                                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure,   sh->getSpatialExpr());
+                                newSH->print(std::cout);
+                                std::cout << std::endl;
+                                return newSH;
+                            } else {
+                                CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
+                            }
+                        } else {
+                            CFDEBUG(std::cout << "ERROR: load error, this should be a PT predicate." << std::endl;);
+                            return sh;
+                        }
+                    }
+                    if(startCounting){
+                        countIndex ++;
+                    }
+                }
             } else if(!posResult.first && 0 == posResult.second) {
                 // TODOsh Grammatik: unify the error by checking the grammar later. 
                 
-            } else if(!posresult.first && -1 == posresult.second){  
+            } else if(!posResult.first && -1 == posResult.second){  
                 CFDEBUG(std::cout << "ERROR: Alloc name store split not get !!" << std::endl;);
             } else {
                 CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);

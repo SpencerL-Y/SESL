@@ -371,15 +371,23 @@ public:
 
 
 class SpatialLiteral : public Expr {
-  int id;
+  public: 
+  enum Kind{  
+    EMP,
+    PT,
+    BLK,
+    SPT
+  };
+  Kind id;
   std::string blkName;
-public: 
+
+  
   static const SpatialLiteral* emp();
   static const SpatialLiteral* pt(const Expr* from, const Expr* to, std::string blkName);
   static const SpatialLiteral* blk(const Expr* from, const Expr* to, std::string blkName);
   static const SpatialLiteral* spt(const Expr* var, const Expr* size, std::string blkName);
-  int getId() const {return id;}
-  void setId(int i){id = i;}
+  SpatialLiteral::Kind getId() const {return id;}
+  void setId(SpatialLiteral::Kind i){id = i;}
   ExprType getType() const { return ExprType::SpatialLit;}
   std::string getBlkName() const { return blkName;}
   void setBlkName(std::string blkName) { this->blkName = blkName;}
@@ -391,7 +399,7 @@ public:
 class EmpLit : public SpatialLiteral {
 
 public: 
-  EmpLit(std::string blkName){setId(0); setBlkName(blkName);}
+  EmpLit(std::string blkName){setId(SpatialLiteral::Kind::EMP); setBlkName(blkName);}
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
 };
@@ -402,8 +410,10 @@ class PtLit : public SpatialLiteral {
   const Expr* to;
 
 public:
-  PtLit(const Expr* f, const Expr* t, std::string blkName) : from(f), to(t){setId(1); setBlkName(blkName);}
+  PtLit(const Expr* f, const Expr* t, std::string blkName) : from(f), to(t){setId(SpatialLiteral::Kind::PT); setBlkName(blkName);}
   void print(std::ostream &os) const;
+  const Expr* getFrom() const {return from;}
+  const Expr* getTo() const {return to;}
   virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
 };
 
@@ -413,7 +423,7 @@ class BlkLit : public SpatialLiteral {
   const Expr* to;
 
 public:
-  BlkLit(const Expr* f, const Expr* t, std::string blkName) : from(f), to(t){setId(2); setBlkName(blkName);}
+  BlkLit(const Expr* f, const Expr* t, std::string blkName) : from(f), to(t){setId(SpatialLiteral::Kind::BLK); setBlkName(blkName);}
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
   const Expr* getFrom() const { return from;}
@@ -425,7 +435,7 @@ class SizePtLit : public SpatialLiteral {
   const Expr* size;
 
 public:
-  SizePtLit(const Expr* v, const Expr* s, std::string blkName) : var(v), size(s) {setId(3);setBlkName(blkName);}
+  SizePtLit(const Expr* v, const Expr* s, std::string blkName) : var(v), size(s) {setId(SpatialLiteral::Kind::SPT);setBlkName(blkName);}
   std::string getVarName() const;
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;

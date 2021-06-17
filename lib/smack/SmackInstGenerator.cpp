@@ -87,7 +87,7 @@ void SmackInstGenerator::nameInstruction(llvm::Instruction &inst) {
   if (inst.getType()->isVoidTy())
     return;
   proc->getDeclarations().push_back(
-      Decl::variable(naming->get(inst), rep->type(&inst)));
+      Decl::variable(naming->get(inst), rep->typeDetail(&inst)));
 }
 
 void SmackInstGenerator::annotate(llvm::Instruction &I, Block *B) {

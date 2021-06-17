@@ -1,4 +1,4 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-bobomdiu.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-o6xjel3f.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
@@ -13,7 +13,11 @@ define dso_local i32 @main() #0 !dbg !10 {
   call void @llvm.dbg.value(metadata i32* %4, metadata !20, metadata !DIExpression()), !dbg !14, !verifier.code !15
   %5 = getelementptr inbounds i32, i32* %4, i64 2, !dbg !21, !verifier.code !15
   store i32 1110, i32* %5, align 4, !dbg !22, !verifier.code !15
-  ret i32 0, !dbg !23, !verifier.code !15
+  %6 = getelementptr inbounds i32, i32* %4, i64 1, !dbg !23, !verifier.code !15
+  %7 = load i32, i32* %6, align 4, !dbg !24, !verifier.code !15
+  %8 = add nsw i32 %7, -1, !dbg !25, !verifier.code !15
+  call void @llvm.dbg.value(metadata i32 %8, metadata !26, metadata !DIExpression()), !dbg !14, !verifier.code !15
+  ret i32 0, !dbg !27, !verifier.code !15
 }
 
 ; Function Attrs: nounwind readnone speculatable willreturn
@@ -62,4 +66,8 @@ attributes #3 = { nounwind }
 !20 = !DILocalVariable(name: "j", scope: !10, file: !1, line: 7, type: !4)
 !21 = !DILocation(line: 11, column: 8, scope: !10)
 !22 = !DILocation(line: 11, column: 12, scope: !10)
-!23 = !DILocation(line: 20, column: 1, scope: !10)
+!23 = !DILocation(line: 12, column: 19, scope: !10)
+!24 = !DILocation(line: 12, column: 16, scope: !10)
+!25 = !DILocation(line: 12, column: 23, scope: !10)
+!26 = !DILocalVariable(name: "nnum", scope: !10, file: !1, line: 12, type: !5)
+!27 = !DILocation(line: 21, column: 1, scope: !10)

@@ -63,7 +63,7 @@ namespace smack{
 
         SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
 
-        SHExprPtr executeLoad(SHExprPtr sh, const CallStmt* stmt);
+        SHExprPtr executeLoad(SHExprPtr sh, std::string lhsVarName, const FunExpr* rhsFun);
 
         SHExprPtr executeStore(SHExprPtr sh, const FunExpr* rhsFun);
 

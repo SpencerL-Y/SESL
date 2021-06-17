@@ -166,23 +166,11 @@ namespace smack{
                     CFDEBUG(std::cout << "ASSIGN: rhs store or load" << std::endl;);
                     // This may contain the pointer arithmetic
                     if(rhsFun->name().find("$store") != std::string::npos){
-                        // const Expr* arg1 = NULL;
-                        // const Expr* arg2 = NULL;
-                        // int i = 0;
-                        // for(const Expr* temp : rhsFun->getArgs()){
-                        //     if(i == 1){
-                        //         arg1 = temp;
-                        //     } else if(i == 2){
-                        //         arg2 = temp;
-                        //     }
-                        //     i++;
-                        // }
-                        // CFDEBUG(std::cout << "STORE ARG1: " << arg1 << " ARG2: " << arg2 << std::endl;)
-                        
                         return this->executeStore(sh, rhsFun);
+                    } else if(rhsFun->name().find("$load") != std::string::npos){
+                        return this->executeLoad(sh, stmt);
                     } else {
-                        const Expr* storedValExpr = rhsFun->getArgs().back();
-                        return sh;
+                        CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
                     }
                 }
                 else {
@@ -213,7 +201,7 @@ namespace smack{
     bool BlockExecutor::isUnaryPtrCastFuncName(std::string name){
         // TODO: only consider the bitcast function here
         // later we should add the ptr to int and int to ptr cast
-        if(name.find("$bitcast.ref") != std::string::npos){
+        if(!name.compare("$bitcast.ref.ref")){
             return true;
         } else {
             return false;
@@ -371,6 +359,7 @@ namespace smack{
                 this->varEquiv->addNewBlkName(retVarName);
                 this->varEquiv->addNewOffset(retVarName, 0);
                 this->storeSplit->createAxis(retVarName);
+                this->storeSplit->setMaxOffset(retVarName, param->translateToInt(this->varEquiv).second);
 
                 /*const Expr* pureConj = Expr::eq(
                     this->varFactory->getVar(retVarName),
@@ -406,6 +395,7 @@ namespace smack{
                 this->varEquiv->addNewBlkName(retVarName);
                 this->varEquiv->addNewOffset(retVarName, 0);
                 this->storeSplit->createAxis(retVarName);
+                this->storeSplit->setMaxOffset(retVarName, sizeExpr->translateToInt(this->varEquiv).second);
 
                 const Expr* pureConj = Expr::eq(
                     this->varFactory->getVar(retVarName),
@@ -503,7 +493,7 @@ namespace smack{
             const VarExpr* varArg1 = (const VarExpr*) arg1;
             int offset = this->varEquiv->getOffset(varArg1->name());
             std::string mallocName = this->varEquiv->getBlkName(varArg1->name());
-            
+            // TODOsh: Attention here, the variable may not contain the size info
             int splitBlkIndex = this->storeSplit->addSplit(mallocName, offset);
             CFDEBUG(std::cout << "malloc name: " << mallocName << " splitIndex: " << splitBlkIndex <<  std::endl);
             int currentIndex = 1;
@@ -559,14 +549,14 @@ namespace smack{
 
     SHExprPtr
     BlockExecutor::executeLoad
-    (SHExprPtr sh, const CallStmt* stmt){ 
+    (SHExprPtr sh, std::string lhsVarName, const FunExpr* rhsFun){ 
         return sh;
     }
 
 
     // ---------------------- Execution for Casting stmt -----------------
     SHExprPtr 
-    BlockExecutor::executeCast(SHExprPtr sh, const Stmt* stmt){
+    BlockExecutor::executeCast(SHExprPtr sh, const Stmt* st人外mt){
         return sh;
     }
 

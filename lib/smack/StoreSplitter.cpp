@@ -29,6 +29,18 @@ namespace smack
         this->maxOffset = max;
     }
 
+
+    std::pair<bool, int> BlkSplitUtil::getOffsetPos(int offset){
+        for(int index = 0; index < this->splitAxis.size(); index ++){
+            if(this->splitAxis[index] == offset){
+                return std::pair<bool, int>(true, index);
+            }
+        }
+        return std::pair<bool, int>(false, 0);
+    }
+
+
+
     void StoreSplitter::createAxis(std::string ptrName){
         if(this->splitMap.find(ptrName) != this->splitMap.end()){
             CFDEBUG(std::cout << "ERROR: Name exists check execution!!!" << std::endl);
@@ -55,6 +67,16 @@ namespace smack
             this->splitMap[ptrName]->setMaxOffset(max);
         } else {
             CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
+        }
+    }
+
+
+    std::pair<bool, int> StoreSplitter::getOffsetPos(std::string allocName, int offset){
+        if(this->splitMap.find(allocName) != this->splitMap.end()){
+            return this->splitMap[allocName]->getOffsetPos(offset);
+        } else {
+            CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
+            return std::pair<bool, int>(false, -1);
         }
     }
 

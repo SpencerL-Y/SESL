@@ -168,7 +168,7 @@ namespace smack{
                     if(rhsFun->name().find("$store") != std::string::npos){
                         return this->executeStore(sh, rhsFun);
                     } else if(rhsFun->name().find("$load") != std::string::npos){
-                        return this->executeLoad(sh, stmt);
+                        return this->executeLoad(sh, lhsVarName, rhsFun);
                     } else {
                         CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
                     }
@@ -500,7 +500,7 @@ namespace smack{
             
             const Expr* newPure = sh->getPure();
             std::list<const SpatialLiteral*> newSpatial;
-
+            // Find the correct blk predicate to break
             for(const SpatialLiteral* i : sh->getSpatialExpr()){
                 if(!i->getBlkName().compare(mallocName) && 
                     2 == i->getId() && 
@@ -550,13 +550,39 @@ namespace smack{
     SHExprPtr
     BlockExecutor::executeLoad
     (SHExprPtr sh, std::string lhsVarName, const FunExpr* rhsFun){ 
+        if(rhsFun->name().find("$load") != std::string::npos){
+            const VarExpr* ldPtr = (const VarExpr*)rhsFun->getArgs().back();
+            CFDEBUG(std::cout << "INFO: Load " << ldPtr->name() << " to " << lhsVarName << std::endl;);
+            int loadPosOffset = this->varEquiv->getOffset(ldPtr->name());
+            std::pair<bool, int> posResult = this->storeSplit->getOffsetPos(
+                this->varEquiv->getAllocName(ldPtr->name()),
+                loadPosOffset
+            );
+            if(posResult.first){
+                // spt * blk * pt * blk * pt
+                //              1          2
+                //              2*1+1      2*2+1
+                int loadIndex = 2*posResult + 1;
+
+            } else if(!posResult.first && 0 == posResult.second) {
+                // TODOsh Grammatik: unify the error by checking the grammar later. 
+                
+            } else if(!posresult.first && -1 == posresult.second){  
+                CFDEBUG(std::cout << "ERROR: Alloc name store split not get !!" << std::endl;);
+            } else {
+                CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
+                return sh;
+            }
+        } else {
+            CFDEBUG(std::cout << "ERROR: this should not happen !!" << std::endl;);
+        }
         return sh;
     }
 
 
     // ---------------------- Execution for Casting stmt -----------------
     SHExprPtr 
-    BlockExecutor::executeCast(SHExprPtr sh, const Stmt* st人外mt){
+    BlockExecutor::executeCast(SHExprPtr sh, const Stmt* stmt){
         return sh;
     }
 

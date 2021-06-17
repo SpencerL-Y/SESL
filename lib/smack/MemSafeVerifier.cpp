@@ -39,7 +39,8 @@ namespace smack {
         CFGPtr mainGraph = CFGs["main"];
         mainGraph->printCFG();
         std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
-        Block* block = mainGraph->getState("$bb0")->getStateBlock();
+        StatePtr state = mainGraph->getState("$bb0");
+        Block* block = state->getStateBlock();
         std::cout << "Block stmt num: " << block->getStatements().size() << std::endl;
         for(auto i : block->getStatements()){
             i->print(std::cout);
@@ -56,7 +57,7 @@ namespace smack {
         // Initialize store splitter
         StoreSplitterPtr storeSplit = std::make_shared<StoreSplitter>();
         // Initialize a block executor
-        BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, block, allocEquiv, varFac, storeSplit);
+        BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, mainGraph, state, allocEquiv, varFac, storeSplit);
         // initial pure formula 
         const Expr* boolTrue = Expr::lit(true);
         // initial list of spatial lits
@@ -70,6 +71,7 @@ namespace smack {
         // Add initial symbolic heap
         newStmts.push_back(Stmt::symbheap(initSH));
         SHExprPtr currSH = initSH;
+        CFDEBUG(std::cout << "here");
         for(const Stmt* i : block->getStatements()){
             // for each stmt in the program, put it in the new list and execute to get resulting symboligetPurec heap
             newStmts.push_back(i);

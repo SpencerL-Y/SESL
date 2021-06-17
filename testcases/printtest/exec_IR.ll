@@ -1,4 +1,4 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-a1mwxnpd.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-bobomdiu.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
@@ -11,11 +11,9 @@ define dso_local i32 @main() #0 !dbg !10 {
   %3 = call noalias i8* @malloc(i64 %2) #3, !dbg !18, !verifier.code !15
   %4 = bitcast i8* %3 to i32*, !dbg !19, !verifier.code !15
   call void @llvm.dbg.value(metadata i32* %4, metadata !20, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  %5 = getelementptr inbounds i32, i32* %4, i64 1, !dbg !21, !verifier.code !15
-  store i32 5, i32* %5, align 4, !dbg !22, !verifier.code !15
-  %6 = bitcast i32* %4 to i8*, !dbg !23, !verifier.code !15
-  call void @free(i8* %6) #3, !dbg !24, !verifier.code !15
-  ret i32 0, !dbg !25, !verifier.code !15
+  %5 = getelementptr inbounds i32, i32* %4, i64 2, !dbg !21, !verifier.code !15
+  store i32 1110, i32* %5, align 4, !dbg !22, !verifier.code !15
+  ret i32 0, !dbg !23, !verifier.code !15
 }
 
 ; Function Attrs: nounwind readnone speculatable willreturn
@@ -23,9 +21,6 @@ declare void @llvm.dbg.declare(metadata, metadata, metadata) #1
 
 ; Function Attrs: nounwind
 declare dso_local noalias i8* @malloc(i64) #2
-
-; Function Attrs: nounwind
-declare dso_local void @free(i8*) #2
 
 ; Function Attrs: nounwind readnone speculatable willreturn
 declare void @llvm.dbg.value(metadata, metadata, metadata) #1
@@ -60,13 +55,11 @@ attributes #3 = { nounwind }
 !13 = !DILocalVariable(name: "num", scope: !10, file: !1, line: 4, type: !5)
 !14 = !DILocation(line: 0, scope: !10)
 !15 = !{i1 false}
-!16 = !DILocation(line: 5, column: 27, scope: !10)
-!17 = !DILocation(line: 5, column: 30, scope: !10)
-!18 = !DILocation(line: 5, column: 20, scope: !10)
-!19 = !DILocation(line: 5, column: 14, scope: !10)
-!20 = !DILocalVariable(name: "i", scope: !10, file: !1, line: 5, type: !4)
-!21 = !DILocation(line: 12, column: 8, scope: !10)
-!22 = !DILocation(line: 12, column: 12, scope: !10)
-!23 = !DILocation(line: 13, column: 10, scope: !10)
-!24 = !DILocation(line: 13, column: 5, scope: !10)
-!25 = !DILocation(line: 15, column: 1, scope: !10)
+!16 = !DILocation(line: 7, column: 27, scope: !10)
+!17 = !DILocation(line: 7, column: 30, scope: !10)
+!18 = !DILocation(line: 7, column: 20, scope: !10)
+!19 = !DILocation(line: 7, column: 14, scope: !10)
+!20 = !DILocalVariable(name: "j", scope: !10, file: !1, line: 7, type: !4)
+!21 = !DILocation(line: 11, column: 8, scope: !10)
+!22 = !DILocation(line: 11, column: 12, scope: !10)
+!23 = !DILocation(line: 20, column: 1, scope: !10)

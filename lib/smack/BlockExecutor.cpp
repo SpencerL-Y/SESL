@@ -99,6 +99,7 @@ namespace smack{
                     CFDEBUG(std::cout << std::endl;);
                     return newSH;
                 } 
+                //2. Deal with variables
                 else if(this->isUnaryAssignFuncName(rhsFun->name())){
                     // TODOsh: only support a single parameter here
                     const Expr* arg1 = rhsFun->getArgs().front();
@@ -212,7 +213,7 @@ namespace smack{
     bool BlockExecutor::isUnaryPtrCastFuncName(std::string name){
         // TODO: only consider the bitcast function here
         // later we should add the ptr to int and int to ptr cast
-        if(!name.compare("$bitcast.ref.ref")){
+        if(name.find("$bitcast.ref") != std::string::npos){
             return true;
         } else {
             return false;
@@ -504,7 +505,7 @@ namespace smack{
             std::string mallocName = this->varEquiv->getBlkName(varArg1->name());
             
             int splitBlkIndex = this->storeSplit->addSplit(mallocName, offset);
-            CFDEBUG(std::cout << "malloc name: " << mallocName << "splitIndex: " << splitBlkIndex <<  std::endl);
+            CFDEBUG(std::cout << "malloc name: " << mallocName << " splitIndex: " << splitBlkIndex <<  std::endl);
             int currentIndex = 1;
             
             const Expr* newPure = sh->getPure();
@@ -525,9 +526,9 @@ namespace smack{
                         arg2,
                         breakBlk->getBlkName()
                     );
-                    // TODOsh: size information need to be obtained here
-                    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    long long size = 1;
+                    std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(mallocName);
+                    CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
+                    long long size = stepSize.second;
                     const SpatialLiteral* rightBlk = SpatialLiteral::blk(
                         Expr::add(arg1, Expr::lit(size)),
                         breakBlk->getTo(),

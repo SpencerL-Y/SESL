@@ -39,6 +39,7 @@ namespace smack
         ~CFG() = default;
     };
     typedef std::shared_ptr<CFG> CFGPtr;
+    typedef std::weak_ptr<CFG> CFGWekPtr;
 } // namespace smack
 
 

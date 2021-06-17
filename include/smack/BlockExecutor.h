@@ -3,6 +3,7 @@
 #include <z3++.h>
 
 #include <utility>
+#include <regex>
 #include "BoogieAst.h"
 #include "llvm/IR/DebugInfo.h"
 #include "smack/AddTiming.h"
@@ -11,6 +12,7 @@
 #include "smack/VarEquiv.h"
 #include "smack/VarFactory.h"
 #include "smack/StoreSplitter.h"
+#include "smack/CFG.h"
 #include "utils/CenterDebug.h"
 
 // This object is for dealing with symbolic execution
@@ -28,6 +30,7 @@ namespace smack{
         VarEquivPtr varEquiv;
         VarFactoryPtr varFactory;
         StoreSplitterPtr storeSplit;
+        CFGPtr cfg;
 
 
         // funcexpr name judgement functions
@@ -48,7 +51,7 @@ namespace smack{
 
 
     public:
-        BlockExecutor(Program* p, Block* cb, VarEquivPtr vars, VarFactoryPtr vf, StoreSplitterPtr split) : program(p), currentBlock(cb), varEquiv(vars), varFactory(vf), storeSplit(split) {}
+        BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb, VarEquivPtr vars, VarFactoryPtr vf, StoreSplitterPtr split) : program(p), currentBlock(cb->getStateBlock()), varEquiv(vars), varFactory(vf), storeSplit(split), cfg(cfgPtr) {}
 
         SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
 

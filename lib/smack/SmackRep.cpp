@@ -213,6 +213,18 @@ std::string SmackRep::procName(llvm::Function *F,
   return name.str();
 }
 
+std::string SmackRep::typeDetail(const llvm::Type *t) {
+    const PointerType *p;
+    if (t->isPointerTy() && (p = dyn_cast<PointerType>(t))) {
+            if (auto sonType = dyn_cast<IntegerType>(p->getElementType())) {
+                return Naming::PTR_TYPE + std::to_string(storageSize(p->getElementType()));
+            } else {
+                return type(t);
+            }
+    }
+    return type(t);
+}
+
 std::string SmackRep::type(const llvm::Type *t) {
 
   if (t->isFloatingPointTy()) {
@@ -234,11 +246,6 @@ std::string SmackRep::type(const llvm::Type *t) {
     return intType(t->getIntegerBitWidth());
 
   else if (t->isPointerTy()) {
-      if (auto p = dyn_cast<PointerType>(t)) {
-          if (auto sonType = dyn_cast<IntegerType>(p->getElementType())) {
-              return Naming::PTR_TYPE + std::to_string(storageSize(p->getElementType()));
-          }
-      }
       return Naming::PTR_TYPE;
   }
 
@@ -249,7 +256,7 @@ std::string SmackRep::type(const llvm::Type *t) {
     return Naming::PTR_TYPE;
 }
 
-std::string SmackRep::type(const llvm::Value *v) { return type(v->getType()); }
+std::string SmackRep::type(const llvm::Value *v) { return typeDetail(v->getType()); }
 
 unsigned SmackRep::storageSize(llvm::Type *T) {
   return targetData->getTypeStoreSize(T);

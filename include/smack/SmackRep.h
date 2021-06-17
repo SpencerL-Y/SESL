@@ -128,6 +128,7 @@ public:
 
   std::string type(const llvm::Type *t);
   std::string type(const llvm::Value *v);
+  std::string typeDetail(const llvm::Type *t);
 
   const Expr *lit(const llvm::Value *v, bool isUnsigned = false,
                   bool isUnsignedInst = false);

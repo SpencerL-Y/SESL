@@ -256,7 +256,8 @@ std::string SmackRep::type(const llvm::Type *t) {
     return Naming::PTR_TYPE;
 }
 
-std::string SmackRep::type(const llvm::Value *v) { return typeDetail(v->getType()); }
+std::string SmackRep::typeDetail(const llvm::Value *v) {return typeDetail(v->getType());}
+std::string SmackRep::type(const llvm::Value *v) { return type(v->getType()); }
 
 unsigned SmackRep::storageSize(llvm::Type *T) {
   return targetData->getTypeStoreSize(T);

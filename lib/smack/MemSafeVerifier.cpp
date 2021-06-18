@@ -76,12 +76,13 @@ namespace smack {
             // for each stmt in the program, put it in the new list and execute to get resulting symboligetPurec heap
             newStmts.push_back(i);
             SHExprPtr newSH = be->execute(currSH, i);
+            newStmts.push_back(Stmt::symbheap(newSH));
             auto const pure = newSH->getPure();
             currSH = newSH;
         }
         be->setBlock(block);
         z3::context ctx;
-        auto trans = std::make_shared<smack::TransToZ3>(ctx, currSH);
+        auto trans = std::make_shared<smack::TransToZ3>(ctx, currSH, mainGraph);
         trans->translate();
 
         std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;

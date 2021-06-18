@@ -6,26 +6,34 @@ axiom (main == $sub.ref(0, 1032));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
-  var $i0: i64;
+  var $p0: ref;
   var $i1: i64;
-  var $p2: ref1;
-  var $p3: ref4;
-  var $p4: ref4;
-  var $p5: ref4;
-  var $i6: i32;
+  var $i2: i64;
+  var $p3: ref8;
+  var $p4: ref32;
+  var $p5: ref32;
+  var $p6: ref32;
   var $i7: i32;
+  var $i8: i32;
+  var $p9: ref;
+  var $p10: ref32;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  $i0 := $sext.i32.i64(5);
-  $i1 := $mul.i64($i0, 4);
-  call $p2 := malloc($i1);
-  $p3 := $bitcast.ref.ref($p2);
-  $p4 := $add.ref($p3, $mul.ref(1, 4));
-  $M.0 := $store.i32($M.0, $p4, 1110);
-  $p5 := $add.ref($p3, $mul.ref(1, 4));
-  $i6 := $load.i32($M.0, $p5);
-  $i7 := $add.i32($i6, $sub.i32(0, 1));
-  call {:cexpr "nnum"} boogie_si_record_i32($i7);
+  call $p0 := $alloc($mul.ref(24, $zext.i32.i64(1)));
+  $i1 := $sext.i32.i64(5);
+  $i2 := $mul.i64($i1, 4);
+  call $p3 := malloc($i2);
+  $p4 := $bitcast.ref.ref($p3);
+  $p5 := $add.ref($p4, $mul.ref(1, 4));
+  $M.0 := $store.i32($M.0, $p5, 1110);
+  $p6 := $add.ref($p4, $mul.ref(1, 4));
+  $i7 := $load.i32($M.0, $p6);
+  $i8 := $add.i32($i7, $sub.i32(0, 1));
+  call {:cexpr "nnum"} boogie_si_record_i32($i8);
+  assume true;
+  $p9 := $add.ref($add.ref($p0, $mul.ref(0, 24)), $mul.ref(1, 12));
+  $p10 := $add.ref($add.ref($add.ref($p0, $mul.ref(0, 24)), $mul.ref(1, 12)), $mul.ref(2, 4));
+  $M.1 := $store.i32($M.1, $p10, 5);
   $r := 0;
   return;
 }

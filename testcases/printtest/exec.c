@@ -13,8 +13,8 @@ int main(){
     //int nnum = *(i+1) + (-1);
     //*(i+1) = num;
     //*(i+2) = 11;
-    //int a[2][3];
-    //a[1][2] = num;
+    int a[2][3];
+    a[1][2] = num;
     //free(i);
     // byte level
     

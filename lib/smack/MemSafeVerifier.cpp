@@ -72,18 +72,20 @@ namespace smack {
         newStmts.push_back(Stmt::symbheap(initSH));
         SHExprPtr currSH = initSH;
         CFDEBUG(std::cout << "here");
-        for(const Stmt* i : block->getStatements()){
-            // for each stmt in the program, put it in the new list and execute to get resulting symboligetPurec heap
-            newStmts.push_back(i);
-            SHExprPtr newSH = be->execute(currSH, i);
-            newStmts.push_back(Stmt::symbheap(newSH));
-            auto const pure = newSH->getPure();
-            currSH = newSH;
-        }
+        // for(const Stmt* i : block->getStatements()){
+        //     // for each stmt in the program, put it in the new list and execute to get resulting symboligetPurec heap
+        //     newStmts.push_back(i);
+        //     SHExprPtr newSH = be->execute(currSH, i);
+        //     newStmts.push_back(Stmt::symbheap(newSH));
+        //     auto const pure = newSH->getPure();
+        //     currSH = newSH;
+        // }
         be->setBlock(block);
         z3::context ctx;
         auto trans = std::make_shared<smack::TransToZ3>(ctx, currSH, mainGraph);
         trans->translate();
+        CFDEBUG(std::cout << trans->getPure() << std::endl;);
+        slah_api::checkSat(trans->getPure());
 
         std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;

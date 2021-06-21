@@ -218,7 +218,7 @@ std::string SmackRep::typeDetail(const llvm::Type *t) {
     const PointerType *p;
     if (t->isPointerTy() && (p = dyn_cast<PointerType>(t))) {
             if (auto sonType = dyn_cast<IntegerType>(p->getElementType())) {
-                return Naming::PTR_TYPE + std::to_string(8*storageSize(p->getElementType()));
+                return Naming::PTR_TYPE + std::to_string(p->getElementType()->getIntegerBitWidth());
             } else {
                 return type(t);
             }

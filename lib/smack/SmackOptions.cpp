@@ -91,6 +91,10 @@ const llvm::cl::opt<bool> SmackOptions::WrappedIntegerEncoding(
     llvm::cl::desc(
         "Enable wrapped integer arithmetic and signedness-aware comparison"));
 
+const llvm::cl::opt<bool> SmackOptions::SymbolicHeapMemoryLeak(
+        "sh-mem-leak",
+        llvm::cl::desc("Use separation logic to detect memory leak."));
+
 bool SmackOptions::isEntryPoint(std::string name) {
   for (auto EP : EntryPoints)
     if (name == EP)

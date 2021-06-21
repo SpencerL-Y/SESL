@@ -35,6 +35,7 @@ public:
   static const llvm::cl::opt<bool> RustPanics;
   static const llvm::cl::opt<bool> AddTiming;
   static const llvm::cl::opt<bool> WrappedIntegerEncoding;
+  static const llvm::cl::opt<bool> SymbolicHeapMemoryLeak;
 
   static bool isEntryPoint(std::string);
 };

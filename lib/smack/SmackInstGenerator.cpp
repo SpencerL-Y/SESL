@@ -255,6 +255,9 @@ void SmackInstGenerator::generateGotoStmts(
 
 void SmackInstGenerator::visitReturnInst(llvm::ReturnInst &ri) {
   SDEBUG(errs() << "visitReturn" << "\n");
+  if (SmackOptions::SymbolicHeapMemoryLeak) {
+      DEBUG_WITH_COLOR(std::cout << "Memory Leak assertion should be insert!\n", color::red);
+  }
   processInstruction(ri);
 
   llvm::Value *v = ri.getReturnValue();

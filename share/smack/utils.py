@@ -50,8 +50,9 @@ def try_command(cmd, cwd=None, console=False, timeout=None, env=None):
         for k, v in env.items():
             os.putenv(k, v)
     try:
-        if args.debug:
-            print("Running %s" % " ".join(cmd))
+        # if args.debug:
+        #     print("Running %s" % " ".join(cmd))
+        print("Running %s" % " ".join(cmd))
 
         proc = subprocess.Popen(
             cmd,

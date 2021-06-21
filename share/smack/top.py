@@ -131,6 +131,10 @@ class VProperty(Flag):
     MEMORY_SAFETY = VALID_DEREF | VALID_FREE | MEMLEAK
     INTEGER_OVERFLOW = auto()
     RUST_PANICS = auto()
+    SH_DEREF = auto()
+    SH_FREE = auto()
+    SH_MEM_LEAK = auto()
+    SH_MEMORY_SAFETY = SH_DEREF | SH_FREE | SH_MEM_LEAK
 
     def __str__(self):
         return self.name.lower().replace('_', '-')
@@ -149,12 +153,22 @@ class VProperty(Flag):
     def mem_safe_subprops():
         return [VProperty.VALID_DEREF, VProperty.VALID_FREE, VProperty.MEMLEAK]
 
+    @staticmethod
+    def sh_mem_safe_subprops():
+        return [VProperty.SH_MEM_LEAK, VProperty.SH_FREE, VProperty.SH_MEM_LEAK]
+
     def contains_mem_safe_props(self):
         '''
         Test if a property is either memory-safety or any of its subproperties.
         '''
 
         return bool(self & VProperty.MEMORY_SAFETY)
+
+    def contains_sh_mem_safe_props(self):
+        '''
+        Test if a property is either memory-safety or any of its subproperties.
+        '''
+        return bool(self & VProperty.SH_MEMORY_SAFETY)
 
     def boogie_attr(self):
         '''
@@ -457,6 +471,13 @@ def arguments():
                 [default: %(default)s]''')
 
     translate_group.add_argument(
+        '--sh-mem-leak',
+        action="store_true",
+        default=False,
+        help='''check memory leak use separation logic'''
+    )
+
+    translate_group.add_argument(
         '--no-byte-access-inference',
         action="store_true",
         default=False,
@@ -738,6 +759,8 @@ def llvm_to_bpl(args):
         cmd += ['-float']
     if args.modular:
         cmd += ['-modular']
+    if args.sh_mem_leak:
+        cmd += ['-sh-mem-leak']
     try_command(cmd, console=True)
     annotate_bpl(args)
     memsafety_subproperty_selection(args)

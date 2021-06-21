@@ -8,7 +8,13 @@
 #endif //SMACK_CENTERDEBUG_H
 #pragma once
 #include <iostream>
+#include <unordered_map>
 #define CENTER_DEBUG 1
+
+
+
+
+
 #define CDEBUG(X) do { \
     if (CENTER_DEBUG) {\
         std::cout<<"\033[33m"; \
@@ -30,10 +36,19 @@ namespace color {
     const std::string green = "\033[32m";
     const std::string yellow = "\033[33m";
     const std::string blue = "\033[34m";
+    const std::string white = "";
 }
 
+static const std::unordered_map<std::string, bool> DISPLAY_TABLE{
+        {color::red, true},
+        {color::green, true},
+        {color::yellow, true},
+        {color::blue, true},
+        {color::white, true}
+};
 #define DEBUG_WITH_COLOR(X, COLOR) do { \
-    if (CENTER_DEBUG) {\
+    if (CENTER_DEBUG) {                 \
+        if (!DISPLAY_TABLE.at(COLOR)) continue;     \
         std::cout<< COLOR; \
         X;                   \
         std::cout<<"\033[0m"; \

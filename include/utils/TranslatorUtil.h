@@ -14,14 +14,12 @@ namespace smack
     public:
         TranslatorUtil(/* args */){};
         ~TranslatorUtil(){};
-    
-        static z3::expr getZ3Var(
-            std::string name, 
-            std::unordered_map<std::string, z3::expr>& z3VarMap,
-            z3::context& ctx
-        );
+        static z3::expr getBase(int index, z3::context& ctx);
+        
     
     };
+
+
 } // namespace smack
 
 

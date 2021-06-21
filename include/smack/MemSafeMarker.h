@@ -11,8 +11,8 @@
 
 namespace smack {
 
-class MemorySafetyChecker : public llvm::FunctionPass,
-                            public llvm::InstVisitor<MemorySafetyChecker> {
+class MemSafeMarker : public llvm::FunctionPass,
+                            public llvm::InstVisitor<MemSafeMarker> {
 private:
   llvm::Function *getLeakCheckFunction(llvm::Module &M);
   llvm::Function *getSafetyCheckFunction(llvm::Module &M);
@@ -28,7 +28,7 @@ private:
   void insertWhatIsThisCheck(llvm::Instruction *I);
 public:
   static char ID; // Pass identification, replacement for typeid
-  MemorySafetyChecker() : llvm::FunctionPass(ID) {}
+  MemSafeMarker() : llvm::FunctionPass(ID) {}
   virtual bool runOnFunction(llvm::Function &F);
 
   void visitReturnInst(llvm::ReturnInst &I);

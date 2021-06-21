@@ -11,9 +11,13 @@
 #include <memory>
 #include "z3++.h"
 #include "utils/TranslatorUtil.h"
+#include "smack/VarEquiv.h"
+
 namespace smack {
 
-
+class VarEquiv;
+class CFG;
+typedef std::shared_ptr<CFG> CFGPtr;
 typedef std::pair<std::string, std::string> Binding;
 
 enum class RModeKind { RNE, RNA, RTP, RTN, RTZ };
@@ -48,7 +52,8 @@ public:
   virtual ExprType getType() const = 0;
   virtual bool isVar() const = 0;
   virtual bool isValue() const = 0;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const;
+  virtual std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const;
   static const Expr *exists(std::list<Binding>, const Expr *e);
   static const Expr *forall(std::list<Binding>, const Expr *e);
   static const Expr *and_(const Expr *l, const Expr *r);
@@ -120,11 +125,15 @@ private:
 public:
   BinExpr(const Binary b, const Expr *l, const Expr *r)
       : op(b), lhs(l), rhs(r) {}
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
+  std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const override;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BIN;}
   bool isVar() const {return false;}
   bool isValue() const {return false;}
+  Binary getOp() const { return op;}
+  const Expr* getLhs() const {return lhs;}
+  const Expr* getRhs() const {return rhs;};
 };
 
 class FunExpr : public Expr {
@@ -146,7 +155,7 @@ class BoolLit : public Expr {
 
 public:
   BoolLit(bool b) : val(b) {}
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
   bool getVal() const { return val;}
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::BOOL;}
@@ -181,8 +190,10 @@ public:
     val = s.str();
   }
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
+  std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const override;
   ExprType getType() const { return ExprType::INT;}
+  int getVal() const { return atoi(val.c_str());} 
   bool isVar() const {return false;}
   bool isValue() const {return true;}
 };
@@ -250,7 +261,7 @@ class NotExpr : public Expr {
 
 public:
   NotExpr(const Expr *e) : expr(e) {}
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::NOT;}
   const Expr* getExpr() const {return expr;}
@@ -312,7 +323,8 @@ class VarExpr : public Expr {
 public:
   VarExpr(std::string v) : var(v) {}
   std::string name() const { return var; }
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
+  std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const override;
   void print(std::ostream &os) const;
   ExprType getType() const { return ExprType::VAR;}
   bool isVar() const {return true;}
@@ -328,7 +340,7 @@ public:
   IfThenElseExpr(const Expr *c, const Expr *t, const Expr *e)
       : cond(c), trueValue(t), falseValue(e) {}
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
   ExprType getType() const { return ExprType::ITE;}
   bool isVar() const {return false;}
   bool isValue() const {return false;}
@@ -362,16 +374,26 @@ public:
 
 
 class SpatialLiteral : public Expr {
-  int id;
+  public: 
+  enum Kind{  
+    EMP,
+    PT,
+    BLK,
+    SPT
+  };
+  Kind id;
+  std::string blkName;
 
-public: 
+  
   static const SpatialLiteral* emp();
-  static const SpatialLiteral* pt(const Expr* from, const Expr* to);
-  static const SpatialLiteral* blk(const Expr* from, const Expr* to);
-  static const SpatialLiteral* spt(const Expr* var, const Expr* size);
-  int getId() const {return id;}
-  void setId(int i){id = i;}
+  static const SpatialLiteral* pt(const Expr* from, const Expr* to, std::string blkName);
+  static const SpatialLiteral* blk(const Expr* from, const Expr* to, std::string blkName);
+  static const SpatialLiteral* spt(const Expr* var, const Expr* size, std::string blkName);
+  SpatialLiteral::Kind getId() const {return id;}
+  void setId(SpatialLiteral::Kind i){id = i;}
   ExprType getType() const { return ExprType::SpatialLit;}
+  std::string getBlkName() const { return blkName;}
+  void setBlkName(std::string blkName) { this->blkName = blkName;}
   bool isVar() const {return false;}
   bool isValue() const {return false;}
   
@@ -380,9 +402,9 @@ public:
 class EmpLit : public SpatialLiteral {
 
 public: 
-  EmpLit(){setId(0);}
+  EmpLit(std::string blkName){setId(SpatialLiteral::Kind::EMP); setBlkName(blkName);}
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
 };
 
 
@@ -391,9 +413,11 @@ class PtLit : public SpatialLiteral {
   const Expr* to;
 
 public:
-  PtLit(const Expr* f, const Expr* t) : from(f), to(t){setId(1);}
+  PtLit(const Expr* f, const Expr* t, std::string blkName) : from(f), to(t){setId(SpatialLiteral::Kind::PT); setBlkName(blkName);}
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  const Expr* getFrom() const {return from;}
+  const Expr* getTo() const {return to;}
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
 };
 
 // TODOsh: blk literal
@@ -402,9 +426,11 @@ class BlkLit : public SpatialLiteral {
   const Expr* to;
 
 public:
-  BlkLit(const Expr* f, const Expr* t) : from(f), to(t){setId(2);}
+  BlkLit(const Expr* f, const Expr* t, std::string blkName) : from(f), to(t){setId(SpatialLiteral::Kind::BLK); setBlkName(blkName);}
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
+  const Expr* getFrom() const { return from;}
+  const Expr* getTo() const { return to;}
 };
 
 class SizePtLit : public SpatialLiteral {
@@ -412,10 +438,18 @@ class SizePtLit : public SpatialLiteral {
   const Expr* size;
 
 public:
-  SizePtLit(const Expr* v, const Expr* s) : var(v), size(s) {setId(3);}
+  SizePtLit(const Expr* v, const Expr* s, std::string blkName) : var(v), size(s) {setId(SpatialLiteral::Kind::SPT);setBlkName(blkName);}
   std::string getVarName() const;
   void print(std::ostream &os) const;
-  virtual z3::expr translateToZ3(z3::context& z3Ctx) const override;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
+};
+
+class ErrorLit : public SpatialLiteral {
+  
+  public:
+  ErrorLit();
+  void print(std::ostream &os) const;
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
 };
 
 

@@ -3,13 +3,12 @@
 #pragma once
 #include <cstdlib>
 #include "BoogieAst.h"
-#include "CFGState.h"
+
 #include <memory>
 
 namespace smack
 {
     class CFGState;
-    typedef std::shared_ptr<CFGState> StatePtr;
     typedef std::weak_ptr<CFGState> StateWekPtr;
 
     class Guard {
@@ -23,6 +22,7 @@ namespace smack
         AssumeStmt* getStmt();
     };
 
+    typedef std::shared_ptr<CFGState> StatePtr;
     class CFGEdge
     {
     private:
@@ -37,6 +37,7 @@ namespace smack
         Guard getGuard();
         ~CFGEdge() = default;
     };
+
 
 
 } // namespace smack

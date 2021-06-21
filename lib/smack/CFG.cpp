@@ -143,7 +143,7 @@ namespace smack
         return std::move(v);
     }
 
-    std::string CFG::getVarType(string &varName) {
+    std::string CFG::getVarType(string varName) {
         return varType.at(varName);
     }
 
@@ -162,7 +162,7 @@ namespace smack
         }
     }
 
-    std::pair<std::string, int> CFG::getVarDetailType(std::string& varName) {
+    std::pair<std::string, int> CFG::getVarDetailType(std::string varName) {
         auto type = getVarType(varName);
         if (type[0] == 'i') {
             int ans = 0;

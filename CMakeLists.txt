@@ -104,12 +104,12 @@ add_library(utils STATIC
   include/utils/MergeGEP.h
   include/utils/SimplifyInsertValue.h
   include/utils/SimplifyExtractValue.h
-  #include/utils/TranslatorUtil.h
+  include/utils/TranslatorUtil.h
   lib/utils/Devirt.cpp
   lib/utils/MergeGEP.cpp
   lib/utils/SimplifyInsertValue.cpp
   lib/utils/SimplifyExtractValue.cpp
-  #lib/utils/TranslatorUtil.cpp
+  lib/utils/TranslatorUtil.cpp
 )
 
 add_library(smackTranslator STATIC
@@ -132,7 +132,7 @@ add_library(smackTranslator STATIC
   include/smack/SimplifyLibCalls.h
   include/smack/SmackRep.h
   include/smack/VectorOperations.h
-  include/smack/MemorySafetyChecker.h
+  include/smack/MemSafeMarker.h
   include/smack/IntegerOverflowChecker.h
   include/smack/RewriteBitwiseOps.h
   include/smack/NormalizeLoops.h
@@ -149,6 +149,7 @@ add_library(smackTranslator STATIC
   include/smack/MemSafeVerifier.h
   include/smack/VarEquiv.h
   include/smack/VarFactory.h
+  include/smack/StoreSplitter.h
   lib/smack/Translator.cpp
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp
@@ -168,7 +169,7 @@ add_library(smackTranslator STATIC
   lib/smack/SimplifyLibCalls.cpp
   lib/smack/SmackRep.cpp
   lib/smack/VectorOperations.cpp
-  lib/smack/MemorySafetyChecker.cpp
+  lib/smack/MemSafeMarker.cpp
   lib/smack/IntegerOverflowChecker.cpp
   lib/smack/RewriteBitwiseOps.cpp
   lib/smack/NormalizeLoops.cpp
@@ -185,6 +186,7 @@ add_library(smackTranslator STATIC
   lib/smack/MemSafeVerifier.cpp
   lib/smack/VarEquiv.cpp
   lib/smack/VarFactory.cpp
+  lib/smack/StoreSplitter.cpp
 )
 
 add_executable(llvm2bpl

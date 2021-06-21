@@ -94,7 +94,7 @@ if (!Modular) {
   11----------------------------------------------------------
   //Checker passes
   if (smack::SmackOptions::MemorySafety) {
-    pass_manager.add(new smack::MemorySafetyChecker());
+    pass_manager.add(new smack::MemSafeMarker());
   }
 
   pass_manager.add(new smack::IntegerOverflowChecker());
@@ -131,7 +131,7 @@ if (!Modular) {
 ## Important Passes
 
 - SmackModuleGenerator
-- MemorySafetyChecker
+- MemSafeMarker
 - IntegerOverflowChecker
 - BplFilePrinter
 

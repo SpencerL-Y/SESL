@@ -213,6 +213,7 @@ std::string SmackRep::procName(llvm::Function *F,
   return name.str();
 }
 
+// Ref added
 std::string SmackRep::typeDetail(const llvm::Type *t) {
     const PointerType *p;
     if (t->isPointerTy() && (p = dyn_cast<PointerType>(t))) {
@@ -305,8 +306,10 @@ bool SmackRep::isExternal(const llvm::Value *v) {
 
 const Stmt *SmackRep::alloca(llvm::AllocaInst &i) {
   const Expr *size = Expr::fn(
-      "$mul.ref", pointerLit(storageSize(i.getAllocatedType())),
-      integerToPointer(expr(i.getArraySize()), getIntSize(i.getArraySize())));
+      "$mul.ref", 
+      pointerLit(storageSize(i.getAllocatedType())),
+      integerToPointer(expr(i.getArraySize()), getIntSize(i.getArraySize()))
+      );
 
   // TODO this should not be a pointer type.
   return Stmt::call(Naming::ALLOC, {size}, {naming->get(i)});

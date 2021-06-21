@@ -3,6 +3,7 @@
 #include <z3++.h>
 
 #include <utility>
+#include <regex>
 #include "BoogieAst.h"
 #include "llvm/IR/DebugInfo.h"
 #include "smack/AddTiming.h"
@@ -10,6 +11,8 @@
 #include "smack/BoogieAst.h"
 #include "smack/VarEquiv.h"
 #include "smack/VarFactory.h"
+#include "smack/StoreSplitter.h"
+#include "smack/CFG.h"
 #include "utils/CenterDebug.h"
 
 // This object is for dealing with symbolic execution
@@ -26,6 +29,9 @@ namespace smack{
         Block* currentBlock;
         VarEquivPtr varEquiv;
         VarFactoryPtr varFactory;
+        StoreSplitterPtr storeSplit;
+        CFGPtr cfg;
+
 
         // funcexpr name judgement functions
         bool isUnaryAssignFuncName(std::string name);
@@ -40,12 +46,15 @@ namespace smack{
         const Expr* parseVarArithmeticExpr(const Expr* arithExpr);
         // compute expression according to the operator types
         const Expr* computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right);
+        
+        int computeArithmeticOffsetValue(const Expr* expression);
 
 
     public:
-        BlockExecutor(Program* p, Block* cb, VarEquivPtr vars, VarFactoryPtr vf) : program(p), currentBlock(cb), varEquiv(vars), varFactory(vf) {}
+        BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb, VarEquivPtr vars, VarFactoryPtr vf, StoreSplitterPtr split) : program(p), currentBlock(cb->getStateBlock()), varEquiv(vars), varFactory(vf), storeSplit(split), cfg(cfgPtr) {}
 
         SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
+
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
 
         SHExprPtr executeMalloc(SHExprPtr sh, const CallStmt* stmt);
@@ -54,9 +63,9 @@ namespace smack{
 
         SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
 
-        SHExprPtr executeLoad(SHExprPtr sh, const CallStmt* stmt);
+        SHExprPtr executeLoad(SHExprPtr sh, std::string lhsVarName, const FunExpr* rhsFun);
 
-        SHExprPtr executeStore(SHExprPtr sh, const CallStmt* stmt);
+        SHExprPtr executeStore(SHExprPtr sh, const FunExpr* rhsFun);
 
         SHExprPtr executeOther(SHExprPtr sh, const Stmt* stmt);
 
@@ -68,10 +77,13 @@ namespace smack{
         void setBlock(Block* block){ currentBlock = block; }
         VarEquivPtr getVarEquiv() { return varEquiv;}
         VarFactoryPtr getVarFactory() { return varFactory;}
+        StoreSplitterPtr getStoreSplit() { return storeSplit;}
 
 
     };
     typedef std::shared_ptr<BlockExecutor> BlockExecutorPtr;
+
+    
 }
 
 

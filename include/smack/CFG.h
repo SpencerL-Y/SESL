@@ -26,8 +26,8 @@ namespace smack
     public:
         void printVarInfo();
         explicit CFG(ProcDecl* procDecl = nullptr);
-        std::string getVarType(std::string& varName);
-        std::pair<std::string, int> getVarDetailType(std::string& varName);
+        std::string getVarType(std::string varName);
+        std::pair<std::string, int> getVarDetailType(std::string varName);
         void setProc(ProcDecl* procDecl);
         void buildCFG();
         void buildCFG(ProcDecl* procDecl);
@@ -39,6 +39,7 @@ namespace smack
         ~CFG() = default;
     };
     typedef std::shared_ptr<CFG> CFGPtr;
+    typedef std::weak_ptr<CFG> CFGWekPtr;
 } // namespace smack
 
 

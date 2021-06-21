@@ -9,7 +9,10 @@
 #include <typeinfo>
 #include <sstream>
 #include <cstring>
+#include "smack/CFG.h"
 #include "utils/CenterDebug.h"
+#include "utils/TranslatorUtil.h"
+
 
 #include "slah_api.h"
 namespace smack {
@@ -136,9 +139,13 @@ const Expr *Expr::bvConcat(const Expr *left, const Expr *right) {
 }
 
 
-z3::expr Expr::translateToZ3(z3::context& z3Ctx) const {
+z3::expr Expr::translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const {
     auto res = z3Ctx.bool_val(true);
     return res;
+}
+
+std::pair<bool, int>  Expr::translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const {
+    return {false, 0};
 }
 
 const Expr *Expr::add(const Expr *left, const Expr* right){
@@ -453,10 +460,10 @@ void BinExpr::print(std::ostream &os) const {
   os << " " << rhs << ")";
 }
 
-z3::expr BinExpr::translateToZ3(z3::context &z3Ctx) const{
+z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg) const{
     z3::expr res = z3Ctx.bool_val(true);
-    const z3::expr left = lhs->translateToZ3(z3Ctx);
-    const z3::expr right = rhs->translateToZ3(z3Ctx);
+    const z3::expr left = lhs->translateToZ3(z3Ctx, cfg);
+    const z3::expr right = rhs->translateToZ3(z3Ctx, cfg);
     CDEBUG(std::cout << "In binExpr function!" << std::endl);
     CDEBUG(std::cout << "left: " << left.to_string() << " right: " << right.to_string() << " op: " << op << std::endl);
     switch (op) {
@@ -526,6 +533,39 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx) const{
     return res;
 }
 
+std::pair<bool, int> BinExpr::translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const {
+    const auto left = lhs->translateToInt(varEquivPtr);
+    const auto right = rhs->translateToInt(varEquivPtr);
+    DEBUG_WITH_COLOR(std::cout << "In binExpr TransToInt function!" << std::endl, color::yellow);
+    CDEBUG(std::cout << "left: " << left.second << " right: " << right.second << " op: " << op << std::endl);
+    if (!(left.first && right.first)) {
+        DEBUG_WITH_COLOR(std::cout << "Can not translate " ;this->print(std::cout); std::cout << endl;, color::red);
+        return {false, 0};
+    }
+    int res = 0;
+    switch (op) {
+        case Plus:
+            res = (left.second + right.second);
+            break;
+        case Minus:
+            res = (left.second - right.second);
+            break;
+        case Times:
+            res = (left.second * right.second);
+            break;
+        case Div:
+            res = (left.second / right.second);
+            break;
+        case Mod:
+            res = left.second & right.second;
+            break;
+        default:
+            DEBUG_WITH_COLOR(std::cout << "Can not translate " ;this->print(std::cout); std::cout << endl;, color::red);
+            break;
+    }
+    return {true, res};
+}
+
     void FunExpr::print(std::ostream &os) const {
   os << fun;
   print_seq<const Expr *>(os, args, "(", ", ", ")");
@@ -554,11 +594,17 @@ void RModeLit::print(std::ostream &os) const {
 }
 
 void IntLit::print(std::ostream &os) const { os << val; }
-z3::expr IntLit::translateToZ3(z3::context& z3Ctx) const {
+z3::expr IntLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const {
     CDEBUG(std::cout << "In intLint : " <<  val << std::endl;)
     return z3Ctx.int_val(val.c_str());
 }
 
+std::pair<bool, int> IntLit::translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const {
+    int ans = 0;
+    for (auto& i : val) {ans = ans * 10 + i - '0';}
+    CDEBUG(std::cout << "In intLint : " <<  ans << std::endl;)
+    return {true, ans};
+}
 
 void BvLit::print(std::ostream &os) const { os << val << "bv" << width; }
 
@@ -575,8 +621,8 @@ void NegExpr::print(std::ostream &os) const { os << "-(" << expr << ")"; }
 
 void NotExpr::print(std::ostream &os) const { os << "!(" << expr << ")"; }
 
-z3::expr NotExpr::translateToZ3(z3::context &z3Ctx) const {
-    auto exp = expr->translateToZ3(z3Ctx);
+z3::expr NotExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg) const {
+    auto exp = expr->translateToZ3(z3Ctx, cfg);
     return not exp;
 }
 
@@ -607,10 +653,34 @@ void UpdExpr::print(std::ostream &os) const {
 
 void VarExpr::print(std::ostream &os) const { os << var; }
 
-z3::expr VarExpr::translateToZ3(z3::context &z3Ctx) const {
-    z3::expr res = //TranslatorUtil::getZ3Var(this->name(), z3VarMap, z3Ctx);
-    z3Ctx.int_const(var.c_str());
-    CDEBUG(std::cout << "in varExpr! " << res.to_string() << std::endl;);
+z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg) const {
+  // std::pair<std::string, int> typeResult = cfg->getVarDetailType(this->name());
+  // int byteNum = 1;
+  // if('i' == typeResult.first[0]){
+  //    byteNum = typeResult.second/8;
+  // } else if('r' == typeResult.first[0]){
+  //    // MACHINE BITWIDTH
+  //    byteNum = 4;
+  // } else {
+  //    CFDEBUG(std::cout << "ERROR: UNSOLVED Variable translation" << std::endl;);
+  // }
+  // z3::expr res = z3Ctx.int_val(0);
+  // for(int i = 0; i < byteNum; i++){
+  //   res = 
+  //   (res + 
+  //     TranslatorUtil::getBase(i, z3Ctx) * 
+  //     z3Ctx.int_const((this->name() + "_" + std::to_string(i)).c_str())
+  //   );
+  // }
+  z3::expr res = //TranslatorUtil::getZ3Var(this->name(), z3VarMap, z3Ctx);
+  z3Ctx.int_const(var.c_str());
+  CDEBUG(std::cout << "in varExpr! " << res.to_string() << std::endl;);
+  return res;
+}
+
+std::pair<bool, int> VarExpr::translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const {
+    auto res = varEquivPtr->getIntVal(var);
+    CDEBUG(std::cout << "in varExpr! " << res.first << " " << res.second << std::endl;);
     return res;
 }
 
@@ -630,9 +700,9 @@ void IfThenElseExpr::print(std::ostream &os) const {
 }
 
 
-z3::expr IfThenElseExpr::translateToZ3(z3::context& z3Ctx) const {
-  auto res = ((cond->translateToZ3(z3Ctx) and trueValue->translateToZ3(z3Ctx)) or
-              (not cond->translateToZ3(z3Ctx) and falseValue->translateToZ3(z3Ctx)));
+z3::expr IfThenElseExpr::translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const {
+  auto res = ((cond->translateToZ3(z3Ctx, cfg) and trueValue->translateToZ3(z3Ctx, cfg)) or
+              (not cond->translateToZ3(z3Ctx, cfg) and falseValue->translateToZ3(z3Ctx, cfg)));
 }
 
 void BvExtract::print(std::ostream &os) const {
@@ -644,26 +714,26 @@ void BvConcat::print(std::ostream &os) const {
 }
 
 const SpatialLiteral* SpatialLiteral::emp(){
-  return new EmpLit();
+  return new EmpLit("");
 }
 
-const SpatialLiteral* SpatialLiteral::pt(const Expr* from, const Expr* to){
-  return new PtLit(from, to);
+const SpatialLiteral* SpatialLiteral::pt(const Expr* from, const Expr* to, std::string blkName){
+  return new PtLit(from, to, blkName);
 }
 
-const SpatialLiteral* SpatialLiteral::blk(const Expr* from, const Expr* to){
-  return new BlkLit(from, to);
+const SpatialLiteral* SpatialLiteral::blk(const Expr* from, const Expr* to, std::string blkName){
+  return new BlkLit(from, to, blkName);
 }
 
-const SpatialLiteral* SpatialLiteral::spt(const Expr* var, const Expr* size) {
-  return new SizePtLit(var, size);
+const SpatialLiteral* SpatialLiteral::spt(const Expr* var, const Expr* size, std::string blkName) {
+  return new SizePtLit(var, size, blkName);
 }
 
 void EmpLit::print(std::ostream &os) const{
   os << "emp";
 }
 
-z3::expr EmpLit::translateToZ3(z3::context &z3Ctx) const {
+z3::expr EmpLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg) const {
     z3::expr res = slah_api::newEmp(z3Ctx);
     CDEBUG(std::cout << "in emp! " << res.to_string() << std::endl;);
     return res;
@@ -673,10 +743,10 @@ void PtLit::print(std::ostream &os) const {
   os << from << " >--> " << to;
 }
 
-z3::expr PtLit::translateToZ3(z3::context& z3Ctx) const{
+z3::expr PtLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const{
   z3::expr res = slah_api::newPto(
-    from->translateToZ3(z3Ctx),
-    to->translateToZ3(z3Ctx)
+    from->translateToZ3(z3Ctx, cfg),
+    to->translateToZ3(z3Ctx, cfg)
   );
   CDEBUG(std::cout << "in ptlit!" << res.to_string() << std::endl;);
   return res;
@@ -686,11 +756,11 @@ void BlkLit::print(std::ostream &os) const {
   os << "Blk(" << from << ", " << to << ")";
 }
 
-z3::expr BlkLit::translateToZ3(z3::context& z3Ctx) const{
-    auto f = from->translateToZ3(z3Ctx);
-    auto t = to->translateToZ3(z3Ctx);
+z3::expr BlkLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const{
+    auto f = from->translateToZ3(z3Ctx, cfg);
+    auto t = to->translateToZ3(z3Ctx, cfg);
     z3::expr ex = z3Ctx.bool_val(true);
-    DEBUG_WITH_COLOR(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl, color::red);
+    DEBUG_WITH_COLOR(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl, color::yellow);
     z3::expr res = slah_api::newBlk(f,t);
     return res;
 }
@@ -699,7 +769,7 @@ void SizePtLit::print(std::ostream &os) const {
   os << var << " >-s-> " << size;
 }
 
-z3::expr SizePtLit::translateToZ3(z3::context& z3Ctx) const {
+z3::expr SizePtLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const {
   //CDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
   // TODOsh: later changed to above one
   CDEBUG(std::cout << "sizeptlit" << std::endl;);
@@ -716,7 +786,16 @@ std::string SizePtLit::getVarName() const {
   }
 }
 
-z3::expr BoolLit::translateToZ3(z3::context& z3Ctx) const {
+void ErrorLit::print(std::ostream &os) const{
+  os << " XXXXXXX ";
+}
+
+z3::expr ErrorLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const {
+  CDEBUG(std::cout << "errorLit" << std::endl;);
+  return slah_api::newEmp(z3Ctx);
+}
+
+z3::expr BoolLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const {
     return z3Ctx.bool_val(val);
 }
 

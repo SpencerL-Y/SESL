@@ -10,24 +10,27 @@
 #include <iostream>
 #include <unordered_map>
 #define CENTER_DEBUG 1
-
+const bool hasColor = true;
 
 
 
 
 #define CDEBUG(X) do { \
     if (CENTER_DEBUG) {\
-        std::cout<<"\033[33m"; \
-        X;                   \
-        std::cout<<"\033[0m"; \
+        if (hasColor)               \
+            std::cout<<"\033[33m"; \
+        X;             \
+        if (hasColor)   \
+            std::cout<<"\033[0m"; \
     }\
 } while(false);
 
 #define CFDEBUG(X) do {\
     if (CENTER_DEBUG) {\
-        std::cout<<"\033[34m";\
-        X;                    \
-        std::cout<<"\033[0m";\
+        if (hasColor)   std::cout<<"\033[34m";\
+        X;             \
+        if (hasColor)   \
+            std::cout<<"\033[0m";\
     }\
 } while(false);
 
@@ -48,9 +51,9 @@ static const std::unordered_map<std::string, bool> DISPLAY_TABLE{
 };
 #define DEBUG_WITH_COLOR(X, COLOR) do { \
     if (CENTER_DEBUG) {                 \
-        if (!DISPLAY_TABLE.at(COLOR)) continue;     \
-        std::cout<< COLOR; \
-        X;                   \
-        std::cout<<"\033[0m"; \
+        if (!DISPLAY_TABLE.at(COLOR)) continue; \
+        if (hasColor)   std::cout<< COLOR; \
+        X;                              \
+        if (hasColor)   std::cout<<"\033[0m"; \
     }\
 } while(false);

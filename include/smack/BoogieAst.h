@@ -389,7 +389,7 @@ class SpatialLiteral : public Expr {
   static const SpatialLiteral* pt(const Expr* from, const Expr* to, std::string blkName);
   static const SpatialLiteral* blk(const Expr* from, const Expr* to, std::string blkName);
   static const SpatialLiteral* spt(const Expr* var, const Expr* size, std::string blkName);
-  static const SpatialLiteral* errlit();
+  static const SpatialLiteral* errlit(bool f);
   SpatialLiteral::Kind getId() const {return id;}
   void setId(SpatialLiteral::Kind i){id = i;}
   ExprType getType() const { return ExprType::SpatialLit;}
@@ -448,8 +448,8 @@ class ErrorLit : public SpatialLiteral {
   bool fresh;
 
   public:
-  ErrorLit() {setId(SpatialLiteral::Kind::ERR); fresh = true;};
-  bool isFresh() {return fresh;}
+  ErrorLit(bool f) {setId(SpatialLiteral::Kind::ERR); fresh = f;};
+  bool isFresh() const {return fresh;}
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
 };
@@ -607,6 +607,7 @@ class SHStmt : public Stmt {
 public:
   SHStmt(SHExprPtr sh) : Stmt(SH), symbheap(sh){}
   void print(std::ostream &os) const;
+  SHExprPtr getSymbHeap() const {return symbheap;}
   static bool classof(const Stmt *S){
     return S->getKind() == SH;
   }

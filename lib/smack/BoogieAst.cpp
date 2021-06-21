@@ -729,8 +729,8 @@ const SpatialLiteral* SpatialLiteral::spt(const Expr* var, const Expr* size, std
 }
 
 
-const SpatialLiteral* SpatialLiteral::errlit(){
-  return new ErrorLit();
+const SpatialLiteral* SpatialLiteral::errlit(bool f){
+  return new ErrorLit(f);
 }
 
 void EmpLit::print(std::ostream &os) const{
@@ -791,7 +791,7 @@ std::string SizePtLit::getVarName() const {
 }
 
 void ErrorLit::print(std::ostream &os) const{
-  os << " XXXXXXX( " << fresh << ")XXXXXXX";
+  os << " XXXXXXX(" << fresh << ")XXXXXXX";
 }
 
 z3::expr ErrorLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const {

@@ -87,21 +87,24 @@ namespace smack {
         // z3::expr trueVal = ctx.bool_val(true);
         // z3::expr falseVal = ctx.bool_val(false);
         // z3::expr eqExpr = (var1 == 1);
-        // z3::expr empExpr = slah_api::newEmp(ctx);
+        // z3::expr empExpr = slah_apErrorLii::newEmp(ctx);
         // z3::expr testSH = eqExpr && empExpr;
         // z3::expr cons = trueVal && empExpr;
         // z3::check_result result = slah_api::checkEnt(falseVal, trueVal);
         // std::cout << result << std::endl;
-        MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans);
+        
+        MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans, newStmts);
         checker->checkCurrentMemLeak();
+        checker->checkInferenceError();
         std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
         return false;
     }
 
-    MemSafeChecker::MemSafeChecker(std::shared_ptr<TransToZ3> trans){
+    MemSafeChecker::MemSafeChecker(std::shared_ptr<TransToZ3> trans, StatementList& stmtList){
         this->trans = trans;
         this->ctx = this->trans->getCtx();
+        this->stmts = stmtList;
     }
 
     MemSafeChecker::~MemSafeChecker(){
@@ -132,6 +135,25 @@ namespace smack {
             DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: MemLeak!!!" << std::endl;, color::red);
             return false;
         }   
+    }
+
+    std::pair<bool, const Stmt*> MemSafeChecker::checkInferenceError(){
+        const Stmt* previous = nullptr;
+        for(const Stmt* s : this->stmts){
+            if(Stmt::Kind::SH == s->getKind()){
+                const SHStmt* shs = (const SHStmt*) s;
+                if(SpatialLiteral::Kind::ERR == 
+                    shs->getSymbHeap()->getSpatialExpr().front()->getId()){
+                        DEBUG_WITH_COLOR(std::cout << "CHECK: Inference error:" << std::endl;, color::red);
+                        previous->print(std::cout);
+                        std::cout << std::endl;
+                        return std::pair<bool, const Stmt*>(true, previous);
+                    }
+            }
+            previous = s;
+        }
+        DEBUG_WITH_COLOR(std::cout << "CHECK: Inferece check pass!"<< std::endl, color::green);
+        return std::pair<bool, const Stmt*>(false, nullptr);
     }
 
     // Return value: checkResult, Error Stmt

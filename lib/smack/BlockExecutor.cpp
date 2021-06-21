@@ -630,7 +630,7 @@ namespace smack{
                 CFDEBUG(std::cout << "INFO: INFERENCE TO ERR SH..." << std::endl;)
                 const Expr* newPure = sh->getPure();
                 std::list<const SpatialLiteral*> newSpatialExpr;
-                const SpatialLiteral* errLit = SpatialLiteral::errlit();
+                const SpatialLiteral* errLit = SpatialLiteral::errlit(true);
                 newSpatialExpr.push_back(errLit);
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
                 newSH->print(std::cout);
@@ -671,11 +671,20 @@ namespace smack{
         CFDEBUG(std::cout << std::endl);
         
         if(currSH->isError()){
-            CFDEBUG(std::cout << "INFO: execute error.." << std::endl;);
-            return currSH;
+            const SpatialLiteral* sp = currSH->getSpatialExpr().front();
+            assert(SpatialLiteral::Kind::ERR == sp->getId());
+            const ErrorLit* errlit = (const ErrorLit*) sp;
+            if(errlit->isFresh()){
+                CFDEBUG(std::cout << "INFO: execute error.." << std::endl;);
+                std::list<const SpatialLiteral*> newSpatial;
+                newSpatial.push_back(SpatialLiteral::errlit(false));
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(currSH->getPure(), newSpatial);
+                newSH->print(std::cout);
+                return newSH;
+            } else {
+                return currSH;
+            }
         }
-        
-
 
         if(Stmt::CALL == stmt->getKind()){
             CFDEBUG(std::cout << "INFO: stmt kind CALL" << std::endl);

@@ -1,5 +1,11 @@
 #include "smack.h"
 #include <stdlib.h>
+
+typedef struct {
+    int a;
+    char b;
+} test_type;
+
 int main(){
     int num = 5;
     //int j = 0;
@@ -15,8 +21,10 @@ int main(){
     //int nnum = *(i+1) + (-1);
     //*(i+1) = num;
     //*(i+2) = 11;
-    //int a[2][3];
-    //a[1][2] = num;
+    int a[2][3];
+    a[1][2] = num;
+    test_type my;
+    my.b = 'a';
     //free(j);
     // byte level
     

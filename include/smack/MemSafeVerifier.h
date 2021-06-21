@@ -32,8 +32,6 @@ namespace smack
             bool checkCurrentMemLeak();
             // Return value: checkResult, Error Stmt
             std::pair<bool, const Stmt*> checkProperty(SHExprPtr property);
-            std::pair<bool, const Stmt*> checkNullDeref(std::string varName);
-            std::pair<bool, const Stmt*> checkNullUse(std::string varName);
     };
     typedef std::shared_ptr<MemSafeChecker> MemSafeCheckerPtr;
 

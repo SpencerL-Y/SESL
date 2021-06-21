@@ -518,7 +518,7 @@ namespace smack{
                     );
                     std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varArg1->name());
                     CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
-                    long long size = stepSize.second/8;
+                    long long size = stepSize.second;
                     if(size % 8 != 0){
                         CFDEBUG(std::cout << "ERROR: UNSOLVED Store bitwidth" << std::endl;)
                     }

@@ -138,12 +138,4 @@ namespace smack {
     std::pair<bool, const Stmt*> MemSafeChecker::checkProperty(SHExprPtr property){
         return std::pair<bool, const Stmt*>(true, nullptr);
     }
-
-    std::pair<bool, const Stmt*> MemSafeChecker::checkNullDeref(std::string varName){
-        return std::pair<bool, const Stmt*>(true, nullptr);
-    }
-
-    std::pair<bool, const Stmt*> MemSafeChecker::checkNullUse(std::string varName){
-        return std::pair<bool, const Stmt*>(true, nullptr);
-    }
 }

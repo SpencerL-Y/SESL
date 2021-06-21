@@ -39,6 +39,7 @@ namespace smack{
         z3::expr getPure();
         z3::expr getSpatial();
         z3::expr getFinalExpr();
+        z3::context* getCtx();
         void translatePure();
         void translateSpatial();
         void translate() override;

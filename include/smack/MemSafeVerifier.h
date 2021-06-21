@@ -19,17 +19,14 @@ namespace smack
         virtual llvm::StringRef getPassName() const { return "MemSafeVerifier"; }
         virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
     };
-
+    class TransToZ3;
     class MemSafeChecker {
         private:
-            
-            SHExprPtr currentSH;
-            CFGPtr currentCFG;
+            std::shared_ptr<TransToZ3> trans;
+            z3::context* ctx;
             // basic check oracle
-            bool checkSat();
-            bool checkEntail(SHExprPtr consequent);
         public:
-            MemSafeChecker(SHExprPtr initSH, CFGPtr cfg);
+            MemSafeChecker(std::shared_ptr<TransToZ3> trans);
             ~MemSafeChecker();
             void setSH(SHExprPtr sh);
             bool checkCurrentMemLeak();
@@ -37,11 +34,6 @@ namespace smack
             std::pair<bool, const Stmt*> checkProperty(SHExprPtr property);
             std::pair<bool, const Stmt*> checkNullDeref(std::string varName);
             std::pair<bool, const Stmt*> checkNullUse(std::string varName);
-
-
-            
-            
-            
     };
     typedef std::shared_ptr<MemSafeChecker> MemSafeCheckerPtr;
 

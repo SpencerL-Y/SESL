@@ -83,51 +83,67 @@ namespace smack {
         be->setBlock(block);
         z3::context ctx;
         auto trans = std::make_shared<smack::TransToZ3>(ctx, currSH, mainGraph);
-        trans->translate();
-        //z3::expr var1 = ctx.int_const("x");
-        //z3::expr trueExpr = (var1 == 1);
-        CFDEBUG(std::cout << trans->getFinalExpr() << std::endl;);
-        slah_api::checkSat(trans->getFinalExpr());
-
+        // z3::expr var1 = ctx.int_const("x");
+        // z3::expr trueVal = ctx.bool_val(true);
+        // z3::expr falseVal = ctx.bool_val(false);
+        // z3::expr eqExpr = (var1 == 1);
+        // z3::expr empExpr = slah_api::newEmp(ctx);
+        // z3::expr testSH = eqExpr && empExpr;
+        // z3::expr cons = trueVal && empExpr;
+        // z3::check_result result = slah_api::checkEnt(falseVal, trueVal);
+        // std::cout << result << std::endl;
+        MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans);
+        checker->checkCurrentMemLeak();
         std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
         return false;
     }
 
-
-    bool MemSafeChecker::checkSat(){
-
-    }
-    
-    bool MemSafeChecker::checkEntail(SHExprPtr consequent){
-
+    MemSafeChecker::MemSafeChecker(std::shared_ptr<TransToZ3> trans){
+        this->trans = trans;
+        this->ctx = this->trans->getCtx();
     }
 
-    MemSafeChecker::MemSafeChecker(SHExprPtr initSH, CFGPtr cfg){
-        this->currentSH = initSH;
-        this->currentCFG = cfg;
-        SHExprPtr memLeakEntailBack = SymbolicHeapExpr::emp_sh();
+    MemSafeChecker::~MemSafeChecker(){
 
     }
     
     void MemSafeChecker::setSH(SHExprPtr sh){
-        this->currentSH = sh;
+        this->trans->setSymbolicHeapHExpr(sh);
     }
 
     bool MemSafeChecker::checkCurrentMemLeak(){
-
+        this->trans->translate();
+        CFDEBUG(std::cout << trans->getFinalExpr() << std::endl;);
+        z3::expr premise = this->trans->getFinalExpr();
+        z3::expr consequent = 
+        (this->ctx->bool_val(true) && slah_api::newEmp(*(this->ctx)));
+        CFDEBUG(std::cout << "INFO: Check " << std::endl;);
+        CFDEBUG(std::cout << premise << std::endl;);
+        CFDEBUG(std::cout << "|" << std::endl <<
+                "|———— " << std::endl << 
+                "|" << std::endl<< std::endl );
+        CFDEBUG(std::cout << consequent << std::endl;);
+        z3::check_result result = slah_api::checkEnt(premise, consequent);
+        if(result == z3::unsat){
+            DEBUG_WITH_COLOR(std::cout << "CHECK: MemLeak Satisfied!" << std::endl, color::green);
+            return true;
+        } else {
+            DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: MemLeak!!!" << std::endl;, color::red);
+            return false;
+        }   
     }
 
     // Return value: checkResult, Error Stmt
     std::pair<bool, const Stmt*> MemSafeChecker::checkProperty(SHExprPtr property){
-
+        return std::pair<bool, const Stmt*>(true, nullptr);
     }
 
     std::pair<bool, const Stmt*> MemSafeChecker::checkNullDeref(std::string varName){
-
+        return std::pair<bool, const Stmt*>(true, nullptr);
     }
 
     std::pair<bool, const Stmt*> MemSafeChecker::checkNullUse(std::string varName){
-
+        return std::pair<bool, const Stmt*>(true, nullptr);
     }
 }

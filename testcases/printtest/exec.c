@@ -17,7 +17,7 @@ int main(){
     //*(i+2) = 11;
     //int a[2][3];
     //a[1][2] = num;
-    //free(i);
+    //free(j);
     // byte level
     
 }

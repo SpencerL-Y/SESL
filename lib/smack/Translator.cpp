@@ -6,6 +6,11 @@
 #include "utils/CenterDebug.h"
 namespace smack{
 
+
+    void TransToZ3::setSymbolicHeapHExpr(const std::shared_ptr<SymbolicHeapExpr>& shExprPtr){
+        this->shExpr = shExprPtr;
+    }
+
     z3::expr TransToZ3::getPure() {
         return pure;
     }
@@ -42,7 +47,12 @@ namespace smack{
     }
 
     z3::expr TransToZ3::getFinalExpr() {
-        return pure && spatial;
+        return (pure && spatial);
+    }
+
+
+    z3::context* TransToZ3::getCtx(){
+        return this->z3Ctx;
     }
 
     void TransToConstant::translate() {

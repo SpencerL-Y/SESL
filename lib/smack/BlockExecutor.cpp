@@ -518,7 +518,10 @@ namespace smack{
                     );
                     std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varArg1->name());
                     CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
-                    long long size = stepSize.second;
+                    long long size = stepSize.second/8;
+                    if(size % 8 != 0){
+                        CFDEBUG(std::cout << "ERROR: UNSOLVED Store bitwidth" << std::endl;)
+                    }
                     const SpatialLiteral* rightBlk = SpatialLiteral::blk(
                         Expr::add(arg1, Expr::lit(size)),
                         breakBlk->getTo(),

@@ -1,7 +1,7 @@
 //
 // This file is distributed under the MIT License. See LICENSE for details.
 //
-#include "smack/MemorySafetyChecker.h"
+#include "smack/MemSafeMarker.h"
 #include "smack/Debug.h"
 #include "smack/Naming.h"
 #include "smack/SmackOptions.h"
@@ -16,13 +16,13 @@ namespace smack {
 
 using namespace llvm;
 
-Function *MemorySafetyChecker::getLeakCheckFunction(Module &M) {
+Function *MemSafeMarker::getLeakCheckFunction(Module &M) {
   auto F = M.getFunction(Naming::MEMORY_LEAK_FUNCTION);
   assert(F && "Memory leak check function must be present.");
   return F;
 }
 
-Function *MemorySafetyChecker::getSafetyCheckFunction(Module &M) {
+Function *MemSafeMarker::getSafetyCheckFunction(Module &M) {
   auto F = M.getFunction(Naming::MEMORY_SAFETY_FUNCTION);
   assert(F && "Memory safety check function must be present.");
   F->setDoesNotAccessMemory();
@@ -30,29 +30,29 @@ Function *MemorySafetyChecker::getSafetyCheckFunction(Module &M) {
   return F;
 }
 
-Function *MemorySafetyChecker::getMyCheckFunction(Module &M) {
+Function *MemSafeMarker::getMyCheckFunction(Module &M) {
   auto F = M.getFunction(Naming::MEMORY_MY_FUNCTION);
   assert(F && "My memory check function must be present.");
   return F;
 }
 
-Function *MemorySafetyChecker::getWhatIsThisCheckFunction(Module &M){
+Function *MemSafeMarker::getWhatIsThisCheckFunction(Module &M){
   auto F = M.getFunction(Naming::WHATISTHIS_FUNCTION);
   assert(F && "what is This check must be present");
   return F;
 }
 
-void MemorySafetyChecker::copyDbgMetadata(Instruction *src, Instruction *dst) {
+void MemSafeMarker::copyDbgMetadata(Instruction *src, Instruction *dst) {
   dst->setMetadata("dbg", src->getMetadata("dbg"));
 }
 
-void MemorySafetyChecker::insertMemoryLeakCheck(Instruction *I) {
+void MemSafeMarker::insertMemoryLeakCheck(Instruction *I) {
   auto &M = *I->getParent()->getParent()->getParent();
   auto ci = CallInst::Create(getLeakCheckFunction(M), "", I);
   copyDbgMetadata(I, ci);
 }
 
-void MemorySafetyChecker::insertMemoryAccessCheck(Value *addr, Value *size,
+void MemSafeMarker::insertMemoryAccessCheck(Value *addr, Value *size,
                                                   Instruction *I) {
   auto &M = *I->getParent()->getParent()->getParent();
   auto &C = M.getContext();
@@ -66,19 +66,19 @@ void MemorySafetyChecker::insertMemoryAccessCheck(Value *addr, Value *size,
   copyDbgMetadata(I, ci);
 }
 
-void MemorySafetyChecker::insertMyMemoryCheck(Instruction *I){
+void MemSafeMarker::insertMyMemoryCheck(Instruction *I){
   auto &M = *I->getParent()->getParent()->getParent();
   auto ci = CallInst::Create(getMyCheckFunction(M), "", I);
   copyDbgMetadata(I, ci);
 }
 
-void MemorySafetyChecker::insertWhatIsThisCheck(Instruction *I){
+void MemSafeMarker::insertWhatIsThisCheck(Instruction *I){
   auto &M = *I->getParent()->getParent()->getParent();
   auto ci = CallInst::Create(getWhatIsThisCheckFunction(M), "", I);
   copyDbgMetadata(I, ci);
 }
 
-bool MemorySafetyChecker::runOnFunction(Function &F) {
+bool MemSafeMarker::runOnFunction(Function &F) {
   if (Naming::isSmackName(F.getName()))
     return false;
 
@@ -86,7 +86,7 @@ bool MemorySafetyChecker::runOnFunction(Function &F) {
   return true;
 }
 
-void MemorySafetyChecker::visitReturnInst(llvm::ReturnInst &I) {
+void MemSafeMarker::visitReturnInst(llvm::ReturnInst &I) {
   auto &F = *I.getParent()->getParent();
   if (SmackOptions::isEntryPoint(F.getName())){
     insertMemoryLeakCheck(&I);
@@ -119,23 +119,23 @@ Value *accessSizeAsPointer(StoreInst &I) {
 }
 } // namespace
 
-void MemorySafetyChecker::visitLoadInst(LoadInst &I) {
+void MemSafeMarker::visitLoadInst(LoadInst &I) {
   insertMemoryAccessCheck(I.getPointerOperand(), accessSizeAsPointer(I), &I);
 }
 
-void MemorySafetyChecker::visitStoreInst(StoreInst &I) {
+void MemSafeMarker::visitStoreInst(StoreInst &I) {
   insertMemoryAccessCheck(I.getPointerOperand(), accessSizeAsPointer(I), &I);
 }
 
-void MemorySafetyChecker::visitMemSetInst(MemSetInst &I) {
+void MemSafeMarker::visitMemSetInst(MemSetInst &I) {
   insertMemoryAccessCheck(I.getDest(), I.getLength(), &I);
 }
 
-void MemorySafetyChecker::visitMemTransferInst(MemTransferInst &I) {
+void MemSafeMarker::visitMemTransferInst(MemTransferInst &I) {
   insertMemoryAccessCheck(I.getDest(), I.getLength(), &I);
   insertMemoryAccessCheck(I.getSource(), I.getLength(), &I);
 }
 
 // Pass ID variable
-char MemorySafetyChecker::ID = 0;
+char MemSafeMarker::ID = 0;
 } // namespace smack

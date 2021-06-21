@@ -132,7 +132,7 @@ add_library(smackTranslator STATIC
   include/smack/SimplifyLibCalls.h
   include/smack/SmackRep.h
   include/smack/VectorOperations.h
-  include/smack/MemorySafetyChecker.h
+  include/smack/MemSafeMarker.h
   include/smack/IntegerOverflowChecker.h
   include/smack/RewriteBitwiseOps.h
   include/smack/NormalizeLoops.h
@@ -169,7 +169,7 @@ add_library(smackTranslator STATIC
   lib/smack/SimplifyLibCalls.cpp
   lib/smack/SmackRep.cpp
   lib/smack/VectorOperations.cpp
-  lib/smack/MemorySafetyChecker.cpp
+  lib/smack/MemSafeMarker.cpp
   lib/smack/IntegerOverflowChecker.cpp
   lib/smack/RewriteBitwiseOps.cpp
   lib/smack/NormalizeLoops.cpp

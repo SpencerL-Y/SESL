@@ -32,7 +32,7 @@
 #include "smack/ExtractContracts.h"
 #include "smack/InitializePasses.h"
 #include "smack/IntegerOverflowChecker.h"
-#include "smack/MemorySafetyChecker.h"
+#include "smack/MemSafeMarker.h"
 #include "smack/Naming.h"
 #include "smack/NormalizeLoops.h"
 #include "smack/RemoveDeadDefs.h"
@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
   pass_manager.add(new smack::SplitAggregateValue());
 
   if (smack::SmackOptions::MemorySafety) {
-    pass_manager.add(new smack::MemorySafetyChecker());
+    pass_manager.add(new smack::MemSafeMarker());
   }
 
   if (smack::SmackOptions::RewriteBitwiseOps &&

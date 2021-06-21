@@ -235,7 +235,6 @@ void SmackInstGenerator::generateGotoStmts(
 
       } else {
         Block *b = createBlock();
-        // TODOsh: add the generation of CFG later
         annotate(inst, b);
         b->addStmt(Stmt::assume(condition));
         b->addStmt(Stmt::goto_({getBlock(target)->getName()}));
@@ -636,29 +635,6 @@ void SmackInstGenerator::visitCastInst(llvm::CastInst &I) {
   } 
   const Stmt* assignStmt = Stmt::assign(rep->expr(&I), E);
   emit(assignStmt);
-  /*
-  if (I.getOpcode() == Instruction::BitCast){
-    SDEBUG(errs() << "SE: Bitcast" << "\n");
-    // TODOsh: only support int* to int*, extend to other sizes later.
-    const AssignStmt* as = (const AssignStmt*) assignStmt;
-    if(as->getLhs().size() == as->getRhs().size()){
-      SDEBUG(errs() << "EXECUTE BITCAST" << "\n");
-      //TODOsh: this may not be correct, since there might be other situations. We omitted the consideration currently.
-      std::list<std::string> leftNames;
-      std::list<std::string> rightNames;
-      se->executeCast(leftNames, rightNames);
-    } else {
-      se->executeOther();
-    }
-  } else if (I.getOpcode() == Instruction::PtrToInt){
-    SDEBUG(errs() << "SE: PtrToInt Cast" << "\n");
-    // TODOsh: add implementation 
-  } else if(I.getOpcode() == Instruction::IntToPtr){
-    SDEBUG(errs() << "SE: IntToPtr Cast" << "\n");
-    // TODOsh: add implementation 
-  } else {
-    
-  }*/
 
   if (I.getOpcode() == Instruction::BitCast) {
     if (const Stmt *inverseAssume =
@@ -702,7 +678,6 @@ void SmackInstGenerator::visitSelectInst(llvm::SelectInst &i) {
 }
 
 void SmackInstGenerator::visitCallInst(llvm::CallInst &ci) {
-  // TODOsh: specify other types of call instruction here
   SDEBUG(errs() << "visitCall" << "\n");
   processInstruction(ci);
 
@@ -871,32 +846,8 @@ void SmackInstGenerator::visitCallInst(llvm::CallInst &ci) {
     //   emit(Stmt::assert_(S->getBoogieExpression(naming,rep)));
 
   } else {
-    // TODOsh: check, add other function calls
     const Stmt* emitted = rep->call(f, ci);
-    /*
-    const CallStmt* callstmt = (CallStmt*) emitted;
-    if(!callstmt->getProc().compare("malloc")){
-      SDEBUG(errs() << "SE CALL: malloc" << "\n");
-      std::string procName = callstmt->getProc();
-      std::list<std::string> rets = callstmt->getReturns();
-      std::list<const Expr*> args = callstmt->getParams();
-      std::string varName = rets.front();
-      const Expr* sizeExpr = args.front();
-      SDEBUG(errs() << "SE CALL: " << procName << " " << rets.front() << " " << args.size() << "\n");
-      emit(emitted);
-      SDEBUG(errs() << "EXECUTE MALLOC" << "\n");
-      se->executeMalloc(varName, sizeExpr);
-      emit(Stmt::symbheap(se->getCurrSH()));
-      
-    } else if(!callstmt->getProc().compare("free_")) {
-      SDEBUG(errs() << "SE CALL: free_" << "\n");
 
-      emit(emitted);
-      //TODOsh: add more symbolic execution support here
-    } else {
-
-      emit(emitted);
-    }*/
     emit(emitted);
   }
 

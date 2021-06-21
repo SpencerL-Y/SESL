@@ -225,7 +225,6 @@ const Stmt *Stmt::assume(const Expr *e, const Attr *a) {
   s->add(a);
   return (const AssumeStmt *)s;
 }
-//TODOsh: stmt modify later
 const Stmt *Stmt::symbheap(SHExprPtr sh){
   SHStmt *s = new SHStmt(sh);
   return s;
@@ -729,6 +728,11 @@ const SpatialLiteral* SpatialLiteral::spt(const Expr* var, const Expr* size, std
   return new SizePtLit(var, size, blkName);
 }
 
+
+const SpatialLiteral* SpatialLiteral::errlit(){
+  return new ErrorLit();
+}
+
 void EmpLit::print(std::ostream &os) const{
   os << "emp";
 }
@@ -787,7 +791,7 @@ std::string SizePtLit::getVarName() const {
 }
 
 void ErrorLit::print(std::ostream &os) const{
-  os << " XXXXXXX ";
+  os << " XXXXXXX( " << fresh << ")XXXXXXX";
 }
 
 z3::expr ErrorLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const {
@@ -846,6 +850,15 @@ std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::emp_sh(){
   SHExprPtr empsh = std::make_shared<SymbolicHeapExpr>(trueExpr, splist);
   empsh->addSpatialLit(SpatialLiteral::emp());
   return empsh;
+}
+
+
+bool SymbolicHeapExpr::isError(){
+  const SpatialLiteral* sp = this->spatialExpr.front();
+  if(SpatialLiteral::Kind::ERR == sp->getId()){
+    return true;
+  }
+  return false;
 }
 
 void SymbolicHeapExpr::addSpatialLit(const SpatialLiteral* spl){

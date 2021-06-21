@@ -7,7 +7,7 @@ namespace smack{
     SHExprPtr BlockExecutor::executeAssign(SHExprPtr sh, const Stmt* assignStmt){
         if(Stmt::ASSIGN == assignStmt->getKind()){
             const AssignStmt* stmt = (const AssignStmt*) assignStmt;
-            // TODOsh: here the assignment is restricted to the single assignment, may cause problem for boogie assignment.
+            //  : here the assignment is restricted to the single assignment, may cause problem for boogie assignment.
             const Expr* lhs = stmt->getLhs().front();
             const Expr* rhs = stmt->getRhs().front();
             const VarExpr* lhsVar = NULL;
@@ -49,7 +49,6 @@ namespace smack{
                             this->varFactory->getVar(rhsVarName)
                         );
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
-                        // TODOsh: DEBUG print
                         newSH->print(std::cout);
                         CFDEBUG(std::cout << std::endl);
                         return newSH;
@@ -113,7 +112,6 @@ namespace smack{
                         }
                         const Expr* valEquality = Expr::eq(this->varFactory->getVar(lhsVarName), arg1);
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, valEquality);
-                        // TODOsh: DEBUG print
                         newSH->print(std::cout);
                         CFDEBUG(std::cout << std::endl);
                         return newSH;
@@ -131,7 +129,6 @@ namespace smack{
                             this->varFactory->getVar(rhsVarName)
                         );
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
-                        // TODOsh: DEBUG print
                         newSH->print(std::cout);
                         CFDEBUG(std::cout << std::endl);
                         return newSH;
@@ -437,7 +434,7 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::executeFree
     (SHExprPtr sh, const CallStmt* stmt){
-        // TODOsh: varName usually is not the initial malloc name, here we need to determine which one to free or there is no such free item.
+        // TODOsh: current use a attribute in spatial literal to store the information which spatial literals need to be freed.
         if(!stmt->getProc().compare("free_")){
             const Expr* arg1 = stmt->getParams().front();
             if(ExprType::VAR == arg1->getType()){
@@ -630,7 +627,14 @@ namespace smack{
                 }
             } else if(!posResult.first && 0 == posResult.second) {
                 // TODOsh Grammatik: unify the error by checking the grammar later. 
-                
+                CFDEBUG(std::cout << "INFO: INFERENCE TO ERR SH..." << std::endl;)
+                const Expr* newPure = sh->getPure();
+                std::list<const SpatialLiteral*> newSpatialExpr;
+                const SpatialLiteral* errLit = SpatialLiteral::errlit();
+                newSpatialExpr.push_back(errLit);
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                newSH->print(std::cout);
+                return newSH;
             } else if(!posResult.first && -1 == posResult.second){  
                 CFDEBUG(std::cout << "ERROR: Alloc name store split not get !!" << std::endl;);
             } else {
@@ -660,23 +664,31 @@ namespace smack{
     // -------------------- General Interface -------------------
     SHExprPtr 
     BlockExecutor::execute
-    (SHExprPtr initialSh, const Stmt* stmt){
+    (SHExprPtr currSH, const Stmt* stmt){
         this->varEquiv->debugPrint();
         CFDEBUG(std::cout << "INFO: executing for stmt: " << std::endl);
         stmt->print(std::cout);
         CFDEBUG(std::cout << std::endl);
+        
+        if(currSH->isError()){
+            CFDEBUG(std::cout << "INFO: execute error.." << std::endl;);
+            return currSH;
+        }
+        
+
+
         if(Stmt::CALL == stmt->getKind()){
             CFDEBUG(std::cout << "INFO: stmt kind CALL" << std::endl);
-            return this->executeCall(initialSh, stmt);
+            return this->executeCall(currSH, stmt);
         } else if(Stmt::ASSIGN == stmt->getKind()){
             CFDEBUG(std::cout << "INFO: stmt kind ASSIGN" << std::endl);
-            return this->executeAssign(initialSh, stmt);
+            return this->executeAssign(currSH, stmt);
         } 
         else {
             CFDEBUG(std::cout << "INFO: stmt kind " << stmt->getKind() << std::endl);
-            return this->executeOther(initialSh, stmt);
+            return this->executeOther(currSH, stmt);
         }
-        return initialSh;
+        return currSH;
     }
     
 }

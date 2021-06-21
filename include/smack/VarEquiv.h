@@ -18,9 +18,15 @@ namespace smack
     class VarEquiv
     {
     private:
+    // varAllocEqualMap: equivalent class of equality between variables
         std::map<std::string, std::string> varAllocEqualMap;
+    // pointsToBlkMap: 
+        // find the pointed allocated blk of a ptr (use the initially allocated ptr to represent)
+        // or itself if none is found
         std::map<std::string, std::string> pointsToBlkMap;
+    // points to blk offset: used to store the offset bytenum of a ptr (used in store and load for ptr arithmetic)
         std::map<std::string, int> pointsToBlkOffset;
+    // varToIntVal: cache the calculated value of integer variables (used in store and load)
         std::map<std::string, int> varToIntVal;
     public:
         VarEquiv(/* args */){};

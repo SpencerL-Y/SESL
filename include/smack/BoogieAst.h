@@ -372,14 +372,14 @@ public:
   bool isValue() const {return false;}
 };
 
-
 class SpatialLiteral : public Expr {
   public: 
   enum Kind{  
     EMP,
     PT,
     BLK,
-    SPT
+    SPT,
+    ERR
   };
   Kind id;
   std::string blkName;
@@ -389,6 +389,7 @@ class SpatialLiteral : public Expr {
   static const SpatialLiteral* pt(const Expr* from, const Expr* to, std::string blkName);
   static const SpatialLiteral* blk(const Expr* from, const Expr* to, std::string blkName);
   static const SpatialLiteral* spt(const Expr* var, const Expr* size, std::string blkName);
+  static const SpatialLiteral* errlit(bool f);
   SpatialLiteral::Kind getId() const {return id;}
   void setId(SpatialLiteral::Kind i){id = i;}
   ExprType getType() const { return ExprType::SpatialLit;}
@@ -420,7 +421,6 @@ public:
   virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
 };
 
-// TODOsh: blk literal
 class BlkLit : public SpatialLiteral {
   const Expr* from;
   const Expr* to;
@@ -445,15 +445,17 @@ public:
 };
 
 class ErrorLit : public SpatialLiteral {
-  
+  bool fresh;
+
   public:
-  ErrorLit();
+  ErrorLit(bool f) {setId(SpatialLiteral::Kind::ERR); fresh = f;};
+  bool isFresh() const {return fresh;}
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
 };
 
 
-// TODOsh: symbolic heap expression, add other operations
+// Symbolic Heap in BoogieAST
 class SymbolicHeapExpr : public Expr {
   const Expr *pure;
   std::list<const SpatialLiteral*> spatialExpr;
@@ -473,6 +475,8 @@ public:
   ExprType getType() const { return ExprType::SH;}
   bool isVar() const {return false;}
   bool isValue() const {return false;}
+  bool isError();
+  
 
 };
 
@@ -538,7 +542,6 @@ public:
                             std::list<const Expr *> rhs);
   static const Stmt *assume(const Expr *e);
   static const Stmt *assume(const Expr *e, const Attr *attr);
-  //TODOsh: add implementation for the function
   static const Stmt *symbheap(SHExprPtr sh);
   static const Stmt *
   call(std::string p, std::list<const Expr *> args = std::list<const Expr *>(),
@@ -598,13 +601,13 @@ public:
 };
 
 // Symbolic Heap Statement
-// TODOsh: check
 class SHStmt : public Stmt {
   SHExprPtr symbheap;
 
 public:
   SHStmt(SHExprPtr sh) : Stmt(SH), symbheap(sh){}
   void print(std::ostream &os) const;
+  SHExprPtr getSymbHeap() const {return symbheap;}
   static bool classof(const Stmt *S){
     return S->getKind() == SH;
   }

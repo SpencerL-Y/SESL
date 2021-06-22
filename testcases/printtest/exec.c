@@ -10,12 +10,12 @@ typedef struct test{
 int main(){
     int num = 9;
     int *j = (int*)malloc(num*sizeof(int));
-    *(j+1) = 1110;
-    int nnum = *(j+1) + (-1);
+    *(j+8) = 1110;
+    int nnum = *(j+8) + (-1);
     // int a[2][3];
     // a[1][2] = num;
     // test_type my;
-    // my.b = 'a';
+    // my.b = 'a'
     // test_type nextMy;
     // my.next = &nextMy;
     //free(j);

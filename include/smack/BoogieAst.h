@@ -387,7 +387,7 @@ class SpatialLiteral : public Expr {
   
   static const SpatialLiteral* emp();
   static const SpatialLiteral* pt(const Expr* from, const Expr* to, std::string blkName);
-  static const SpatialLiteral* blk(const Expr* from, const Expr* to, std::string blkName);
+  static const SpatialLiteral* blk(const Expr* from, const Expr* to, std::string blkName, bool empty);
   static const SpatialLiteral* spt(const Expr* var, const Expr* size, std::string blkName);
   static const SpatialLiteral* errlit(bool f);
   SpatialLiteral::Kind getId() const {return id;}
@@ -424,10 +424,11 @@ public:
 class BlkLit : public SpatialLiteral {
   const Expr* from;
   const Expr* to;
-
+  bool isEmptyBlk;
 public:
-  BlkLit(const Expr* f, const Expr* t, std::string blkName) : from(f), to(t){setId(SpatialLiteral::Kind::BLK); setBlkName(blkName);}
+  BlkLit(const Expr* f, const Expr* t, std::string blkName, bool empty) : from(f), to(t){setId(SpatialLiteral::Kind::BLK); setBlkName(blkName); isEmptyBlk = empty;}
   void print(std::ostream &os) const;
+  bool isEmpty() const {return isEmptyBlk;}
   virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
   const Expr* getFrom() const { return from;}
   const Expr* getTo() const { return to;}

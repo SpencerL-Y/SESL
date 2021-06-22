@@ -720,8 +720,8 @@ const SpatialLiteral* SpatialLiteral::pt(const Expr* from, const Expr* to, std::
   return new PtLit(from, to, blkName);
 }
 
-const SpatialLiteral* SpatialLiteral::blk(const Expr* from, const Expr* to, std::string blkName){
-  return new BlkLit(from, to, blkName);
+const SpatialLiteral* SpatialLiteral::blk(const Expr* from, const Expr* to, std::string blkName, bool empty){
+  return new BlkLit(from, to, blkName, empty);
 }
 
 const SpatialLiteral* SpatialLiteral::spt(const Expr* var, const Expr* size, std::string blkName) {
@@ -761,6 +761,9 @@ void BlkLit::print(std::ostream &os) const {
 }
 
 z3::expr BlkLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const{
+    if(this->isEmpty()){
+      return slah_api::newEmp(z3Ctx);
+    }
     auto f = from->translateToZ3(z3Ctx, cfg);
     auto t = to->translateToZ3(z3Ctx, cfg);
     z3::expr ex = z3Ctx.bool_val(true);

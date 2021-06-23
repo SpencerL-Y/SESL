@@ -10,28 +10,21 @@ procedure {:entrypoint} main()
   var $i1: i1;
   var $i2: i32;
 $bb0:
-  SymbHeap(true|emp)
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  SymbHeap(true|emp)
   $i0 := 5;
   goto $bb1;
 $bb1:
-  SymbHeap(true|emp)
-  SymbHeap(true|emp)
   $i1 := $sgt.i32($i0, 0);
   assume {:branchcond $i1} true;
   goto $bb2, $bb3;
 $bb2:
   assume ($i1 == 1);
-  SymbHeap(true|emp)
   $i2 := $add.i32($i0, $sub.i32(0, 1));
-  SymbHeap(true|emp)
   call {:cexpr "i"} boogie_si_record_i32($i2);
   $i0 := $i2;
   goto $bb1;
 $bb3:
   assume !(($i1 == 1));
-  SymbHeap(true|emp)
   $r := 0;
   return;
 }
@@ -46,7 +39,6 @@ axiom (__SMACK_static_init == $sub.ref(0, 4128));
 procedure  __SMACK_static_init()
 {
 $bb0:
-  SymbHeap(true|emp)
   return;
 }
 procedure  boogie_si_record_i32(x: i32);

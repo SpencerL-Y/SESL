@@ -559,6 +559,11 @@ public:
     }
     return false;
   }
+  void printAttr() {
+     for (auto a = attrs.begin(); a != attrs.end(); ++a) {
+      std::cout << (*a)->getName() << " ";
+    }
+  }
   void print(std::ostream &os) const;
   static bool classof(const Stmt *S) { return S->getKind() == ASSUME; }
 };

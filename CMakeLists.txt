@@ -149,7 +149,7 @@ add_library(smackTranslator STATIC
   include/smack/MemSafeVerifier.h
   include/smack/VarEquiv.h
   include/smack/VarFactory.h
-  include/smacl/LassoVerifier.h
+  include/smack/LassoVerifier.h
   lib/smack/Translator.cpp
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp

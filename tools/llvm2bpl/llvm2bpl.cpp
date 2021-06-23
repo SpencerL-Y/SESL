@@ -271,7 +271,7 @@ int main(int argc, char **argv) {
     // TODOsh: currently the symbolic execution is in this pass
     pass_manager.add(new smack::SmackModuleGenerator());
     // pass_manager.add(new smack::MemSafeVerifier());
-    pass_manager.add(new.smack::LassoVerifier());
+    pass_manager.add(new smack::LassoVerifier());
     pass_manager.add(new smack::BplFilePrinter(F->os()));
   }
 

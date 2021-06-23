@@ -1,4 +1,4 @@
-; ModuleID = '/home/fengwz/Desktop/Smack/SmackBasedPrj/bin/b-vicwpwl3.bc'
+; ModuleID = '/home/fengwz/Desktop/Smack/SmackBasedPrj/build/b-v6jx4d42.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-unknown-linux-gnu"
@@ -42,7 +42,7 @@ attributes #1 = { nounwind readnone speculatable willreturn }
 !llvm.module.flags = !{!4, !5, !6}
 
 !0 = distinct !DICompileUnit(language: DW_LANG_C99, file: !1, producer: "clang version 10.0.1 ", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, enums: !2, splitDebugInlining: false, nameTableKind: None)
-!1 = !DIFile(filename: "../testcases/tercases/oneloop.c", directory: "/home/fengwz/Desktop/Smack/SmackBasedPrj/bin")
+!1 = !DIFile(filename: "../testcases/tercases/oneloop.c", directory: "/home/fengwz/Desktop/Smack/SmackBasedPrj/build")
 !2 = !{}
 !3 = !{!"clang version 10.0.1 "}
 !4 = !{i32 7, !"Dwarf Version", i32 4}

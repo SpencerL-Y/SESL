@@ -187,7 +187,7 @@ add_library(smackTranslator STATIC
   lib/smack/VarEquiv.cpp
   lib/smack/VarFactory.cpp
   lib/smack/StoreSplitter.cpp
-)
+        include/utils/SplitUtil.cpp include/utils/SplitUtil.h include/smack/SpatialElement.cpp include/smack/SpatialElement.h)
 
 add_executable(llvm2bpl
   tools/llvm2bpl/llvm2bpl.cpp

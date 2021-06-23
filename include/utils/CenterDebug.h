@@ -51,7 +51,7 @@ static const std::unordered_map<std::string, bool> DISPLAY_TABLE{
 };
 #define DEBUG_WITH_COLOR(X, COLOR) do { \
     if (CENTER_DEBUG) {                 \
-        if (!DISPLAY_TABLE.at(COLOR)) continue; \
+        if (!DISPLAY_TABLE.at(COLOR)) break; \
         if (hasColor)   std::cout<< COLOR; \
         X;                              \
         if (hasColor)   std::cout<<"\033[0m"; \

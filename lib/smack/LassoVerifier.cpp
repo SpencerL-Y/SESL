@@ -50,7 +50,7 @@ namespace smack {
         std::ofstream outfile;
         outfile.open("LassoRankFile.bpl");
         std::string s = "procedure {:entrypoint} main()\n";
-        s += " return ($r: int)\n";
+        s += " returns ($r: int)\n";
         s += "{\n";
         outfile << s;
         std::unordered_map<std::string, std::string> varType = mainGraph->getVar();
@@ -143,7 +143,7 @@ namespace smack {
                                     subArg1->print(outfile);
                                     outfile << " - ";
                                     subArg2->print(outfile);
-                                    outfile << ")\n";
+                                    outfile << ");\n";
                                 }
                             }
                         }
@@ -169,8 +169,12 @@ namespace smack {
                 
             }
         }
-
-        outfile << "\n}";
+        
+        // at the enter of loop part, there is a branch,
+        // we needs to store the block name, which we did not store in the lasso vector 
+        // and print it as a label with return;
+        outfile << "$bb3:\n";
+        outfile << "\treturn;\n}";
 
         outfile.close();
 

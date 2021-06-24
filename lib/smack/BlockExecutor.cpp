@@ -683,7 +683,9 @@ namespace smack{
                 }
             } else if(!posResult.first && 0 == posResult.second) {
                 // TODOsh: use fresh variable for the nondeterministic value
-                CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory..." << std::endl;)
+                CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory..." << std::endl;);
+                int freshVarByteSize = this->cfg->getVarDetailType(lhsVarName).second/8;
+                assert(freshVarByteSize > 0);
                 const Expr* newPure =  Expr::and_(
                     sh->getPure(),
                     Expr::eq(Expr::lit(lhsVarName), this->varFactory->getFreshVar())

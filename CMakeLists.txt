@@ -105,13 +105,11 @@ add_library(utils STATIC
   include/utils/SimplifyInsertValue.h
   include/utils/SimplifyExtractValue.h
   include/utils/TranslatorUtil.h
-  include/utils/SplitUtil.h
   lib/utils/Devirt.cpp
   lib/utils/MergeGEP.cpp
   lib/utils/SimplifyInsertValue.cpp
   lib/utils/SimplifyExtractValue.cpp
   lib/utils/TranslatorUtil.cpp
-  lib/utils/SplitUtil.cpp
 )
 
 add_library(smackTranslator STATIC

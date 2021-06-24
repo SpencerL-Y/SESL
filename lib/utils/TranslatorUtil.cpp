@@ -10,4 +10,32 @@ namespace smack
         }
         return res;
     }
+
+    z3::expr TranslatorUtil::byteVarSizeConstraint(std::string varName, int byteIndex, z3::context& z3Ctx){
+        z3::expr res = 
+        (
+          z3Ctx.int_const((varName + "_" + std::to_string(byteIndex)).c_str()) < 
+          z3Ctx.int_val(256)
+        ) &&
+        (
+          z3Ctx.int_const((varName + "_" + std::to_string(byteIndex)).c_str()) >= 
+          z3Ctx.int_val(0)
+        );
+        return res;
+    }
+
+    z3::expr TranslatorUtil::splitLargeVariable(std::string varName, int byteIndex, z3::context& z3Ctx){
+        // use the sum of byteVar*base as represent of old variables.
+        z3::expr res = z3Ctx.int_val(0);
+        for(int i = 0; i < byteIndex; i ++){
+            res = (
+                res + 
+                z3Ctx.int_const((varName + "_" + std::to_string(byteIndex)).c_str()) * TranslatorUtil::getBase(byteIndex, z3Ctx)
+            );
+        }
+        return res;
+    }
+
+
+    
 } // namespace smack

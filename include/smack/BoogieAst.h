@@ -13,6 +13,8 @@
 #include "utils/TranslatorUtil.h"
 #include "smack/VarEquiv.h"
 
+#define PTR_BYTEWIDTH 4
+
 namespace smack {
 
 class VarEquiv;

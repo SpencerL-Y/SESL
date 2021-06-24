@@ -483,7 +483,60 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg) const{
             res = (left and right);
             break;
         case Eq:
-            res = (left == right);
+            // Equality here is regarded as assignment and need to test the type of lhs and rhs
+            if(lhs->isVar() && rhs->isVar()){
+              const VarExpr* lhsVar = (const VarExpr*) lhs;
+              const VarExpr* rhsVar = (const VarExpr*) rhs;
+
+              // pointer variable are all set to size 32
+              int leftVarSize = (!cfg->getVarDetailType(lhsVar->name()).first.compare("ref")) ?PTR_BYTEWIDTH : cfg->getVarDetailType(lhsVar->name()).second/8;
+              int rightVarSize = (!cfg->getVarDetailType(rhsVar->name()).first.compare("ref")) ?PTR_BYTEWIDTH : cfg->getVarDetailType(rhsVar->name()).second/8;
+              
+              assert(leftVarSize > 0 && rightVarSize > 0);
+
+              z3::expr resultEquality = z3Ctx.bool_val(true);
+              if(leftVarSize == rightVarSize){
+                for(int index = 0; index < leftVarSize; index ++){
+                  resultEquality = (resultEquality && 
+                                    (z3Ctx.int_const((lhsVar->name() + "_" + std::to_string(index)).c_str()) == 
+                                     z3Ctx.int_const((rhsVar->name() + "_" + std::to_string(index)).c_str())
+                                    )
+                                   );
+                }
+              } else if (leftVarSize < rightVarSize){
+                // Truncated 
+                for(int index = 0; index < leftVarSize; index ++){
+                  resultEquality = (resultEquality &&
+                                      (z3Ctx.int_const((lhsVar->name() + "_" + std::to_string(index)).c_str()) == 
+                                      z3Ctx.int_const((rhsVar->name() + "_" + std::to_string(index)).c_str())
+                                      )
+                                   );
+                }
+              } else if(leftVarSize > rightVarSize){
+                // Size extended
+                for(int index = 0; index < leftVarSize; index ++){
+                  if(index < rightVarSize){
+                    resultEquality = (resultEquality &&
+                      (z3Ctx.int_const((lhsVar->name() + "_" + std::to_string(index)).c_str()) == 
+                       z3Ctx.int_const((rhsVar->name() + "_" + std::to_string(index)).c_str())
+                      )
+                    );
+                  } else {
+                    resultEquality = (resultEquality && 
+                      (z3Ctx.int_const((lhsVar->name() + "_" + std::to_string(index)).c_str()) == 
+                       0)
+                    );
+                  }
+                }
+              }
+              CDEBUG(std::cout << "in eq func!: " << resultEquality.to_string() << std::endl);
+              return resultEquality;
+            } else {
+              res = (left == right);
+            }
+
+
+
             CDEBUG(std::cout << "in eq func!: " << res.to_string() << std::endl);
             break;
         case Neq:
@@ -653,27 +706,26 @@ void UpdExpr::print(std::ostream &os) const {
 void VarExpr::print(std::ostream &os) const { os << var; }
 
 z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg) const {
-  // std::pair<std::string, int> typeResult = cfg->getVarDetailType(this->name());
-  // int byteNum = 1;
-  // if('i' == typeResult.first[0]){
-  //    byteNum = typeResult.second/8;
-  // } else if('r' == typeResult.first[0]){
-  //    // MACHINE BITWIDTH
-  //    byteNum = 4;
-  // } else {
-  //    CFDEBUG(std::cout << "ERROR: UNSOLVED Variable translation" << std::endl;);
-  // }
-  // z3::expr res = z3Ctx.int_val(0);
-  // for(int i = 0; i < byteNum; i++){
-  //   res = 
-  //   (res + 
-  //     TranslatorUtil::getBase(i, z3Ctx) * 
-  //     z3Ctx.int_const((this->name() + "_" + std::to_string(i)).c_str())
-  //   );
-  // }
-  z3::expr res = //TranslatorUtil::getZ3Var(this->name(), z3VarMap, z3Ctx);
-  z3Ctx.int_const(var.c_str());
-  CDEBUG(std::cout << "in varExpr! " << res.to_string() << std::endl;);
+  std::pair<std::string, int> typeResult = cfg->getVarDetailType(this->name());
+  int byteNum = 1;
+  if('i' == typeResult.first[0]){
+     byteNum = typeResult.second/8;
+  } else if('r' == typeResult.first[0]){
+     byteNum = PTR_BYTEWIDTH;
+  } else {
+     CFDEBUG(std::cout << "ERROR: UNSOLVED Variable translation" << std::endl;);
+  }
+  z3::expr res = z3Ctx.int_val(0);
+  for(int i = 0; i < byteNum; i++){
+    res = 
+    (res + 
+      TranslatorUtil::getBase(i, z3Ctx) * 
+      z3Ctx.int_const((this->name() + "_" + std::to_string(i)).c_str())
+    );
+  }
+  // z3::expr res = //TranslatorUtil::getZ3Var(this->name(), z3VarMap, z3Ctx);
+  // z3Ctx.int_const(var.c_str());
+  // CDEBUG(std::cout << "in varExpr! " << res.to_string() << std::endl;);
   return res;
 }
 

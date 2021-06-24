@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-#include "include/smack/CFGExecutor.h"
-
-namespace smack{
-    
-=======
 //
 // Created by center on 2021/6/23.
 //
@@ -80,5 +74,4 @@ namespace smack {
         this->step = step;
     }
 
->>>>>>> ceba1546247e43ff4fc6f7a199b399149e561647
 }

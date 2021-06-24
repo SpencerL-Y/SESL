@@ -1,9 +1,7 @@
-<<<<<<< HEAD
 #include "include/smack/CFGExecutor.h"
 
 namespace smack{
     
-=======
 //
 // Created by center on 2021/6/23.
 //
@@ -17,7 +15,7 @@ namespace smack {
         visNum[state] ++;
         auto successors = state->getSuccessors();
         if (successors.empty()) {
-            exePathVec.push_back(path);
+            exePathVec.push_back(ExecutionPath(path));
             path.pop_back();
             visNum[state] --;
             return;
@@ -35,7 +33,7 @@ namespace smack {
         path.push_back(state);
         auto successors = state->getSuccessors();
         if (successors.empty()) {
-            exePathVec.push_back(path);
+            exePathVec.push_back(ExecutionPath(path));
             path.pop_back();
             return;
         }
@@ -65,8 +63,8 @@ namespace smack {
     void CFGExecutor::printPath() {
         cout << "Printing path:" << std::endl;
         for (auto &path : exePathVec) {
-            for (auto& s : path) {
-                cout << s->getBlockName() << " ";
+            for (int i = 0; i < path.length(); ++ i) {
+                cout << path[i]->getBlockName() << " ";
             }
             cout << endl;
         }
@@ -80,5 +78,7 @@ namespace smack {
         this->step = step;
     }
 
->>>>>>> ceba1546247e43ff4fc6f7a199b399149e561647
+    StatePtr ExecutionPath::operator[](int pos) const {
+        return exePath[pos];
+    }
 }

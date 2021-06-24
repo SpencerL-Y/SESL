@@ -13,6 +13,11 @@ namespace smack
         }
     }
 
+    const VarExpr* VarFactory::getFreshVar(){
+        const VarExpr* fresh = new VarExpr("$fresh" + std::to_string(freshIndex));
+        return fresh;
+    }
+
     const IntLit* VarFactory::getInt(int i){
         if(this->intsMap.find(i) == this->intsMap.end()){
             const IntLit* newInt = new IntLit((long long)i);

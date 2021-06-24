@@ -1,41 +1,22 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-32c91vbt.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-ta6l6xi3.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
-%struct.TData = type { i8*, i8* }
-
 ; Function Attrs: noinline nounwind uwtable
-define dso_local i32 @main() #0 !dbg !9 {
-  %1 = alloca %struct.TData, align 8, !verifier.code !13
-  call void @llvm.dbg.declare(metadata %struct.TData* %1, metadata !14, metadata !DIExpression()), !dbg !20, !verifier.code !13
-  call void @llvm.dbg.value(metadata %struct.TData* %1, metadata !21, metadata !DIExpression()), !dbg !23, !verifier.code !13
-  %2 = call noalias i8* @malloc(i64 16) #3, !dbg !24, !verifier.code !13
-  %3 = getelementptr inbounds %struct.TData, %struct.TData* %1, i32 0, i32 0, !dbg !25, !verifier.code !13
-  store i8* %2, i8** %3, align 8, !dbg !26, !verifier.code !13
-  %4 = call noalias i8* @malloc(i64 24) #3, !dbg !27, !verifier.code !13
-  %5 = getelementptr inbounds %struct.TData, %struct.TData* %1, i32 0, i32 1, !dbg !28, !verifier.code !13
-  store i8* %4, i8** %5, align 8, !dbg !29, !verifier.code !13
-  %6 = getelementptr inbounds %struct.TData, %struct.TData* %1, i32 0, i32 0, !dbg !30, !verifier.code !13
-  %7 = load i8*, i8** %6, align 8, !dbg !30, !verifier.code !13
-  call void @llvm.dbg.value(metadata i8* %7, metadata !31, metadata !DIExpression()), !dbg !23, !verifier.code !13
-  %8 = getelementptr inbounds %struct.TData, %struct.TData* %1, i32 0, i32 1, !dbg !32, !verifier.code !13
-  %9 = load i8*, i8** %8, align 8, !dbg !32, !verifier.code !13
-  call void @llvm.dbg.value(metadata i8* %9, metadata !33, metadata !DIExpression()), !dbg !23, !verifier.code !13
-  %10 = icmp eq i8* %7, %9, !dbg !34, !verifier.code !13
-  br i1 %10, label %11, label %12, !dbg !36, !verifier.code !13
-
-11:                                               ; preds = %0
-  call void @free(i8* %7) #3, !dbg !37, !verifier.code !13
-  call void @free(i8* %9) #3, !dbg !39, !verifier.code !13
-  br label %12, !dbg !40, !verifier.code !13
-
-12:                                               ; preds = %11, %0
-  %13 = getelementptr inbounds %struct.TData, %struct.TData* %1, i32 0, i32 0, !dbg !41, !verifier.code !13
-  store i8* null, i8** %13, align 8, !dbg !42, !verifier.code !13
-  %14 = getelementptr inbounds %struct.TData, %struct.TData* %1, i32 0, i32 1, !dbg !43, !verifier.code !13
-  store i8* null, i8** %14, align 8, !dbg !44, !verifier.code !13
-  ret i32 0, !dbg !45, !verifier.code !13
+define dso_local i32 @main() #0 !dbg !10 {
+  call void @llvm.dbg.value(metadata i32 0, metadata !13, metadata !DIExpression()), !dbg !14, !verifier.code !15
+  %1 = sext i32 0 to i64, !dbg !16, !verifier.code !15
+  %2 = mul i64 %1, 4, !dbg !17, !verifier.code !15
+  %3 = call noalias i8* @malloc(i64 %2) #3, !dbg !18, !verifier.code !15
+  %4 = bitcast i8* %3 to i32*, !dbg !19, !verifier.code !15
+  call void @llvm.dbg.value(metadata i32* %4, metadata !20, metadata !DIExpression()), !dbg !14, !verifier.code !15
+  %5 = load i32, i32* %4, align 4, !dbg !21, !verifier.code !15
+  %6 = add nsw i32 %5, -1, !dbg !22, !verifier.code !15
+  call void @llvm.dbg.value(metadata i32 %6, metadata !23, metadata !DIExpression()), !dbg !14, !verifier.code !15
+  %7 = add nsw i32 0, 1, !dbg !24, !verifier.code !15
+  call void @llvm.dbg.value(metadata i32 %7, metadata !13, metadata !DIExpression()), !dbg !14, !verifier.code !15
+  ret i32 0, !dbg !25, !verifier.code !15
 }
 
 ; Function Attrs: nounwind readnone speculatable willreturn
@@ -43,9 +24,6 @@ declare void @llvm.dbg.declare(metadata, metadata, metadata) #1
 
 ; Function Attrs: nounwind
 declare dso_local noalias i8* @malloc(i64) #2
-
-; Function Attrs: nounwind
-declare dso_local void @free(i8*) #2
 
 ; Function Attrs: nounwind readnone speculatable willreturn
 declare void @llvm.dbg.value(metadata, metadata, metadata) #1
@@ -61,52 +39,32 @@ attributes #2 = { nounwind "correctly-rounded-divide-sqrt-fp-math"="false" "disa
 attributes #3 = { nounwind }
 
 !llvm.dbg.cu = !{!0}
-!llvm.ident = !{!5}
-!llvm.module.flags = !{!6, !7, !8}
+!llvm.ident = !{!6}
+!llvm.module.flags = !{!7, !8, !9}
 
 !0 = distinct !DICompileUnit(language: DW_LANG_C99, file: !1, producer: "clang version 10.0.0-4ubuntu1 ", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, enums: !2, retainedTypes: !3, splitDebugInlining: false, nameTableKind: None)
 !1 = !DIFile(filename: "../testcases/printtest/exec.c", directory: "/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build")
 !2 = !{}
 !3 = !{!4}
-!4 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: null, size: 64)
-!5 = !{!"clang version 10.0.0-4ubuntu1 "}
-!6 = !{i32 7, !"Dwarf Version", i32 4}
-!7 = !{i32 2, !"Debug Info Version", i32 3}
-!8 = !{i32 1, !"wchar_size", i32 4}
-!9 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 16, type: !10, scopeLine: 16, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
-!10 = !DISubroutineType(types: !11)
-!11 = !{!12}
-!12 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
-!13 = !{i1 false}
-!14 = !DILocalVariable(name: "data", scope: !9, file: !1, line: 49, type: !15)
-!15 = !DIDerivedType(tag: DW_TAG_typedef, name: "TData", file: !1, line: 13, baseType: !16)
-!16 = distinct !DICompositeType(tag: DW_TAG_structure_type, file: !1, line: 10, size: 128, elements: !17)
-!17 = !{!18, !19}
-!18 = !DIDerivedType(tag: DW_TAG_member, name: "lo", scope: !16, file: !1, line: 11, baseType: !4, size: 64)
-!19 = !DIDerivedType(tag: DW_TAG_member, name: "hi", scope: !16, file: !1, line: 12, baseType: !4, size: 64, offset: 64)
-!20 = !DILocation(line: 49, column: 11, scope: !9)
-!21 = !DILocalVariable(name: "pdata", scope: !9, file: !1, line: 50, type: !22)
-!22 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !15, size: 64)
-!23 = !DILocation(line: 0, scope: !9)
-!24 = !DILocation(line: 51, column: 17, scope: !9)
-!25 = !DILocation(line: 51, column: 12, scope: !9)
-!26 = !DILocation(line: 51, column: 15, scope: !9)
-!27 = !DILocation(line: 52, column: 17, scope: !9)
-!28 = !DILocation(line: 52, column: 12, scope: !9)
-!29 = !DILocation(line: 52, column: 15, scope: !9)
-!30 = !DILocation(line: 53, column: 23, scope: !9)
-!31 = !DILocalVariable(name: "lo", scope: !9, file: !1, line: 53, type: !4)
-!32 = !DILocation(line: 54, column: 23, scope: !9)
-!33 = !DILocalVariable(name: "hi", scope: !9, file: !1, line: 54, type: !4)
-!34 = !DILocation(line: 56, column: 12, scope: !35)
-!35 = distinct !DILexicalBlock(scope: !9, file: !1, line: 56, column: 9)
-!36 = !DILocation(line: 56, column: 9, scope: !9)
-!37 = !DILocation(line: 57, column: 9, scope: !38)
-!38 = distinct !DILexicalBlock(scope: !35, file: !1, line: 56, column: 19)
-!39 = !DILocation(line: 58, column: 9, scope: !38)
-!40 = !DILocation(line: 59, column: 5, scope: !38)
-!41 = !DILocation(line: 61, column: 12, scope: !9)
-!42 = !DILocation(line: 61, column: 15, scope: !9)
-!43 = !DILocation(line: 62, column: 12, scope: !9)
-!44 = !DILocation(line: 62, column: 15, scope: !9)
-!45 = !DILocation(line: 72, column: 1, scope: !9)
+!4 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !5, size: 64)
+!5 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
+!6 = !{!"clang version 10.0.0-4ubuntu1 "}
+!7 = !{i32 7, !"Dwarf Version", i32 4}
+!8 = !{i32 2, !"Debug Info Version", i32 3}
+!9 = !{i32 1, !"wchar_size", i32 4}
+!10 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 16, type: !11, scopeLine: 16, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
+!11 = !DISubroutineType(types: !12)
+!12 = !{!5}
+!13 = !DILocalVariable(name: "num", scope: !10, file: !1, line: 17, type: !5)
+!14 = !DILocation(line: 0, scope: !10)
+!15 = !{i1 false}
+!16 = !DILocation(line: 18, column: 27, scope: !10)
+!17 = !DILocation(line: 18, column: 30, scope: !10)
+!18 = !DILocation(line: 18, column: 20, scope: !10)
+!19 = !DILocation(line: 18, column: 14, scope: !10)
+!20 = !DILocalVariable(name: "j", scope: !10, file: !1, line: 18, type: !4)
+!21 = !DILocation(line: 20, column: 16, scope: !10)
+!22 = !DILocation(line: 20, column: 21, scope: !10)
+!23 = !DILocalVariable(name: "nnum", scope: !10, file: !1, line: 20, type: !5)
+!24 = !DILocation(line: 21, column: 15, scope: !10)
+!25 = !DILocation(line: 39, column: 1, scope: !10)

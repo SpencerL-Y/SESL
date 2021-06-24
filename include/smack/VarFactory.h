@@ -16,10 +16,12 @@ namespace smack
         /* data */
         std::unordered_map<std::string, const VarExpr*> varsMap;
         std::unordered_map<int, const IntLit*> intsMap;
+        int freshIndex;
     public:
-        VarFactory(/* args */){};
+        VarFactory(/* args */){freshIndex = 0;};
         const VarExpr* getVar(std::string name);
         const IntLit* getInt(int i);
+        const VarExpr* getFreshVar();
         ~VarFactory(){};
     };
     typedef std::shared_ptr<VarFactory> VarFactoryPtr;

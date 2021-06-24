@@ -443,6 +443,8 @@ class SizePtLit : public SpatialLiteral {
 public:
   SizePtLit(const Expr* v, const Expr* s, std::string blkName) : var(v), size(s) {setId(SpatialLiteral::Kind::SPT);setBlkName(blkName);}
   std::string getVarName() const;
+  const Expr* getVar() const {return var;}
+  const Expr* getSize() const {return size;}
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg) const override;
 };
@@ -467,6 +469,7 @@ public:
   SymbolicHeapExpr(const Expr* p, std::list<const SpatialLiteral*> splist) : pure(p), spatialExpr(splist){}
   const Expr* getPure() const { return this->pure;}
   std::list<const SpatialLiteral*> getSpatialExpr() const { return this->spatialExpr;}
+  const Expr* getBlkSize(std::string blkName) const;
   void print(std::ostream &os) const;
   void addSpatialLit(const SpatialLiteral* spatialLit);
 

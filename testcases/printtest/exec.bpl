@@ -6,48 +6,24 @@ axiom (main == $sub.ref(0, 1032));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
-  var $p0: ref;
-  var $p1: ref8;
-  var $p2: ref;
-  var $p3: ref8;
-  var $p4: ref;
-  var $p5: ref;
-  var $p6: ref8;
-  var $p7: ref;
-  var $p8: ref8;
-  var $i9: i1;
-  var $p10: ref;
-  var $p11: ref;
+  var $i0: i64;
+  var $i1: i64;
+  var $p2: ref8;
+  var $p3: ref32;
+  var $i4: i32;
+  var $i5: i32;
+  var $i6: i32;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  call $p0 := $alloc($mul.ref(16, $zext.i32.i64(1)));
-  assume true;
-  call $p1 := malloc(16);
-  $p2 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(0, 1));
-  $M.0 := $store.ref($M.0, $p2, $p1);
-  call $p3 := malloc(24);
-  $p4 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(8, 1));
-  $M.1 := $store.ref($M.1, $p4, $p3);
-  $p5 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(0, 1));
-  $p6 := $load.ref($M.0, $p5);
-  $p7 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(8, 1));
-  $p8 := $load.ref($M.1, $p7);
-  $i9 := $eq.ref($p6, $p8);
-  assume {:branchcond $i9} true;
-  goto $bb1, $bb2;
-$bb1:
-  assume ($i9 == 1);
-  call free_($p6);
-  call free_($p8);
-  goto $bb3;
-$bb2:
-  assume !(($i9 == 1));
-  goto $bb3;
-$bb3:
-  $p10 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(0, 1));
-  $M.0 := $store.ref($M.0, $p10, $0.ref);
-  $p11 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(8, 1));
-  $M.1 := $store.ref($M.1, $p11, $0.ref);
+  $i0 := $sext.i32.i64(0);
+  $i1 := $mul.i64($i0, 4);
+  call $p2 := malloc($i1);
+  $p3 := $bitcast.ref.ref($p2);
+  $i4 := $load.i32($M.0, $p3);
+  $i5 := $add.i32($i4, $sub.i32(0, 1));
+  call {:cexpr "nnum"} boogie_si_record_i32($i5);
+  $i6 := $add.i32(0, 1);
+  call {:cexpr "num"} boogie_si_record_i32($i6);
   $r := 0;
   return;
 }
@@ -61,22 +37,17 @@ procedure  malloc($i0: i64)
 {
   call $r := $malloc($i0);
 }
-const free_: ref;
-axiom (free_ == $sub.ref(0, 4128));
-procedure  free_($p0: ref)
-{
-  call $free($p0);
-}
 const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 5160));
+axiom (llvm.dbg.value == $sub.ref(0, 4128));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 6192));
+axiom (__SMACK_static_init == $sub.ref(0, 5160));
 procedure  __SMACK_static_init()
 {
 $bb0:
   return;
 }
+procedure  boogie_si_record_i32(x: i32);
 procedure  boogie_si_record_ref(x: ref);
 procedure  $initialize()
 {

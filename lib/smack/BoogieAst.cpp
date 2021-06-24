@@ -489,10 +489,8 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg) const{
               const VarExpr* rhsVar = (const VarExpr*) rhs;
 
               // pointer variable are all set to size 32
-              int leftVarSize = (!cfg->getVarDetailType(lhsVar->name()).first.compare("ref")) ?PTR_BYTEWIDTH : cfg->getVarDetailType(lhsVar->name()).second/8;
-              int rightVarSize = (!cfg->getVarDetailType(rhsVar->name()).first.compare("ref")) ?PTR_BYTEWIDTH : cfg->getVarDetailType(rhsVar->name()).second/8;
-              
-              assert(leftVarSize > 0 && rightVarSize > 0);
+              int leftVarSize = (cfg->getVarDetailType(lhsVar->name()).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(lhsVar->name()).second/8;
+              int rightVarSize = (cfg->getVarDetailType(rhsVar->name()).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(rhsVar->name()).second/8;
 
               z3::expr resultEquality = z3Ctx.bool_val(true);
               if(leftVarSize == rightVarSize){
@@ -918,6 +916,19 @@ bool SymbolicHeapExpr::isError(){
 
 void SymbolicHeapExpr::addSpatialLit(const SpatialLiteral* spl){
   spatialExpr.push_back(spl);
+}
+
+
+const Expr* SymbolicHeapExpr::getBlkSize(std::string blkName) const{
+  for(const SpatialLiteral* sp : this->spatialExpr){
+    if(SpatialLiteral::Kind::SPT == sp->getId() &&
+       !sp->getBlkName().compare(blkName)){
+         const SizePtLit* st = (const SizePtLit*)sp;
+         return st->getSize();
+    }
+  }
+  CFDEBUG(std::cout << "ERROR: Block Name not found" << std::endl;);
+  return nullptr;
 }
 
 void SymbolicHeapExpr::print(std::ostream &os) const {

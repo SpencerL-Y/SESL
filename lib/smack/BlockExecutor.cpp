@@ -601,8 +601,20 @@ namespace smack{
             std::string ldPtrName = ldPtr->name();
             CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
             int loadPosOffset = this->varEquiv->getOffset(ldPtrName);
+            std::string blkName = this->varEquiv->getBlkName(ldPtrName);
+            int blkSize = sh->getBlkSize(blkName)->translateToInt(this->varEquiv).second;
+            if(loadPosOffset >= blkSize){
+                // If the ptr offset is overflow
+                std::list<const SpatialLiteral*> newSpatial;
+                newSpatial.push_back(SpatialLiteral::errlit(true));
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
+                newSH->print(std::cout);
+                std::cout << std::endl;
+                return newSH;
+            }
+
             std::pair<bool, int> posResult = this->storeSplit->getOffsetPos(
-                this->varEquiv->getBlkName(ldPtrName),
+                blkName,
                 loadPosOffset
             );
             CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
@@ -659,13 +671,7 @@ namespace smack{
                                 return newSH;
                             } else {
                                 CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
-                            }const Expr* newPure = sh->getPure();
-                // std::list<const SpatialLiteral*> newSpatialExpr;
-                // const SpatialLiteral* errLit = SpatialLiteral::errlit(true);
-                // newSpatialExpr.push_back(errLit);
-                // SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
-                // newSH->print(std::cout);
-                // return newSH;
+                            } 
                         } else {
                             CFDEBUG(std::cout << "ERROR: load error, this should be a PT predicate." << std::endl;);
                             return sh;
@@ -676,18 +682,16 @@ namespace smack{
                     }
                 }
             } else if(!posResult.first && 0 == posResult.second) {
-                // TODOsh Grammatik: unify the error by checking the grammar later. 
-                // CFDEBUG(std::cout << "INFO: INFERENCE TO ERR SH..." << std::endl;)
-                // const Expr* newPure = sh->getPure();
-                // std::list<const SpatialLiteral*> newSpatialExpr;
-                // const SpatialLiteral* errLit = SpatialLiteral::errlit(true);
-                // newSpatialExpr.push_back(errLit);
-                // SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
-                // newSH->print(std::cout);
-                // return newSH;
-
+                // TODOsh: use fresh variable for the nondeterministic value
                 CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory..." << std::endl;)
-                return sh;
+                const Expr* newPure =  Expr::and_(
+                    sh->getPure(),
+                    Expr::eq(Expr::lit(lhsVarName), this->varFactory->getFreshVar())
+                );
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                newSH->print(std::cout);
+                std::cout << std::endl;
+                return newSH;
             } else if(!posResult.first && -1 == posResult.second){  
                 CFDEBUG(std::cout << "ERROR: Alloc name store split not get !!" << std::endl;);
             } else {

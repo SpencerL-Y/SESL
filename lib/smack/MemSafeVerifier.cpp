@@ -8,6 +8,7 @@
 #include "smack/BlockExecutor.h"
 #include "smack/Translator.h"
 #include "smack/StoreSplitter.h"
+#include "smack/CFGExecutor.h"
 
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/GraphWriter.h" 
@@ -38,6 +39,11 @@ namespace smack {
         } 
         CFGPtr mainGraph = CFGs["main"];
         mainGraph->printCFG();
+        mainGraph->printSCCNumber();
+        CFGExecutor cfgExecutor(mainGraph);
+        cfgExecutor.generatePathByUpperBound();
+        cfgExecutor.printPath();
+
         std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
         StatePtr state = mainGraph->getState("$bb0");
         Block* block = state->getStateBlock();

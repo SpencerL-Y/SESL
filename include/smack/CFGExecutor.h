@@ -1,45 +1,38 @@
-#ifndef CFGEXECUTOR_H
-#define CFGEXECUTOR_H
-#include <stdlib.h>
-#include <vector>
-#include "smack/BlockExecutor.h"
+//
+// Created by center on 2021/6/23.
+//
 
+#ifndef SMACK_CFGEXECUTOR_H
+#define SMACK_CFGEXECUTOR_H
+#pragma once
+#include <utility>
 
-namespace smack
-{
-    // purpose of CFGExecutor: from CFG to the execution graph and execute on the tree
-    class CFGExecutor
-    {
+#include "smack/CFG.h"
+#include "vector"
+using namespace std;
+namespace smack {
+    class CFGExecutor {
     private:
-        /* data */
         CFGPtr cfg;
-        BlockExecutorPtr be;
+        vector<vector<StatePtr>> exePathVec;
+        int bound;
+        int step;
 
+        unordered_map<StatePtr, int> visNum;
+
+        void DFSByBound(StatePtr& state);
+        void DFSByStep(StatePtr& state, int remainStep);
+        StatePtr getEntryState();
     public:
-        // there should be a method to construct the execution graph
-        CFGExecutor(CFGPtr cfg, BlockExecutorPtr bep) : cfg(cfg), be(bep) {};
-        ~CFGExecutor();
+        explicit CFGExecutor(CFGPtr cfgPtr, int bound = 3, int step = 20) : cfg(std::move(cfgPtr)), bound(bound), step(step) {exePathVec.clear();}
+        void setUpperBound(int upperBound);
+        void setStep(int step);
+        void generatePathByUpperBound();
+        void generatePathByStep();
+        void printPath();
     };
-
-    // this class is constructed from searching unrolling and later be used for execution
-    class ExecutionGraph {
-
-    }
-
-    // record execution path when doing execution on execution graph
-    class ExecutionPath {
-        
-        std::vector<StatePtr> path;
-
-        public: 
-        void appendState(StatePtr currState);
-        ExecutionPath();
-        ~ExecutionPath();
-
-    };
-    
-
-} // namespace smack
+}
 
 
-#endif
+
+#endif //SMACK_CFGEXECUTOR_H

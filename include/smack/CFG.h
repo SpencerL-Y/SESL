@@ -23,7 +23,11 @@ namespace smack
         std::unordered_map<std::string, StatePtr> states;
         void printCFG(const std::string& start, bool fresh = true);
         void generateTypeInfo();
+        // SCC related
+        std::unordered_map<std::string , int> dfn, low, inStack, SCCNumber;
+        int sccNumber = 0, step = 0;
     public:
+        void markSCC(std::string start);
         void printVarInfo();
         explicit CFG(ProcDecl* procDecl = nullptr);
         std::string getVarType(std::string varName);
@@ -36,6 +40,8 @@ namespace smack
         StatePtr createState(Block* block);
         static EdgePtr createEdge(const StatePtr& fromState, const StatePtr& toState);
         void printCFG();
+        void printSCCNumber();
+        StatePtr getEntryState();
         ~CFG() = default;
     };
     typedef std::shared_ptr<CFG> CFGPtr;

@@ -99,19 +99,18 @@ endif()
 include_directories(include)
 include_directories(sea-dsa/include)
 
-add_library(utils STATIC
+add_library(
+  utils STATIC
   include/utils/Devirt.h
   include/utils/MergeGEP.h
   include/utils/SimplifyInsertValue.h
   include/utils/SimplifyExtractValue.h
   include/utils/TranslatorUtil.h
-  include/utils/SplitUtil.h
   lib/utils/Devirt.cpp
   lib/utils/MergeGEP.cpp
   lib/utils/SimplifyInsertValue.cpp
   lib/utils/SimplifyExtractValue.cpp
   lib/utils/TranslatorUtil.cpp
-  lib/utils/SplitUtil.cpp
 )
 
 add_library(smackTranslator STATIC

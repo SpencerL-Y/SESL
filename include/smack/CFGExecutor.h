@@ -11,10 +11,20 @@
 #include "vector"
 using namespace std;
 namespace smack {
+    class ExecutionPath {
+        vector<StatePtr> exePath;
+    public:
+        ExecutionPath() {exePath.clear();}
+        explicit ExecutionPath(vector<StatePtr> pathVec) {exePath = std::move(pathVec);}
+        void setPath(vector<StatePtr> pathVec) {exePath = std::move(pathVec);}
+        size_t length() {return exePath.size();}
+        StatePtr operator [] (int pos) const;
+    };
+
     class CFGExecutor {
     private:
         CFGPtr cfg;
-        vector<vector<StatePtr>> exePathVec;
+        vector<ExecutionPath> exePathVec;
         int bound;
         int step;
 

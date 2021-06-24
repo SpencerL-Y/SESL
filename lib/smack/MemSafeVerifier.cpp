@@ -158,7 +158,7 @@ namespace smack {
             }
             previous = s;
         }
-        DEBUG_WITH_COLOR(std::cout << "CHECK: Inferece check pass!"<< std::endl, color::green);
+        DEBUG_WITH_COLOR(std::cout << "CHECK: Inference check pass!"<< std::endl, color::green);
         return std::pair<bool, const Stmt*>(false, nullptr);
     }
 

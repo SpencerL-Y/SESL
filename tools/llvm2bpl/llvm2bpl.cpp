@@ -189,12 +189,13 @@ int main(int argc, char **argv) {
   // Shaobo: sea-dsa is inconsistent with the pass below.
   // pass_manager.add(llvm::createInternalizePass());
   pass_manager.add(llvm::createPromoteMemoryToRegisterPass());
-
-  if (StaticUnroll) {
+  //StaticUnroll
+  if (true) {
     pass_manager.add(llvm::createLoopSimplifyPass());
     pass_manager.add(llvm::createLoopRotatePass());
     // pass_manager.add(llvm::createIndVarSimplifyPass());
-    pass_manager.add(llvm::createLoopUnrollPass(32767));
+    //32767
+    pass_manager.add(llvm::createLoopUnrollPass(3));
   }
 
   // pass_manager.add(new llvm::StructRet());
@@ -268,7 +269,7 @@ int main(int argc, char **argv) {
     files.push_back(F);
     // TODOsh: currently the symbolic execution is in this pass
     pass_manager.add(new smack::SmackModuleGenerator());
-    pass_manager.add(new smack::MemSafeVerifier());
+    // pass_manager.add(new smack::MemSafeVerifier());
     pass_manager.add(new smack::BplFilePrinter(F->os()));
   }
 

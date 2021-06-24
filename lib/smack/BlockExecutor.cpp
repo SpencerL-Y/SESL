@@ -535,6 +535,15 @@ namespace smack{
                     SpatialLiteral::Kind::BLK == i->getId() && 
                     currentIndex == splitBlkIndex){
                     const BlkLit* breakBlk = (const BlkLit*) i;
+                    if(breakBlk->isEmpty()){
+                        const Expr* newPure = sh->getPure();
+                        std::list<const SpatialLiteral*> newSpatialExpr;
+                        const SpatialLiteral* errLit = SpatialLiteral::errlit(true);
+                        newSpatialExpr.push_back(errLit);
+                        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                        newSH->print(std::cout);
+                        return newSH;
+                    }
                     bool leftEmpty = (this->computeArithmeticOffsetValue(arg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
                     const SpatialLiteral* leftBlk = SpatialLiteral::blk(
                         breakBlk->getFrom(),
@@ -650,7 +659,13 @@ namespace smack{
                                 return newSH;
                             } else {
                                 CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
-                            }
+                            }const Expr* newPure = sh->getPure();
+                // std::list<const SpatialLiteral*> newSpatialExpr;
+                // const SpatialLiteral* errLit = SpatialLiteral::errlit(true);
+                // newSpatialExpr.push_back(errLit);
+                // SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                // newSH->print(std::cout);
+                // return newSH;
                         } else {
                             CFDEBUG(std::cout << "ERROR: load error, this should be a PT predicate." << std::endl;);
                             return sh;
@@ -662,14 +677,17 @@ namespace smack{
                 }
             } else if(!posResult.first && 0 == posResult.second) {
                 // TODOsh Grammatik: unify the error by checking the grammar later. 
-                CFDEBUG(std::cout << "INFO: INFERENCE TO ERR SH..." << std::endl;)
-                const Expr* newPure = sh->getPure();
-                std::list<const SpatialLiteral*> newSpatialExpr;
-                const SpatialLiteral* errLit = SpatialLiteral::errlit(true);
-                newSpatialExpr.push_back(errLit);
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
-                newSH->print(std::cout);
-                return newSH;
+                // CFDEBUG(std::cout << "INFO: INFERENCE TO ERR SH..." << std::endl;)
+                // const Expr* newPure = sh->getPure();
+                // std::list<const SpatialLiteral*> newSpatialExpr;
+                // const SpatialLiteral* errLit = SpatialLiteral::errlit(true);
+                // newSpatialExpr.push_back(errLit);
+                // SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                // newSH->print(std::cout);
+                // return newSH;
+
+                CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory..." << std::endl;)
+                return sh;
             } else if(!posResult.first && -1 == posResult.second){  
                 CFDEBUG(std::cout << "ERROR: Alloc name store split not get !!" << std::endl;);
             } else {

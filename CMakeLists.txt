@@ -150,6 +150,7 @@ add_library(smackTranslator STATIC
   include/smack/VarEquiv.h
   include/smack/VarFactory.h
   include/smack/StoreSplitter.h
+  include/smack/CFGExecutor.h
   lib/smack/Translator.cpp
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp
@@ -187,7 +188,8 @@ add_library(smackTranslator STATIC
   lib/smack/VarEquiv.cpp
   lib/smack/VarFactory.cpp
   lib/smack/StoreSplitter.cpp
-        include/utils/SplitUtil.cpp include/utils/SplitUtil.h include/smack/SpatialElement.cpp include/smack/SpatialElement.h)
+  lib/smack/CFGExecutor.cpp
+  include/utils/SplitUtil.cpp include/utils/SplitUtil.h include/smack/SpatialElement.cpp include/smack/SpatialElement.h)
 
 add_executable(llvm2bpl
   tools/llvm2bpl/llvm2bpl.cpp

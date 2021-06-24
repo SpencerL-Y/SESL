@@ -23,7 +23,10 @@ namespace smack
         std::vector<std::weak_ptr<CFGState>> predecessors, successors;
         std::weak_ptr<CFG> cfgPtr;
         friend class CFG;
+        std::vector<std::string> attr;
     public:
+        std::vector<std::string> getAttr() {return attr;}
+        void addAttr(const std::string& s);
         explicit CFGState(Block* block = nullptr) : stateBlock(block) {}
         void addEdge(const EdgePtr& edgePtr);
         void addEdge(const std::string& blockName, EdgePtr edgePtr);

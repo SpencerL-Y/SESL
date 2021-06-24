@@ -37,4 +37,8 @@ namespace smack
     std::vector<std::weak_ptr<CFGState>> CFGState::getSuccessors() {
         return successors;
     }
+
+    void CFGState::addAttr(const std::string &s) {
+        return attr.push_back(s);
+    }
 } // namespace smack

@@ -1,4 +1,3 @@
-
 #include "smack/CFG.h"
 #include "smack/SmackModuleGenerator.h"
 #include <iostream>
@@ -9,8 +8,8 @@
 using namespace std;
 namespace smack
 {
-    CFG::CFG(ProcDecl *procDecl) : proc(procDecl) {
-        buildCFG();
+    CFG::CFG(ProcDecl *procDecl) {
+        setProc(procDecl);
     }
 
     StatePtr CFG::getState(const std::string& blockName, Block* block) {
@@ -32,9 +31,13 @@ namespace smack
 
     void CFG::setProc(ProcDecl *procDecl) {
         proc = procDecl;
+        buildCFG();
+        dfn.clear(); low.clear(); inStack.clear(); SCCNumber.clear();
+        sccNumber = step = 0;
+        if (states.count("$bb0")) {
+            markSCC("$bb0");
+        }
     }
-
-
 
     void CFG::buildCFG() {
         if (!proc) return;
@@ -178,6 +181,57 @@ namespace smack
             return {type, ans / 8};
         }
         return {type, 0};
+    }
+
+    void CFG::markSCC(std::string start) {
+        static std::vector<string> stk;
+        dfn[start] = low[start] = step ++;
+        stk.push_back(start); inStack[start] = 1;
+        auto successors = getState(start)->getSuccessors();
+        for (auto &toPtr : successors) {
+            auto to = toPtr.lock()->getBlockName();
+            if (!dfn.count(to)) {
+                markSCC(to);
+                low[start] = min(low[start], low[to]);
+            } else {
+                if (inStack[to]) low[start] = min(low[start], dfn[to]);
+            }
+        }
+
+        if (dfn[start] == low[start]) {
+            sccNumber ++;
+            DEBUG_WITH_COLOR(cout << "In " << start << endl;, color::white);
+            string top;
+            do {
+                top = stk.back(); stk.pop_back();
+                inStack[top] = 0;
+                SCCNumber[top] = sccNumber;
+                DEBUG_WITH_COLOR( cout << "pop: " << top << endl;, color::white);
+            } while (top != start);
+            DEBUG_WITH_COLOR(cout << "pop finished" <<endl;, color::white);
+            if (successors.empty()) return;
+            for (auto &toPtr : successors) {
+                if (SCCNumber[toPtr.lock()->getBlockName()] == sccNumber) {
+                    getState(start)->addAttr("entry_point");
+                    return;
+                }
+            }
+        }
+    }
+
+    StatePtr CFG::getEntryState() {
+        return getState("$bb0");
+    }
+
+    void CFG::printSCCNumber() {
+        for (auto &i : SCCNumber) {
+            cout << i.first << " " << i.second << " ";
+            auto v = getState(i.first)->getAttr();
+            if (!v.empty()) {
+                for (auto &attr : v) cout << attr << " ";
+            }
+            cout << endl;
+        }
     }
 
 } // namespace name

@@ -99,7 +99,8 @@ endif()
 include_directories(include)
 include_directories(sea-dsa/include)
 
-add_library(utils STATIC
+add_library(
+  utils STATIC
   include/utils/Devirt.h
   include/utils/MergeGEP.h
   include/utils/SimplifyInsertValue.h

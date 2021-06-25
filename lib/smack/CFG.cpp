@@ -179,6 +179,8 @@ namespace smack
                 ans = ans * 10 + type[i] - '0';
             }
             return {type, ans / 8};
+        } else {
+            return {"fresh", 0};
         }
         return {type, 0};
     }

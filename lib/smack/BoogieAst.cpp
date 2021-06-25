@@ -707,13 +707,22 @@ void VarExpr::print(std::ostream &os) const { os << var; }
 z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
   std::pair<std::string, int> typeResult = cfg->getVarDetailType(this->name());
   int byteNum = 1;
-  if('i' == typeResult.first[0]){
+  if(typeResult.first.compare("fresh")){
+    if('i' == typeResult.first[0]){
      byteNum = typeResult.second/8;
-  } else if('r' == typeResult.first[0]){
-     byteNum = PTR_BYTEWIDTH;
+    } else if('r' == typeResult.first[0]){
+       byteNum = PTR_BYTEWIDTH;
+    } else {
+       CFDEBUG(std::cout << "ERROR: UNSOLVED Variable translation" << std::endl;);
+    }
   } else {
-     CFDEBUG(std::cout << "ERROR: UNSOLVED Variable translation" << std::endl;);
+    byteNum = varFac->getFreshVarSize(this);
   }
+
+  if(byteNum < 0){
+    CFDEBUG(std::cout << "ERROR: translate variable size error .." << std::endl;);
+  }
+  
   z3::expr res = z3Ctx.int_val(0);
   for(int i = 0; i < byteNum; i++){
     res = 

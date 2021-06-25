@@ -13,12 +13,6 @@ namespace smack
         }
     }
 
-    const VarExpr* VarFactory::getFreshVar(int byteSize){
-        const VarExpr* fresh = new VarExpr("$fresh" + std::to_string(freshIndex));
-        this->freshVar2Byte[fresh] = byteSize;
-        return fresh;
-    }
-
     const IntLit* VarFactory::getInt(int i){
         if(this->intsMap.find(i) == this->intsMap.end()){
             const IntLit* newInt = new IntLit((long long)i);
@@ -28,5 +22,20 @@ namespace smack
             return this->intsMap[i];
         }
     }
+
+    const VarExpr* VarFactory::getFreshVar(int byteSize){
+        const VarExpr* fresh = new VarExpr("$fresh" + std::to_string(freshIndex));
+        this->freshVar2Byte[fresh] = byteSize;
+        return fresh;
+    } 
+    
+    int VarFactory::getFreshVarSize(const VarExpr* var){
+        if(this->freshVar2Byte.find(var) != this->freshVar2Byte.end()){
+            return this->freshVar2Byte[var];
+        } else {
+            return -1;
+        }
+     }
+    
 
 } // namespace smack

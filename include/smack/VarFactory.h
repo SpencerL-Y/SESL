@@ -23,6 +23,7 @@ namespace smack
         const VarExpr* getVar(std::string name);
         const IntLit* getInt(int i);
         const VarExpr* getFreshVar(int byteSize);
+        int getFreshVarSize(const VarExpr* var);
         ~VarFactory(){};
     };
     typedef std::shared_ptr<VarFactory> VarFactoryPtr;

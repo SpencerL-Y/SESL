@@ -43,6 +43,7 @@ namespace smack
         void printCFG();
         void printSCCNumber();
         StatePtr getEntryState();
+        void addVarType(std::string varName, std::string type);
         ~CFG() = default;
     };
     typedef std::shared_ptr<CFG> CFGPtr;

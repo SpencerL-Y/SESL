@@ -563,6 +563,7 @@ namespace smack{
                         //arg2,
                         breakBlk->getBlkName()
                     );
+                    
                     CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
                     long long size = stepSize.second;
                     bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;

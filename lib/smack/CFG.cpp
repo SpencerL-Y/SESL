@@ -234,4 +234,8 @@ namespace smack
         }
     }
 
+    void CFG::addVarType(std::string varName, std::string type) {
+        varType[varName] = type;
+    }
+
 } // namespace name

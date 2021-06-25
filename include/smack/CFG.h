@@ -10,6 +10,7 @@
 #include "CFGState.h"
 #include "CFGEdge.h"
 #include <memory>
+#include "VarFactory.h"
 // This is the CFG constructed from the BoogieAST defined program which contains a set of procedure declarations.
 // Currently only support the intraprocedural conversion for main function.
 namespace smack
@@ -24,7 +25,7 @@ namespace smack
         void printCFG(const std::string& start, bool fresh = true);
         void generateTypeInfo();
         // SCC related
-        std::unordered_map<std::string , int> dfn, low, inStack, SCCNumber;
+        std::unordered_map<std::string, int> dfn, low, inStack, SCCNumber;
         int sccNumber = 0, step = 0;
     public:
         void markSCC(std::string start);

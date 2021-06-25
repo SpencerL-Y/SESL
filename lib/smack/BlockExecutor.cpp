@@ -551,14 +551,18 @@ namespace smack{
                         breakBlk->getBlkName(),
                         leftEmpty
                     );
-
-                    const SpatialLiteral* storedPt = SpatialLiteral::pt(
-                        arg1,
-                        arg2,
-                        breakBlk->getBlkName()
-                    );
+                    // TODOsh: add fresh variable here
 
                     std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varArg1->name());
+                    const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
+                    newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
+                    this->varEquiv->addNewName(freshVar->name());
+                    const SpatialLiteral* storedPt = SpatialLiteral::pt(
+                        arg1,
+                        freshVar,
+                        //arg2,
+                        breakBlk->getBlkName()
+                    );
                     CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
                     long long size = stepSize.second;
                     bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
@@ -655,6 +659,7 @@ namespace smack{
                                 std::cout << std::endl;
                                 return newSH;
                             } else if(toExpr->isValue()){
+                                // This branch should be deleted since all pt rhs are now variables.
                                 const IntLit* intToExpr = (const IntLit*) toExpr;
                                 const Expr* newPure = Expr::and_(
                                     sh->getPure(),
@@ -682,13 +687,16 @@ namespace smack{
                     }
                 }
             } else if(!posResult.first && 0 == posResult.second) {
-                // TODOsh: use fresh variable for the nondeterministic value
+                //  Use fresh variable for the nondeterministic value
                 CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory..." << std::endl;);
                 int freshVarByteSize = this->cfg->getVarDetailType(lhsVarName).second/8;
                 assert(freshVarByteSize > 0);
+                // TODOSh: Debug here
+                const VarExpr* freshVar = this->varFactory->getFreshVar(freshVarByteSize);
+                this->varEquiv->addNewName(freshVar->name());
                 const Expr* newPure =  Expr::and_(
                     sh->getPure(),
-                    Expr::eq(Expr::lit(lhsVarName), this->varFactory->getFreshVar())
+                    Expr::eq(Expr::lit(lhsVarName), freshVar)
                 );
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
                 newSH->print(std::cout);

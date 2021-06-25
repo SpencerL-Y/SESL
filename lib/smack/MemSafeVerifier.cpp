@@ -88,7 +88,7 @@ namespace smack {
         
         be->setBlock(block);
         z3::context ctx;
-        auto trans = std::make_shared<smack::TransToZ3>(ctx, currSH, mainGraph);
+        auto trans = std::make_shared<smack::TransToZ3>(ctx, currSH, mainGraph, varFac);
         // z3::expr var1 = ctx.int_const("x");
         // z3::expr trueVal = ctx.bool_val(true);
         // z3::expr falseVal = ctx.bool_val(false);

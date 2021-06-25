@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include "smack/VarEquiv.h"
 #include "smack/CFG.h"
+#include "smack/VarFactory.h"
 
 namespace smack{
     class Translator{
@@ -28,14 +29,15 @@ namespace smack{
         std::shared_ptr<SymbolicHeapExpr> shExpr;
         z3::context* z3Ctx;
         CFGPtr cfg;
+        VarFactoryPtr varFac;
         std::unordered_map<std::string, z3::expr> z3VarMap;
         z3::expr pure;
         z3::expr spatial;
     public:
         void setSymbolicHeapHExpr(const std::shared_ptr<SymbolicHeapExpr>& shExprPtr);
         explicit TransToZ3(z3::context& ctx, std::shared_ptr<SymbolicHeapExpr> shExprPtr,
-        CFGPtr cfg) :
-        z3Ctx(&ctx), shExpr(std::move(shExprPtr)), pure(*z3Ctx), spatial(*z3Ctx), cfg(cfg) {}
+        CFGPtr cfg, VarFactoryPtr varf) :
+        z3Ctx(&ctx), shExpr(std::move(shExprPtr)), pure(*z3Ctx), spatial(*z3Ctx), cfg(cfg), varFac(varf) {}
         z3::expr getPure();
         z3::expr getSpatial();
         z3::expr getFinalExpr();

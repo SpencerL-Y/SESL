@@ -397,7 +397,7 @@ namespace smack{
                     this->varFactory->getVar(paramVarName),
                     retVarName
                 ); 
-                bool empty = (param->translateToInt(this->varEquiv).second > 0) ? true : false;
+                bool empty = (param->translateToInt(this->varEquiv).second > 0) ? false : true;
 
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
                     this->varFactory->getVar(retVarName),
@@ -555,6 +555,7 @@ namespace smack{
 
                     std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varArg1->name());
                     const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
+                    this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
                     newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
                     this->varEquiv->addNewName(freshVar->name());
                     const SpatialLiteral* storedPt = SpatialLiteral::pt(
@@ -563,7 +564,7 @@ namespace smack{
                         //arg2,
                         breakBlk->getBlkName()
                     );
-                    
+
                     CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
                     long long size = stepSize.second;
                     bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
@@ -689,15 +690,17 @@ namespace smack{
                 }
             } else if(!posResult.first && 0 == posResult.second) {
                 //  Use fresh variable for the nondeterministic value
-                CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory..." << std::endl;);
-                int freshVarByteSize = this->cfg->getVarDetailType(lhsVarName).second/8;
+                CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory... "  << std::endl;);
+                int freshVarByteSize = this->cfg->getVarDetailType(lhsVarName).second;
+                std::cout << "load size: " << freshVarByteSize << std::endl;
                 assert(freshVarByteSize > 0);
                 // TODOSh: Debug here
                 const VarExpr* freshVar = this->varFactory->getFreshVar(freshVarByteSize);
                 this->varEquiv->addNewName(freshVar->name());
+                this->cfg->addVarType(freshVar->name(), "i" + std::to_string(freshVarByteSize * 8));
                 const Expr* newPure =  Expr::and_(
                     sh->getPure(),
-                    Expr::eq(Expr::lit(lhsVarName), freshVar)
+                    Expr::eq(this->varFactory->getVar(lhsVarName), freshVar)
                 );
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
                 newSH->print(std::cout);

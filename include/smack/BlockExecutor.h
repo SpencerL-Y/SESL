@@ -4,6 +4,7 @@
 
 #include <utility>
 #include <regex>
+#include <string>
 #include "BoogieAst.h"
 #include "llvm/IR/DebugInfo.h"
 #include "smack/AddTiming.h"

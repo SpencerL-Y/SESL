@@ -16,8 +16,8 @@ typedef struct {
 int main(){
     int num = 2;
     int *j = (int*)malloc(num*sizeof(int));
-    // *(j) = 1110;
-    int nnum = *(j+1) + (-1); 
+    *(j) = 1110;
+    int nnum = *(j) + (-1); 
     num = num + 1;
 
 // // new example

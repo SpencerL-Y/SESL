@@ -490,8 +490,8 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr va
               const VarExpr* rhsVar = (const VarExpr*) rhs;
 
               // pointer variable are all set to size 32
-              int leftVarSize = (cfg->getVarDetailType(lhsVar->name()).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(lhsVar->name()).second/8;
-              int rightVarSize = (cfg->getVarDetailType(rhsVar->name()).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(rhsVar->name()).second/8;
+              int leftVarSize = (cfg->getVarDetailType(lhsVar->name()).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(lhsVar->name()).second;
+              int rightVarSize = (cfg->getVarDetailType(rhsVar->name()).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(rhsVar->name()).second;
 
               z3::expr resultEquality = z3Ctx.bool_val(true);
               if(leftVarSize == rightVarSize){
@@ -705,11 +705,13 @@ void UpdExpr::print(std::ostream &os) const {
 void VarExpr::print(std::ostream &os) const { os << var; }
 
 z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+  // TODOsh: later remove the varFac and dealing fresh variables in CFG
+  CFDEBUG(std::cout << "translating var" << this->name() << std::endl;);
   std::pair<std::string, int> typeResult = cfg->getVarDetailType(this->name());
   int byteNum = 1;
   if(typeResult.first.compare("fresh")){
     if('i' == typeResult.first[0]){
-     byteNum = typeResult.second/8;
+     byteNum = typeResult.second;
     } else if('r' == typeResult.first[0]){
        byteNum = PTR_BYTEWIDTH;
     } else {
@@ -883,7 +885,7 @@ void ErrorLit::print(std::ostream &os) const{
 z3::expr ErrorLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
   CDEBUG(std::cout << "errorLit" << std::endl;);
   // Since error occurs, we set the pure constraint pure to false
-  return (z3Ctx.bool_val(false) && slah_api::newEmp(z3Ctx));
+  return (slah_api::newEmp(z3Ctx));
 }
 
 z3::expr BoolLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {

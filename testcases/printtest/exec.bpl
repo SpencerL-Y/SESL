@@ -13,13 +13,10 @@ procedure {:entrypoint} main()
   var $p4: ref32;
   var $i5: i32;
   var $i6: i32;
-  var $i7: i32;
-  var $i8: i32;
-  var $i9: i32;
-  var $p10: ref8;
+  var $p7: ref8;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  $i0 := $sext.i32.i64(2);
+  $i0 := $sext.i32.i64(5);
   $i1 := $mul.i64($i0, 4);
   call $p2 := malloc($i1);
   $p3 := $bitcast.ref.ref($p2);
@@ -27,13 +24,8 @@ $bb0:
   $i5 := $load.i32($M.0, $p4);
   $i6 := $add.i32($i5, $sub.i32(0, 1));
   call {:cexpr "nnum"} boogie_si_record_i32($i6);
-  $i7 := $load.i32($M.1, $p3);
-  $i8 := $add.i32($i7, 1);
-  call {:cexpr "nnnum"} boogie_si_record_i32($i8);
-  $i9 := $add.i32(2, 1);
-  call {:cexpr "num"} boogie_si_record_i32($i9);
-  $p10 := $bitcast.ref.ref($p3);
-  call free_($p10);
+  $p7 := $bitcast.ref.ref($p3);
+  call free_($p7);
   $r := 0;
   return;
 }

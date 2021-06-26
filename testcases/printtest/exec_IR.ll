@@ -1,12 +1,12 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-v8cb0d67.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-wwnyj34i.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
 ; Function Attrs: noinline nounwind uwtable
 define dso_local i32 @main() #0 !dbg !10 {
-  call void @llvm.dbg.value(metadata i32 2, metadata !13, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  %1 = sext i32 2 to i64, !dbg !16, !verifier.code !15
+  call void @llvm.dbg.value(metadata i32 5, metadata !13, metadata !DIExpression()), !dbg !14, !verifier.code !15
+  %1 = sext i32 5 to i64, !dbg !16, !verifier.code !15
   %2 = mul i64 %1, 4, !dbg !17, !verifier.code !15
   %3 = call noalias i8* @malloc(i64 %2) #3, !dbg !18, !verifier.code !15
   %4 = bitcast i8* %3 to i32*, !dbg !19, !verifier.code !15
@@ -15,15 +15,9 @@ define dso_local i32 @main() #0 !dbg !10 {
   %6 = load i32, i32* %5, align 4, !dbg !22, !verifier.code !15
   %7 = add nsw i32 %6, -1, !dbg !23, !verifier.code !15
   call void @llvm.dbg.value(metadata i32 %7, metadata !24, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  %8 = load i32, i32* %4, align 4, !dbg !25, !verifier.code !15
-  %9 = add nsw i32 %8, 1, !dbg !26, !verifier.code !15
-  call void @llvm.dbg.value(metadata i32 %9, metadata !27, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  %10 = add nsw i32 2, 1, !dbg !28, !verifier.code !15
-  call void @llvm.dbg.value(metadata i32 %10, metadata !13, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  call void @llvm.dbg.value(metadata i32* %4, metadata !29, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  %11 = bitcast i32* %4 to i8*, !dbg !30, !verifier.code !15
-  call void @free(i8* %11) #3, !dbg !31, !verifier.code !15
-  ret i32 0, !dbg !32, !verifier.code !15
+  %8 = bitcast i32* %4 to i8*, !dbg !25, !verifier.code !15
+  call void @free(i8* %8) #3, !dbg !26, !verifier.code !15
+  ret i32 0, !dbg !27, !verifier.code !15
 }
 
 ; Function Attrs: nounwind readnone speculatable willreturn
@@ -77,11 +71,6 @@ attributes #3 = { nounwind }
 !22 = !DILocation(line: 19, column: 16, scope: !10)
 !23 = !DILocation(line: 19, column: 23, scope: !10)
 !24 = !DILocalVariable(name: "nnum", scope: !10, file: !1, line: 19, type: !5)
-!25 = !DILocation(line: 20, column: 17, scope: !10)
-!26 = !DILocation(line: 20, column: 22, scope: !10)
-!27 = !DILocalVariable(name: "nnnum", scope: !10, file: !1, line: 20, type: !5)
-!28 = !DILocation(line: 21, column: 15, scope: !10)
-!29 = !DILocalVariable(name: "freep", scope: !10, file: !1, line: 22, type: !4)
-!30 = !DILocation(line: 23, column: 10, scope: !10)
-!31 = !DILocation(line: 23, column: 5, scope: !10)
-!32 = !DILocation(line: 41, column: 1, scope: !10)
+!25 = !DILocation(line: 20, column: 10, scope: !10)
+!26 = !DILocation(line: 20, column: 5, scope: !10)
+!27 = !DILocation(line: 38, column: 1, scope: !10)

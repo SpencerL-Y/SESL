@@ -522,7 +522,7 @@ namespace smack{
             const VarExpr* varArg1 = (const VarExpr*) arg1;
             int offset = this->varEquiv->getOffset(varArg1->name());
             std::string mallocName = this->varEquiv->getBlkName(varArg1->name());
-            // TODOsh: Attention here, the variable may not contain the size info
+
             int splitBlkIndex = this->storeSplit->addSplit(mallocName, offset);
             CFDEBUG(std::cout << "malloc name: " << mallocName << " splitIndex: " << splitBlkIndex <<  std::endl);
             int currentIndex = 1;
@@ -607,11 +607,12 @@ namespace smack{
             std::string ldPtrName = ldPtr->name();
             CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
             int loadPosOffset = this->varEquiv->getOffset(ldPtrName);
-            std::string blkName = this->varEquiv->getBlkName(ldPtrName);
-            int blkSize = sh->getBlkSize(blkName)->translateToInt(this->varEquiv).second;
+            std::string mallocName = this->varEquiv->getBlkName(ldPtrName);
+            int blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
             if(loadPosOffset >= blkSize){
                 // If the ptr offset is overflow
-                std::list<const SpatialLiteral*> newSpatial;
+                std::list<const SpatialLiteral*> newSpatial;\
+                // the symbolic heap is set to error
                 newSpatial.push_back(SpatialLiteral::errlit(true));
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
                 newSH->print(std::cout);
@@ -620,7 +621,7 @@ namespace smack{
             }
 
             std::pair<bool, int> posResult = this->storeSplit->getOffsetPos(
-                blkName,
+                mallocName,
                 loadPosOffset
             );
             CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
@@ -630,7 +631,9 @@ namespace smack{
                 //              2*1+1      2*2+1
                 
                 int loadIndex = 2*posResult.second + 1;
+                // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
                 bool startCounting = false;
+                // increase index by 1 when counting is started 
                 int countIndex = 1;
                 for(const SpatialLiteral* spl : sh->getSpatialExpr()){
                     if(SpatialLiteral::Kind::SPT == spl->getId()){
@@ -640,6 +643,7 @@ namespace smack{
                         }
                     }
                     if(countIndex == loadIndex){
+                        // find the correct index and load the content out
                         if(SpatialLiteral::Kind::PT == spl->getId()){
                             const PtLit* pt = (const PtLit*) spl;
                             const Expr* toExpr = pt->getTo();
@@ -690,11 +694,12 @@ namespace smack{
                 }
             } else if(!posResult.first && 0 == posResult.second) {
                 //  Use fresh variable for the nondeterministic value
+                //  and modify the value of the original one 
                 CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory... "  << std::endl;);
                 int freshVarByteSize = this->cfg->getVarDetailType(lhsVarName).second;
                 std::cout << "load size: " << freshVarByteSize << std::endl;
                 assert(freshVarByteSize > 0);
-                // TODOSh: Debug here
+
                 const VarExpr* freshVar = this->varFactory->getFreshVar(freshVarByteSize);
                 this->varEquiv->addNewName(freshVar->name());
                 this->cfg->addVarType(freshVar->name(), "i" + std::to_string(freshVarByteSize * 8));
@@ -702,7 +707,68 @@ namespace smack{
                     sh->getPure(),
                     Expr::eq(this->varFactory->getVar(lhsVarName), freshVar)
                 );
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                // after loading we have a fresh variable for the points to so we also need to modify the spatial literals
+                // This piece of code is related to executeStore
+                const Expr* arg1 = ldPtr;
+                const Expr* arg2 = freshVar;
+                int splitBlkIndex = this->storeSplit->addSplit(mallocName, loadPosOffset);
+                std::list<const SpatialLiteral*> newSpatial;
+                int currentIndex = 1;
+                for(const SpatialLiteral* i : sh->getSpatialExpr()){
+                    if(!i->getBlkName().compare(mallocName) &&
+                       currentIndex == splitBlkIndex &&
+                       SpatialLiteral::Kind::BLK == i->getId()){
+                        const BlkLit* breakBlk = (const BlkLit*) i;
+                        if(breakBlk->isEmpty()){
+                            const Expr* newPure = sh->getPure();
+                            std::list<const SpatialLiteral*> newSpatialExpr;
+                            const SpatialLiteral* errLit =  SpatialLiteral::errlit(true);
+                            newSpatialExpr.push_back(errLit);
+                            SHExprPtr newSH =   std::make_shared<SymbolicHeapExpr>(newPure,   newSpatialExpr);
+                            newSH->print(std::cout);
+                            return newSH;
+                        }
+                        bool leftEmpty = (this->computeArithmeticOffsetValue(arg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
+                        
+                        const SpatialLiteral* leftBlk = SpatialLiteral::blk(
+                            breakBlk->getFrom(),
+                            arg1,
+                            breakBlk->getBlkName(),
+                            leftEmpty
+                        );
+
+                        const SpatialLiteral* storedPt = SpatialLiteral::pt(
+                            arg1, 
+                            freshVar,
+                            breakBlk->getBlkName()
+                        );
+                        long long size = (long long) freshVarByteSize;
+                        bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
+
+                        const SpatialLiteral* rightBlk = SpatialLiteral::blk(
+                            Expr::add(arg1, Expr::lit(size)),
+                            breakBlk->getTo(),
+                            breakBlk->getBlkName(),
+                            rightEmpty
+                        );
+
+                        newSpatial.push_back(leftBlk);
+                        newSpatial.push_back(storedPt);
+                        newSpatial.push_back(rightBlk);
+
+                        currentIndex += 1;
+                    } else if(!i->getBlkName().compare(mallocName) && 
+                            SpatialLiteral::Kind::BLK == i->getId() && 
+                            currentIndex != splitBlkIndex){
+                        newSpatial.push_back(i);
+                        currentIndex += 1;
+                    } else {
+                        newSpatial.push_back(i);
+                    }
+
+                }
+
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
                 newSH->print(std::cout);
                 std::cout << std::endl;
                 return newSH;

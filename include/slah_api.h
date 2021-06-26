@@ -32,9 +32,9 @@ private:
 
 public:
 
-	static z3::expr sep(z3::expr spatialFormula1, z3::expr spatialFormula2);//spatialFormula * spatialAtom
+	static z3::expr sep(z3::expr spatialFormula1, z3::expr spatialFormula2);//spatialFormula1 * spatialFormula2
 
-	static z3::expr newSep(z3::expr_vector spatialAtomSet);//spatialAtom1 * spatialAtom2 * ...
+	static z3::expr newSep(z3::expr_vector spatialFormulaSet);//spatialFormla1 * spatialFormula2 * ...
 
 	static z3::expr newBlk(z3::expr x, z3::expr y);//blk(x,y)
 

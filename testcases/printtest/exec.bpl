@@ -10,21 +10,30 @@ procedure {:entrypoint} main()
   var $i1: i64;
   var $p2: ref8;
   var $p3: ref32;
-  var $i4: i32;
+  var $p4: ref32;
   var $i5: i32;
   var $i6: i32;
+  var $i7: i32;
+  var $i8: i32;
+  var $i9: i32;
+  var $p10: ref8;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
   $i0 := $sext.i32.i64(2);
   $i1 := $mul.i64($i0, 4);
   call $p2 := malloc($i1);
   $p3 := $bitcast.ref.ref($p2);
-  $M.0 := $store.i32($M.0, $p3, 1110);
-  $i4 := $load.i32($M.0, $p3);
-  $i5 := $add.i32($i4, $sub.i32(0, 1));
-  call {:cexpr "nnum"} boogie_si_record_i32($i5);
-  $i6 := $add.i32(2, 1);
-  call {:cexpr "num"} boogie_si_record_i32($i6);
+  $p4 := $add.ref($p3, $mul.ref(1, 4));
+  $i5 := $load.i32($M.0, $p4);
+  $i6 := $add.i32($i5, $sub.i32(0, 1));
+  call {:cexpr "nnum"} boogie_si_record_i32($i6);
+  $i7 := $load.i32($M.1, $p3);
+  $i8 := $add.i32($i7, 1);
+  call {:cexpr "nnnum"} boogie_si_record_i32($i8);
+  $i9 := $add.i32(2, 1);
+  call {:cexpr "num"} boogie_si_record_i32($i9);
+  $p10 := $bitcast.ref.ref($p3);
+  call free_($p10);
   $r := 0;
   return;
 }
@@ -38,11 +47,17 @@ procedure  malloc($i0: i64)
 {
   call $r := $malloc($i0);
 }
+const free_: ref;
+axiom (free_ == $sub.ref(0, 4128));
+procedure  free_($p0: ref)
+{
+  call $free($p0);
+}
 const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 4128));
+axiom (llvm.dbg.value == $sub.ref(0, 5160));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 5160));
+axiom (__SMACK_static_init == $sub.ref(0, 6192));
 procedure  __SMACK_static_init()
 {
 $bb0:

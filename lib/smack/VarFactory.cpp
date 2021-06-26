@@ -26,6 +26,7 @@ namespace smack
     const VarExpr* VarFactory::getFreshVar(int byteSize){
         const VarExpr* fresh = new VarExpr("$fresh" + std::to_string(freshIndex));
         this->freshVar2Byte[fresh] = byteSize;
+        this->freshIndex++;
         return fresh;
     } 
     

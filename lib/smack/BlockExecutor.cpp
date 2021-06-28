@@ -119,8 +119,7 @@ namespace smack{
                         const VarExpr* rhsVar = (const VarExpr*) arg1;
                         std::string rhsVarName = rhsVar->name();
                         varEquiv->linkName(lhsVarName, rhsVarName);
-                        varEquiv->linkBlkName(lhsVarName, rhsVarName);
-                        if(ExprType::INT == arg1->getType()){
+                        if(this->varEquiv->getIntVal(rhsVar->name()).first){
                             const IntLit* intValExpr = (const IntLit*) arg1;
                             this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
                         }
@@ -355,7 +354,9 @@ namespace smack{
                 return this->executeMalloc(sh, call);
             } else if(!call->getProc().compare("free_")){
                 return this->executeFree(sh, call);
-            } 
+            } else if(!call->getProc().compare("$alloc")){
+                return this->executeAlloc(sh, call);
+            }
             else {
                 CFDEBUG(std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl);
             }
@@ -380,6 +381,7 @@ namespace smack{
                 this->varEquiv->addNewName(retVarName);
                 this->varEquiv->addNewBlkName(retVarName);
                 this->varEquiv->addNewOffset(retVarName, 0);
+                this->varEquiv->setStructArrayPtr(retVarName, false);
                 this->storeSplit->createAxis(retVarName);
                 this->storeSplit->setMaxOffset(retVarName, param->translateToInt(this->varEquiv).second);
 
@@ -420,6 +422,7 @@ namespace smack{
                 this->varEquiv->addNewName(retVarName);
                 this->varEquiv->addNewBlkName(retVarName);
                 this->varEquiv->addNewOffset(retVarName, 0);
+                this->varEquiv->setStructArrayPtr(retVarName, false);
                 this->storeSplit->createAxis(retVarName);
                 this->storeSplit->setMaxOffset(retVarName, sizeExpr->translateToInt(this->varEquiv).second);
 
@@ -545,40 +548,79 @@ namespace smack{
                         return newSH;
                     }
                     bool leftEmpty = (this->computeArithmeticOffsetValue(arg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
-                    const SpatialLiteral* leftBlk = SpatialLiteral::blk(
-                        breakBlk->getFrom(),
-                        arg1,
-                        breakBlk->getBlkName(),
-                        leftEmpty
-                    );
-                    // TODOsh: add fresh variable here
+                    const SpatialLiteral*  leftBlk = NULL;
+                    if(this->varEquiv->isStructArrayPtr(mallocName)){
+                        const SpatialLiteral* leftBlk = SpatialLiteral::gcBlk(
+                            breakBlk->getFrom(),
+                            arg1,
+                            breakBlk->getBlkName(),
+                            leftEmpty
+                        );
+                        // TODOsh: add fresh variable here
+    
+                        std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varArg1->name());
+                        const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
+                        this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
+                        newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
+                        this->varEquiv->addNewName(freshVar->name());
+                        const SpatialLiteral* storedPt = SpatialLiteral::gcPt(
+                            arg1,
+                            freshVar,
+                            //arg2,
+                            breakBlk->getBlkName()
+                        );
+    
+                        CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
+                        long long size = stepSize.second;
+                        bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) - this->computeArithmeticOffsetValue    (breakBlk->getTo()) == 0) ? true : false;
+                        const SpatialLiteral* rightBlk = SpatialLiteral::gcBlk(
+                            Expr::add(arg1, Expr::lit(size)),
+                            breakBlk->getTo(),
+                            breakBlk->getBlkName(),
+                            rightEmpty
+                        );
+                        newSpatial.push_back(leftBlk);
+                        newSpatial.push_back(storedPt);
+                        newSpatial.push_back(rightBlk);
+    
+                        currentIndex += 1;
+                    } else {
+                        const SpatialLiteral* leftBlk = SpatialLiteral::blk(
+                            breakBlk->getFrom(),
+                            arg1,
+                            breakBlk->getBlkName(),
+                            leftEmpty
+                        );
+                        // TODOsh: add fresh variable here
 
-                    std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varArg1->name());
-                    const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
-                    this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
-                    newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
-                    this->varEquiv->addNewName(freshVar->name());
-                    const SpatialLiteral* storedPt = SpatialLiteral::pt(
-                        arg1,
-                        freshVar,
-                        //arg2,
-                        breakBlk->getBlkName()
-                    );
+                        std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varArg1->name());
+                        const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
+                        this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
+                        newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
+                        this->varEquiv->addNewName(freshVar->name());
+                        const SpatialLiteral* storedPt = SpatialLiteral::pt(
+                            arg1,
+                            freshVar,
+                            //arg2,
+                            breakBlk->getBlkName()
+                        );
 
-                    CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
-                    long long size = stepSize.second;
-                    bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
-                    const SpatialLiteral* rightBlk = SpatialLiteral::blk(
-                        Expr::add(arg1, Expr::lit(size)),
-                        breakBlk->getTo(),
-                        breakBlk->getBlkName(),
-                        rightEmpty
-                    );
-                    newSpatial.push_back(leftBlk);
-                    newSpatial.push_back(storedPt);
-                    newSpatial.push_back(rightBlk);
+                        CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
+                        long long size = stepSize.second;
+                        bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) - this->computeArithmeticOffsetValue    (breakBlk->getTo()) == 0) ? true : false;
+                        const SpatialLiteral* rightBlk = SpatialLiteral::blk(
+                            Expr::add(arg1, Expr::lit(size)),
+                            breakBlk->getTo(),
+                            breakBlk->getBlkName(),
+                            rightEmpty
+                        );
+                        newSpatial.push_back(leftBlk);
+                        newSpatial.push_back(storedPt);
+                        newSpatial.push_back(rightBlk);
 
-                    currentIndex += 1;
+                        currentIndex += 1;
+                    }
+                    
                 } else if(!i->getBlkName().compare(mallocName) && 
                        SpatialLiteral::Kind::BLK == i->getId() && 
                        currentIndex != splitBlkIndex){
@@ -724,39 +766,76 @@ namespace smack{
                             std::list<const SpatialLiteral*> newSpatialExpr;
                             const SpatialLiteral* errLit =  SpatialLiteral::errlit(true);
                             newSpatialExpr.push_back(errLit);
-                            SHExprPtr newSH =   std::make_shared<SymbolicHeapExpr>(newPure,   newSpatialExpr);
+                            SHExprPtr newSH =   std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
                             newSH->print(std::cout);
                             return newSH;
                         }
-                        bool leftEmpty = (this->computeArithmeticOffsetValue(arg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
                         
-                        const SpatialLiteral* leftBlk = SpatialLiteral::blk(
-                            breakBlk->getFrom(),
-                            arg1,
-                            breakBlk->getBlkName(),
-                            leftEmpty
-                        );
+                        if(this->varEquiv->isStructArrayPtr(mallocName)){
+                            bool leftEmpty = (this->computeArithmeticOffsetValue(arg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
+                        
+                        
 
-                        const SpatialLiteral* storedPt = SpatialLiteral::pt(
-                            arg1, 
-                            freshVar,
-                            breakBlk->getBlkName()
-                        );
-                        long long size = (long long) freshVarByteSize;
-                        bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
+                            const SpatialLiteral* leftBlk = SpatialLiteral::gcBlk(
+                                breakBlk->getFrom(),
+                                arg1,
+                                breakBlk->getBlkName(),
+                                leftEmpty
+                            );
 
-                        const SpatialLiteral* rightBlk = SpatialLiteral::blk(
-                            Expr::add(arg1, Expr::lit(size)),
-                            breakBlk->getTo(),
-                            breakBlk->getBlkName(),
-                            rightEmpty
-                        );
+                            const SpatialLiteral* storedPt = SpatialLiteral::gcPt(
+                                arg1, 
+                                freshVar,
+                                breakBlk->getBlkName()
+                            );
+                            long long size = (long long) freshVarByteSize;
+                            bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) -   this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
 
-                        newSpatial.push_back(leftBlk);
-                        newSpatial.push_back(storedPt);
-                        newSpatial.push_back(rightBlk);
+                            const SpatialLiteral* rightBlk = SpatialLiteral::blk(
+                                Expr::add(arg1, Expr::lit(size)),
+                                breakBlk->getTo(),
+                                breakBlk->getBlkName(),
+                                rightEmpty
+                            );
 
-                        currentIndex += 1;
+                            newSpatial.push_back(leftBlk);
+                            newSpatial.push_back(storedPt);
+                            newSpatial.push_back(rightBlk);
+
+                            currentIndex += 1;
+                        } else {
+                            bool leftEmpty = (this->computeArithmeticOffsetValue(arg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
+                        
+                        
+
+                            const SpatialLiteral* leftBlk = SpatialLiteral::blk(
+                                breakBlk->getFrom(),
+                                arg1,
+                                breakBlk->getBlkName(),
+                                leftEmpty
+                            );
+                            
+                            const SpatialLiteral* storedPt = SpatialLiteral::pt(
+                                arg1, 
+                                freshVar,
+                                breakBlk->getBlkName()
+                            );
+                            long long size = (long long) freshVarByteSize;
+                            bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) -   this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
+    
+                            const SpatialLiteral* rightBlk = SpatialLiteral::blk(
+                                Expr::add(arg1, Expr::lit(size)),
+                                breakBlk->getTo(),
+                                breakBlk->getBlkName(),
+                                rightEmpty
+                            );
+    
+                            newSpatial.push_back(leftBlk);
+                            newSpatial.push_back(storedPt);
+                            newSpatial.push_back(rightBlk);
+    
+                            currentIndex += 1;
+                        }
                     } else if(!i->getBlkName().compare(mallocName) && 
                             SpatialLiteral::Kind::BLK == i->getId() && 
                             currentIndex != splitBlkIndex){
@@ -783,6 +862,115 @@ namespace smack{
         }
         return sh;
     }
+    
+    // ---------------------- Execution for Alloc stmt
+    
+    SHExprPtr  
+    BlockExecutor::executeAlloc
+    (SHExprPtr sh, const CallStmt* stmt){
+        // example of the instruction
+        // 1. call $p1 = $alloc($mul.ref(4, $i2))
+        // 2. caall $p2 = $alloc($mul.ref(40, $zext.i32.i64(1)))
+        std::string funcName = stmt->getProc();
+        if(!funcName.compare("$alloc")){
+            std::string retVarName = stmt->getReturns().front();
+            const Expr* param = stmt->getParams().front();
+            assert(ExprType::FUNC == param->getType());
+            const FunExpr* multiFuncExpr = (const FunExpr*) param;
+            if(!multiFuncExpr->name().compare("$mul.ref")){
+                const Expr* multiArg1 = multiFuncExpr->getArgs().front();
+                const Expr* multiArg2 = multiFuncExpr->getArgs().back();
+
+                assert(multiArg1->isValue());
+                if(multiArg2->isValue() || multiArg2->isVar()){
+                    const Expr* lengthExpr = Expr::multiply(multiArg1, multiArg2);
+                    this->varEquiv->addNewName(retVarName);
+                    this->varEquiv->addNewBlkName(retVarName);
+                    this->varEquiv->addNewOffset(retVarName, 0);
+                    this->varEquiv->setStructArrayPtr(retVarName, true);
+                    this->storeSplit->createAxis(retVarName);
+                    this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
+                    const Expr* newPure = sh->getPure();
+                    std::list<const SpatialLiteral *> newSpatialExpr;
+                    for(const SpatialLiteral* sp : sh->getSpatialExpr()){
+                        newSpatialExpr.push_back(sp);
+                    }
+                    const SpatialLiteral* sizePt = SpatialLiteral::spt(
+                        this->varFactory->getVar(retVarName),
+                        lengthExpr,
+                        retVarName
+                    ); 
+                    bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
+
+                    const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
+                        this->varFactory->getVar(retVarName),
+                        Expr::add(
+                            this->varFactory->getVar(retVarName),
+                            lengthExpr
+                        ),
+                        retVarName,
+                        empty
+                    );
+
+                    newSpatialExpr.push_back(sizePt);
+                    newSpatialExpr.push_back(allocBlk);
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                    newSH->print(std::cout);
+                    CFDEBUG(std::cout << std::endl)
+                    return newSH;
+                } else if(ExprType::FUNC == multiArg2->getType()) {
+                    const FunExpr* multiArg2FunExpr = (const FunExpr*) multiArg2;
+                    assert(!multiArg2FunExpr->name().compare("$zext.i32.i64"));
+                    assert(multiArg2FunExpr->getArgs().back()->translateToInt(this->varEquiv).second == 1);
+                    const Expr* lengthExpr = multiArg1;
+                    this->varEquiv->addNewName(retVarName);
+                    this->varEquiv->addNewBlkName(retVarName);
+                    this->varEquiv->addNewOffset(retVarName, 0);
+                    this->varEquiv->setStructArrayPtr(retVarName, true);
+                    this->storeSplit->createAxis(retVarName);
+                    this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
+                    const Expr* newPure = sh->getPure();
+                    std::list<const SpatialLiteral *> newSpatialExpr;
+                    for(const SpatialLiteral* sp : sh->getSpatialExpr()){
+                        newSpatialExpr.push_back(sp);
+                    }
+                    const SpatialLiteral* sizePt = SpatialLiteral::spt(
+                        this->varFactory->getVar(retVarName),
+                        lengthExpr,
+                        retVarName
+                    ); 
+                    bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
+
+                    const SpatialLiteral* allocBlk = SpatialLiteral::blk(
+                        this->varFactory->getVar(retVarName),
+                        Expr::add(
+                            this->varFactory->getVar(retVarName),
+                            lengthExpr
+                        ),
+                        retVarName,
+                        empty
+                    );
+
+                    newSpatialExpr.push_back(sizePt);
+                    newSpatialExpr.push_back(allocBlk);
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                    newSH->print(std::cout);
+                    CFDEBUG(std::cout << std::endl)
+                    return newSH;
+                } else {
+                    CFDEBUG(std::cout << "ERROR: UNSOLVED alloc expression type !!!" << std::endl;);
+                    return sh;
+                }
+            } else {
+                CFDEBUG(std::cout << "ERROR: UNSOLVED SITUATION!!" << std::endl);
+                return sh;
+            }
+        } else {
+            return nullptr;
+        }
+        return sh;
+    }
+
 
 
     // ---------------------- Execution for Casting stmt -----------------
@@ -830,7 +1018,7 @@ namespace smack{
             CFDEBUG(std::cout << "INFO: stmt kind ASSIGN" << std::endl);
             return this->executeAssign(currSH, stmt);
         } 
-        else {
+        else { 
             CFDEBUG(std::cout << "INFO: stmt kind " << stmt->getKind() << std::endl);
             return this->executeOther(currSH, stmt);
         }

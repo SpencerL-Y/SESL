@@ -129,6 +129,18 @@ namespace smack
             return std::pair<bool, int>(false, 0);
         }
     }
-    // name2stepName operations
+    // isAllocPtr operations
+
+    void VarEquiv::setStructArrayPtr(std::string name, bool val){
+        assert(name.find("$p") != std::string::npos);
+        this->structArrayPtr[name] = val;
+    }
+
+
+    
+    bool VarEquiv::isStructArrayPtr(std::string name){
+        assert(name.find("$p") != std::string::npos);
+        return this->structArrayPtr[name];
+    }
 
 } // namespace smack

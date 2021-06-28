@@ -146,6 +146,7 @@ z3::expr Expr::translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varFa
 }
 
 std::pair<bool, int>  Expr::translateToInt(const std::shared_ptr<VarEquiv>& varEquivPtr) const {
+    CFDEBUG(std::cout << "WARNING: UNSolved translate to Int!!" << std::endl;);
     return {false, 0};
 }
 
@@ -790,6 +791,12 @@ const SpatialLiteral* SpatialLiteral::spt(const Expr* var, const Expr* size, std
   return new SizePtLit(var, size, blkName);
 }
 
+const SpatialLiteral* SpatialLiteral::gcPt(const Expr* from, const Expr* to, std::string blkName){
+  return new GCPtLit(from, to, blkName);
+}
+const SpatialLiteral* SpatialLiteral::gcBlk(const Expr* from, const Expr* to, std::string blkName, bool empty){
+  return new GCBlkLit(from, to, blkName, empty);
+}
 
 const SpatialLiteral* SpatialLiteral::errlit(bool f){
   return new ErrorLit(f);
@@ -841,8 +848,19 @@ z3::expr PtLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varF
   return res;
 }
 
+z3::expr GCPtLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+  z3::expr res = slah_api::newEmp(z3Ctx);
+  return res;
+}
+
+
 void BlkLit::print(std::ostream &os) const {
   os << "Blk(" << from << ", " << to << ")";
+}
+
+z3::expr GCBlkLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+  z3::expr res = slah_api::newEmp(z3Ctx);
+  return res;
 }
 
 z3::expr BlkLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const{

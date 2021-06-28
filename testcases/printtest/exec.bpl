@@ -6,45 +6,47 @@ axiom (main == $sub.ref(0, 1032));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
-  var $i0: i64;
-  var $i1: i64;
-  var $p2: ref8;
-  var $p3: ref32;
+  var $p0: ref;
+  var $i1: i32;
+  var $i2: i64;
+  var $p3: ref8;
   var $p4: ref32;
-  var $i5: i32;
-  var $i6: i32;
-  var $p7: ref8;
+  var $p5: ref32;
+  var $p6: ref32;
+  var $p7: ref32;
+  var $i8: i32;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  $i0 := $sext.i32.i64(5);
-  $i1 := $mul.i64($i0, 4);
-  call $p2 := malloc($i1);
-  $p3 := $bitcast.ref.ref($p2);
-  $p4 := $add.ref($p3, $mul.ref(1, 4));
-  $i5 := $load.i32($M.0, $p4);
-  $i6 := $add.i32($i5, $sub.i32(0, 1));
-  call {:cexpr "nnum"} boogie_si_record_i32($i6);
-  $p7 := $bitcast.ref.ref($p3);
-  call free_($p7);
+  call $p0 := $alloc($mul.ref(40, $zext.i32.i64(1)));
+  assume true;
+  $i1 := $add.i32(101, 1);
+  $i2 := $zext.i32.i64($i1);
+  /* llvm2bpl: ../testcases/printtest/exec.c:54:5: warning: over-approximating unmodeled operation llvm.stacksave; */
+  call $p3 := llvm.stacksave();
+  call $p4 := $alloc($mul.ref(4, $i2));
+  assume true;
+  $p5 := $add.ref($add.ref($p0, $mul.ref(0, 40)), $mul.ref(2, 4));
+  $M.1 := $store.i32($M.1, $p5, 111);
+  $p6 := $add.ref($p4, $mul.ref(3, 4));
+  $M.2 := $store.i32($M.2, $p6, 222);
+  $p7 := $add.ref($add.ref($p0, $mul.ref(0, 40)), $mul.ref(1, 4));
+  $i8 := $load.i32($M.3, $p7);
+  call {:cexpr "newname"} boogie_si_record_i32($i8);
+  /* llvm2bpl: ../testcases/printtest/exec.c:58:1: warning: unsoundly ignoring unmodeled operation llvm.stackrestore; */
+  call llvm.stackrestore($p3);
   $r := 0;
   return;
 }
 const llvm.dbg.declare: ref;
 axiom (llvm.dbg.declare == $sub.ref(0, 2064));
 procedure  llvm.dbg.declare($p0: ref, $p1: ref, $p2: ref);
-const malloc: ref;
-axiom (malloc == $sub.ref(0, 3096));
-procedure  malloc($i0: i64)
-  returns ($r: ref)
-{
-  call $r := $malloc($i0);
-}
-const free_: ref;
-axiom (free_ == $sub.ref(0, 4128));
-procedure  free_($p0: ref)
-{
-  call $free($p0);
-}
+const llvm.stacksave: ref;
+axiom (llvm.stacksave == $sub.ref(0, 3096));
+procedure  llvm.stacksave()
+  returns ($r: ref);
+const llvm.stackrestore: ref;
+axiom (llvm.stackrestore == $sub.ref(0, 4128));
+procedure  llvm.stackrestore($p0: ref);
 const llvm.dbg.value: ref;
 axiom (llvm.dbg.value == $sub.ref(0, 5160));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);

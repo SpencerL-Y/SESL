@@ -392,6 +392,8 @@ class SpatialLiteral : public Expr {
   static const SpatialLiteral* emp();
   static const SpatialLiteral* pt(const Expr* from, const Expr* to, std::string blkName);
   static const SpatialLiteral* blk(const Expr* from, const Expr* to, std::string blkName, bool empty);
+  static const SpatialLiteral* gcPt(const Expr* from, const Expr* to, std::string blkName);
+  static const SpatialLiteral* gcBlk(const Expr* from, const Expr* to, std::string blkName, bool empty);
   static const SpatialLiteral* spt(const Expr* var, const Expr* size, std::string blkName);
   static const SpatialLiteral* errlit(bool f);
   SpatialLiteral::Kind getId() const {return id;}
@@ -425,6 +427,14 @@ public:
   virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 };
 
+class GCPtLit : public PtLit {
+  public: 
+  GCPtLit(const Expr* f, const Expr* t, std::string blkName):PtLit(f,t,blkName){};
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+};
+
+
+
 class BlkLit : public SpatialLiteral {
   const Expr* from;
   const Expr* to;
@@ -436,6 +446,12 @@ public:
   virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
   const Expr* getFrom() const { return from;}
   const Expr* getTo() const { return to;}
+};
+
+class GCBlkLit : public BlkLit {
+  public:
+  GCBlkLit(const Expr* f, const Expr* t, std::string blkName, bool empty):BlkLit(f,t,blkName, empty){};
+  virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 };
 
 class SizePtLit : public SpatialLiteral {
@@ -450,6 +466,7 @@ public:
   void print(std::ostream &os) const;
   virtual z3::expr translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 };
+
 
 class ErrorLit : public SpatialLiteral {
   bool fresh;

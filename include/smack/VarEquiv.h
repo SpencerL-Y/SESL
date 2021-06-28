@@ -28,6 +28,8 @@ namespace smack
         std::map<std::string, int> pointsToBlkOffset;
     // varToIntVal: cache the calculated value of integer variables (used in store and load)
         std::map<std::string, int> varToIntVal;
+    // structArrayPtr: remember the ptr created by alloc, which is used when struct and array are used
+        std::map<std::string, bool> structArrayPtr;
     public:
         VarEquiv(/* args */){};
         ~VarEquiv() {};
@@ -50,6 +52,11 @@ namespace smack
         void addNewVal(std::string name, int val);
         void linkIntVar(std::string newname, std::string oldname);
         std::pair<bool, int> getIntVal(std::string name);
+
+        // alloc ptr
+        void setStructArrayPtr(std::string name, bool val);
+        bool isStructArrayPtr(std::string name);
+
 
         void debugPrint();
 

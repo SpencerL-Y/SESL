@@ -34,6 +34,7 @@ public:
     z3::model get_model();
     z3::check_result check_entl();
     
+    bool spaceANoEmp_spaceBEmp(z3::expr spaceA, z3::expr spaceB);
     z3::expr_vector get_disjunctive_normal_form(z3::expr_vector formula_set);
     z3::expr_vector get_conjunct(z3::expr formula);
     void get_data_space(z3::expr &formula, z3::expr &data, z3::expr &space); 

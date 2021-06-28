@@ -618,6 +618,11 @@ namespace smack{
                         // TODOsh: add fresh variable here
     
                         std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varArg1->name());
+                        if(stepSize.second == 0){
+                            // If the step size is 0, we regard it as the step size of the size of ptr
+                            stepSize.second = PTR_BYTEWIDTH;
+                        }
+                        assert(stepSize.second > 0);
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
                         newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
@@ -806,6 +811,10 @@ namespace smack{
                 CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory... "  << std::endl;);
                 int freshVarByteSize = this->cfg->getVarDetailType(lhsVarName).second;
                 std::cout << "load size: " << freshVarByteSize << std::endl;
+                if(freshVarByteSize == 0){
+                    // if 0, regard it as ptr size
+                    freshVarByteSize = PTR_BYTEWIDTH;
+                }
                 assert(freshVarByteSize > 0);
 
                 const VarExpr* freshVar = this->varFactory->getFreshVar(freshVarByteSize);

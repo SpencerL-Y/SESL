@@ -20,22 +20,22 @@ int main(){
     // free(j);
 
 // new example
-    // TData data;
-    // TData* pdata = &data;
+    TData data;
+    TData* pdata = &data;
 
-    // TData c;
-    // pdata->lo = malloc(16);
-    // pdata->hi = malloc(24);
-    // void *lo = pdata->lo;
-    // void *hi = pdata->hi;
+    TData c;
+    pdata->lo = malloc(16);
+    pdata->hi = malloc(24);
+    void *lo = pdata->lo;
+    void *hi = pdata->hi;
 
-    // free(lo);
-    // free(hi);
+    //free(lo);
+    //free(hi);
 
-    test_type i;
-    i.a = 0;
-    i.b = 100;
-    int a = i.b;
+    // test_type i;
+    // i.a = 0;
+    // i.b = 100;
+    // int a = i.b;
 
     // int a[10];
     // int num = 101;

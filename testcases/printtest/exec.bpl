@@ -7,40 +7,51 @@ procedure {:entrypoint} main()
   returns ($r: i32)
 {
   var $p0: ref;
-  var $p1: ref32;
-  var $p2: ref8;
+  var $p1: ref8;
+  var $p2: ref;
   var $p3: ref8;
-  var $i4: i8;
-  var $i5: i32;
+  var $p4: ref;
+  var $p5: ref;
+  var $p6: ref8;
+  var $p7: ref;
+  var $p8: ref8;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
   call $p0 := $alloc($mul.ref(16, $zext.i32.i64(1)));
   assume true;
-  $p1 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(0, 1));
-  $M.0 := $store.i32($M.0, $p1, 0);
-  $p2 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(4, 1));
-  $M.1 := $store.i8($M.1, $p2, 100);
-  $p3 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(4, 1));
-  $i4 := $load.i8($M.1, $p3);
-  $i5 := $sext.i8.i32($i4);
-  call {:cexpr "a"} boogie_si_record_i32($i5);
+  call $p1 := malloc(16);
+  $p2 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(0, 1));
+  $M.0 := $store.ref($M.0, $p2, $p1);
+  call $p3 := malloc(24);
+  $p4 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(8, 1));
+  $M.1 := $store.ref($M.1, $p4, $p3);
+  $p5 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(0, 1));
+  $p6 := $load.ref($M.0, $p5);
+  $p7 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(8, 1));
+  $p8 := $load.ref($M.1, $p7);
   $r := 0;
   return;
 }
 const llvm.dbg.declare: ref;
 axiom (llvm.dbg.declare == $sub.ref(0, 2064));
 procedure  llvm.dbg.declare($p0: ref, $p1: ref, $p2: ref);
+const malloc: ref;
+axiom (malloc == $sub.ref(0, 3096));
+procedure  malloc($i0: i64)
+  returns ($r: ref)
+{
+  call $r := $malloc($i0);
+}
 const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 3096));
+axiom (llvm.dbg.value == $sub.ref(0, 4128));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 4128));
+axiom (__SMACK_static_init == $sub.ref(0, 5160));
 procedure  __SMACK_static_init()
 {
 $bb0:
   return;
 }
-procedure  boogie_si_record_i32(x: i32);
 procedure  boogie_si_record_ref(x: ref);
 procedure  $initialize()
 {

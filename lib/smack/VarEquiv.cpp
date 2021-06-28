@@ -117,7 +117,7 @@ namespace smack
            this->varToIntVal.find(oldname) != this->varToIntVal.end()){
             this->varToIntVal[newname] = this->varToIntVal[oldname];
         } else {
-            DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << std::endl, color::green);
+            DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl, color::green);
         }
     }
 
@@ -125,7 +125,12 @@ namespace smack
         if(this->varToIntVal.find(name) != this->varToIntVal.end()){
             return std::pair<bool, int>(true, this->varToIntVal[name]);
         } else {
-            DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap get error. " << std::endl, color::green);
+            if(!name.find("$p")){
+                DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap get error. " << name << std::endl, color::green);
+            } else {
+                DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get error. " << name << std::endl, color::green);
+            }
+            
             return std::pair<bool, int>(false, 0);
         }
     }

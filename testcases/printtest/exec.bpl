@@ -7,51 +7,34 @@ procedure {:entrypoint} main()
   returns ($r: i32)
 {
   var $p0: ref;
-  var $i1: i32;
-  var $i2: i64;
+  var $p1: ref32;
+  var $p2: ref8;
   var $p3: ref8;
-  var $p4: ref32;
-  var $p5: ref32;
-  var $p6: ref32;
-  var $p7: ref32;
-  var $i8: i32;
+  var $i4: i8;
+  var $i5: i32;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  call $p0 := $alloc($mul.ref(40, $zext.i32.i64(1)));
+  call $p0 := $alloc($mul.ref(16, $zext.i32.i64(1)));
   assume true;
-  $i1 := $add.i32(101, 1);
-  $i2 := $zext.i32.i64($i1);
-  /* llvm2bpl: ../testcases/printtest/exec.c:54:5: warning: over-approximating unmodeled operation llvm.stacksave; */
-  call $p3 := llvm.stacksave();
-  call $p4 := $alloc($mul.ref(4, $i2));
-  assume true;
-  $p5 := $add.ref($add.ref($p0, $mul.ref(0, 40)), $mul.ref(2, 4));
-  $M.1 := $store.i32($M.1, $p5, 111);
-  $p6 := $add.ref($p4, $mul.ref(3, 4));
-  $M.2 := $store.i32($M.2, $p6, 222);
-  $p7 := $add.ref($add.ref($p0, $mul.ref(0, 40)), $mul.ref(1, 4));
-  $i8 := $load.i32($M.3, $p7);
-  call {:cexpr "newname"} boogie_si_record_i32($i8);
-  /* llvm2bpl: ../testcases/printtest/exec.c:58:1: warning: unsoundly ignoring unmodeled operation llvm.stackrestore; */
-  call llvm.stackrestore($p3);
+  $p1 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(0, 1));
+  $M.0 := $store.i32($M.0, $p1, 0);
+  $p2 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(4, 1));
+  $M.1 := $store.i8($M.1, $p2, 100);
+  $p3 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(4, 1));
+  $i4 := $load.i8($M.1, $p3);
+  $i5 := $sext.i8.i32($i4);
+  call {:cexpr "a"} boogie_si_record_i32($i5);
   $r := 0;
   return;
 }
 const llvm.dbg.declare: ref;
 axiom (llvm.dbg.declare == $sub.ref(0, 2064));
 procedure  llvm.dbg.declare($p0: ref, $p1: ref, $p2: ref);
-const llvm.stacksave: ref;
-axiom (llvm.stacksave == $sub.ref(0, 3096));
-procedure  llvm.stacksave()
-  returns ($r: ref);
-const llvm.stackrestore: ref;
-axiom (llvm.stackrestore == $sub.ref(0, 4128));
-procedure  llvm.stackrestore($p0: ref);
 const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 5160));
+axiom (llvm.dbg.value == $sub.ref(0, 3096));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 6192));
+axiom (__SMACK_static_init == $sub.ref(0, 4128));
 procedure  __SMACK_static_init()
 {
 $bb0:

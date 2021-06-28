@@ -69,6 +69,7 @@ namespace smack{
                             const Expr* arithLhs = arithExpr->getLhs();
                             const Expr* arithRhs = arithExpr->getRhs();
                             if(arithLhs->isVar()){
+                                // This is for normal ptr arithmetic
                                 const VarExpr* ptrVar = (const VarExpr*) arithLhs;
                                 int lhsOffset = this->varEquiv->getOffset(ptrVar->name());
                                 int rhsOffset = 0;
@@ -78,10 +79,16 @@ namespace smack{
                                     rhsOffset = rhsComputeResult.second;
                                     this->varEquiv->addNewOffset(lhsVarName, (lhsOffset + rhsOffset));
                                 } else {
-                                    CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET !!!" << std::endl; rhsExpr->print(std::cout););
+                                    CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET 1!!!" << std::endl; rhsExpr->print(std::cout););
                                 }
                             } else {
-                                CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET !!!" << std::endl; rhsExpr->print(std::cout));
+                                // For other ptr arithmetic like struct and array
+                                int offsetVal = this->computeArithmeticOffsetValue(rhsExpr);
+                                const Expr* extractedExpr = this->extractPtrArithVarName(rhsExpr);
+                                assert(extractedExpr->isVar());
+                                const VarExpr* ptrVar = (const VarExpr*)extractedExpr;
+                                std::string ptrVarName = ptrVar->name();
+                                this->varEquiv->addNewOffset(lhsVarName, offsetVal);
                             }
                         }
                     } else {
@@ -181,6 +188,9 @@ namespace smack{
         }
         return sh;
     }
+
+
+
     // ----------- Util functions for assignment symbolic execution ----------- 
 
     bool BlockExecutor::isUnaryAssignFuncName(std::string name){
@@ -224,32 +234,131 @@ namespace smack{
         }
     }
 
+
+    const Expr* BlockExecutor::parseVarArithmeticExpr(const Expr* arithExpr){
+        if(ExprType::FUNC == arithExpr->getType()){
+            const FunExpr* funcExpr = (const FunExpr*) arithExpr;
+            if(this->isBinaryArithFuncName(funcExpr->name())){
+                const Expr* resultExpr = NULL;
+                const Expr* arg1 = funcExpr->getArgs().front();
+                const Expr* arg2 = funcExpr->getArgs().back();
+                resultExpr = this->computeBinaryArithmeticExpr(
+                    funcExpr->name(), 
+                    this->parseVarArithmeticExpr(arg1), 
+                    this->parseVarArithmeticExpr(arg2));
+                return resultExpr;
+            } else {
+                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function !!!!" << std::endl;);
+                return funcExpr;
+            }
+        } else {
+            if(arithExpr->isVar()){
+                return this->varFactory->getVar(((const VarExpr*)arithExpr)->name());
+            }
+            return arithExpr;
+        }
+    }
+
+    const Expr* BlockExecutor::parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName){
+        // parse the ptr arithmetic expression and return the simplified expression, link the ptr variable to the malloc name when found
+        if(ExprType::FUNC == arithExpr->getType()){
+            const FunExpr* funcExpr = (const FunExpr*) arithExpr;
+            if(this->isPtrArithFuncName(funcExpr->name())){
+                const Expr* resultExpr = NULL;
+                const Expr* arg1 = funcExpr->getArgs().front();
+                const Expr* arg2 = funcExpr->getArgs().back();
+                resultExpr = this->computeBinaryArithmeticExpr(
+                    funcExpr->name(),
+                    parsePtrArithmeticExpr(arg1, lhsName),
+                    parsePtrArithmeticExpr(arg2, lhsName)
+                );
+                return resultExpr;
+            } else {
+                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function !!!!" << std::endl;);
+                return arithExpr;
+            }
+        } else {
+            if(arithExpr->isVar()){
+                CFDEBUG(std::cout << "Link arithmetic operation: " <<  lhsName << " " << ((const VarExpr*) arithExpr)->name() << std::endl;);
+                this->varEquiv->linkBlkName(lhsName, ((const VarExpr*) arithExpr)->name());  
+                return this->varFactory->getVar(((const VarExpr*) arithExpr)->name());
+            } 
+            return arithExpr;
+        }
+    }
+
     int BlockExecutor::computeArithmeticOffsetValue(const Expr* expression){
         //TODOsh: only compute for one layer
         if(expression->isValue()){
-            CFDEBUG(std::cout << "WARNING: This should not happen" << std::endl;);
             const IntLit* intValExpr = (const IntLit*) expression;
             return intValExpr->getVal();
         } else if(expression->isVar()){
             const VarExpr* varExpr = (const VarExpr*) expression;
-            assert(varExpr->name().find("$p") != std::string::npos);
-            return this->varEquiv->getOffset(varExpr->name());
+            if(varExpr->name().find("$p") != std::string::npos){
+                return this->varEquiv->getOffset(varExpr->name());
+            } else if (varExpr->name().find("$i") != std::string::npos){
+                assert(varExpr->translateToInt(this->varEquiv).first);
+                return varExpr->translateToInt(this->varEquiv).second;
+            } else {
+                CFDEBUG(std::cout << "ERROR: UNSOLVED Arithmetic offset computation" << std::endl;);
+                return 0;
+            }
         } else if(ExprType::BIN == expression->getType()){  
             const BinExpr* binExpr = (const BinExpr*) expression;
             if(BinExpr::Binary::Plus == binExpr->getOp()){
-                assert(binExpr->getLhs()->isVar());
-                const VarExpr* ptrVar = (const VarExpr*) binExpr->getLhs();
-                assert(ptrVar->name().find("$p") != std::string::npos);
-                int ptrOff = this->varEquiv->getOffset(ptrVar->name());
-                int arithmeticVal = binExpr->getRhs()->translateToInt(this->varEquiv).second;
-                return ptrOff + arithmeticVal;
-            } else {
-                CFDEBUG(std::cout << "ERROR: this should not happen" << expression << std::endl;);
+                const Expr* lhsExpr =  binExpr->getLhs();
+                const Expr* rhsExpr = binExpr->getRhs();
+                int lhsVal = this->computeArithmeticOffsetValue(lhsExpr);
+                int rhsVal = this->computeArithmeticOffsetValue(rhsExpr);
+                return lhsVal + rhsVal;
+            } else if(BinExpr::Binary::Times == binExpr->getOp()){
+                const Expr* lhsExpr =  binExpr->getLhs();
+                const Expr* rhsExpr = binExpr->getRhs();
+                int lhsVal = this->computeArithmeticOffsetValue(lhsExpr);
+                int rhsVal = this->computeArithmeticOffsetValue(rhsExpr);
+                return lhsVal * rhsVal;
+            } 
+            else {
+                CFDEBUG(std::cout << "ERROR: this should not happen " << expression << std::endl;);
                 return -1;
             }
         } else {
             CFDEBUG(std::cout << "ERROR: compute offset value error: " << expression << std::endl;);
             return -1;
+        }
+    }
+
+    const Expr* BlockExecutor::extractPtrArithVarName(const Expr* expression){
+        // Find the ptr arithmetic var variable
+        // e.g. ($p0 + 1) + ($i + 2) as input, the function return the name $p0
+        if(expression->isVar()){
+            const VarExpr* varExpr = (const VarExpr*) expression;
+            if(varExpr->name().find("$p") != std::string::npos){
+                return varExpr;
+            } else {
+                return nullptr;
+            }
+        } else if(expression->isValue()){
+            return nullptr;
+        } else if(ExprType::BIN == expression->getType()){
+            const BinExpr* binExpr = (const BinExpr*) expression;
+            const Expr* lhsExpr = binExpr->getLhs();
+            const Expr* rhsExpr = binExpr->getRhs();
+            const Expr* lhsRes = this->extractPtrArithVarName(lhsExpr);
+            const Expr* rhsRes = this->extractPtrArithVarName(rhsExpr);
+            if(lhsRes == nullptr && rhsRes == nullptr){
+                return nullptr;
+            } else if(!(lhsRes == nullptr) && (rhsRes == nullptr)){
+                return lhsRes;
+            } else if(!(rhsRes == nullptr) && (lhsRes == nullptr)){
+                return rhsRes;
+            } else {
+                CFDEBUG(std::cout << "ERROR: Extract ptr arith var name error, two ptr variables !!" << std::endl;);
+                return nullptr;
+            }
+
+        } else {
+            return nullptr;
         }
     }
     
@@ -294,56 +403,8 @@ namespace smack{
     }
 
 
-    const Expr* BlockExecutor::parseVarArithmeticExpr(const Expr* arithExpr){
-        if(ExprType::FUNC == arithExpr->getType()){
-            const FunExpr* funcExpr = (const FunExpr*) arithExpr;
-            if(this->isBinaryArithFuncName(funcExpr->name())){
-                const Expr* resultExpr = NULL;
-                const Expr* arg1 = funcExpr->getArgs().front();
-                const Expr* arg2 = funcExpr->getArgs().back();
-                resultExpr = this->computeBinaryArithmeticExpr(
-                    funcExpr->name(), 
-                    this->parseVarArithmeticExpr(arg1), 
-                    this->parseVarArithmeticExpr(arg2));
-                return resultExpr;
-            } else {
-                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function !!!!" << std::endl;);
-                return funcExpr;
-            }
-        } else {
-            if(arithExpr->isVar()){
-                return this->varFactory->getVar(((const VarExpr*)arithExpr)->name());
-            }
-            return arithExpr;
-        }
-    }
 
-    const Expr* BlockExecutor::parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName){
-        if(ExprType::FUNC == arithExpr->getType()){
-            const FunExpr* funcExpr = (const FunExpr*) arithExpr;
-            if(this->isPtrArithFuncName(funcExpr->name())){
-                const Expr* resultExpr = NULL;
-                const Expr* arg1 = funcExpr->getArgs().front();
-                const Expr* arg2 = funcExpr->getArgs().back();
-                resultExpr = this->computeBinaryArithmeticExpr(
-                    funcExpr->name(),
-                    parsePtrArithmeticExpr(arg1, lhsName),
-                    parsePtrArithmeticExpr(arg2, lhsName)
-                );
-                return resultExpr;
-            } else {
-                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function !!!!" << std::endl;);
-                return arithExpr;
-            }
-        } else {
-            if(arithExpr->isVar()){
-                CFDEBUG(std::cout << "Link arithmetic operation: " <<  lhsName << " " << ((const VarExpr*) arithExpr)->name() << std::endl;);
-                this->varEquiv->linkBlkName(lhsName, ((const VarExpr*) arithExpr)->name());  
-                return this->varFactory->getVar(((const VarExpr*) arithExpr)->name());
-            } 
-            return arithExpr;
-        }
-    }
+
     //----------------------- Assign execution utils end ---------------
 
     // ---------------------- Execution for Call stmts -----------------
@@ -426,11 +487,7 @@ namespace smack{
                 this->storeSplit->createAxis(retVarName);
                 this->storeSplit->setMaxOffset(retVarName, sizeExpr->translateToInt(this->varEquiv).second);
 
-                const Expr* pureConj = Expr::eq(
-                    this->varFactory->getVar(retVarName),
-                    sizeExpr
-                );
-                const Expr* newPure = Expr::and_(sh->getPure(), pureConj);
+                const Expr* newPure = sh->getPure();
                 std::list<const SpatialLiteral*> newSpatialExpr;
                 for(const SpatialLiteral* sp : sh->getSpatialExpr()){
                     newSpatialExpr.push_back(sp);
@@ -454,6 +511,8 @@ namespace smack{
                 newSpatialExpr.push_back(sizePt);
                 newSpatialExpr.push_back(allocBlk);
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                newSH->print(std::cout);
+                std::cout << std::endl;
                 return newSH;
             } else {
                 CFDEBUG(std::cout << "ERROR: UNSOLVED SITUATION!!" << std::endl);
@@ -563,6 +622,10 @@ namespace smack{
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
                         newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
                         this->varEquiv->addNewName(freshVar->name());
+                        if(arg2->translateToInt(this->varEquiv).first){
+                            this->varEquiv->addNewVal(freshVar->name(), arg2->translateToInt(this->varEquiv).second);
+                        }
+
                         const SpatialLiteral* storedPt = SpatialLiteral::gcPt(
                             arg1,
                             freshVar,
@@ -598,6 +661,9 @@ namespace smack{
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
                         newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
                         this->varEquiv->addNewName(freshVar->name());
+                        if(arg2->translateToInt(this->varEquiv).first){
+                            this->varEquiv->addNewVal(freshVar->name(), arg2->translateToInt(this->varEquiv).second);
+                        }
                         const SpatialLiteral* storedPt = SpatialLiteral::pt(
                             arg1,
                             freshVar,

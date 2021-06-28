@@ -117,7 +117,7 @@ namespace smack
            this->varToIntVal.find(oldname) != this->varToIntVal.end()){
             this->varToIntVal[newname] = this->varToIntVal[oldname];
         } else {
-            DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap link error. " << std::endl, color::green);
+            DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << std::endl, color::green);
         }
     }
 

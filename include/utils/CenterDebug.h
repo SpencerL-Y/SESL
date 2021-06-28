@@ -13,10 +13,10 @@
 const bool hasColor = true;
 
 
-
+#define OPEN_CDEBUG false
 
 #define CDEBUG(X) do { \
-    if (CENTER_DEBUG) {\
+    if (CENTER_DEBUG && OPEN_CDEBUG) {\
         if (hasColor)               \
             std::cout<<"\033[33m"; \
         X;             \

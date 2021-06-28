@@ -49,6 +49,7 @@ namespace smack{
         const Expr* computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right);
         
         int computeArithmeticOffsetValue(const Expr* expression);
+        const Expr* extractPtrArithVarName(const Expr* expression);
 
 
     public:

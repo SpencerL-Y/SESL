@@ -29,6 +29,8 @@ $bb0:
   $p6 := $load.ref($M.0, $p5);
   $p7 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(8, 1));
   $p8 := $load.ref($M.1, $p7);
+  call free_($p6);
+  call free_($p8);
   $r := 0;
   return;
 }
@@ -42,11 +44,17 @@ procedure  malloc($i0: i64)
 {
   call $r := $malloc($i0);
 }
+const free_: ref;
+axiom (free_ == $sub.ref(0, 4128));
+procedure  free_($p0: ref)
+{
+  call $free($p0);
+}
 const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 4128));
+axiom (llvm.dbg.value == $sub.ref(0, 5160));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 5160));
+axiom (__SMACK_static_init == $sub.ref(0, 6192));
 procedure  __SMACK_static_init()
 {
 $bb0:

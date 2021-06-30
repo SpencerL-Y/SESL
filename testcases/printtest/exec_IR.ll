@@ -1,4 +1,4 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-frra87f7.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-272xcx86.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
@@ -22,7 +22,9 @@ define dso_local i32 @main() #0 !dbg !7 {
   %8 = getelementptr inbounds %struct.TData, %struct.TData* %1, i32 0, i32 1, !dbg !31, !verifier.code !11
   %9 = load i8*, i8** %8, align 8, !dbg !31, !verifier.code !11
   call void @llvm.dbg.value(metadata i8* %9, metadata !32, metadata !DIExpression()), !dbg !22, !verifier.code !11
-  ret i32 0, !dbg !33, !verifier.code !11
+  call void @free(i8* %7) #3, !dbg !33, !verifier.code !11
+  call void @free(i8* %9) #3, !dbg !34, !verifier.code !11
+  ret i32 0, !dbg !35, !verifier.code !11
 }
 
 ; Function Attrs: nounwind readnone speculatable willreturn
@@ -30,6 +32,9 @@ declare void @llvm.dbg.declare(metadata, metadata, metadata) #1
 
 ; Function Attrs: nounwind
 declare dso_local noalias i8* @malloc(i64) #2
+
+; Function Attrs: nounwind
+declare dso_local void @free(i8*) #2
 
 ; Function Attrs: nounwind readnone speculatable willreturn
 declare void @llvm.dbg.value(metadata, metadata, metadata) #1
@@ -81,4 +86,6 @@ attributes #3 = { nounwind }
 !30 = !DILocalVariable(name: "lo", scope: !7, file: !1, line: 29, type: !17)
 !31 = !DILocation(line: 30, column: 23, scope: !7)
 !32 = !DILocalVariable(name: "hi", scope: !7, file: !1, line: 30, type: !17)
-!33 = !DILocation(line: 46, column: 1, scope: !7)
+!33 = !DILocation(line: 31, column: 5, scope: !7)
+!34 = !DILocation(line: 32, column: 5, scope: !7)
+!35 = !DILocation(line: 52, column: 1, scope: !7)

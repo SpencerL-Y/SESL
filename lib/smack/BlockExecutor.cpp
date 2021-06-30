@@ -626,7 +626,12 @@ namespace smack{
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
                         newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
-                        this->varEquiv->addNewName(freshVar->name());
+                        if(arg2->isVar()){
+                            std::string oldname = ((const VarExpr*) arg2)->name();
+                            this->varEquiv->linkName(freshVar->name(), oldname);
+                        } else {
+                            this->varEquiv->addNewName(freshVar->name());
+                        }
                         if(arg2->translateToInt(this->varEquiv).first){
                             this->varEquiv->addNewVal(freshVar->name(), arg2->translateToInt(this->varEquiv).second);
                         }
@@ -665,7 +670,12 @@ namespace smack{
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
                         newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
-                        this->varEquiv->addNewName(freshVar->name());
+                        if(arg2->isVar()){
+                            std::string oldname = ((const VarExpr*) arg2)->name();
+                            this->varEquiv->linkName(freshVar->name(), oldname);
+                        } else {
+                            this->varEquiv->addNewName(freshVar->name());
+                        }
                         if(arg2->translateToInt(this->varEquiv).first){
                             this->varEquiv->addNewVal(freshVar->name(), arg2->translateToInt(this->varEquiv).second);
                         }

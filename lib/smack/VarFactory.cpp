@@ -3,13 +3,29 @@
 namespace smack
 {
     
-    const VarExpr* VarFactory::getVar(std::string name){
-        if(this->varsMap.find(name) == this->varsMap.end()){
-            const VarExpr* newVar = new VarExpr(name);
-            this->varsMap[name] = newVar;
-            return newVar;
+
+    const VarExpr* VarFactory::useVar(std::string name){
+        std::string bb_repeat_str = "_bb";
+        if(this->varsMap.find(name) != this->varsMap.end()){
+            this->varsMap[name] = this->varsMap[name] + 1;
         } else {
-            return this->varsMap[name];
+            this->varsMap[name] = 0;
+        }
+        const VarExpr* newVar = new VarExpr(name + bb_repeat_str + std::to_string(this->varsMap[name]));
+        this->varNameRestoreMap[newVar->name()] = name;
+        return newVar;
+    }
+
+    const VarExpr* VarFactory::getVar(std::string name){
+        std::string bb_repeat_str = "_bb";
+        if(this->varsMap.find(name) == this->varsMap.end()){
+            CFDEBUG(std::cout << "WARNING: This is not correct use, please check, getVar after useVar");
+            const VarExpr* newVar = new VarExpr(name + bb_repeat_str + "0");
+            this->varsMap[name] = 1;
+            return nullptr;
+        } else {
+            const VarExpr* varExpr = new VarExpr(name + bb_repeat_str + std::to_string(this->varsMap[name]));
+            return varExpr;
         }
     }
 
@@ -25,6 +41,7 @@ namespace smack
 
     const VarExpr* VarFactory::getFreshVar(int byteSize){
         const VarExpr* fresh = new VarExpr("$fresh" + std::to_string(freshIndex));
+        this->varNameRestoreMap[fresh->name()] = fresh->name();
         this->freshVar2Byte[fresh] = byteSize;
         this->freshIndex++;
         return fresh;
@@ -38,5 +55,9 @@ namespace smack
         }
      }
     
+
+    std::string VarFactory::getOrigVarName(std::string varName){
+        return this->varNameRestoreMap[varName];
+    }
 
 } // namespace smack

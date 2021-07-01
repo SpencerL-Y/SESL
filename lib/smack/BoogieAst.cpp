@@ -489,10 +489,11 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr va
             if(lhs->isVar() && rhs->isVar()){
               const VarExpr* lhsVar = (const VarExpr*) lhs;
               const VarExpr* rhsVar = (const VarExpr*) rhs;
-
+              std::string lhsOrigVarName = varFac->getOrigVarName(lhsVar->name());
+              std::string rhsOrigVarName = varFac->getOrigVarName(rhsVar->name());
               // pointer variable are all set to size 32
-              int leftVarSize = (cfg->getVarDetailType(lhsVar->name()).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(lhsVar->name()).second;
-              int rightVarSize = (cfg->getVarDetailType(rhsVar->name()).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(rhsVar->name()).second;
+              int leftVarSize = (cfg->getVarDetailType(lhsOrigVarName).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(lhsOrigVarName).second;
+              int rightVarSize = (cfg->getVarDetailType(rhsOrigVarName).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(rhsOrigVarName).second;
 
               z3::expr resultEquality = z3Ctx.bool_val(true);
               if(leftVarSize == rightVarSize){
@@ -708,7 +709,7 @@ void VarExpr::print(std::ostream &os) const { os << var; }
 z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
   // TODOsh: later remove the varFac and dealing fresh variables in CFG
   CFDEBUG(std::cout << "translating var" << this->name() << std::endl;);
-  std::pair<std::string, int> typeResult = cfg->getVarDetailType(this->name());
+  std::pair<std::string, int> typeResult = cfg->getVarDetailType(varFac->getOrigVarName(this->name()));
   int byteNum = 1;
   if(typeResult.first.compare("fresh")){
     if('i' == typeResult.first[0]){
@@ -820,7 +821,8 @@ z3::expr PtLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varF
   assert(this->getFrom()->isVar() && this->getTo()->isVar());
   const VarExpr* fromVar = (const VarExpr*) this->getFrom();
   const VarExpr* toVar = (const VarExpr*) this->getTo();
-  int stepWidth = cfg->getVarDetailType(fromVar->name()).second;
+  std::string fromOrigVarName = varFac->getOrigVarName(fromVar->name());
+  int stepWidth = cfg->getVarDetailType(fromOrigVarName).second;
   // e.g. a pointer $p with type int* points to a variable $fresh
   // $p --> $fresh
   // will be translated into 

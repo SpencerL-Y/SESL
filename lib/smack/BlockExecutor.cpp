@@ -10,13 +10,22 @@ namespace smack{
             //  : here the assignment is restricted to the single assignment, may cause problem for boogie assignment.
             const Expr* lhs = stmt->getLhs().front();
             const Expr* rhs = stmt->getRhs().front();
+            // the original var in the source
+            const VarExpr* lhsOrigVar = NULL;
+            // var created by varFactory
             const VarExpr* lhsVar = NULL;
             const FunExpr* rhsFun = NULL;
+            // original varname in the source
+            std::string lhsVarOrigName;
+            // varname created by varFactory
             std::string lhsVarName;
             // Assign a variable
             if(lhs->isVar()){
                 // lhs is a single var
-                lhsVar = (const VarExpr* ) lhs;
+                lhsOrigVar = (const VarExpr* ) lhs;
+                lhsVarOrigName = lhsOrigVar->name();
+                // create a new lhs variable in varFactory
+                lhsVar = this->varFactory->useVar(lhsVarOrigName);
                 lhsVarName = lhsVar->name();
             } else {
                 CFDEBUG(std::cout << "ERROR: This should not happen.");
@@ -24,6 +33,7 @@ namespace smack{
 
             
             if(ExprType::FUNC == rhs->getType()){
+                // rhs is a function expression, deal with the execution depending on the function met.
                 CFDEBUG(std::cout << "ASSIGN: rhs ExprType::FUNC" << std::endl;);
                 rhsFun = (const FunExpr* ) rhs;
                 //1. Deal with pointer first
@@ -33,8 +43,14 @@ namespace smack{
                     CFDEBUG(std::cout << "Arg1 Type: " << arg1->getType() << std::endl);
                     
                     if(arg1->isVar()){
-                        const VarExpr* rhsVar = (const VarExpr*) arg1;
+
+
+                        const VarExpr* rhsOrigVar = (const VarExpr*) arg1;
+                        std::string rhsOrigVarName = rhsOrigVar->name();
+                        const VarExpr* rhsVar = this->varFactory->getVar(rhsOrigVarName);
                         std::string rhsVarName = rhsVar->name();
+
+
                         this->varEquiv->linkName(lhsVarName, rhsVarName);
                         this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
                         if(this->varEquiv->getOffset(rhsVarName) >= 0){
@@ -45,8 +61,8 @@ namespace smack{
                         }
                         
                         const Expr* varEquality = Expr::eq(
-                            this->varFactory->getVar(lhsVarName),
-                            this->varFactory->getVar(rhsVarName)
+                            lhsVar,
+                            rhsVar
                         );
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
                         newSH->print(std::cout);
@@ -62,7 +78,7 @@ namespace smack{
                 } else if(this->isPtrArithFuncName(rhsFun->name())){
                     CFDEBUG(std::cout << "ASSIGN: rhs ptr arithmetic" << std::endl;);
                     const Expr* rhsExpr = this->parsePtrArithmeticExpr(rhsFun, lhsVarName);
-                    // TODOsh: this currently is the ptr arithmetic offset computing for malloc, extend to array later.
+
                     if(ExprType::BIN == rhsExpr->getType()){
                         const BinExpr* arithExpr = (const BinExpr*) rhsExpr;
                         if(BinExpr::Binary::Plus == arithExpr->getOp()){
@@ -70,6 +86,8 @@ namespace smack{
                             const Expr* arithRhs = arithExpr->getRhs();
                             if(arithLhs->isVar()){
                                 // This is for normal ptr arithmetic
+                                // normal ptr arithmetic is of the form
+                                // $p1 = $p0 + arithRhs
                                 const VarExpr* ptrVar = (const VarExpr*) arithLhs;
                                 int lhsOffset = this->varEquiv->getOffset(ptrVar->name());
                                 int rhsOffset = 0;
@@ -97,7 +115,7 @@ namespace smack{
 
                     this->varEquiv->addNewName(lhsVarName);
                     const Expr* varEquality = Expr::eq(
-                        this->varFactory->getVar(lhsVarName),
+                        this->varFactory->getVar(lhsVarOrigName),
                         rhsExpr
                     );
                     SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
@@ -117,22 +135,28 @@ namespace smack{
                             const IntLit* intValExpr =(const IntLit*)arg1;
                             this->varEquiv->addNewVal(lhsVarName, intValExpr->getVal());
                         }
-                        const Expr* valEquality = Expr::eq(this->varFactory->getVar(lhsVarName), arg1);
+                        const Expr* valEquality = Expr::eq(this->varFactory->getVar(lhsVarOrigName), arg1);
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, valEquality);
                         newSH->print(std::cout);
                         CFDEBUG(std::cout << std::endl);
                         return newSH;
                     } else if(arg1->isVar()){
-                        const VarExpr* rhsVar = (const VarExpr*) arg1;
+                        // original var get from the boogie ast
+                        const VarExpr* rhsOrigVar = (const VarExpr*) arg1;
+                        std::string rhsOrigVarName = rhsOrigVar->name();
+                        // var get after dealing with the repeating
+                        const VarExpr* rhsVar = this->varFactory->getVar(rhsOrigVarName);
                         std::string rhsVarName = rhsVar->name();
+
                         varEquiv->linkName(lhsVarName, rhsVarName);
+                        // if the int value can be computed, update the link 
                         if(this->varEquiv->getIntVal(rhsVar->name()).first){
                             const IntLit* intValExpr = (const IntLit*) arg1;
                             this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
                         }
                         const Expr* varEquality = Expr::eq(
-                            this->varFactory->getVar(lhsVarName),
-                            this->varFactory->getVar(rhsVarName)
+                            this->varFactory->getVar(lhsVarOrigName),
+                            this->varFactory->getVar(rhsOrigVarName)
                         );
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
                         newSH->print(std::cout);
@@ -145,6 +169,7 @@ namespace smack{
                         CFDEBUG(std::cout << "RHS TYPE: " << rhs->getType() << std::endl); 
                         return sh;
                     }
+                    // 3. Deal with arithmetic functions
                 } else if(this->isBinaryArithFuncName(rhsFun->name())){
                     CFDEBUG(std::cout << "ASSIGN: rhs binary arithmetic" << std::endl;);
                     this->varEquiv->addNewName(lhsVarName);
@@ -158,20 +183,22 @@ namespace smack{
                         CFDEBUG(std::cout << "INFO: cannot compute int value." <<std::endl;);
                     }
                     const Expr* equality = Expr::eq(
-                        this->varFactory->getVar(lhsVarName),
+                        this->varFactory->getVar(lhsVarOrigName),
                         rhsExpr
                     );
                     SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, equality);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl);
                     return newSH;
+                    // 4. Deal with load and store instructions
                 } else if(this->isStoreLoadFuncName(rhsFun->name())){
                     CFDEBUG(std::cout << "ASSIGN: rhs store or load" << std::endl;);
                     // This may contain the pointer arithmetic
                     if(rhsFun->name().find("$store") != std::string::npos){
+                        // lhsVarName is not needed, since lhsVar is not used in store instruction.
                         return this->executeStore(sh, rhsFun);
                     } else if(rhsFun->name().find("$load") != std::string::npos){
-                        return this->executeLoad(sh, lhsVarName, rhsFun);
+                        return this->executeLoad(sh, lhsVarName, lhsVarOrigName, rhsFun);
                     } else {
                         CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
                     }
@@ -253,7 +280,9 @@ namespace smack{
             }
         } else {
             if(arithExpr->isVar()){
-                return this->varFactory->getVar(((const VarExpr*)arithExpr)->name());
+                const VarExpr* arithExprOrigVar = (const VarExpr*) arithExpr;
+                std::string arithExprOrigVarName = arithExprOrigVar->name();
+                return this->varFactory->getVar(arithExprOrigVarName);
             }
             return arithExpr;
         }
@@ -261,6 +290,7 @@ namespace smack{
 
     const Expr* BlockExecutor::parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName){
         // parse the ptr arithmetic expression and return the simplified expression, link the ptr variable to the malloc name when found
+        // do the variable rename during the parsing
         if(ExprType::FUNC == arithExpr->getType()){
             const FunExpr* funcExpr = (const FunExpr*) arithExpr;
             if(this->isPtrArithFuncName(funcExpr->name())){
@@ -279,20 +309,28 @@ namespace smack{
             }
         } else {
             if(arithExpr->isVar()){
-                CFDEBUG(std::cout << "Link arithmetic operation: " <<  lhsName << " " << ((const VarExpr*) arithExpr)->name() << std::endl;);
-                this->varEquiv->linkBlkName(lhsName, ((const VarExpr*) arithExpr)->name());  
-                return this->varFactory->getVar(((const VarExpr*) arithExpr)->name());
-            } 
-            return arithExpr;
+                const VarExpr* varOrig = (const VarExpr*) arithExpr;
+                std::string varOrigName = varOrig->name();
+                const VarExpr* varGet = this->varFactory->getVar(varOrigName);
+
+                CFDEBUG(std::cout << "Link arithmetic operation: " <<  lhsName << " " << varGet->name() << std::endl;);
+                this->varEquiv->linkBlkName(lhsName, varGet->name());  
+                return varGet;
+            } else {
+                return arithExpr;
+            }
         }
     }
 
     int BlockExecutor::computeArithmeticOffsetValue(const Expr* expression){
-        //TODOsh: only compute for one layer
+        // input expression is already renamed form
         if(expression->isValue()){
             const IntLit* intValExpr = (const IntLit*) expression;
             return intValExpr->getVal();
         } else if(expression->isVar()){
+            // if there is var in the expression
+            // 1. if it is a pointer variable, we use the offset of the pointer varible
+            // 2. if it is an integer variable, we use the inferred value of the variable
             const VarExpr* varExpr = (const VarExpr*) expression;
             if(varExpr->name().find("$p") != std::string::npos){
                 return this->varEquiv->getOffset(varExpr->name());
@@ -329,6 +367,7 @@ namespace smack{
     }
 
     const Expr* BlockExecutor::extractPtrArithVarName(const Expr* expression){
+        // input expression is already renamed form
         // Find the ptr arithmetic var variable
         // e.g. ($p0 + 1) + ($i + 2) as input, the function return the name $p0
         if(expression->isVar()){
@@ -433,18 +472,22 @@ namespace smack{
         
         std::string funcName = stmt->getProc();
         if(!funcName.compare("malloc")){
-            std::string retVarName = stmt->getReturns().front();
+            std::string retOrigVarName = stmt->getReturns().front();
+            const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
+            std::string retVarName = retVar->name();
             // TODOsh: check, we assume there is only one parameter.
             const Expr* param = stmt->getParams().front();
             if(param->isVar()){
-                const VarExpr* paramVar = (const VarExpr*)param;
+                const VarExpr* paramOrigVar = (const VarExpr*)param;
+                std::string paramOrigVarName = paramOrigVar->name();
+                const VarExpr* paramVar = this->varFactory->getVar(paramOrigVarName);
                 std::string paramVarName = paramVar->name();
                 this->varEquiv->addNewName(retVarName);
                 this->varEquiv->addNewBlkName(retVarName);
                 this->varEquiv->addNewOffset(retVarName, 0);
                 this->varEquiv->setStructArrayPtr(retVarName, false);
                 this->storeSplit->createAxis(retVarName);
-                this->storeSplit->setMaxOffset(retVarName, param->translateToInt(this->varEquiv).second);
+                this->storeSplit->setMaxOffset(retVarName, paramVar->translateToInt(this->varEquiv).second);
 
                 /*const Expr* pureConj = Expr::eq(
                     this->varFactory->getVar(retVarName),
@@ -456,17 +499,17 @@ namespace smack{
                     newSpatialExpr.push_back(sp);
                 }
                 const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                    this->varFactory->getVar(retVarName),
-                    this->varFactory->getVar(paramVarName),
+                    this->varFactory->getVar(retOrigVarName),
+                    this->varFactory->getVar(paramOrigVarName),
                     retVarName
                 ); 
-                bool empty = (param->translateToInt(this->varEquiv).second > 0) ? false : true;
+                bool empty = (paramVar->translateToInt(this->varEquiv).second > 0) ? false : true;
 
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
-                    this->varFactory->getVar(retVarName),
+                    this->varFactory->getVar(retOrigVarName),
                     Expr::add(
-                        this->varFactory->getVar(retVarName),
-                        this->varFactory->getVar(paramVarName)
+                        this->varFactory->getVar(retOrigVarName),
+                        this->varFactory->getVar(paramOrigVarName)
                     ),
                     retVarName,
                     empty
@@ -479,6 +522,7 @@ namespace smack{
                 CFDEBUG(std::cout << std::endl)
                 return newSH;
             } else if(param->isValue()){
+                // the sizeExpr here must be a value expression containing no variables
                 const Expr* sizeExpr = param;
                 this->varEquiv->addNewName(retVarName);
                 this->varEquiv->addNewBlkName(retVarName);
@@ -493,16 +537,16 @@ namespace smack{
                     newSpatialExpr.push_back(sp);
                 }
                 const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                    this->varFactory->getVar(retVarName),
+                    this->varFactory->getVar(retOrigVarName),
                     sizeExpr,
                     retVarName
                 );
                 bool empty = (sizeExpr->translateToInt(this->varEquiv).second == 0) ? true : false;
                 
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
-                    this->varFactory->getVar(retVarName),
+                    this->varFactory->getVar(retOrigVarName),
                     Expr::add(
-                        this->varFactory->getVar(retVarName),
+                        this->varFactory->getVar(retOrigVarName),
                         sizeExpr
                     ),
                     retVarName,
@@ -532,7 +576,10 @@ namespace smack{
         if(!stmt->getProc().compare("free_")){
             const Expr* arg1 = stmt->getParams().front();
             if(ExprType::VAR == arg1->getType()){
-                const VarExpr* freedVar = (const VarExpr*) arg1;
+                const VarExpr* freedOrigVar = (const VarExpr*) arg1;
+                std::string freedOrigVarName = freedOrigVar->name();
+                const VarExpr* freedVar = this->varFactory->getVar(freedOrigVarName);
+
                 std::string allocVarName = this->varEquiv->getAllocName(freedVar->name());
                 CFDEBUG(std::cout << "Freed varname: " << freedVar->name() << std::endl);
                 CFDEBUG(std::cout << "Alloced varname: " << allocVarName << std::endl);
@@ -581,7 +628,10 @@ namespace smack{
                 i++;
             }
             CFDEBUG(std::cout << "STORE: arg1 " << arg1 << " arg2: " << arg2 << std::endl;);
-            const VarExpr* varArg1 = (const VarExpr*) arg1;
+            const VarExpr* varOrigArg1 = (const VarExpr*) arg1;
+            std::string varOrigiArg1Name = varOrigArg1->name();
+            const VarExpr* varArg1 = this->varFactory->getVar(varOrigiArg1Name);
+
             int offset = this->varEquiv->getOffset(varArg1->name());
             std::string mallocName = this->varEquiv->getBlkName(varArg1->name());
 
@@ -606,18 +656,19 @@ namespace smack{
                         newSH->print(std::cout);
                         return newSH;
                     }
-                    bool leftEmpty = (this->computeArithmeticOffsetValue(arg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
+                    bool leftEmpty = (this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
                     const SpatialLiteral*  leftBlk = NULL;
                     if(this->varEquiv->isStructArrayPtr(mallocName)){
                         const SpatialLiteral* leftBlk = SpatialLiteral::gcBlk(
                             breakBlk->getFrom(),
-                            arg1,
+                            varArg1,
                             breakBlk->getBlkName(),
                             leftEmpty
                         );
                         // TODOsh: add fresh variable here
-    
-                        std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varArg1->name());
+
+                        // CFG use the original var name to store the size information, so we use name of varOrigArg1
+                        std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigArg1->name());
                         if(stepSize.second == 0){
                             // If the step size is 0, we regard it as the step size of the size of ptr
                             stepSize.second = PTR_BYTEWIDTH;
@@ -625,19 +676,26 @@ namespace smack{
                         assert(stepSize.second > 0);
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
-                        newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
+                        // TODOsh: check whether the store instruction can store a compositional expression to a location
                         if(arg2->isVar()){
-                            std::string oldname = ((const VarExpr*) arg2)->name();
+                            const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
+                            std::string varOrigArg2Name = varOrigArg2->name();
+                            const VarExpr* varArg2 = this->varFactory->getVar(varOrigArg2Name);
+
+                            std::string oldname = varArg2->name();
                             this->varEquiv->linkName(freshVar->name(), oldname);
+                            if(varArg2->translateToInt(this->varEquiv).first){
+                                this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
+                            }
+                            newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
                         } else {
-                            this->varEquiv->addNewName(freshVar->name());
-                        }
-                        if(arg2->translateToInt(this->varEquiv).first){
-                            this->varEquiv->addNewVal(freshVar->name(), arg2->translateToInt(this->varEquiv).second);
+                            CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable !!" << std::endl;);
+                            return nullptr;
+                            //this->varEquiv->addNewName(freshVar->name());
                         }
 
                         const SpatialLiteral* storedPt = SpatialLiteral::gcPt(
-                            arg1,
+                            varArg1,
                             freshVar,
                             //arg2,
                             breakBlk->getBlkName()
@@ -645,9 +703,9 @@ namespace smack{
     
                         CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
                         long long size = stepSize.second;
-                        bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) - this->computeArithmeticOffsetValue    (breakBlk->getTo()) == 0) ? true : false;
+                        bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
                         const SpatialLiteral* rightBlk = SpatialLiteral::gcBlk(
-                            Expr::add(arg1, Expr::lit(size)),
+                            Expr::add(varArg1, Expr::lit(size)),
                             breakBlk->getTo(),
                             breakBlk->getBlkName(),
                             rightEmpty
@@ -660,27 +718,36 @@ namespace smack{
                     } else {
                         const SpatialLiteral* leftBlk = SpatialLiteral::blk(
                             breakBlk->getFrom(),
-                            arg1,
+                            varArg1,
                             breakBlk->getBlkName(),
                             leftEmpty
                         );
                         // TODOsh: add fresh variable here
 
-                        std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varArg1->name());
+                        // CFG use the original var name to store the size information, so we use name of varOrigArg1
+                        std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigArg1->name());
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
-                        newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
+
                         if(arg2->isVar()){
-                            std::string oldname = ((const VarExpr*) arg2)->name();
+                            const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
+                            std::string varOrigArg2Name = varOrigArg2->name();
+                            const VarExpr* varArg2 = this->varFactory->getVar(varOrigArg2Name);
+
+                            std::string oldname = varArg2->name();
                             this->varEquiv->linkName(freshVar->name(), oldname);
+
+                            if(varArg2->translateToInt(this->varEquiv).first){
+                                this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
+                            }
+                            newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
                         } else {
-                            this->varEquiv->addNewName(freshVar->name());
-                        }
-                        if(arg2->translateToInt(this->varEquiv).first){
-                            this->varEquiv->addNewVal(freshVar->name(), arg2->translateToInt(this->varEquiv).second);
+                            CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable !!" << std::endl;);
+                            return nullptr;
+                            //this->varEquiv->addNewName(freshVar->name());
                         }
                         const SpatialLiteral* storedPt = SpatialLiteral::pt(
-                            arg1,
+                            varArg1,
                             freshVar,
                             //arg2,
                             breakBlk->getBlkName()
@@ -688,9 +755,9 @@ namespace smack{
 
                         CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
                         long long size = stepSize.second;
-                        bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) - this->computeArithmeticOffsetValue    (breakBlk->getTo()) == 0) ? true : false;
+                        bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
                         const SpatialLiteral* rightBlk = SpatialLiteral::blk(
-                            Expr::add(arg1, Expr::lit(size)),
+                            Expr::add(varArg1, Expr::lit(size)),
                             breakBlk->getTo(),
                             breakBlk->getBlkName(),
                             rightEmpty
@@ -724,9 +791,12 @@ namespace smack{
 
     SHExprPtr
     BlockExecutor::executeLoad
-    (SHExprPtr sh, std::string lhsVarName, const FunExpr* rhsFun){ 
+    (SHExprPtr sh, std::string lhsVarName, std::string lhsVarOrigName, const FunExpr* rhsFun){ 
         if(rhsFun->name().find("$load") != std::string::npos){
-            const VarExpr* ldPtr = (const VarExpr*)rhsFun->getArgs().back();
+            const VarExpr* ldOrigPtr = (const VarExpr*)rhsFun->getArgs().back();
+            std::string ldOrigPtrName = ldOrigPtr->name();
+            const VarExpr* ldPtr = this->varFactory->getVar(ldOrigPtrName);
+
             std::string ldPtrName = ldPtr->name();
             CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
             int loadPosOffset = this->varEquiv->getOffset(ldPtrName);
@@ -734,7 +804,7 @@ namespace smack{
             int blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
             if(loadPosOffset >= blkSize){
                 // If the ptr offset is overflow
-                std::list<const SpatialLiteral*> newSpatial;\
+                std::list<const SpatialLiteral*> newSpatial;
                 // the symbolic heap is set to error
                 newSpatial.push_back(SpatialLiteral::errlit(true));
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
@@ -769,37 +839,25 @@ namespace smack{
                         // find the correct index and load the content out
                         if(SpatialLiteral::Kind::PT == spl->getId()){
                             const PtLit* pt = (const PtLit*) spl;
-                            const Expr* toExpr = pt->getTo();
+                            // toExpr should be a variable
+                            const Expr* toExprOrig = pt->getTo();
 
-                            CFDEBUG(std::cout << "INFO: loaded expr: " << toExpr << std::endl;);
-                            if(toExpr->isVar()){
-                                std::string loadedVarName = ((const VarExpr*)toExpr)->name();
+                            CFDEBUG(std::cout << "INFO: loaded expr: " << toExprOrig << std::endl;);
+                            if(toExprOrig->isVar()){
+                                //toExprOrig should always be a fresh variable
+                                const VarExpr* toExprVar = (const VarExpr*)toExprOrig;
+
+                                std::string loadedVarName = toExprVar->name();
                                 const Expr* newPure = Expr::and_(
                                      sh->getPure(),
                                      Expr::eq(
-                                        this->varFactory->getVar(lhsVarName), 
-                                        this->varFactory->getVar(loadedVarName)     
+                                        this->varFactory->getVar(lhsVarOrigName), 
+                                        toExprVar     
                                     )
                                 );
                                 this->varEquiv->linkName(lhsVarName, loadedVarName);
                                 this->varEquiv->linkIntVar(lhsVarName, loadedVarName);
-                                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure,   sh->getSpatialExpr());
-                                newSH->print(std::cout);
-                                std::cout << std::endl;
-                                return newSH;
-                            } else if(toExpr->isValue()){
-                                // This branch should be deleted since all pt rhs are now variables.
-                                const IntLit* intToExpr = (const IntLit*) toExpr;
-                                const Expr* newPure = Expr::and_(
-                                    sh->getPure(),
-                                    Expr::eq(
-                                        this->varFactory->getVar(lhsVarName), 
-                                        toExpr    
-                                    )
-                                );
-                                this->varEquiv->addNewName(lhsVarName);
-                                this->varEquiv->addNewVal(lhsVarName, intToExpr->getVal());
-                                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure,   sh->getSpatialExpr());
+                                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
                                 newSH->print(std::cout);
                                 std::cout << std::endl;
                                 return newSH;
@@ -819,7 +877,9 @@ namespace smack{
                 //  Use fresh variable for the nondeterministic value
                 //  and modify the value of the original one 
                 CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory... "  << std::endl;);
-                int freshVarByteSize = this->cfg->getVarDetailType(lhsVarName).second;
+
+                // TODOsh: getVarDetailType name is not correct
+                int freshVarByteSize = this->cfg->getVarDetailType(lhsVarOrigName).second;
                 std::cout << "load size: " << freshVarByteSize << std::endl;
                 if(freshVarByteSize == 0){
                     // if 0, regard it as ptr size
@@ -832,7 +892,7 @@ namespace smack{
                 this->cfg->addVarType(freshVar->name(), "i" + std::to_string(freshVarByteSize * 8));
                 const Expr* newPure =  Expr::and_(
                     sh->getPure(),
-                    Expr::eq(this->varFactory->getVar(lhsVarName), freshVar)
+                    Expr::eq(this->varFactory->getVar(lhsVarOrigName), freshVar)
                 );
                 // after loading we have a fresh variable for the points to so we also need to modify the spatial literals
                 // This piece of code is related to executeStore
@@ -955,10 +1015,13 @@ namespace smack{
     (SHExprPtr sh, const CallStmt* stmt){
         // example of the instruction
         // 1. call $p1 = $alloc($mul.ref(4, $i2))
-        // 2. caall $p2 = $alloc($mul.ref(40, $zext.i32.i64(1)))
+        // 2. call $p2 = $alloc($mul.ref(40, $zext.i32.i64(1)))
         std::string funcName = stmt->getProc();
         if(!funcName.compare("$alloc")){
-            std::string retVarName = stmt->getReturns().front();
+            std::string retOrigVarName = stmt->getReturns().front();
+            const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
+            std::string retVarName = retVar->name();
+
             const Expr* param = stmt->getParams().front();
             assert(ExprType::FUNC == param->getType());
             const FunExpr* multiFuncExpr = (const FunExpr*) param;
@@ -967,7 +1030,7 @@ namespace smack{
                 const Expr* multiArg2 = multiFuncExpr->getArgs().back();
 
                 assert(multiArg1->isValue());
-                if(multiArg2->isValue() || multiArg2->isVar()){
+                if(multiArg2->isValue()){
                     const Expr* lengthExpr = Expr::multiply(multiArg1, multiArg2);
                     this->varEquiv->addNewName(retVarName);
                     this->varEquiv->addNewBlkName(retVarName);
@@ -981,16 +1044,56 @@ namespace smack{
                         newSpatialExpr.push_back(sp);
                     }
                     const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                        this->varFactory->getVar(retVarName),
+                        this->varFactory->getVar(retOrigVarName),
                         lengthExpr,
                         retVarName
                     ); 
                     bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
 
                     const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
-                        this->varFactory->getVar(retVarName),
+                        this->varFactory->getVar(retOrigVarName),
                         Expr::add(
-                            this->varFactory->getVar(retVarName),
+                            this->varFactory->getVar(retOrigVarName),
+                            lengthExpr
+                        ),
+                        retVarName,
+                        empty
+                    );
+
+                    newSpatialExpr.push_back(sizePt);
+                    newSpatialExpr.push_back(allocBlk);
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                    newSH->print(std::cout);
+                    CFDEBUG(std::cout << std::endl)
+                    return newSH;
+                } else if(multiArg2->isVar()) {
+                    const VarExpr* multiArg2OrigVar = (const VarExpr*) multiArg2;
+                    std::string multiArg2OrigVarName = multiArg2OrigVar->name();
+                    const VarExpr* multiArg2Var = this->varFactory->getVar(multiArg2OrigVarName);
+
+                    const Expr* lengthExpr = Expr::multiply(multiArg1, multiArg2Var);
+                    this->varEquiv->addNewName(retVarName);
+                    this->varEquiv->addNewBlkName(retVarName);
+                    this->varEquiv->addNewOffset(retVarName, 0);
+                    this->varEquiv->setStructArrayPtr(retVarName, true);
+                    this->storeSplit->createAxis(retVarName);
+                    this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
+                    const Expr* newPure = sh->getPure();
+                    std::list<const SpatialLiteral *> newSpatialExpr;
+                    for(const SpatialLiteral* sp : sh->getSpatialExpr()){
+                        newSpatialExpr.push_back(sp);
+                    }
+                    const SpatialLiteral* sizePt = SpatialLiteral::spt(
+                        this->varFactory->getVar(retOrigVarName),
+                        lengthExpr,
+                        retVarName
+                    ); 
+                    bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
+
+                    const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
+                        this->varFactory->getVar(retOrigVarName),
+                        Expr::add(
+                            this->varFactory->getVar(retOrigVarName),
                             lengthExpr
                         ),
                         retVarName,
@@ -1020,16 +1123,16 @@ namespace smack{
                         newSpatialExpr.push_back(sp);
                     }
                     const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                        this->varFactory->getVar(retVarName),
+                        this->varFactory->getVar(retOrigVarName),
                         lengthExpr,
                         retVarName
                     ); 
                     bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
 
                     const SpatialLiteral* allocBlk = SpatialLiteral::blk(
-                        this->varFactory->getVar(retVarName),
+                        this->varFactory->getVar(retOrigVarName),
                         Expr::add(
-                            this->varFactory->getVar(retVarName),
+                            this->varFactory->getVar(retOrigVarName),
                             lengthExpr
                         ),
                         retVarName,

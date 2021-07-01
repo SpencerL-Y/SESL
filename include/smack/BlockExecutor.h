@@ -26,6 +26,11 @@
 namespace smack{
     using llvm::errs;
     class BlockExecutor {
+
+        // An abstract state for execution includes:
+        // (p,SHExprPtr)
+        // auxillary information: varEquiv and storeSplit
+
         Program* program;
         Block* currentBlock;
         VarEquivPtr varEquiv;
@@ -55,6 +60,8 @@ namespace smack{
     public:
         BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb, VarEquivPtr vars, VarFactoryPtr vf, StoreSplitterPtr split) : program(p), currentBlock(cb->getStateBlock()), varEquiv(vars), varFactory(vf), storeSplit(split), cfg(cfgPtr) {}
 
+        // --------------------- Execution for instructions
+
         SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
 
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
@@ -67,11 +74,19 @@ namespace smack{
 
         SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
 
-        SHExprPtr executeLoad(SHExprPtr sh, std::string lhsVarName, const FunExpr* rhsFun);
+        SHExprPtr executeLoad(SHExprPtr sh, std::string lhsVarName, std::string lhsVarOrigName, const FunExpr* rhsFun);
 
         SHExprPtr executeStore(SHExprPtr sh, const FunExpr* rhsFun);
 
         SHExprPtr executeOther(SHExprPtr sh, const Stmt* stmt);
+
+        //----------------------- Execution for library functions
+
+        SHExprPtr executeMemcpy(SHExprPtr sh, const FunExpr* rhsFun);
+
+        SHExprPtr executeMemset(SHExprPtr sh, const FunExpr* rhsFun);
+
+
 
         // symbolic execution for current block and results in and symbolic heap.
         SHExprPtr execute(SHExprPtr initialSh, const Stmt* stmt);

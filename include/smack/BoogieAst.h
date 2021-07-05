@@ -62,9 +62,14 @@ public:
   static const Expr *forall(std::list<Binding>, const Expr *e);
   static const Expr *and_(const Expr *l, const Expr *r);
   static const Expr *or_(const Expr *l, const Expr *r);
+  static const Expr *xor_(const Expr *l, const Expr *r);
   static const Expr *eq(const Expr *l, const Expr *r);
   static const Expr *lt(const Expr *l, const Expr *r);
+  static const Expr *le(const Expr *l, const Expr *r);
+  static const Expr *gt(const Expr *l, const Expr *r);
+  static const Expr *ge(const Expr *l, const Expr *r);
   static const Expr *ifThenElse(const Expr *c, const Expr *t, const Expr *e);
+  static const Expr *iff(const Expr* l, const Expr* r);
   static const Expr *fn(std::string f, const Expr *x);
   static const Expr *fn(std::string f, const Expr *x, const Expr *y);
   static const Expr *fn(std::string f, const Expr *x, const Expr *y,

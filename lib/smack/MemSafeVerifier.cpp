@@ -40,9 +40,6 @@ namespace smack {
         CFGPtr mainGraph = CFGs["main"];
         mainGraph->printCFG();
         mainGraph->printSCCNumber();
-        CFGExecutor cfgExecutor(mainGraph);
-        cfgExecutor.generatePathByUpperBound();
-        cfgExecutor.printPath();
 
         StatePtr state = mainGraph->getEntryState();
         // std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
@@ -131,24 +128,33 @@ namespace smack {
 
     bool MemSafeChecker::checkCurrentMemLeak(){
         this->trans->translate();
-        CFDEBUG(std::cout << trans->getFinalExpr() << std::endl;);
-        z3::expr premise = this->trans->getFinalExpr();
-        z3::expr consequent = 
-        (this->ctx->bool_val(true) && slah_api::newEmp(*(this->ctx)));
-        CFDEBUG(std::cout << "INFO: Check " << std::endl;);
-        CFDEBUG(std::cout << premise << std::endl;);
-        CFDEBUG(std::cout << "|" << std::endl <<
-                "|———— " << std::endl << 
-                "|" << std::endl<< std::endl );
-        CFDEBUG(std::cout << consequent << std::endl;);
-        z3::check_result result = slah_api::checkEnt(premise, consequent);
-        if(result == z3::unsat){
-            DEBUG_WITH_COLOR(std::cout << "CHECK: MemLeak Satisfied!" << std::endl, color::green);
+        z3::expr pureCond = this->trans->getPure();
+        z3::expr tempFormula = pureCond;
+        std::cout << tempFormula << std::endl;
+        z3::check_result pathCond = slah_api::checkSat(tempFormula);
+        if(pathCond == z3::unsat){
+            DEBUG_WITH_COLOR(std::cout << "CHECK: Satisfied, path condition false!" << std::endl, color::green);
             return true;
         } else {
-            DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: MemLeak!!!" << std::endl;, color::red);
-            return false;
-        }   
+            CFDEBUG(std::cout << trans->getFinalExpr() << std::endl;);
+            z3::expr premise = this->trans->getFinalExpr();
+            z3::expr consequent = 
+            (this->ctx->bool_val(true) && slah_api::newEmp(*(this->ctx)));
+            CFDEBUG(std::cout << "INFO: Check " << std::endl;);
+            CFDEBUG(std::cout << premise << std::endl;);
+            CFDEBUG(std::cout << "|" << std::endl <<
+                    "|———— " << std::endl << 
+                    "|" << std::endl<< std::endl );
+            CFDEBUG(std::cout << consequent << std::endl;);
+            z3::check_result result = slah_api::checkEnt(premise, consequent);
+            if(result == z3::unsat){
+                DEBUG_WITH_COLOR(std::cout << "CHECK: MemLeak Satisfied!" << std::endl, color::green);
+                return true;
+            } else {
+                DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: MemLeak!!!" << std::endl;, color::red);
+                return false;
+            }   
+        }
     }
 
     std::pair<bool, const Stmt*> MemSafeChecker::checkInferenceError(){

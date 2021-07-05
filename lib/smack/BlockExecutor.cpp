@@ -38,7 +38,6 @@ namespace smack{
             }
 
             if(lhsVarName.find("$M") != std::string::npos){
-                std::cout << "ADDDDDDD " << lhsVarName << " M" + std::to_string(8 * PTR_BYTEWIDTH) << std::endl;
                 this->cfg->addVarType(lhsVarOrigName, "M" + std::to_string(8 * PTR_BYTEWIDTH));
             }
 
@@ -213,6 +212,43 @@ namespace smack{
                     } else {
                         CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
                     }
+                    // 5. deal with boolean functions
+                } else if(this->isUnaryBooleanFuncName(rhsFun->name())){
+                    CFDEBUG(std::cout << "ASSIGN: rhs unary boolean function" << std::endl;);
+                    if(rhsFun->name().find("$not") != std::string::npos){
+                        const Expr* arg = rhsFun->getArgs().front();
+                        const Expr* notPure = this->parseUnaryBooleanExpression(rhsFun->name(), arg);
+                        this->varEquiv->addNewName(lhsVarName);
+                        const Expr* newPureConj = Expr::iff(
+                            this->varFactory->getVar(lhsVarOrigName),
+                            notPure
+                        );
+                        const Expr* newPure = Expr::and_(newPureConj, sh->getPure());
+                        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                        newSH->print(std::cout);
+                        std::cout << std::endl;
+                        return newSH;
+                    } else {
+                        CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
+                        return sh;
+                    }
+                } else if(this->isBinaryBooleanFuncName(rhsFun->name())){
+                    CFDEBUG(std::cout << "ASSIGN: rhs binary boolean function" << std::endl;);
+                    const Expr* arg1 = rhsFun->getArgs().front();
+                    const Expr* arg2 = rhsFun->getArgs().back();
+                    const Expr* rhsExpr = this->parseBinaryBooleanExpression(rhsFun->name(), arg1, arg2);
+                    const Expr* newPureConj = Expr::iff(
+                        this->varFactory->getVar(lhsVarOrigName),
+                        rhsExpr
+                    );
+                    const Expr* newPure = Expr::and_(
+                        newPureConj,
+                        sh->getPure()
+                    );
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                    newSH->print(std::cout);
+                    std::cout << std::endl;
+                    return newSH;
                 }
                 else {
                     CFDEBUG(std::cout <<  "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl);
@@ -468,11 +504,94 @@ namespace smack{
     
 
     bool BlockExecutor::isUnaryBooleanFuncName(std::string name){
+        if(name.find("$not") != std::string::npos){
+            return true;
+        } else {
+            return false;
+        }
         return false;
     }
 
     bool BlockExecutor::isBinaryBooleanFuncName(std::string name){
-        return false;
+        if(name.find("$and") != std::string::npos ||
+        name.find("$or") != std::string::npos ||
+        name.find("$xor") != std::string::npos ||
+        name.find("$nand") != std::string::npos ||
+        name.find("$ule") != std::string::npos ||
+        name.find("$ult") != std::string::npos ||
+        name.find("$uge") != std::string::npos ||
+        name.find("$ugt") != std::string::npos ||
+        name.find("$sle") != std::string::npos ||
+        name.find("$slt") != std::string::npos ||
+        name.find("$sge") != std::string::npos ||
+        name.find("$sgt") != std::string::npos ||
+        name.find("$eq") != std::string::npos ||
+        name.find("$ne") != std::string::npos){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    const Expr* BlockExecutor::parseUnaryBooleanExpression(std::string funcName, const Expr* inner){
+        if(funcName.find("$not") != std::string::npos){
+            const Expr* result = Expr::not_(inner);
+            return result;
+        } else {
+            CFDEBUG(std::cout << "ERROR: UNKNOWN unary boolean expression" << std::endl;);
+            return NULL;
+        }
+    }
+
+    const Expr* BlockExecutor::parseBinaryBooleanExpression(std::string funcName, const Expr* lhs, const Expr* rhs){
+        // Currently only expand for one level...
+        // TODOsh: extend to recursive version later
+        const Expr* finalLhs;
+        const Expr* finalRhs;
+
+        if(lhs->isVar()){
+            const VarExpr* lhsVar = (const VarExpr*) lhs;
+            finalLhs = this->varFactory->getVar(lhsVar->name());
+        } else {
+            finalLhs = lhs;
+        }
+
+        if(rhs->isVar()){
+            const VarExpr* rhsVar = (const VarExpr*) rhs;
+            finalRhs = this->varFactory->getVar(rhsVar->name());
+        } else {
+            finalRhs = rhs;
+        }
+
+        if(funcName.find("$and") != std::string::npos){
+            const Expr* result = Expr::and_(finalLhs, finalRhs);
+            return result;
+        } else if(funcName.find("$or") != std::string::npos){
+            const Expr* result = Expr::or_(finalLhs, finalRhs);
+            return result;
+        } else if(funcName.find("$xor") != std::string::npos){
+            const Expr *result = Expr::xor_(finalLhs, finalRhs);
+            return result;
+        } else if(funcName.find("$ule") != std::string::npos ||
+        funcName.find("$sle") != std::string::npos){
+            const Expr *result = Expr::le(finalLhs, finalRhs);
+            return result;
+        } else if(funcName.find("$ult") != std::string::npos || 
+        funcName.find("$slt") != std::string::npos){
+            const Expr* result = Expr::lt(finalLhs, finalRhs);
+            return result;
+        } else if(funcName.find("$uge") != std::string::npos ||
+        funcName.find("$sge") != std::string::npos){
+            const Expr *result = Expr::ge(finalLhs, finalRhs);
+            return result;
+        } else if(funcName.find("$ugt") != std::string::npos ||
+        funcName.find("$sgt") != std::string::npos){
+            const Expr *result = Expr::gt(finalLhs, finalRhs);
+            return result;
+        } else {
+            CFDEBUG(std::cout << "ERROR: UNSOLVED Boolean Expression Name" << std::endl;);
+            return NULL;
+        }
     }
 
     bool BlockExecutor::isPtrArithFuncName(std::string name){
@@ -776,6 +895,7 @@ namespace smack{
 
                         // CFG use the original var name to store the size information, so we use name of varOrigArg1
                         std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigArg1->name());
+                        stepSize.second = stepSize.second/8;// convert to byte 
                         if(stepSize.second == 0){
                             // If the step size is 0, we regard it as the step size of the size of ptr
                             stepSize.second = PTR_BYTEWIDTH;
@@ -837,6 +957,8 @@ namespace smack{
 
                         // CFG use the original var name to store the size information, so we use name of varOrigArg1
                         std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigArg1->name());
+                        stepSize.second = stepSize.second/8;
+
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
 
@@ -994,8 +1116,9 @@ namespace smack{
                 //  and modify the value of the original one 
                 CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory... "  << std::endl;);
 
-                // TODOsh: getVarDetailType name is not correct
-                int freshVarByteSize = this->cfg->getVarDetailType(lhsVarOrigName).second;
+                auto stepSize = this->cfg->getVarDetailType(lhsVarOrigName);
+                stepSize.second = stepSize.second/8;
+                int freshVarByteSize = stepSize.second;
                 std::cout << "load size: " << freshVarByteSize << std::endl;
                 if(freshVarByteSize == 0){
                     // if 0, regard it as ptr size
@@ -1316,12 +1439,16 @@ namespace smack{
         }
 
         if(Stmt::CALL == stmt->getKind()){
-            CFDEBUG(std::cout << "INFO: stmt kind CALL" << std::endl);
+            CFDEBUG(std::cout << "INFO: stmt kind CALL" << std::endl;);
             return this->executeCall(currSH, stmt);
         } else if(Stmt::ASSIGN == stmt->getKind()){
-            CFDEBUG(std::cout << "INFO: stmt kind ASSIGN" << std::endl);
+            CFDEBUG(std::cout << "INFO: stmt kind ASSIGN" << std::endl;);
             return this->executeAssign(currSH, stmt);
-        } 
+        } else if(Stmt::ASSUME == stmt->getKind()){
+            CFDEBUG(std::cout << "INFO: stmt kind ASSUME" << std::endl;);
+            return currSH;
+            //this->executeAssume(currSH, stmt);
+        }
         else { 
             CFDEBUG(std::cout << "INFO: stmt kind " << stmt->getKind() << std::endl);
             return this->executeOther(currSH, stmt);

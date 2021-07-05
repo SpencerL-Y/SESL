@@ -180,13 +180,13 @@ namespace smack
             for (int i = 1; i < type.length(); ++ i) {
                 ans = ans * 10 + type[i] - '0';
             }
-            return {type, ans / 8};
+            return {type, ans};
         } else if (type[0] == 'r') {
             int ans = 0;
             for (int i = 3; i < type.length(); ++ i) {
                 ans = ans * 10 + type[i] - '0';
             }
-            return {type, ans / 8};
+            return {type, ans};
         } else {
             return {"fresh", 0};
         }

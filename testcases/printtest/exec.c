@@ -15,19 +15,18 @@ typedef struct {
 int *a, *b;
 int n;
 
-TData whatthefuck;
-
 int c[10];
 #define BLOCK_SIZE 128
 
 int main(){
+    // example 1
     // int num = 5;
     // int *j = (int*)malloc(num*sizeof(int));
     // *(j+1) = num + (-1);
     // int nnum = *(j+1) + (-1); 
     // free(j);
 
-// new example
+    // example 2
     // TData data;
     // TData* pdata = &data;
 
@@ -55,6 +54,8 @@ int main(){
     // a[2] = 111;
     // b[3] = 222;
     // int newname = a[1];
+    
+    // 2021.6.29
 
     // DEBUG: free
     // benchmark
@@ -63,19 +64,38 @@ int main(){
     // memcpy, memset byte level
     // call graph, variable rename
 
-    n = 128;
-    a = malloc (n * sizeof(*a));
-    b = malloc (n * sizeof(*b));
-    *b++ = 0;
-    int i;
-    for (i = 0; i < n; i++)
-        a[i] = -1;
-    for (i = 0; i < 128 - 1; i++)
-        b[i] = -1;
-    if (b[-2]) /* invalid deref */
-    { free(a); free(b-1); }
-    else
-    { free(a); free(b-1); }
+    // example 3
+    // n = 128;
+    // a = malloc (n * sizeof(*a));
+    // b = malloc (n * sizeof(*b));
+    // *b++ = 0;
+    // int i;
+    // for (i = 0; i < n; i++)
+    //     a[i] = -1;
+    // for (i = 0; i < 128 - 1; i++)
+    //     b[i] = -1;
+    // if (b[-2]) /* invalid deref */
+    // { free(a); free(b-1); }
+    // else
+    // { free(a); free(b-1); }
+    // example 4
+    // for(int i = 0; i < 5; i ++){
+    //     int *j = (int*)malloc(sizeof(int));
+    //     free(j);
+    // }
+    // example 5
+    int a = 10;
+    int* j = malloc(4);
+    if(a > 10){
+        free(j);
+    }
+    // example 6
+    // for(int i = 0; i < 6; i ++){
+    //     int *j = (int*)malloc(sizeof(int));
+    //     if(i < 6){
+    //         free(j);
+    //     }
+    // }
 
     return 0;
 } 

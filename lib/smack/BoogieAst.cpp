@@ -36,6 +36,14 @@ const Expr *Expr::or_(const Expr *l, const Expr *r) {
   return new BinExpr(BinExpr::Or, l, r);
 }
 
+const Expr *Expr::xor_(const Expr* l, const Expr *r){
+  const Expr* result = Expr::or_(
+                Expr::and_(Expr::not_(l), r),
+                Expr::and_(Expr::not_(r), l)
+            );
+  return result;
+}
+
 const Expr *Expr::eq(const Expr *l, const Expr *r) {
   return new BinExpr(BinExpr::Eq, l, r);
 }
@@ -44,8 +52,24 @@ const Expr *Expr::lt(const Expr *l, const Expr *r) {
   return new BinExpr(BinExpr::Lt, l, r);
 }
 
+const Expr *Expr::le(const Expr *l, const Expr *r){
+  return new BinExpr(BinExpr::Lte, l, r);
+}
+
+const Expr *Expr::gt(const Expr *l, const Expr *r){
+  return new BinExpr(BinExpr::Gt, l, r);
+}
+
+const Expr *Expr::ge(const Expr *l, const Expr *r){
+  return new BinExpr(BinExpr::Gte, l, r);
+}
+
 const Expr *Expr::ifThenElse(const Expr *c, const Expr *t, const Expr *e) {
   return new IfThenElseExpr(c, t, e);
+}
+
+const Expr *Expr::iff(const Expr* l, const Expr* r){
+  return new BinExpr(BinExpr::Iff, l, r);
 }
 
 const Expr *Expr::fn(std::string f, std::list<const Expr *> args) {
@@ -491,9 +515,16 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr va
               const VarExpr* rhsVar = (const VarExpr*) rhs;
               std::string lhsOrigVarName = varFac->getOrigVarName(lhsVar->name());
               std::string rhsOrigVarName = varFac->getOrigVarName(rhsVar->name());
+              // Deal with boolean assignment
+              if(cfg->getVarDetailType(lhsOrigVarName).second == 1){
+                assert(cfg->getVarDetailType(rhsOrigVarName).second == 1);
+                res = z3::implies(left, right) && z3::implies(right, left);
+                return res;
+              }
+
               // pointer variable are all set to size 32
-              int leftVarSize = (cfg->getVarDetailType(lhsOrigVarName).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(lhsOrigVarName).second;
-              int rightVarSize = (cfg->getVarDetailType(rhsOrigVarName).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(rhsOrigVarName).second;
+              int leftVarSize = (cfg->getVarDetailType(lhsOrigVarName).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(lhsOrigVarName).second/8;
+              int rightVarSize = (cfg->getVarDetailType(rhsOrigVarName).first.find("ref") != std::string::npos) ? PTR_BYTEWIDTH : cfg->getVarDetailType(rhsOrigVarName).second/8;
 
               z3::expr resultEquality = z3Ctx.bool_val(true);
               if(leftVarSize == rightVarSize){
@@ -532,7 +563,23 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr va
               }
               CDEBUG(std::cout << "in eq func!: " << resultEquality.to_string() << std::endl);
               return resultEquality;
-            } else {
+            } else if(lhs->isVar()){
+              const VarExpr* lhsVar = (const VarExpr*) lhs;
+              std::string lhsOrigVarName = varFac->getOrigVarName(lhsVar->name());
+              if(cfg->getVarDetailType(lhsOrigVarName).second == 1){
+                assert(rhs->isValue());
+                const IntLit* rhsInt = (const IntLit*) rhs;
+                if(rhsInt->getVal() == 0){
+                  res = z3::implies(left, false) && z3::implies(false, left); 
+                } else {
+                  res = z3::implies(left, true) && z3::implies(true, left); 
+                }
+                return res;
+              } else {
+                CFDEBUG(std::cout << "ERROR: this should not happen var translate ..." << std::endl;)
+              }
+            }
+            else {
               res = (left == right);
             }
 
@@ -710,14 +757,20 @@ z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr va
   // TODOsh: later remove the varFac and dealing fresh variables in CFG
   CFDEBUG(std::cout << "translating var" << this->name() << std::endl;);
   std::pair<std::string, int> typeResult = cfg->getVarDetailType(varFac->getOrigVarName(this->name()));
+  if(typeResult.second == 1){
+    
+    CFDEBUG(std::cout << "translating boolvar" << this->name() << std::endl;);
+    z3::expr result = z3Ctx.bool_const(this->name().c_str());
+    return result;
+  }
   int byteNum = 1;
   if(typeResult.first.compare("fresh")){
     if('i' == typeResult.first[0]){
-     byteNum = typeResult.second;
+     byteNum = typeResult.second/8;
     } else if('r' == typeResult.first[0]){
        byteNum = PTR_BYTEWIDTH;
     } else if('M' == typeResult.first[0]){
-       byteNum = typeResult.second;
+       byteNum = typeResult.second/8;
     }  else {
        CFDEBUG(std::cout << "ERROR: UNSOLVED Variable translation" << std::endl;);
     }
@@ -824,7 +877,7 @@ z3::expr PtLit::translateToZ3(z3::context& z3Ctx, CFGPtr cfg, VarFactoryPtr varF
   const VarExpr* fromVar = (const VarExpr*) this->getFrom();
   const VarExpr* toVar = (const VarExpr*) this->getTo();
   std::string fromOrigVarName = varFac->getOrigVarName(fromVar->name());
-  int stepWidth = cfg->getVarDetailType(fromOrigVarName).second;
+  int stepWidth = cfg->getVarDetailType(fromOrigVarName).second/8;
   // e.g. a pointer $p with type int* points to a variable $fresh
   // $p --> $fresh
   // will be translated into 

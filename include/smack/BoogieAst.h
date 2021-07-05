@@ -622,6 +622,7 @@ public:
     return false;
   }
   void print(std::ostream &os) const;
+  const Expr* getExpr() const {return expr;}
   static bool classof(const Stmt *S) { return S->getKind() == ASSUME; }
 };
 

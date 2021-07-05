@@ -32,6 +32,7 @@
         {
         private:
             std::map<std::string, BlkSplitterPtr> splitMap;
+            typedef std::shared_ptr<StoreSplitter> StoreSplitterPtr;
         public:
             StoreSplitter(/* args */) {};
             ~StoreSplitter() {};
@@ -39,6 +40,9 @@
             void setMaxOffset(std::string ptrName, int max);
             int addSplit(std::string allocName, int offset);
             std::pair<bool, int> getOffsetPos(std::string allocName, int offset);
+
+            void setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap);
+            StoreSplitterPtr clone();
         };
         typedef std::shared_ptr<StoreSplitter> StoreSplitterPtr;
         

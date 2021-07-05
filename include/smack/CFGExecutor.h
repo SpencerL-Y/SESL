@@ -17,6 +17,7 @@ namespace smack {
         ExecutionPath() {exePath.clear();}
         explicit ExecutionPath(vector<StatePtr> pathVec) {exePath = std::move(pathVec);}
         void setPath(vector<StatePtr> pathVec) {exePath = std::move(pathVec);}
+        vector<StatePtr> getExePath() {return exePath;}
         size_t length() {return exePath.size();}
         StatePtr operator [] (int pos) const;
     };
@@ -40,6 +41,7 @@ namespace smack {
         void generatePathByUpperBound();
         void generatePathByStep();
         void printPath();
+        vector<ExecutionPath> getExecPathVec();
     };
 }
 

@@ -80,4 +80,14 @@ namespace smack
         }
     }
 
+    void StoreSplitter::setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap){
+        this->splitMap = splitMap;
+    }
+
+    StoreSplitterPtr StoreSplitter::clone(){
+        StoreSplitterPtr newStoreSplit = std::make_shared<StoreSplitter>();
+        newStoreSplit->setSplitMap(splitMap);
+        return newStoreSplit;
+    }
+
 } // namespace smack

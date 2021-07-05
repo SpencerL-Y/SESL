@@ -60,4 +60,47 @@ namespace smack
         return this->varNameRestoreMap[varName];
     }
 
+    // getters and setters
+    std::unordered_map<std::string, int> VarFactory::getVarsMap(){
+        return this->varsMap;
+    }
+    std::unordered_map<int, const IntLit*> VarFactory::getIntsMap(){
+        return this->intsMap;
+    }
+    std::unordered_map<const VarExpr*, int> VarFactory::getFreshVar2Byte(){
+        return this->freshVar2Byte;
+    }
+    std::unordered_map<std::string, std::string> VarFactory::getVarNameRestoreMap(){
+        return this->varNameRestoreMap;
+    }
+    int VarFactory::getFreshIndex(){
+        return this->freshIndex;
+    }
+     
+    void VarFactory::setVarsMap(std::unordered_map<std::string, int> varsMap){
+        this->varsMap = varsMap;
+    }
+    void VarFactory::setIntsMap(std::unordered_map<int, const IntLit*> intsMap){
+        this->intsMap = intsMap;
+    }
+    void VarFactory::setFreshVar2Byte(std::unordered_map<const VarExpr*, int> freshVar2Byte){
+        this->freshVar2Byte = freshVar2Byte;
+    }
+    void VarFactory::setVarNameRestoreMap(std::unordered_map<std::string, std::string> varNameRestoreMap){
+        this->varNameRestoreMap = varNameRestoreMap;
+    }
+    void VarFactory::setFreshIndex(int freshIndex){
+        this->freshIndex = freshIndex;
+    }
+
+    VarFactoryPtr VarFactory::clone(){
+        VarFactoryPtr newVarFac = std::make_shared<VarFactory>();
+        newVarFac->setFreshIndex(this->freshIndex);
+        newVarFac->setFreshVar2Byte(this->freshVar2Byte);
+        newVarFac->setIntsMap(this->intsMap);
+        newVarFac->setVarNameRestoreMap(this->varNameRestoreMap);
+        newVarFac->setVarsMap(this->varsMap);
+        return newVarFac;
+    }
+
 } // namespace smack

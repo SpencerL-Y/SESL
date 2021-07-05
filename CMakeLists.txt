@@ -152,6 +152,7 @@ add_library(smackTranslator STATIC
   include/smack/VarFactory.h
   include/smack/StoreSplitter.h
   include/smack/CFGExecutor.h
+  include/smack/ExecutionState.h
   lib/smack/Translator.cpp
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp

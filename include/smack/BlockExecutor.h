@@ -10,6 +10,7 @@
 #include "smack/AddTiming.h"
 #include "smack/Debug.h"
 #include "smack/BoogieAst.h"
+#include "smack/ExecutionState.h"
 #include "smack/VarEquiv.h"
 #include "smack/VarFactory.h"
 #include "smack/StoreSplitter.h"
@@ -29,7 +30,7 @@ namespace smack{
 
         // An abstract state for execution includes:
         // (p,SHExprPtr)
-        // auxillary information: varEquiv and storeSplit
+        // auxillary information: varEquiv, varFactory and storeSplit
 
         Program* program;
         Block* currentBlock;
@@ -58,11 +59,13 @@ namespace smack{
 
 
     public:
-        BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb, VarEquivPtr vars, VarFactoryPtr vf, StoreSplitterPtr split) : program(p), currentBlock(cb->getStateBlock()), varEquiv(vars), varFactory(vf), storeSplit(split), cfg(cfgPtr) {}
+        BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb);}
 
         // --------------------- Execution for instructions
 
         SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
+
+        SHExprPtr executeAssume(SHExprPtr sh, const Stmt* stmt);
 
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
 
@@ -88,12 +91,12 @@ namespace smack{
 
 
 
-        // symbolic execution for current block and results in and symbolic heap.
-        SHExprPtr execute(SHExprPtr initialSh, const Stmt* stmt);
-
+        // symbolic execution for current stmt and results in and symbolic heap.
+        SHExprPtr executeStmt(SHExprPtr initialSh, const Stmt* stmt);
+        std::pair<ExecutionStatePtr, StatementList> execute(ExecutionStatePtr previousExecState);
 
         Block* getBlock(){ return currentBlock; }
-        void setBlock(Block* block){ currentBlock = block; }
+        void setBlock(StatePtr cb){ currentBlock = cb->getStateBlock(); }
         VarEquivPtr getVarEquiv() { return varEquiv;}
         VarFactoryPtr getVarFactory() { return varFactory;}
         StoreSplitterPtr getStoreSplit() { return storeSplit;}

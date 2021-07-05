@@ -66,6 +66,11 @@ namespace smack {
         }
     }
 
+    
+    vector<ExecutionPath> CFGExecutor::getExecPathVec(){
+        return this->exePathVec;
+    }
+
     void CFGExecutor::setUpperBound(int upperBound) {
         bound = upperBound;
     }

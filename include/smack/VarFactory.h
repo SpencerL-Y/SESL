@@ -21,6 +21,7 @@ namespace smack
         std::unordered_map<const VarExpr*, int> freshVar2Byte;
         std::unordered_map<std::string, std::string> varNameRestoreMap;
         int freshIndex;
+        typedef std::shared_ptr<VarFactory> VarFactoryPtr;
     public:
         VarFactory(/* args */){freshIndex = 0;};
         const VarExpr* useVar(std::string name);
@@ -30,7 +31,20 @@ namespace smack
         int getFreshVarSize(const VarExpr* var);
 
         std::string getOrigVarName(std::string varName);
+        // getters and setters
+        std::unordered_map<std::string, int> getVarsMap();
+        std::unordered_map<int, const IntLit*> getIntsMap();
+        std::unordered_map<const VarExpr*, int> getFreshVar2Byte();
+        std::unordered_map<std::string, std::string> getVarNameRestoreMap();
+        int getFreshIndex();
+         
+        void setVarsMap(std::unordered_map<std::string, int> varsMap);
+        void setIntsMap(std::unordered_map<int, const IntLit*> intsMap);
+        void setFreshVar2Byte(std::unordered_map<const VarExpr*, int> freshVar2Byte);
+        void setVarNameRestoreMap(std::unordered_map<std::string, std::string> varNameRestoreMap);
+        void setFreshIndex(int freshIndex);
 
+        VarFactoryPtr clone();
         ~VarFactory(){};
     };
     typedef std::shared_ptr<VarFactory> VarFactoryPtr;

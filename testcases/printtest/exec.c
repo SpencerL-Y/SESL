@@ -14,24 +14,25 @@ typedef struct {
 
 
 int main(){
-    int num = 5;
-    int *j = (int*)malloc(num*sizeof(int));
-    *(j+1) = num + (-1);
-    int nnum = *(j+1) + (-1); 
-    free(j);
+    // int num = 5;
+    // int *j = (int*)malloc(num*sizeof(int));
+    // *(j+1) = num + (-1);
+    // int nnum = *(j+1) + (-1); 
+    // free(j);
 
 // new example
-    // TData data;
-    // TData* pdata = &data;
+    TData data;
+    TData* pdata = &data;
 
-    // TData c;
-    // pdata->lo = malloc(16);
-    // pdata->hi = malloc(24);
-    // void *lo = pdata->lo;
-    // void *hi = pdata->hi;
-    // free(lo);
-
-    //free(hi);
+    TData c;
+    pdata->lo = malloc(16);
+    pdata->hi = malloc(24);
+    void *lo = pdata->lo;
+    void *hi = pdata->hi;
+    if(lo == hi){
+        free(lo);
+        free(hi);
+    }
 
 
     // // int init = nondet();

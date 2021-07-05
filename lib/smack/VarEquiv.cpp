@@ -39,22 +39,22 @@ namespace smack
     }
 
     void VarEquiv::debugPrint(){
-        DEBUG_WITH_COLOR(std::cout << "Debug VarEquiv: " << std::endl, color::green);
-        for(auto i : this->varAllocEqualMap){
-            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
-        }
-        DEBUG_WITH_COLOR(std::cout << "Debug BlkLinkName: " << std::endl, color::green);
-        for(auto i : this->pointsToBlkMap){
-            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
-        }
-        DEBUG_WITH_COLOR(std::cout << "Debug Offset:" << std::endl, color::green);
-        for(auto i : this->pointsToBlkOffset) {
-            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
-        }
-        DEBUG_WITH_COLOR(std::cout << "Debug IntVal: " << std::endl, color::green);
-        for(auto i : this->varToIntVal){
-            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Val: " << i.second << std::endl, color::green);
-        }
+        // DEBUG_WITH_COLOR(std::cout << "Debug VarEquiv: " << std::endl, color::green);
+        // for(auto i : this->varAllocEqualMap){
+        //     DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
+        // }
+        // DEBUG_WITH_COLOR(std::cout << "Debug BlkLinkName: " << std::endl, color::green);
+        // for(auto i : this->pointsToBlkMap){
+        //     DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
+        // }
+        // DEBUG_WITH_COLOR(std::cout << "Debug Offset:" << std::endl, color::green);
+        // for(auto i : this->pointsToBlkOffset) {
+        //     DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
+        // }
+        // DEBUG_WITH_COLOR(std::cout << "Debug IntVal: " << std::endl, color::green);
+        // for(auto i : this->varToIntVal){
+        //     DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Val: " << i.second << std::endl, color::green);
+        // }
     }
     // name2blk operations
 
@@ -117,7 +117,13 @@ namespace smack
            this->varToIntVal.find(oldname) != this->varToIntVal.end()){
             this->varToIntVal[newname] = this->varToIntVal[oldname];
         } else {
-            DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl, color::green);
+            if((this->varToIntVal.find(newname) ==  this->varToIntVal.end()) && (this->varToIntVal.find(oldname) ==  this->varToIntVal.end())
+            ){  
+                DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl, color::green);
+            } else {
+                DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl, color::green);
+            }
+            
         }
     }
 
@@ -126,9 +132,9 @@ namespace smack
             return std::pair<bool, int>(true, this->varToIntVal[name]);
         } else {
             if(!name.find("$p")){
-                DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap get error. " << name << std::endl, color::green);
+                DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl, color::green);
             } else {
-                DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get error. " << name << std::endl, color::green);
+                DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap get warning. " << name << std::endl, color::green);
             }
             
             return std::pair<bool, int>(false, 0);
@@ -146,6 +152,50 @@ namespace smack
     bool VarEquiv::isStructArrayPtr(std::string name){
         assert(name.find("$p") != std::string::npos);
         return this->structArrayPtr[name];
+    }
+
+    // get a copy of the object
+
+    VarEquivPtr VarEquiv::clone(){
+        VarEquivPtr newVarEquiv = std::make_shared<VarEquiv>();
+        newVarEquiv->setPointsToBlkMap(this->getPointsToBlkMap());
+        newVarEquiv->setPointsToBlkOffset(this->getPointsToBlkOffset());
+        newVarEquiv->setStructArrayPtr(this->getStructArrayPtr());
+        newVarEquiv->setVarAllocEqualMap(this->getVarAllocEqualMap());
+        newVarEquiv->setVarToIntVal(this->getVarToIntVal());
+        return newVarEquiv;
+    }
+
+    std::map<std::string, std::string> VarEquiv::getVarAllocEqualMap(){
+        return this->varAllocEqualMap;
+    }
+    std::map<std::string, std::string> VarEquiv::getPointsToBlkMap(){
+        return this->pointsToBlkMap;
+    }
+    std::map<std::string, int> VarEquiv::getPointsToBlkOffset(){
+        return this->pointsToBlkOffset;
+    }
+    std::map<std::string, int> VarEquiv::getVarToIntVal(){
+        return this->varToIntVal;
+    }
+    std::map<std::string, bool> VarEquiv::getStructArrayPtr(){
+        return this->structArrayPtr;
+    }
+
+    void VarEquiv::setVarAllocEqualMap(std::map<std::string, std::string> i){
+        this->varAllocEqualMap = i;
+    }
+    void VarEquiv::setPointsToBlkMap(std::map<std::string, std::string> i){
+        this->pointsToBlkMap = i;
+    }
+    void VarEquiv::setPointsToBlkOffset(std::map<std::string, int> i){
+        this->pointsToBlkOffset = i;
+    }
+    void VarEquiv::setVarToIntVal(std::map<std::string, int> i){
+        this->varToIntVal = i;
+    }
+    void VarEquiv::setStructArrayPtr(std::map<std::string, bool> i){
+        this->structArrayPtr = i;
     }
 
 } // namespace smack

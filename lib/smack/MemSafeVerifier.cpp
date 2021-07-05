@@ -44,65 +44,73 @@ namespace smack {
         cfgExecutor.generatePathByUpperBound();
         cfgExecutor.printPath();
 
-        std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
-        StatePtr state = mainGraph->getState("$bb0");
-        Block* block = state->getStateBlock();
-        std::cout << "Block stmt num: " << block->getStatements().size() << std::endl;
-        for(auto i : block->getStatements()){
-            i->print(std::cout);
-            std::cout << std::endl;
-        }
-        std::cout << "=========== END PRINT THE DETAILED STMTs" << std::endl;
-        std::cout << "=========== DO SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
-        // Initialize the equivalent class for allocation
-        VarEquivPtr allocEquiv = std::make_shared<VarEquiv>();
-        // Initialize the varFactory class for variable remembering
-        VarFactoryPtr varFac = std::make_shared<VarFactory>();
-        // Initialize int translator
-        ConstTranslatorPtr transToConstant = std::make_shared<TransToConstant>(allocEquiv);
-        // Initialize store splitter
-        StoreSplitterPtr storeSplit = std::make_shared<StoreSplitter>();
-        // Initialize a block executor
-        BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, mainGraph, state, allocEquiv, varFac, storeSplit);
-        // initial pure formula 
-        const Expr* boolTrue = Expr::lit(true);
-        // initial list of spatial lits
-        std::list<const SpatialLiteral*> splist;
-        const SpatialLiteral* emp = SpatialLiteral::emp();
-        splist.push_back(emp);
-        // initialization for the symbolic heap
-        SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(boolTrue, splist);
-        // new Statementlist
-        StatementList newStmts;
-        // Add initial symbolic heap
-        newStmts.push_back(Stmt::symbheap(initSH));
-        SHExprPtr currSH = initSH;
-        for(const Stmt* i : block->getStatements()){
-            // for each stmt in the program, put it in the new list and execute to get resulting symbolic getPure heap
-            newStmts.push_back(i);
-            SHExprPtr newSH = be->execute(currSH, i);
-            newStmts.push_back(Stmt::symbheap(newSH));
-            auto const pure = newSH->getPure();
-            currSH = newSH;
-        }
+        StatePtr state = mainGraph->getEntryState();
+        // std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
+        // Block* block = state->getStateBlock();
+        // std::cout << "Block stmt num: " << block->getStatements().size() << std::endl;
+        // for(auto i : block->getStatements()){
+        //     i->print(std::cout);
+        //     std::cout << std::endl;
+        // }
+        // std::cout << "=========== END PRINT THE DETAILED STMTs" << std::endl;
+
         
-        be->setBlock(block);
-        z3::context ctx;
-        auto trans = std::make_shared<smack::TransToZ3>(ctx, currSH, mainGraph, varFac);
-        // z3::expr var1 = ctx.int_const("x");
-        // z3::expr trueVal = ctx.bool_val(true);
-        // z3::expr falseVal = ctx.bool_val(false);
-        // z3::expr eqExpr = (var1 == 1);
-        // z3::expr empExpr = slah_apErrorLii::newEmp(ctx);
-        // z3::expr testSH = eqExpr && empExpr;
-        // z3::expr cons = trueVal && empExpr;
-        // z3::check_result result = slah_api::checkEnt(falseVal, trueVal);
-        // std::cout << result << std::endl;
         
-        MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans, newStmts);
-        checker->checkCurrentMemLeak();
-        checker->checkInferenceError();
-        std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
+        CFGExecutor cfgExec(mainGraph);
+        cfgExec.generatePathByUpperBound();
+        cfgExec.printPath();
+
+        for(ExecutionPath p : cfgExec.getExecPathVec()){
+
+            std::cout << "=========== DO SYMBOLIC EXECUTION FOR ONE PATH" << std::endl;
+            // initialization of the execution initial state
+            //---------------------- initializatio of SH
+            // initial pure formula 
+            const Expr* boolTrue = Expr::lit(true);
+            // initial list of spatial lits
+            std::list<const SpatialLiteral*> splist;
+            const SpatialLiteral* emp = SpatialLiteral::emp();
+            splist.push_back(emp);
+            // initialization for the symbolic heap
+            SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(boolTrue, splist);
+            //---------------------- initialization of auxillaries
+            // Initialize the equivalent class for allocation
+            VarEquivPtr allocEquiv = std::make_shared<VarEquiv>();
+            // Initialize the varFactory class for variable         remembering
+            VarFactoryPtr varFac = std::make_shared<VarFactory>();
+            // Initialize store splitter
+            StoreSplitterPtr storeSplit = std::make_shared<StoreSplitter>();
+
+            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, storeSplit);
+            // initialization of the execution initial state over
+            // Initialize a CFGExecutor
+            SHExprPtr currSH = initSH;
+            ExecutionStatePtr  currExecState = initialExecState;
+            StatementList finalStmts;
+            BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, mainGraph, state);
+            for(StatePtr s : p.getExePath()){
+                be->setBlock(s);
+                std::pair<ExecutionStatePtr,StatementList> result = be->execute(currExecState);
+                currExecState = result.first;
+                currSH = currExecState->getSH();
+                for(const Stmt* s : result.second){
+                    finalStmts.push_back(s);
+                }
+            }
+            z3::context ctx;
+            auto trans = std::make_shared<smack::TransToZ3> (ctx, currSH, mainGraph, varFac);
+
+            MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans, finalStmts);
+            bool memLeakSafeSat = checker->checkCurrentMemLeak();
+            bool infErrorSafeSat = checker->checkInferenceError().first;
+            if(!memLeakSafeSat || !infErrorSafeSat){
+                std::cout << "INFO: BUG FOUND, STOP EXCUTION" << std::endl;
+                break;
+            }
+            std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
+        }
+
+        
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
         return false;
     }
@@ -153,13 +161,13 @@ namespace smack {
                         DEBUG_WITH_COLOR(std::cout << "CHECK: Inference error:" << std::endl;, color::red);
                         previous->print(std::cout);
                         std::cout << std::endl;
-                        return std::pair<bool, const Stmt*>(true, previous);
+                        return std::pair<bool, const Stmt*>(false, previous);
                     }
             }
             previous = s;
         }
         DEBUG_WITH_COLOR(std::cout << "CHECK: Inference check pass!"<< std::endl, color::green);
-        return std::pair<bool, const Stmt*>(false, nullptr);
+        return std::pair<bool, const Stmt*>(true, nullptr);
     }
 
     // Return value: checkResult, Error Stmt

@@ -216,7 +216,7 @@ namespace smack{
         return sh;
     }
 
-
+    
 
     // ----------- Util functions for assignment symbolic execution ----------- 
 
@@ -441,6 +441,23 @@ namespace smack{
         }
     }
 
+
+
+    SHExprPtr BlockExecutor::executeAssume(SHExprPtr sh, const Stmt* stmt){
+        if(Stmt::ASSUME == stmt->getKind()){
+            const AssumeStmt* ass = (const AssumeStmt*) stmt;
+            const Expr* cond = ass->getExpr();
+            const Expr* newPure = Expr::and_(
+                sh->getPure(),
+                cond
+            );
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            return newSH;
+        } else {
+            CFDEBUG(std::cout << "ERROR: This should not happen" << std::endl;);
+            return sh;
+        }
+    }
 
 
 
@@ -1174,9 +1191,9 @@ namespace smack{
         return sh;
     }
 
-    // -------------------- General Interface -------------------
+    // --------------------- Execution for single stmt ------------------
     SHExprPtr 
-    BlockExecutor::execute
+    BlockExecutor::executeStmt
     (SHExprPtr currSH, const Stmt* stmt){
         this->varEquiv->debugPrint();
         CFDEBUG(std::cout << "INFO: executing for stmt: " << std::endl);
@@ -1211,6 +1228,34 @@ namespace smack{
             return this->executeOther(currSH, stmt);
         }
         return currSH;
+    }
+    
+
+
+    // -------------------- General Interface -------------------
+    std::pair<ExecutionStatePtr, StatementList> BlockExecutor::execute(ExecutionStatePtr previousExecState){
+        SHExprPtr previousSH = previousExecState->getSH();
+        // Initialize the equivalent class for allocation
+        this->varEquiv = previousExecState->getVarEquiv();
+        // Initialize the varFactory class for variable remembering
+        this->varFactory = previousExecState->getVarFactory();
+        // Initialize store splitter
+        this->storeSplit = previousExecState->getStoreSplit();
+        
+        StatementList newStmts;
+        newStmts.push_back(Stmt::symbheap(previousSH));
+        SHExprPtr currSH = previousSH;
+        for(const Stmt* i : currentBlock->getStatements()){
+            // for each stmt in the program, put it in the new list and execute to get resulting symbolic getPure heap
+            newStmts.push_back(i);
+            SHExprPtr newSH = this->executeStmt(currSH, i);
+            newStmts.push_back(Stmt::symbheap(newSH));
+            auto const pure = newSH->getPure();
+            currSH = newSH;
+        }
+
+        ExecutionStatePtr resultExecState = std::make_shared<ExecutionState>(currSH, this->varEquiv, this->varFactory, this->storeSplit);
+        return std::pair<ExecutionStatePtr, StatementList>(resultExecState, newStmts);
     }
     
 }

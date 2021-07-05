@@ -30,6 +30,7 @@ namespace smack
         std::map<std::string, int> varToIntVal;
     // structArrayPtr: remember the ptr created by alloc, which is used when struct and array are used
         std::map<std::string, bool> structArrayPtr;
+        typedef std::shared_ptr<VarEquiv> VarEquivPtr;
     public:
         VarEquiv(/* args */){};
         ~VarEquiv() {};
@@ -56,6 +57,20 @@ namespace smack
         // alloc ptr
         void setStructArrayPtr(std::string name, bool val);
         bool isStructArrayPtr(std::string name);
+
+        VarEquivPtr clone();
+
+        // getters and setters
+        std::map<std::string, std::string> getVarAllocEqualMap();
+        std::map<std::string, std::string> getPointsToBlkMap();
+        std::map<std::string, int> getPointsToBlkOffset();
+        std::map<std::string, int> getVarToIntVal();
+        std::map<std::string, bool> getStructArrayPtr();
+        void setVarAllocEqualMap(std::map<std::string, std::string> i);
+        void setPointsToBlkMap(std::map<std::string, std::string> i);
+        void setPointsToBlkOffset(std::map<std::string, int> i);
+        void setVarToIntVal(std::map<std::string, int> i);
+        void setStructArrayPtr(std::map<std::string, bool> i);
 
 
         void debugPrint();

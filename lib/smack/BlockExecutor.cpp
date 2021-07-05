@@ -39,7 +39,7 @@ namespace smack{
 
             if(lhsVarName.find("$M") != std::string::npos){
                 std::cout << "ADDDDDDD " << lhsVarName << " M" + std::to_string(8 * PTR_BYTEWIDTH) << std::endl;
-                this->cfg->addVarType(lhsVarName, "M" + std::to_string(8 * PTR_BYTEWIDTH));
+                this->cfg->addVarType(lhsVarOrigName, "M" + std::to_string(8 * PTR_BYTEWIDTH));
             }
 
 
@@ -281,7 +281,7 @@ namespace smack{
     }
 
     
-
+    
     // ----------- Util functions for assignment symbolic execution ----------- 
 
     bool BlockExecutor::isUnaryAssignFuncName(std::string name){
@@ -339,7 +339,7 @@ namespace smack{
                     this->parseVarArithmeticExpr(arg2));
                 return resultExpr;
             } else {
-                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function !!!!" << std::endl;);
+                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function var!!!!" << std::endl;);
                 return funcExpr;
             }
         } else {
@@ -368,7 +368,7 @@ namespace smack{
                 );
                 return resultExpr;
             } else {
-                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function !!!!" << std::endl;);
+                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function ptr!!!!" << std::endl;);
                 return arithExpr;
             }
         } else {
@@ -478,7 +478,8 @@ namespace smack{
     bool BlockExecutor::isPtrArithFuncName(std::string name){
         // ptr arithmetic, currently only support the addition
         if(name.find("$add.ref") != std::string::npos||
-           name.find("$mul.ref") != std::string::npos){
+           name.find("$mul.ref") != std::string::npos||
+           name.find("$sub.ref") != std::string::npos){
                 return true;
            } else {
                 return false;
@@ -505,6 +506,7 @@ namespace smack{
             return false;
         }
     }
+    //----------------------- Assign execution utils end ---------------
 
 
 
@@ -512,7 +514,8 @@ namespace smack{
         // TODOsh: should replace the variable in assume condition according to the varEquiv
         if(Stmt::ASSUME == stmt->getKind()){
             const AssumeStmt* ass = (const AssumeStmt*) stmt;
-            const Expr* cond = ass->getExpr();
+            const Expr* origCond = ass->getExpr();
+            const Expr* cond = this->parseCondition(origCond);
             const Expr* newPure = Expr::and_(
                 sh->getPure(),
                 cond
@@ -526,10 +529,29 @@ namespace smack{
             return sh;
         }
     }
+    // -------------------- Assume execution utils begin ----------
 
+    const Expr* BlockExecutor::parseCondition(const Expr* cond){
+        if(cond->isVar()) {
+            const VarExpr* condOrigVar = (const VarExpr*) cond;
+            std::string varOrigName =  condOrigVar->name();
+            if(varOrigName.find("fresh") != std::string::npos){
+                return condOrigVar;
+            } else {
+                return this->varFactory->getVar(varOrigName);
+            }
+        } else if(ExprType::BIN == cond->getType()){
+            const BinExpr* condBin = (const BinExpr*) cond;
+            const Expr* newLhs = this->parseCondition(condBin->getLhs());
+            const Expr* newRhs = this->parseCondition(condBin->getRhs());
+            return new BinExpr(condBin->getOp(), newLhs, newRhs);
+        } else {
+            return cond;
+        }
+    }
 
+    //-------------------- Assume execution utils end -- ----------
 
-    //----------------------- Assign execution utils end ---------------
 
     // ---------------------- Execution for Call stmts -----------------
     SHExprPtr BlockExecutor::executeCall(SHExprPtr sh, const Stmt* callstmt){

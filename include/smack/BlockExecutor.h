@@ -58,6 +58,8 @@ namespace smack{
         const Expr* extractPtrArithVarName(const Expr* expression);
 
 
+        const Expr* parseCondition(const Expr* cond);
+
     public:
         BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb);}
 

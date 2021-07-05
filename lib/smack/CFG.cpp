@@ -150,6 +150,9 @@ namespace smack
         if(varType.find(varName) != varType.end()){
             return varType[varName];
         } else {
+            for(auto i : varType){
+                std::cout << i.first << " " << i.second << " " << varName << std::endl;
+            }
             CFDEBUG(std::cout << "ERROR: vartype not found: " << varName << std::endl;);
             return nullptr;
         }

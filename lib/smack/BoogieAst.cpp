@@ -716,7 +716,9 @@ z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr va
      byteNum = typeResult.second;
     } else if('r' == typeResult.first[0]){
        byteNum = PTR_BYTEWIDTH;
-    } else {
+    } else if('M' == typeResult.first[0]){
+       byteNum = typeResult.second;
+    }  else {
        CFDEBUG(std::cout << "ERROR: UNSOLVED Variable translation" << std::endl;);
     }
   } else {

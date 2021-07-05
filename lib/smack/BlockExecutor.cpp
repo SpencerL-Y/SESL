@@ -7,7 +7,7 @@ namespace smack{
     SHExprPtr BlockExecutor::executeAssign(SHExprPtr sh, const Stmt* assignStmt){
         if(Stmt::ASSIGN == assignStmt->getKind()){
             const AssignStmt* stmt = (const AssignStmt*) assignStmt;
-            //  : here the assignment is restricted to the single assignment, may cause problem for boogie assignment.
+            //TODOsh : here the assignment is restricted to the single assignment, may cause problem for boogie assignment.
             const Expr* lhs = stmt->getLhs().front();
             const Expr* rhs = stmt->getRhs().front();
             // the original var in the source
@@ -208,6 +208,59 @@ namespace smack{
                     CFDEBUG(std::cout <<  "FUNC NAME: " << rhsFun->name() << std::endl); 
                     return sh;
                 }
+            } else {
+                // If RHS is not a function, directly equal them and update varEquiv accordingly..
+                CFDEBUG(std::cout << "INFO: ASSIGN RHS is not a funcExpr" << std::endl;);
+                if(rhs->isVar()){
+                    const VarExpr* rhsOrigVar = (const VarExpr*) rhs;
+                    std::string rhsOrigVarName = rhsOrigVar->name();
+                    const VarExpr* rhsVar = this->varFactory->getVar(rhsOrigVarName);
+                    std::string rhsVarName = rhsVar->name();
+                    auto computeIntResult = rhsVar->translateToInt(this->varEquiv);
+                    if(computeIntResult.first){
+                        this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
+                    } else {
+                        CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
+                    }
+                    const Expr* eq = Expr::eq(
+                        this->varFactory->getVar(lhsVarOrigName),
+                        this->varFactory->getVar(rhsOrigVarName)
+                    );
+                    this->varEquiv->linkName(lhsVarName, rhsVarName);
+                    if(rhsOrigVarName.find("$p") != std::string::npos || lhsVarOrigName.find("$p") != std::string::npos){
+                        this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
+                        this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(rhsVarName));
+                    }
+                    const Expr* newPure = Expr::and_(
+                        sh->getPure(),
+                        eq
+                    );
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                    newSH->print(std::cout);
+                    std::cout << std::endl;
+                    return newSH;
+                } else { 
+                    this->varEquiv->addNewName(lhsVarName);
+                    const Expr* rhsExpr = rhs;
+                    auto computeIntResult = rhs->translateToInt(this->varEquiv);
+                    if(computeIntResult.first){
+                        this->varEquiv->addNewVal(lhsVarName, computeIntResult.second);
+                    } else {
+                        CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
+                    }
+                    const Expr* eq = Expr::eq(
+                        this->varFactory->getVar(lhsVarOrigName),
+                        rhs
+                    );
+                    const Expr* newPure = Expr::and_(
+                        sh->getPure(),
+                        eq
+                    );
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                    newSH->print(std::cout);
+                    std::cout << std::endl;
+                    return newSH;
+                }
             }
         } else {
             CFDEBUG(std::cout << "ERROR: stmt type error" << std::endl);
@@ -332,7 +385,8 @@ namespace smack{
             // 1. if it is a pointer variable, we use the offset of the pointer varible
             // 2. if it is an integer variable, we use the inferred value of the variable
             const VarExpr* varExpr = (const VarExpr*) expression;
-            if(varExpr->name().find("$p") != std::string::npos){
+            if(varExpr->name().find("$p") != std::string::npos || 
+               varExpr->name().find("$M") != std::string::npos){
                 return this->varEquiv->getOffset(varExpr->name());
             } else if (varExpr->name().find("$i") != std::string::npos){
                 assert(varExpr->translateToInt(this->varEquiv).first);
@@ -444,6 +498,7 @@ namespace smack{
 
 
     SHExprPtr BlockExecutor::executeAssume(SHExprPtr sh, const Stmt* stmt){
+        // TODOsh: should replace the variable in assume condition according to the varEquiv
         if(Stmt::ASSUME == stmt->getKind()){
             const AssumeStmt* ass = (const AssumeStmt*) stmt;
             const Expr* cond = ass->getExpr();
@@ -452,6 +507,8 @@ namespace smack{
                 cond
             );
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            newSH->print(std::cout);
+            std::cout << std::endl;
             return newSH;
         } else {
             CFDEBUG(std::cout << "ERROR: This should not happen" << std::endl;);
@@ -692,8 +749,7 @@ namespace smack{
                         }
                         assert(stepSize.second > 0);
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
-                        this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
-                        // TODOsh: check whether the store instruction can store a compositional expression to a location
+                        this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * PTR_BYTEWIDTH));
                         if(arg2->isVar()){
                             const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
                             std::string varOrigArg2Name = varOrigArg2->name();
@@ -705,10 +761,15 @@ namespace smack{
                                 this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                             }
                             newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
-                        } else {
-                            CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable !!" << std::endl;);
-                            return nullptr;
-                            //this->varEquiv->addNewName(freshVar->name());
+                        } 
+                        else {
+                            //CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable or val !!" << std::endl;);
+                            const Expr* storedExpr = this->parseVarArithmeticExpr(arg2);
+                            if(storedExpr->translateToInt(this->varEquiv).first){
+                                this->varEquiv->addNewVal(freshVar->name(), storedExpr->translateToInt(this->varEquiv).second);
+                            }
+                            newPure = Expr::and_(newPure, Expr::eq(freshVar, storedExpr));
+                            this->varEquiv->addNewName(freshVar->name());
                         }
 
                         const SpatialLiteral* storedPt = SpatialLiteral::gcPt(
@@ -758,10 +819,15 @@ namespace smack{
                                 this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                             }
                             newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
-                        } else {
-                            CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable !!" << std::endl;);
-                            return nullptr;
-                            //this->varEquiv->addNewName(freshVar->name());
+                        } 
+                        else {
+                            //CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable or val !!" << std::endl;);
+                            const Expr* storedExpr = this->parseVarArithmeticExpr(arg2);
+                            if(storedExpr->translateToInt(this->varEquiv).first){
+                                this->varEquiv->addNewVal(freshVar->name(), storedExpr->translateToInt(this->varEquiv).second);
+                            }
+                            newPure = Expr::and_(newPure, Expr::eq(freshVar, storedExpr));
+                            this->varEquiv->addNewName(freshVar->name());
                         }
                         const SpatialLiteral* storedPt = SpatialLiteral::pt(
                             varArg1,

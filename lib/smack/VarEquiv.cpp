@@ -17,7 +17,7 @@ namespace smack
            varAllocEqualMap.find(oldname) != varAllocEqualMap.end()){
             varAllocEqualMap[newname] = varAllocEqualMap[oldname];
         } else {
-            std::cout << "ERROR: VarEquiv new name exists "  << (varAllocEqualMap.find(newname) == varAllocEqualMap.end()) << " " << (varAllocEqualMap.find(oldname) != varAllocEqualMap.end()) << std::endl;
+            std::cout << "ERROR: VarEquiv new name exists "  << (varAllocEqualMap.find(newname) == varAllocEqualMap.end()) << " " << (varAllocEqualMap.find(oldname) != varAllocEqualMap.end()) << " " + newname + " " + oldname << std::endl;
         }
     }
 
@@ -39,22 +39,22 @@ namespace smack
     }
 
     void VarEquiv::debugPrint(){
-        // DEBUG_WITH_COLOR(std::cout << "Debug VarEquiv: " << std::endl, color::green);
-        // for(auto i : this->varAllocEqualMap){
-        //     DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
-        // }
-        // DEBUG_WITH_COLOR(std::cout << "Debug BlkLinkName: " << std::endl, color::green);
-        // for(auto i : this->pointsToBlkMap){
-        //     DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
-        // }
-        // DEBUG_WITH_COLOR(std::cout << "Debug Offset:" << std::endl, color::green);
-        // for(auto i : this->pointsToBlkOffset) {
-        //     DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
-        // }
-        // DEBUG_WITH_COLOR(std::cout << "Debug IntVal: " << std::endl, color::green);
-        // for(auto i : this->varToIntVal){
-        //     DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Val: " << i.second << std::endl, color::green);
-        // }
+        DEBUG_WITH_COLOR(std::cout << "Debug VarEquiv: " << std::endl, color::green);
+        for(auto i : this->varAllocEqualMap){
+            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
+        }
+        DEBUG_WITH_COLOR(std::cout << "Debug BlkLinkName: " << std::endl, color::green);
+        for(auto i : this->pointsToBlkMap){
+            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
+        }
+        DEBUG_WITH_COLOR(std::cout << "Debug Offset:" << std::endl, color::green);
+        for(auto i : this->pointsToBlkOffset) {
+            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
+        }
+        DEBUG_WITH_COLOR(std::cout << "Debug IntVal: " << std::endl, color::green);
+        for(auto i : this->varToIntVal){
+            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Val: " << i.second << std::endl, color::green);
+        }
     }
     // name2blk operations
 
@@ -134,7 +134,7 @@ namespace smack
             if(!name.find("$p")){
                 DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl, color::green);
             } else {
-                DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap get warning. " << name << std::endl, color::green);
+                DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl, color::green);
             }
             
             return std::pair<bool, int>(false, 0);

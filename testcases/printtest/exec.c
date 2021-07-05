@@ -12,6 +12,10 @@ typedef struct {
     void *hi;
 } TData;
 
+int *a, *b;
+int n;
+
+#define BLOCK_SIZE 128
 
 int main(){
     // int num = 5;
@@ -21,18 +25,18 @@ int main(){
     // free(j);
 
 // new example
-    TData data;
-    TData* pdata = &data;
+    // TData data;
+    // TData* pdata = &data;
 
-    TData c;
-    pdata->lo = malloc(16);
-    pdata->hi = malloc(24);
-    void *lo = pdata->lo;
-    void *hi = pdata->hi;
-    if(lo == hi){
-        free(lo);
-        free(hi);
-    }
+    // TData c;
+    // pdata->lo = malloc(16);
+    // pdata->hi = malloc(24);
+    // void *lo = pdata->lo;
+    // void *hi = pdata->hi;
+    // if(lo == hi){
+    //     free(lo);
+    //     free(hi);
+    // }
 
 
     // // int init = nondet();
@@ -55,4 +59,20 @@ int main(){
     // cfg unroll, variable rename 
     // memcpy, memset byte level
     // call graph, variable rename
+
+    n = 128;
+    a = malloc (n * sizeof(*a));
+    b = malloc (n * sizeof(*b));
+    *b++ = 0;
+    int i;
+    for (i = 0; i < n; i++)
+        a[i] = -1;
+    for (i = 0; i < 128 - 1; i++)
+        b[i] = -1;
+    if (b[-2]) /* invalid deref */
+    { free(a); free(b-1); }
+    else
+    { free(a); free(b-1); }
+
+    return 0;
 } 

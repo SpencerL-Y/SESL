@@ -31,7 +31,18 @@ namespace smack{
                 CFDEBUG(std::cout << "ERROR: This should not happen.");
             }
 
-            
+            // TODOsh: if the lhs variable is a return variable
+            if(lhsVarName.find("$r") != std::string::npos){
+                CFDEBUG(std::cout << "INFO: TODOsh: add interprocedural analysis later" << std::endl;);
+                return sh;
+            }
+
+            if(lhsVarName.find("$M") != std::string::npos){
+                std::cout << "ADDDDDDD " << lhsVarName << " M" + std::to_string(8 * PTR_BYTEWIDTH) << std::endl;
+                this->cfg->addVarType(lhsVarName, "M" + std::to_string(8 * PTR_BYTEWIDTH));
+            }
+
+
             if(ExprType::FUNC == rhs->getType()){
                 // rhs is a function expression, deal with the execution depending on the function met.
                 CFDEBUG(std::cout << "ASSIGN: rhs ExprType::FUNC" << std::endl;);

@@ -147,7 +147,12 @@ namespace smack
     }
 
     std::string CFG::getVarType(string varName) {
-        return varType.at(varName);
+        if(varType.find(varName) != varType.end()){
+            return varType[varName];
+        } else {
+            CFDEBUG(std::cout << "ERROR: vartype not found: " << varName << std::endl;);
+            return nullptr;
+        }
     }
 
     void CFG::generateTypeInfo() {
@@ -167,7 +172,7 @@ namespace smack
 
     std::pair<std::string, int> CFG::getVarDetailType(std::string varName) {
         auto type = getVarType(varName);
-        if (type[0] == 'i') {
+        if (type[0] == 'i' || type[0] == 'M') {
             int ans = 0;
             for (int i = 1; i < type.length(); ++ i) {
                 ans = ans * 10 + type[i] - '0';

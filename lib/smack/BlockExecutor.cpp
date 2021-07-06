@@ -1446,8 +1446,8 @@ namespace smack{
             return this->executeAssign(currSH, stmt);
         } else if(Stmt::ASSUME == stmt->getKind()){
             CFDEBUG(std::cout << "INFO: stmt kind ASSUME" << std::endl;);
-            return currSH;
-            //this->executeAssume(currSH, stmt);
+            return 
+            this->executeAssume(currSH, stmt);
         }
         else { 
             CFDEBUG(std::cout << "INFO: stmt kind " << stmt->getKind() << std::endl);

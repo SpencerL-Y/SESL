@@ -86,16 +86,24 @@ int main(){
     // example 5
     int a = 10;
     int* j = malloc(4);
-    if(a > 10){
+    if(a > 9){
         free(j);
     }
+
+
     // example 6
-    // for(int i = 0; i < 6; i ++){
+    // for(int i = 0; i < 15; i ++){
     //     int *j = (int*)malloc(sizeof(int));
-    //     if(i < 6){
+    //     if(i < 10){
     //         free(j);
     //     }
     // }
 
+    // int i = 10;
+    // int b = computeSquare(i);
+    
+    // Flemming Nielson
+
     return 0;
 } 
+

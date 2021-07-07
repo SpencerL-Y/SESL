@@ -535,7 +535,7 @@ namespace smack{
 
     const Expr* BlockExecutor::parseUnaryBooleanExpression(std::string funcName, const Expr* inner){
         if(funcName.find("$not") != std::string::npos){
-            const Expr* result = Expr::not_(inner);
+            const Expr* result = Expr::not_(this->parseCondition(inner));
             return result;
         } else {
             CFDEBUG(std::cout << "ERROR: UNKNOWN unary boolean expression" << std::endl;);
@@ -664,7 +664,14 @@ namespace smack{
             const Expr* newLhs = this->parseCondition(condBin->getLhs());
             const Expr* newRhs = this->parseCondition(condBin->getRhs());
             return new BinExpr(condBin->getOp(), newLhs, newRhs);
-        } else {
+        } else if(ExprType::NOT == cond->getType()){
+            const NotExpr* origExpr = (const NotExpr*)cond;
+            const Expr* inner = this->parseCondition(origExpr->getExpr());
+            const Expr* result = Expr::not_(inner);
+            return result;
+        }
+        else {
+            CFDEBUG(std::cout << "ERROR: UNSOLVED Parse condition, " << cond->getType() << std::endl;);
             return cond;
         }
     }

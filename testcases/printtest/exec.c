@@ -86,7 +86,7 @@ int main(){
     // example 5
     int a = 10;
     int* j = malloc(4);
-    if(a > 9){
+    if(a > 10){
         free(j);
     }
 

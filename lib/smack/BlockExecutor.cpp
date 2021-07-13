@@ -588,7 +588,15 @@ namespace smack{
         funcName.find("$sgt") != std::string::npos){
             const Expr *result = Expr::gt(finalLhs, finalRhs);
             return result;
-        } else {
+        } else if(funcName.find("$eq") != std::string::npos) {
+            const Expr * result = Expr::eq(finalLhs, finalRhs);
+            return result;
+        } else if(funcName.find("$ne") != std::string::npos){
+            const Expr* result = Expr::neq(finalLhs, finalRhs);
+            return result;
+        }
+        
+        else {
             CFDEBUG(std::cout << "ERROR: UNSOLVED Boolean Expression Name" << std::endl;);
             return NULL;
         }
@@ -671,7 +679,7 @@ namespace smack{
             return result;
         }
         else {
-            CFDEBUG(std::cout << "ERROR: UNSOLVED Parse condition, " << cond->getType() << std::endl;);
+            CFDEBUG(std::cout << "INFO: Basic Parse condition, " << cond->getType() << std::endl;);
             return cond;
         }
     }
@@ -814,10 +822,22 @@ namespace smack{
                 const VarExpr* freedVar = this->varFactory->getVar(freedOrigVarName);
 
                 std::string allocVarName = this->varEquiv->getAllocName(freedVar->name());
+                std::string linkVarName = this->varEquiv->getBlkName(freedVar->name());
                 CFDEBUG(std::cout << "Freed varname: " << freedVar->name() << std::endl);
                 CFDEBUG(std::cout << "Alloced varname: " << allocVarName << std::endl);
-                
-
+                CFDEBUG(std::cout << "Linked Name: " << linkVarName << std::endl;);
+                if(linkVarName.compare(allocVarName)){
+                    if(this->varEquiv->getOffset(freedVar->name()) != 0){
+                        // This means the freed variable is not an allocated location and error happens.
+                        const SpatialLiteral* errlit = SpatialLiteral::errlit(true);
+                        std::list<const SpatialLiteral*> newSpatialExpr;
+                        newSpatialExpr.push_back(errlit);
+                        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatialExpr);
+                        return newSH;
+                    } else {
+                        allocVarName = linkVarName;
+                    }
+                }
 
                 const Expr* newPure = sh->getPure();
                 std::list<const SpatialLiteral*> newSpatial;
@@ -835,7 +855,7 @@ namespace smack{
                 std::cout << std::endl;
                 return newSH;
             } else {
-                CFDEBUG(std::cout << "ERROR: UNsolved situation" << std::endl);
+                CFDEBUG(std::cout << "ERROR: UNsolved free situation" << std::endl);
                 return sh;
             }
         } else {

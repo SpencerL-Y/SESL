@@ -567,6 +567,7 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr va
               const VarExpr* lhsVar = (const VarExpr*) lhs;
               std::string lhsOrigVarName = varFac->getOrigVarName(lhsVar->name());
               if(cfg->getVarDetailType(lhsOrigVarName).second == 1){
+                // if lhs variable is a boolean variable
                 assert(rhs->isValue());
                 const IntLit* rhsInt = (const IntLit*) rhs;
                 if(rhsInt->getVal() == 0){
@@ -576,7 +577,9 @@ z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr va
                 }
                 return res;
               } else {
-                CFDEBUG(std::cout << "ERROR: this should not happen var translate ..." << std::endl;)
+                CFDEBUG(std::cout << "WARNING: directly let lhs == rhs ..."  << std::endl;)
+                res = (left == right);
+                return res;
               }
             }
             else {

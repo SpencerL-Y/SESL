@@ -1,6 +1,5 @@
 #include "smack.h"
 #include <stdlib.h>
-
 typedef struct test{
     int a;
     short b[10];
@@ -65,36 +64,36 @@ int main(){
     // call graph, variable rename
 
     // example 3
-    // n = 128;
-    // a = malloc (n * sizeof(*a));
-    // b = malloc (n * sizeof(*b));
-    // *b++ = 0;
-    // int i;
-    // for (i = 0; i < n; i++)
-    //     a[i] = -1;
-    // for (i = 0; i < 128 - 1; i++)
-    //     b[i] = -1;
-    // if (b[-2]) /* invalid deref */
-    // { free(a); free(b-1); }
-    // else
-    // { free(a); free(b-1); }
+    n = 4;
+    a = malloc (n * sizeof(*a));
+    b = malloc (n * sizeof(*b));
+    *b++ = 0;
+    int i;
+    for (i = 0; i < n; i++)
+        a[i] = -1;
+    for (i = 0; i < 4 - 1; i++)
+        b[i] = -1;
+    if (b[-2]) /* invalid deref */
+    { free(a); free(b-1); }
+    else
+    { free(a); free(b-1); }
     // example 4
     // for(int i = 0; i < 5; i ++){
     //     int *j = (int*)malloc(sizeof(int));
     //     free(j);
     // }
-    // example 5
-    int a = 10;
-    int* j = malloc(4);
-    if(a > 10){
-        free(j);
-    }
+    // // example 5
+    // int a = 10;
+    // int* j = malloc(4);
+    // if(a > 9){
+    //     free(j);
+    // }
 
 
     // example 6
-    // for(int i = 0; i < 15; i ++){
+    // for(int i = 0; i < 6; i ++){
     //     int *j = (int*)malloc(sizeof(int));
-    //     if(i < 10){
+    //     if(i < 5){
     //         free(j);
     //     }
     // }
@@ -103,7 +102,17 @@ int main(){
     // int b = computeSquare(i);
     
     // Flemming Nielson
-
-    return 0;
+    // int a;
+    // test_type b;
+    // int c;
+    
+    // b.a = 0;
+    
+    // c = a;
+    // int *ma = malloc(a);
+    // int *mc = malloc(c);
+    // char* p = ((char*) &a) + 1;
+    // memcpy(mc, p, sizeof(int));
+    // return c;
 } 
 

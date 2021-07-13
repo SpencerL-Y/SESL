@@ -98,6 +98,7 @@ namespace smack {
             auto trans = std::make_shared<smack::TransToZ3> (ctx, currSH, mainGraph, varFac);
 
             MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans, finalStmts);
+            trans->translate();
             bool memLeakSafeSat = checker->checkCurrentMemLeak();
             bool infErrorSafeSat = checker->checkInferenceError().first;
             if(!memLeakSafeSat || !infErrorSafeSat){
@@ -127,10 +128,8 @@ namespace smack {
     }
 
     bool MemSafeChecker::checkCurrentMemLeak(){
-        this->trans->translate();
         z3::expr pureCond = this->trans->getPure();
         z3::expr tempFormula = pureCond;
-        std::cout << tempFormula << std::endl;
         z3::check_result pathCond = slah_api::checkSat(tempFormula);
         if(pathCond == z3::unsat){
             DEBUG_WITH_COLOR(std::cout << "CHECK: Satisfied, path condition false!" << std::endl, color::green);
@@ -158,22 +157,31 @@ namespace smack {
     }
 
     std::pair<bool, const Stmt*> MemSafeChecker::checkInferenceError(){
-        const Stmt* previous = nullptr;
-        for(const Stmt* s : this->stmts){
-            if(Stmt::Kind::SH == s->getKind()){
-                const SHStmt* shs = (const SHStmt*) s;
-                if(SpatialLiteral::Kind::ERR == 
-                    shs->getSymbHeap()->getSpatialExpr().front()->getId()){
-                        DEBUG_WITH_COLOR(std::cout << "CHECK: Inference error:" << std::endl;, color::red);
-                        previous->print(std::cout);
-                        std::cout << std::endl;
-                        return std::pair<bool, const Stmt*>(false, previous);
-                    }
+        //this->trans->translate();
+        z3::expr pureCond = this->trans->getPure();
+        z3::expr tempFormula = pureCond;
+        z3::check_result pathCond = slah_api::checkSat(tempFormula);
+        if(pathCond == z3::unsat){
+            DEBUG_WITH_COLOR(std::cout << "CHECK: Inference check pass! Path condition unsat..." << std::endl;, color::green);
+            return std::pair<bool, const Stmt*>(true, nullptr);
+        } else {
+            const Stmt* previous = nullptr;
+            for(const Stmt* s : this->stmts){
+                if(Stmt::Kind::SH == s->getKind()){
+                    const SHStmt* shs = (const SHStmt*) s;
+                    if(SpatialLiteral::Kind::ERR == 
+                        shs->getSymbHeap()->getSpatialExpr().front()->getId()){
+                            DEBUG_WITH_COLOR(std::cout << "CHECK: Inference error:" << std::endl;, color::red);
+                            previous->print(std::cout);
+                            std::cout << std::endl;
+                            return std::pair<bool, const Stmt*>(false, previous);
+                        }
+                }
+                previous = s;
             }
-            previous = s;
+            DEBUG_WITH_COLOR(std::cout << "CHECK: Inference check pass!"<< std::endl, color::green);
+            return std::pair<bool, const Stmt*>(true, nullptr);
         }
-        DEBUG_WITH_COLOR(std::cout << "CHECK: Inference check pass!"<< std::endl, color::green);
-        return std::pair<bool, const Stmt*>(true, nullptr);
     }
 
     // Return value: checkResult, Error Stmt

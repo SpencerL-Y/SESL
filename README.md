@@ -34,3 +34,9 @@ TODOs:
 - 加入对数组和结构体的支持 DONE
   - 对alloca函数进行相关的符号执行处理 DONE
   - 将所有变量在调用求解器之前转为字节为基本单位：需要在符号执行时所有变量的类型，等式翻译时的cast问题的处理，新旧变量之间的关系和新变量的取值约束 DONE
+
+## 7.13
+TODOs:
+- Fix the bug for free (DONE)
+- interprocedural analysis: call graph, order of function calls, recursive calls, context of stack elements, inlining
+- library functions: alloca for basic variables, intepretation of byte variables.

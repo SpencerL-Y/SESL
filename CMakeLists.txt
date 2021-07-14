@@ -143,15 +143,15 @@ add_library(smackTranslator STATIC
   include/smack/SmackWarnings.h
   include/smack/BlockExecutor.h
   include/smack/Solver.h
-  include/smack/CFG.h
-  include/smack/CFGState.h
-  include/smack/CFGEdge.h
+        include/smack/cfg/CFG.h
+        include/smack/cfg/CFGState.h
+        include/smack/cfg/CFGEdge.h
   include/smack/Lasso.h
   include/smack/MemSafeVerifier.h
   include/smack/VarEquiv.h
   include/smack/VarFactory.h
   include/smack/StoreSplitter.h
-  include/smack/CFGExecutor.h
+        include/smack/cfg/CFGExecutor.h
   include/smack/ExecutionState.h
   lib/smack/Translator.cpp
   lib/smack/AddTiming.cpp
@@ -182,16 +182,16 @@ add_library(smackTranslator STATIC
   lib/smack/SmackWarnings.cpp
   lib/smack/BlockExecutor.cpp
   lib/smack/Solver.cpp
-  lib/smack/CFG.cpp
-  lib/smack/CFGState.cpp
-  lib/smack/CFGEdge.cpp
+        lib/smack/cfg/CFG.cpp
+        lib/smack/cfg/CFGState.cpp
+        lib/smack/cfg/CFGEdge.cpp
   lib/smack/Lasso.cpp
   lib/smack/MemSafeVerifier.cpp
   lib/smack/VarEquiv.cpp
   lib/smack/VarFactory.cpp
   lib/smack/StoreSplitter.cpp
-  lib/smack/CFGExecutor.cpp
-)
+        lib/smack/cfg/CFGExecutor.cpp
+        lib/smack/cfg/ProcManager.cpp include/smack/cfg/ProcManager.h lib/smack/cfg/CFGUtils.cpp include/smack/cfg/CFGUtils.h)
 
 add_executable(llvm2bpl
   tools/llvm2bpl/llvm2bpl.cpp

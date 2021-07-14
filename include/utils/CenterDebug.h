@@ -9,7 +9,7 @@
 #pragma once
 #include <iostream>
 #include <unordered_map>
-#define CENTER_DEBUG 1
+#define CENTER_DEBUG 0
 const bool hasColor = true;
 
 

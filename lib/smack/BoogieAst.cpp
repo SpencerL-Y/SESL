@@ -9,7 +9,7 @@
 #include <typeinfo>
 #include <sstream>
 #include <cstring>
-#include "smack/CFG.h"
+#include "smack/cfg/CFG.h"
 #include "smack/VarFactory.h"
 #include "utils/CenterDebug.h"
 #include "utils/TranslatorUtil.h"

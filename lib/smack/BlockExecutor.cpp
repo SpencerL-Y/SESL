@@ -390,7 +390,7 @@ namespace smack{
 
     const Expr* BlockExecutor::parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName){
         // parse the ptr arithmetic expression and return the simplified expression, link the ptr variable to the malloc name when found
-        // do the variable rename during the parsing
+        // do the variable renameBlocks during the parsing
         if(ExprType::FUNC == arithExpr->getType()){
             const FunExpr* funcExpr = (const FunExpr*) arithExpr;
             if(this->isPtrArithFuncName(funcExpr->name())){

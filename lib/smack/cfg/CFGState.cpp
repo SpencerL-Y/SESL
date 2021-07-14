@@ -1,4 +1,4 @@
-#include "smack/CFGState.h"
+#include "smack/cfg/CFGState.h"
 
 #include <utility>
 

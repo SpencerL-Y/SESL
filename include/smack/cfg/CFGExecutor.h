@@ -7,7 +7,7 @@
 #pragma once
 #include <utility>
 
-#include "smack/CFG.h"
+#include "CFG.h"
 #include "vector"
 using namespace std;
 namespace smack {

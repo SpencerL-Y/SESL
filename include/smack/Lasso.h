@@ -7,9 +7,9 @@
 #include <algorithm>
 #include <unistd.h>
 #include "BoogieAst.h"
-#include "CFGState.h"
-#include "CFGEdge.h"
-#include "CFG.h"
+#include "smack/cfg/CFGState.h"
+#include "smack/cfg/CFGEdge.h"
+#include "smack/cfg/CFG.h"
 #include <memory>
 
 // Sample a lasso-shaped trace from CFG. 

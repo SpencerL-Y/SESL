@@ -1,5 +1,5 @@
 #include "smack/Lasso.h"
-#include "smack/CFG.h"
+#include "smack/cfg/CFG.h"
 #include "smack/SmackModuleGenerator.h"
 #include <iostream>
 #include <llvm/Support/Casting.h>

@@ -14,7 +14,7 @@
 #include "smack/BoogieAst.h"
 #include <unordered_map>
 #include "smack/VarEquiv.h"
-#include "smack/CFG.h"
+#include "smack/cfg/CFG.h"
 #include "smack/VarFactory.h"
 
 namespace smack{

@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <map>
 #include <string>
-#include "BoogieAst.h"
+#include "smack/BoogieAst.h"
 #include "CFGEdge.h"
 #include <memory>
 #include <unordered_map>

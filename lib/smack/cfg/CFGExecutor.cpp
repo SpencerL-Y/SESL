@@ -2,7 +2,7 @@
 // Created by center on 2021/6/23.
 //
 
-#include "smack/CFGExecutor.h"
+#include "smack/cfg/CFGExecutor.h"
 
 namespace smack {
     void CFGExecutor::DFSByBound(StatePtr& state) {
@@ -16,6 +16,11 @@ namespace smack {
             visNum[state] --;
             return;
         }
+        cout << "In pro:" << state->getBlockName() << " " << visNum[state] << " ";
+        for (const auto& successor : successors) {
+            cout << successor.lock()->getBlockName() << " ";
+        }
+        cout << endl;
         for (const auto& successor : successors) {
             auto to = successor.lock();
             if (visNum[to] < bound) DFSByBound(to);
@@ -53,7 +58,7 @@ namespace smack {
     }
 
     StatePtr CFGExecutor::getEntryState() {
-        return cfg->getState("$bb0");
+        return cfg->getState(cfg->getEntryBlockName());
     }
 
     void CFGExecutor::printPath() {

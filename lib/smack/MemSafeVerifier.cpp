@@ -2,16 +2,12 @@
 
 #include "smack/BoogieAst.h"
 #include "smack/SmackModuleGenerator.h"
-#include "smack/CFG.h"
-#include "smack/VarEquiv.h"
-#include "smack/VarFactory.h"
-#include "smack/BlockExecutor.h"
+#include "smack/cfg/CFG.h"
 #include "smack/Translator.h"
 #include "smack/StoreSplitter.h"
-#include "smack/CFGExecutor.h"
-
-#include "llvm/Support/Debug.h"
-#include "llvm/Support/GraphWriter.h" 
+#include "smack/cfg/CFGExecutor.h"
+#include "llvm/Support/GraphWriter.h"
+#include "smack/cfg/CFGUtils.h"
 #include <iostream>
 #include <stdlib.h>
 namespace smack {
@@ -29,18 +25,10 @@ namespace smack {
         Program* program = smackGen.getProgram();
         // TODO: add the checking here.
         std::cout << "Begin verifying" << std::endl;
-        std::unordered_map<std::string, CFGPtr> CFGs;
-        for (auto &decl : program->getDeclarations()) {
-            if (auto proc_decl = dyn_cast<ProcDecl>(decl)) {
-                auto cfg = std::make_shared<CFG>(proc_decl);
-                CFGs[proc_decl->getName()] = cfg; 
-                std::cout << proc_decl->getName() << std::endl;
-            }
-        } 
-        CFGPtr mainGraph = CFGs["main"];
-        mainGraph->printCFG();
+        CFGUtil cfgUtil(program);
+        auto mainGraph = cfgUtil.getMainCFG();
         mainGraph->printSCCNumber();
-
+        mainGraph->printStateInfo();
         StatePtr state = mainGraph->getEntryState();
         // std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
         // Block* block = state->getStateBlock();
@@ -51,8 +39,6 @@ namespace smack {
         // }
         // std::cout << "=========== END PRINT THE DETAILED STMTs" << std::endl;
 
-        
-        
         CFGExecutor cfgExec(mainGraph);
         cfgExec.generatePathByUpperBound();
         cfgExec.printPath();

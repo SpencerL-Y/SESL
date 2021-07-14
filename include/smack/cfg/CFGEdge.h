@@ -2,7 +2,7 @@
 #define CFGEDGE_H
 #pragma once
 #include <cstdlib>
-#include "BoogieAst.h"
+#include "smack/BoogieAst.h"
 
 #include <memory>
 

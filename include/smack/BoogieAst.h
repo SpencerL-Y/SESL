@@ -817,7 +817,7 @@ public:
 
 class Block {
   std::string name;
-  typedef std::list<const Stmt *> StatementList;
+  typedef std::list<const Stmt *>   StatementList;
   StatementList stmts;
   bool executed;
 public:
@@ -826,6 +826,7 @@ public:
         std::list<const Stmt *> stmts = std::list<const Stmt *>()) {
     return new Block(n, stmts);
   }
+  void setBlockName(std::string newName) { name = std::move(newName); }
   Block(std::string n, std::list<const Stmt *> stmts) : name(n), stmts(stmts) {executed = false;}
   void print(std::ostream &os) const;
   typedef StatementList::iterator iterator;

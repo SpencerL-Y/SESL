@@ -5,7 +5,7 @@
 #include "smack/VarEquiv.h"
 #include "smack/VarFactory.h"
 #include "smack/StoreSplitter.h"
-#include "smack/CFG.h"
+#include "smack/cfg/CFG.h"
 #include "utils/CenterDebug.h"
 namespace smack
 {

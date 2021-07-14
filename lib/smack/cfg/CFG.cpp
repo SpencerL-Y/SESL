@@ -1,18 +1,18 @@
-#include "smack/CFG.h"
+#include "smack/cfg/CFG.h"
 #include "smack/SmackModuleGenerator.h"
 #include <iostream>
 #include <unordered_set>
 #include <llvm/Support/Casting.h>
 
-#define CENTER_DEBUG 0
+#define CENTER_DEBUG 1
 using namespace std;
-namespace smack
-{
+namespace smack {
     CFG::CFG(ProcDecl *procDecl) {
+        if (nullptr == procDecl) return;
         setProc(procDecl);
     }
 
-    StatePtr CFG::getState(const std::string& blockName, Block* block) {
+    StatePtr CFG::getState(const std::string &blockName, Block *block) {
         if (states.count(blockName)) return states[blockName];
         if (block) return createState(block);
         return nullptr;
@@ -25,59 +25,73 @@ namespace smack
         return statePtr;
     }
 
-    EdgePtr CFG::createEdge(const StatePtr& fromState, const StatePtr& toState) {
+    EdgePtr CFG::createEdge(const StatePtr &fromState, const StatePtr &toState) {
         return std::make_shared<CFGEdge>(fromState, toState);
     }
 
     void CFG::setProc(ProcDecl *procDecl) {
-        proc = procDecl;
-        buildCFG();
-        dfn.clear(); low.clear(); inStack.clear(); SCCNumber.clear();
-        sccNumber = step = 0;
-        if (states.count("$bb0")) {
-            markSCC("$bb0");
-        }
+        vector<ProcDecl *> tVec{procDecl};
+        setProc(tVec);
     }
 
     void CFG::buildCFG() {
-        if (!proc) return;
+        if (procVec.empty()) return;
         generateTypeInfo();
 //        printVarInfo();
-        for (auto& sb : proc->getBlocks()) {
-            auto fromState = getState(sb->getName(), sb);
+        int cnt = 1;
+        for (auto &proc : procVec) {
+            cout << "center: " << to_string(cnt++) << endl;
+            for (auto &sb : proc->getBlocks()) {
+                auto fromState = getState(sb->getName(), sb);
+            }
         }
-        for (auto &sb : proc->getBlocks()) {
-            auto fromState = getState(sb->getName());
-            bool firstStmt = true;
-            AssumeStmt * assume = nullptr;
-            for (auto &stmt : sb->getStatements()) {
-                if (firstStmt) {
-                    if (Stmt::Kind::ASSUME == stmt->getKind()) {
-                        assume = (AssumeStmt*) stmt;
+//        for (auto &proc : procVec) {
+//            for (auto &block : proc->getBlocks()) {
+//                cout << "from " << block->getName() << " to: ";
+//                for (auto& stmt : block->getStatements()) {
+//                    if (stmt->getKind() == Stmt::GOTO) {
+//                        auto p = (GotoStmt*) stmt;
+//                        auto t = p->getTargets();
+//                        for (auto &to : t) cout << to << " ";
+//                    }
+//                }
+//                cout << endl;
+//            }
+//        }
+        for (auto &proc : procVec) {
+            for (auto &sb : proc->getBlocks()) {
+                auto fromState = getState(sb->getName());
+                bool firstStmt = true;
+                AssumeStmt *assume = nullptr;
+                for (auto &stmt : sb->getStatements()) {
+                    if (firstStmt) {
+                        if (Stmt::Kind::ASSUME == stmt->getKind()) {
+                            assume = (AssumeStmt *) stmt;
+                        }
+                        firstStmt = false;
                     }
-                    firstStmt = false;
-                }
-                if (stmt->getKind() != Stmt::Kind::GOTO) {
-                    continue;
-                }
-                if (auto goto_stmt = (GotoStmt*) stmt) {
-                    auto& targets = goto_stmt->getTargets();
-#if CENTER_DEBUG
-                    cout << "from bb: " << sb->getName() << " to bb: ";
-#endif
-                    for (auto &to_bb : targets) {
-#if CENTER_DEBUG
-                        cout << to_bb << " ";
-#endif
-                        auto toState = getState(to_bb);
-                        assert(fromState && toState);
-                        auto edgePtr = createEdge(fromState, toState);
-                        edgePtr->setGuard(assume);
-                        fromState->addEdge(edgePtr);
+                    if (stmt->getKind() != Stmt::Kind::GOTO) {
+                        continue;
                     }
+                    if (auto goto_stmt = (GotoStmt *) stmt) {
+                        auto &targets = goto_stmt->getTargets();
 #if CENTER_DEBUG
-                    cout << "\n";
+                        cout << "from bb: " << sb->getName() << " to bb: ";
 #endif
+                        for (auto &to_bb : targets) {
+#if CENTER_DEBUG
+                            cout << to_bb << " ";
+#endif
+                            auto toState = getState(to_bb);
+                            assert(fromState && toState);
+                            auto edgePtr = createEdge(fromState, toState);
+                            edgePtr->setGuard(assume);
+                            fromState->addEdge(edgePtr);
+                        }
+#if CENTER_DEBUG
+                        cout << "\n";
+#endif
+                    }
                 }
             }
         }
@@ -92,7 +106,7 @@ namespace smack
     // if no successor: print path and pop current bb state to find other path;
     // else: if no loop, increase path; else, print path with duplicate bb state and pop current bb state.
     //center Modify: use unorderd_set to mark if the block was visited
-    void CFG::printCFG(const std::string& start, bool fresh) {
+    void CFG::printCFG(const std::string &start, bool fresh) {
         static vector<std::string> path;
         static unordered_set<std::string> is_visited;
         if (fresh) {
@@ -104,24 +118,24 @@ namespace smack
         is_visited.insert(start);
         if (statePtr->edges.empty()) {
             cout << path[0];
-            for (int i = 1; i < path.size(); ++ i) {
+            for (int i = 1; i < path.size(); ++i) {
                 cout << " -> " << path[i];
             }
             cout << endl;
         } else {
-            for (auto& to : statePtr->edges) {
+            for (auto &to : statePtr->edges) {
                 if (is_visited.count(to.first)) {
                     cout << "Found loop. " << endl;
                     cout << "Standard: ";
                     int i = 0;
-                    while(path[i] != to.first) {
+                    while (path[i] != to.first) {
                         cout << path[i] << " ";
-                        i ++;
+                        i++;
                     }
                     cout << " Loop: ";
-                    while(i < path.size()) {
+                    while (i < path.size()) {
                         cout << path[i] << " ";
-                        i ++;
+                        i++;
                     }
                     cout << endl;
                     continue;
@@ -134,23 +148,24 @@ namespace smack
     }
 
     void CFG::printCFG() {
-        printCFG("$bb0", true);
+        cout << getEntryBlockName() << endl;
+        printCFG(getEntryBlockName(), true);
     }
 
     std::vector<StatePtr> CFG::getStates() {
         std::vector<StatePtr> v;
         v.reserve(states.size());
-        for(auto &i : states) {
+        for (auto &i : states) {
             v.push_back(i.second);
         }
         return std::move(v);
     }
 
     std::string CFG::getVarType(string varName) {
-        if(varType.find(varName) != varType.end()){
+        if (varType.find(varName) != varType.end()) {
             return varType[varName];
         } else {
-            for(auto i : varType){
+            for (const auto &i : varType) {
                 std::cout << i.first << " " << i.second << " " << varName << std::endl;
             }
             CFDEBUG(std::cout << "ERROR: vartype not found: " << varName << std::endl;);
@@ -159,17 +174,20 @@ namespace smack
     }
 
     void CFG::generateTypeInfo() {
-        for (auto i = proc->decl_begin(); i != proc->decl_end(); ++ i) {
-            if ((*i)->getKind() == Decl::Kind::VARIABLE) {
-                VarDecl* varDecl = (VarDecl*)(*i);
-                varType[varDecl->getName()] = varDecl->getType();
+        for (auto &proc : procVec) {
+            for (auto i = proc->decl_begin(); i != proc->decl_end(); ++i) {
+                if ((*i)->getKind() == Decl::Kind::VARIABLE) {
+                    auto *varDecl = (VarDecl *) (*i);
+                    varType[varDecl->getName()] = varDecl->getType();
+                }
             }
         }
     }
 
     void CFG::printVarInfo() {
         for (auto &i : varType) {
-            std::cout << i.first << " " << i.second << " " << getVarDetailType(const_cast<string &>(i.first)).first << " " << getVarDetailType(const_cast<string &>(i.first)).second << std::endl;
+            std::cout << i.first << " " << i.second << " " << getVarDetailType(const_cast<string &>(i.first)).first
+                      << " " << getVarDetailType(const_cast<string &>(i.first)).second << std::endl;
         }
     }
 
@@ -177,13 +195,13 @@ namespace smack
         auto type = getVarType(varName);
         if (type[0] == 'i' || type[0] == 'M') {
             int ans = 0;
-            for (int i = 1; i < type.length(); ++ i) {
+            for (int i = 1; i < type.length(); ++i) {
                 ans = ans * 10 + type[i] - '0';
             }
             return {type, ans};
         } else if (type[0] == 'r') {
             int ans = 0;
-            for (int i = 3; i < type.length(); ++ i) {
+            for (int i = 3; i < type.length(); ++i) {
                 ans = ans * 10 + type[i] - '0';
             }
             return {type, ans};
@@ -195,8 +213,9 @@ namespace smack
 
     void CFG::markSCC(std::string start) {
         static std::vector<string> stk;
-        dfn[start] = low[start] = step ++;
-        stk.push_back(start); inStack[start] = 1;
+        dfn[start] = low[start] = step++;
+        stk.push_back(start);
+        inStack[start] = 1;
         auto successors = getState(start)->getSuccessors();
         for (auto &toPtr : successors) {
             auto to = toPtr.lock()->getBlockName();
@@ -209,16 +228,17 @@ namespace smack
         }
 
         if (dfn[start] == low[start]) {
-            sccNumber ++;
+            sccNumber++;
             DEBUG_WITH_COLOR(cout << "In " << start << endl;, color::white);
             string top;
             do {
-                top = stk.back(); stk.pop_back();
+                top = stk.back();
+                stk.pop_back();
                 inStack[top] = 0;
                 SCCNumber[top] = sccNumber;
-                DEBUG_WITH_COLOR( cout << "pop: " << top << endl;, color::white);
+                DEBUG_WITH_COLOR(cout << "pop: " << top << endl;, color::white);
             } while (top != start);
-            DEBUG_WITH_COLOR(cout << "pop finished" <<endl;, color::white);
+            DEBUG_WITH_COLOR(cout << "pop finished" << endl;, color::white);
             if (successors.empty()) return;
             for (auto &toPtr : successors) {
                 if (SCCNumber[toPtr.lock()->getBlockName()] == sccNumber) {
@@ -230,7 +250,7 @@ namespace smack
     }
 
     StatePtr CFG::getEntryState() {
-        return getState("$bb0");
+        return getState(getEntryBlockName());
     }
 
     void CFG::printSCCNumber() {
@@ -246,6 +266,39 @@ namespace smack
 
     void CFG::addVarType(std::string varName, std::string type) {
         varType[varName] = type;
+    }
+
+    std::string CFG::getEntryBlockName() {
+        return entryBlockName;
+    }
+
+    void CFG::setProc(std::vector<ProcDecl *> &procV) {
+        procVec.clear();
+        procVec = procV;
+        buildCFG();
+        dfn.clear();
+        low.clear();
+        inStack.clear();
+        SCCNumber.clear();
+        sccNumber = step = 0;
+        if (states.count(getEntryBlockName())) {
+            markSCC(getEntryBlockName());
+        }
+    }
+
+    CFG::CFG(ProcDecl *procDecl, std::string entryBlock) {
+        entryBlockName = std::move(entryBlock);
+        setProc(procDecl);
+    }
+
+    void CFG::printStateInfo() {
+        for (auto&[i, state] : states) {
+            cout << state->getBlockName() << ": ";
+            for (const auto &s : state->getSuccessors()) {
+                cout << s.lock()->getBlockName() << " ";
+            }
+            cout << endl;
+        }
     }
 
 } // namespace name

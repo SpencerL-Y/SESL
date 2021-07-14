@@ -1,4 +1,4 @@
-#include "smack/CFGEdge.h"
+#include "smack/cfg/CFGEdge.h"
 
 namespace smack
 {

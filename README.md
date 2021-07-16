@@ -38,5 +38,6 @@ TODOs:
 ## 7.13
 TODOs:
 - Fix the bug for free (DONE)
-- interprocedural analysis: call graph, order of function calls, recursive calls, context of stack elements, inlining
+- interprocedural analysis: call graph, order of function calls, recursive calls, context of stack elements, inlining （DONE）
 - library functions: alloca for basic variables, intepretation of byte variables.
+- the problem of global variable

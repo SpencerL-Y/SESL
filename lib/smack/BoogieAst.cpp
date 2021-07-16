@@ -164,6 +164,10 @@ namespace smack {
         return new BvConcat(left, right);
     }
 
+    const Expr* Expr::renameClone(std::string funcName, int usedNum) const {
+        CFDEBUG(std::cout << "WARNING: Default renameClone used" << std::endl;);
+        return this;
+    }
 
     z3::expr Expr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
         auto res = z3Ctx.bool_val(true);
@@ -284,6 +288,12 @@ namespace smack {
     const Stmt *Stmt::skip() { return new AssumeStmt(Expr::lit(true)); }
 
     const Stmt *Stmt::code(std::string s) { return new CodeStmt(s); }
+
+    const Stmt *Stmt::renameClone(std::string funcName, int usedNum) const {
+        const Stmt* clonedStmt = nullptr;
+        CFDEBUG(std::cout << "ERROR: This should be solved by children.." << std::endl;);
+        return clonedStmt;
+    }
 
     Decl *Decl::typee(std::string name, std::string type,
                       std::list<const Attr *> attrs) {
@@ -508,6 +518,68 @@ namespace smack {
         os << " " << rhs << ")";
     }
 
+    const Expr* BinExpr::renameClone(std::string funcName, int usedNum) const {
+        const Expr* renamedLhs = this->lhs->renameClone(funcName, usedNum);
+        const Expr* renamedRhs = this->rhs->renameClone(funcName, usedNum);
+        switch (op) {
+            case Iff:
+                return Expr::iff(renamedLhs, renamedRhs);
+                break;
+            case Imp:
+                return Expr::impl(renamedLhs, renamedRhs);
+                break;
+            case Or:
+                return Expr::or_(renamedLhs, renamedRhs);
+                break;
+            case And:
+                return Expr::and_(renamedLhs, renamedRhs);
+                break;
+            case Eq:
+                return Expr::eq(renamedLhs, renamedRhs);
+                break;
+            case Neq:
+                return Expr::neq(renamedLhs, renamedRhs);
+                break;
+            case Lt:
+                return Expr::lt(renamedLhs, renamedRhs);
+                break;
+            case Gt:
+                return Expr::gt(renamedLhs, renamedRhs);
+                break;
+            case Lte:
+                return Expr::le(renamedLhs, renamedRhs);
+                break;
+            case Gte:
+                return Expr::ge(renamedLhs, renamedRhs);
+                break;
+            case Sub:
+                CFDEBUG(std::cout << "WARNING: Unsolved binary Sub" << std::endl;);
+                return nullptr;
+                break;
+            case Conc:
+                CFDEBUG(std::cout << "WARNING: Unsolved binary Conc" << std::endl;);
+                return nullptr;
+                break;
+            case Plus:
+                return Expr::add(renamedLhs, renamedRhs);
+                break;
+            case Minus:
+                return Expr::substract(renamedLhs, renamedRhs);
+                break;
+            case Times:
+                return Expr::multiply(renamedLhs, renamedRhs);
+                break;
+            case Div:
+                return Expr::divide(renamedLhs, renamedRhs);
+                break;
+            case Mod:
+                CFDEBUG(std::cout << "WARNING: Unsolved binary Mod" << std::endl;);
+                return nullptr;
+                break;
+        }
+        return nullptr;
+    }
+
     z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
         z3::expr res = z3Ctx.bool_val(true);
         const z3::expr left = lhs->translateToZ3(z3Ctx, cfg, varFac);
@@ -699,12 +771,31 @@ namespace smack {
         return {true, res};
     }
 
+    const Expr* FunExpr::renameClone(std::string funcName, int usedNum) const {
+        std::list<const Expr*> renamedArgs;
+        for(const Expr* arg :  this->args){
+            renamedArgs.push_back(arg->renameClone(funcName, usedNum));
+        }
+        const Expr* clonedExpr = new FunExpr(this->fun, renamedArgs);
+        return clonedExpr;
+    }
+
     void FunExpr::print(std::ostream &os) const {
         os << fun;
         print_seq<const Expr *>(os, args, "(", ", ", ")");
     }
 
+    const Expr* BoolLit::renameClone(std::string funcName, int usedNum) const {
+        // No copy since it is a constant
+        return this;
+    }
+
     void BoolLit::print(std::ostream &os) const { os << (val ? "true" : "false"); }
+
+    const Expr* RModeLit::renameClone(std::string funcName, int usedNum) const {
+        // No copy since it is a constant
+        return this;
+    }
 
     void RModeLit::print(std::ostream &os) const {
         switch (val) {
@@ -728,6 +819,10 @@ namespace smack {
 
     void IntLit::print(std::ostream &os) const { os << val; }
 
+    const Expr* IntLit::renameClone(std::string funcName, int usedNum) const {
+        return this;
+    }
+
     z3::expr IntLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
         CDEBUG(std::cout << "In intLint : " << val << std::endl;)
         return z3Ctx.int_val(val.c_str());
@@ -740,7 +835,15 @@ namespace smack {
         return {true, ans};
     }
 
+    const Expr* BvLit::renameClone(std::string funcName, int usedNum) const {
+        return this;
+    }
+
     void BvLit::print(std::ostream &os) const { os << val << "bv" << width; }
+
+    const Expr* FPLit::renameClone(std::string funcName, int usedNum) const {
+        return this;
+    }
 
     void FPLit::print(std::ostream &os) const {
         if (specialValue.empty()) {
@@ -751,13 +854,30 @@ namespace smack {
         os << sigSize << "e" << expSize;
     }
 
+    const Expr* NegExpr::renameClone(std::string funcName, int usedNum) const{
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
+        const Expr* clonedExpr = new NegExpr(renamedExpr);
+        return clonedExpr;
+    }
+
     void NegExpr::print(std::ostream &os) const { os << "-(" << expr << ")"; }
+
+    const Expr* NotExpr::renameClone(std::string funcName, int usedNum) const{
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
+        const Expr* clonedExpr = new NotExpr(renamedExpr);
+        return clonedExpr;
+    }
 
     void NotExpr::print(std::ostream &os) const { os << "!(" << expr << ")"; }
 
     z3::expr NotExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
         auto exp = expr->translateToZ3(z3Ctx, cfg, varFac);
         return not exp;
+    }
+
+    const Expr* QuantExpr::renameClone(std::string funcName, int usedNum) const{
+        //TODOsh: currently no such instance, check later.
+        return this;
     }
 
     void QuantExpr::print(std::ostream &os) const {
@@ -774,9 +894,31 @@ namespace smack {
         os << " :: " << expr << ")";
     }
 
+    const Expr* SelExpr::renameClone(std::string funcName, int usedNum) const {
+        const Expr* renamedBase = this->base->renameClone(funcName, usedNum);
+        std::list<const Expr*> renamedIdxs;
+        for(const Expr* i : this->idxs){
+            renamedIdxs.push_back(i->renameClone(funcName, usedNum));
+        }
+        const Expr* clonedExpr = new SelExpr(renamedBase, renamedIdxs);
+        return clonedExpr;
+    }
+
+
     void SelExpr::print(std::ostream &os) const {
         os << base;
         print_seq<const Expr *>(os, idxs, "[", ", ", "]");
+    }
+
+    const Expr* UpdExpr::renameClone(std::string funcName, int usedNum) const{
+        const Expr* renamedBase = this->base->renameClone(funcName, usedNum);
+        std::list<const Expr*> renamedIdxs;
+        for(const Expr* i : this->idxs){
+          renamedIdxs.push_back(i->renameClone(funcName, usedNum));
+        }
+        const Expr* renamedVal = this->val->renameClone(funcName, usedNum);
+        const Expr* clonedExpr = new UpdExpr(renamedBase, renamedIdxs, renamedVal);
+        return clonedExpr;
     }
 
     void UpdExpr::print(std::ostream &os) const {
@@ -784,11 +926,16 @@ namespace smack {
         print_seq<const Expr *>(os, idxs, ", ");
         os << " := " << val << "]";
     }
-
+    
     void VarExpr::print(std::ostream &os) const { os << var; }
 
+    const Expr* VarExpr::renameClone(std::string funcName, int usedNum) const{
+        std::string renamedVar = this->var + "_" + funcName + std::to_string(usedNum);
+        const Expr* clonedExpr = new VarExpr(renamedVar);
+        return clonedExpr;
+    }
+    
     z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
-        // TODOsh: later remove the varFac and dealing fresh variables in CFG
         CFDEBUG(std::cout << "translating var" << this->name() << std::endl;);
         std::pair<std::string, int> typeResult = cfg->getVarDetailType(varFac->getOrigVarName(this->name()));
         if (typeResult.second == 1) {
@@ -851,6 +998,14 @@ namespace smack {
            << ")";
     }
 
+    const Expr* IfThenElseExpr::renameClone(std::string funcName, int usedNum) const{
+        const Expr* renamedCond = this->cond->renameClone(funcName, usedNum);
+        const Expr* renamedTrueValue = this->trueValue->renameClone(funcName, usedNum);
+        const Expr* renamedFalseValue = this->falseValue->renameClone(funcName, usedNum);
+
+        const Expr* clonedExpr = new IfThenElseExpr(renamedCond, renamedTrueValue, renamedFalseValue);
+        return clonedExpr;
+    }
 
     z3::expr IfThenElseExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
         auto res = ((cond->translateToZ3(z3Ctx, cfg, varFac) and trueValue->translateToZ3(z3Ctx, cfg, varFac)) or
@@ -861,8 +1016,26 @@ namespace smack {
         os << var << "[" << upper << ":" << lower << "]";
     }
 
+    const Expr* BvExtract::renameClone(std::string funcName, int usedNum) const {
+        const Expr* renamedVar = this->var->renameClone(funcName, usedNum);
+        const Expr* renamedUpper = this->upper->renameClone(funcName, usedNum);
+        const Expr* renamedLower = this->lower->renameClone(funcName, usedNum);
+
+        const Expr* clonedExpr = new BvExtract(renamedVar, renamedUpper, renamedLower);
+        return clonedExpr;
+
+    }
+
     void BvConcat::print(std::ostream &os) const {
         os << "(" << left << "++" << right << ")";
+    }
+    
+    const Expr* BvConcat::renameClone(std::string funcName, int usedNum) const{
+        const Expr* renamedLeft = this->left->renameClone(funcName, usedNum);
+        const Expr* renamedRight = this->right->renameClone(funcName, usedNum);
+
+        const Expr* clonedExpr = new BvConcat(renamedLeft, renamedRight);
+        return clonedExpr;
     }
 
     const SpatialLiteral *SpatialLiteral::emp() {
@@ -1085,13 +1258,32 @@ namespace smack {
         os << ")";
     }
 
+    const Expr* StringLit::renameClone(std::string funcName, int usedNum) const{
+        return this;
+    }
+
     void StringLit::print(std::ostream &os) const { os << "\"" << val << "\""; }
+
+    const Attr* Attr::renameClone(std::string funcName, int usedNum) const{
+        // Currently no copy
+        return this;
+    }
 
     void Attr::print(std::ostream &os) const {
         os << "{:" << name;
         if (vals.size() > 0)
             print_seq<const Expr *>(os, vals, " ", ", ", "");
         os << "}";
+    }
+
+    const Stmt* AssertStmt::renameClone(std::string funcName, int usedNum) const{
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
+        std::list<const Attr*> renamedAttrs;
+        for(const Attr* a : this->attrs){
+            renamedAttrs.push_back(a->renameClone(funcName, usedNum));
+        }
+        const Stmt* clonedStmt = new AssertStmt(renamedExpr, renamedAttrs);
+        return clonedStmt;
     }
 
     void AssertStmt::print(std::ostream &os) const {
@@ -1101,11 +1293,34 @@ namespace smack {
         os << expr << ";";
     }
 
+    const Stmt* AssignStmt::renameClone(std::string funcName, int usedNum) const {
+        list<const Expr*> renamedLhs, renamedRhs;
+        for(const Expr* le : this->lhs){
+            renamedLhs.push_back(le->renameClone(funcName, usedNum));
+        }
+        for(const Expr* re : this->rhs){  
+            renamedRhs.push_back(re->renameClone(funcName, usedNum));
+        }
+        const Stmt* clonedStmt = new AssignStmt(renamedLhs, renamedRhs);
+        return clonedStmt;
+    }
+
     void AssignStmt::print(std::ostream &os) const {
         print_seq<const Expr *>(os, lhs, ", ");
         os << " := ";
         print_seq<const Expr *>(os, rhs, ", ");
         os << ";";
+    }
+
+    const Stmt* AssumeStmt::renameClone(std::string funcName, int usedNum) const {
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
+        std::list<const Attr*> renamedAttrs;
+        for(const Attr* a : this->attrs){
+            renamedAttrs.push_back(a->renameClone(funcName, usedNum));
+        }
+        const Stmt* clonedStmt = new AssumeStmt(renamedExpr);
+        // TODOsh: what is the attr used for?
+        return clonedStmt;
     }
 
     void AssumeStmt::print(std::ostream &os) const {
@@ -1116,8 +1331,35 @@ namespace smack {
     }
 
 // SHStmt
+    const Stmt* SHStmt::renameClone(std::string funcName, int usedNum) const {
+        CFDEBUG(std::cout << "ERROR: SHStmt rename should not happen.." << std::endl;);
+        return nullptr;
+    }
+
     void SHStmt::print(std::ostream &os) const {
         os << symbheap;
+    }
+
+    const Stmt* CallStmt::renameClone(std::string funcName, int usedNum) const {
+        std::string renameProc = this->proc;
+        std::list<const Attr*> renamedAttrs;
+        std::list<const Expr*> renamedParams;
+        std::list<std::string> renamedReturns;
+
+        for(const Attr* a : this->attrs){
+            renamedAttrs.push_back(a->renameClone(funcName, usedNum));
+        }
+        for(const Expr* e : this->params){
+            renamedParams.push_back(e->renameClone(funcName, usedNum));
+        }
+        for(std::string ret : this->returns){
+            renamedReturns.push_back(ret + "_" + funcName + std::to_string(usedNum));
+        }
+        // TODOsh: renameClone after procDecl
+        const Stmt* clonedStmt = new CallStmt(renameProc, renamedAttrs, renamedParams, renamedReturns);
+
+        return clonedStmt;
+
     }
 
     void CallStmt::print(std::ostream &os) const {
@@ -1131,7 +1373,17 @@ namespace smack {
         os << ";";
     }
 
+    const Stmt* Comment::renameClone(std::string funcName, int usedNum) const {
+        // No copy for comment stmt since it is not important..
+        return this;
+    }
+
     void Comment::print(std::ostream &os) const { os << "/* " << str << " */"; }
+
+    const Stmt* GotoStmt::renameClone(std::string funcName, int usedNum) const {
+        // No copy for goto since it is renamed at frontend
+        return this;
+    }
 
     void GotoStmt::print(std::ostream &os) const {
         os << "goto ";
@@ -1139,10 +1391,25 @@ namespace smack {
         os << ";";
     }
 
+    const Stmt* HavocStmt::renameClone(std::string funcName, int usedNum) const { 
+        std::list<std::string> renamedVars;
+        for(std::string s : this->vars){
+            renamedVars.push_back(s + "_" + funcName + std::to_string(usedNum));
+        }
+        const Stmt* clonedStmt = new HavocStmt(renamedVars);
+        return clonedStmt;
+    }
+
     void HavocStmt::print(std::ostream &os) const {
         os << "havoc ";
         print_seq<std::string>(os, vars, ", ");
         os << ";";
+    }
+
+    const Stmt* ReturnStmt::renameClone(std::string funcName, int usedNum) const {
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
+        const Stmt* clonedStmt = new ReturnStmt(renamedExpr);
+        return clonedStmt;
     }
 
     void ReturnStmt::print(std::ostream &os) const {
@@ -1156,6 +1423,15 @@ namespace smack {
         return expr;
     }
 
+    const Stmt* CodeStmt::renameClone(std::string funcName, int usedNum) const {
+      // No copy for code stmt since currently not finding relevant
+        return this;
+    }
+    
+    const Decl* Decl::renameClone(std::string funcName, int usedNum) const{
+        return this;
+    }
+
     void CodeStmt::print(std::ostream &os) const { os << code; }
 
     void TypeDecl::print(std::ostream &os) const {
@@ -1166,6 +1442,12 @@ namespace smack {
         if (alias != "")
             os << " = " << alias;
         os << ";";
+    }
+    
+    const Decl* AxiomDecl::renameClone(std::string funcName, int usedNum) const {
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
+        const Decl* clonedStmt = new AxiomDecl(this->name, renamedExpr);
+        return clonedStmt;
     }
 
     void AxiomDecl::print(std::ostream &os) const {
@@ -1182,6 +1464,11 @@ namespace smack {
         os << (unique ? "unique " : "") << name << ": " << type << ";";
     }
 
+    const Decl* FuncDecl::renameClone(std::string funcName, int usedNum) const {
+        // TODOsh: check this later, whether ok not processing the declaration
+        return this;
+    }
+
     void FuncDecl::print(std::ostream &os) const {
         os << "function ";
         if (attrs.size() > 0)
@@ -1194,6 +1481,12 @@ namespace smack {
             os << " { " << body << " }";
         else
             os << ";";
+    }
+
+    const Decl* VarDecl::renameClone(std::string funcName, int usedNum) const {
+        std::string renamedVarName = this->name + "_" + funcName + std::to_string(usedNum);
+        const Decl* clonedDecl = new VarDecl(renamedVarName, this->type);
+        return clonedDecl;
     }
 
     void VarDecl::print(std::ostream &os) const {

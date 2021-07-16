@@ -1,3 +1,4 @@
+
 ; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/smack/build/b-e9_oh7cg.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"

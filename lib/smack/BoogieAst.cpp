@@ -1407,6 +1407,8 @@ namespace smack {
     }
 
     const Stmt* ReturnStmt::renameClone(std::string funcName, int usedNum) const {
+        if (nullptr == this->expr)
+            return this;
         const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
         const Stmt* clonedStmt = new ReturnStmt(renamedExpr);
         return clonedStmt;

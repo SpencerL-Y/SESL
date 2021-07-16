@@ -257,7 +257,7 @@ namespace smack{
                 }
             } else {
                 // If RHS is not a function, directly equal them and update varEquiv accordingly..
-                CFDEBUG(std::cout << "INFO: ASSIGN RHS is not a funcExpr" << std::endl;);
+                CFDEBUG(std::cout << "INFO: ASSIGN RHS is not a funcExpr"; rhs->print(cout); lhs->print(cout); cout << std::endl;);
                 if(rhs->isVar()){
                     const VarExpr* rhsOrigVar = (const VarExpr*) rhs;
                     std::string rhsOrigVarName = rhsOrigVar->name();

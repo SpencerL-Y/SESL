@@ -26,7 +26,6 @@ namespace smack {
         string entryBlockName;
         unordered_map<Block *, string> newNames;
         unordered_map<string, string> reNames;
-        static unordered_map<string, shared_ptr<ProcManager>> procedures;
         static unordered_map<string, pair<ProcDecl *, int>> originProcedures;
         vector<Block *> funcCallBlock, returnBlock;
         ParameterList params;
@@ -48,6 +47,8 @@ namespace smack {
 
         string createNewName();
 
+        string getFunctionName();
+
         void recursiveInline(ProcManager *curManager, int depth = 0);
 
         void splitBlock(Block *blockPtr, int depth = 0);
@@ -68,8 +69,6 @@ namespace smack {
         ProcDecl *renameProc();
 
         void doInline(int depth = 0);
-
-        void addProcManager(const string &name, shared_ptr<ProcManager> procManager);
 
         static void addProc(ProcDecl *proc);
 

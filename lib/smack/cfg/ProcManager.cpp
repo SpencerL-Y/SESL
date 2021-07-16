@@ -7,8 +7,7 @@
 #include <utility>
 
 namespace smack {
-    int ProcManager::inlineDepthBound = 3;
-    unordered_map<string, shared_ptr<ProcManager>> ProcManager::procedures = {};
+    int ProcManager::inlineDepthBound = 2;
     unordered_map<string, pair<ProcDecl *, int>> ProcManager::originProcedures = {};
 
     ProcManager::ProcManager(ProcDecl *old) : oldProc(old), newProc(nullptr), nameCounter(0) {
@@ -62,7 +61,7 @@ namespace smack {
                 newStmts.push_back(Stmt::goto_(newTargets));
                 continue;
             }
-            newStmts.push_back(stmt);
+            newStmts.push_back(stmt->renameClone(procName, renameCounter));
         }
         auto newBlock = new Block(newName, newStmts);
         blockList.push_back(newBlock);
@@ -83,7 +82,6 @@ namespace smack {
     }
 
     ProcDecl *ProcManager::renameProc() {
-        renameCounter++;
         reset();
         renameBlocks();
         copyBlocks();
@@ -95,9 +93,7 @@ namespace smack {
         return entryBlockName;
     }
 
-    void ProcManager::addProcManager(const string &name, shared_ptr<ProcManager> procManager) {
-        procedures[name] = std::move(procManager);
-    }
+
 
     void ProcManager::doInline(int depth) {
         recursiveInline(this, depth);
@@ -290,6 +286,8 @@ namespace smack {
     void ProcManager::copyProcedure(ProcDecl *procDecl) {
         auto &blk = procDecl->getBlocks();
         toBeMerged.insert(toBeMerged.end(), blk.begin(), blk.end());
+        auto& targetDecls = procDecl->getDeclarations();
+        declarationList.insert(declarationList.end(), targetDecls.begin(), targetDecls.end());
     }
 
     void ProcManager::reset() {
@@ -309,11 +307,26 @@ namespace smack {
     }
 
     void ProcManager::copyOldProcInfo(ProcDecl *procDecl) {
-        params = procDecl->getParameters();
         procName = procDecl->getName();
-        rets = procDecl->getReturns();
         blockList.clear();
-        declarationList = procDecl->getDeclarations();
+        rets.clear();
+        params.clear();
+        declarationList.clear();
+
+        for (auto& [name, type] : procDecl->getParameters()) {
+            string newName = name +"_" + procName + to_string(renameCounter);
+            params.push_back({newName, type == "ref" ? "ref32" : type });
+            declarationList.push_back(Decl::variable(newName, type == "ref" ? "ref32" : type));
+        }
+        for (auto &decl : procDecl->getDeclarations()) {
+            Decl* p = const_cast<Decl*>(decl->renameClone(procName, renameCounter));
+            declarationList.push_back(p);
+        }
+        for (auto& [name, type] : procDecl->getReturns()) {
+            string newName = name +"_" + procName + to_string(renameCounter);
+            rets.push_back({newName, type == "ref" ? "ref32" : type});
+            declarationList.push_back(Decl::variable(newName, type == "ref" ? "ref32" : type));
+        }
     }
 
     shared_ptr<ProcManager> ProcManager::getNewManager(string procName) {
@@ -335,6 +348,10 @@ namespace smack {
             if (block->getName().empty()) return;
         }
         originProcedures[proc->getName()] = {proc, 0};
+    }
+
+    string ProcManager::getFunctionName() {
+        return procName + "_" + to_string(renameCounter);
     }
 
 }

@@ -39,8 +39,8 @@ namespace smack {
 
         CFGExecutor cfgExec(mainGraph);
         cfgExec.generatePathByUpperBound();
-        cfgExec.printPath();
-/*
+//        cfgExec.printPath();
+
         for(ExecutionPath p : cfgExec.getExecPathVec()){
 
             std::cout << "=========== DO SYMBOLIC EXECUTION FOR ONE PATH" << std::endl;
@@ -93,7 +93,7 @@ namespace smack {
         }
 
         
-        std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;*/
+        std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
         return false;
     }
 

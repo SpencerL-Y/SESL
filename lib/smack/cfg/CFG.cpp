@@ -1,10 +1,8 @@
 #include "smack/cfg/CFG.h"
-#include "smack/SmackModuleGenerator.h"
 #include <iostream>
 #include <unordered_set>
 #include <llvm/Support/Casting.h>
 
-#define CENTER_DEBUG 1
 using namespace std;
 namespace smack {
     CFG::CFG(ProcDecl *procDecl) {
@@ -38,26 +36,12 @@ namespace smack {
         if (procVec.empty()) return;
         generateTypeInfo();
 //        printVarInfo();
-        int cnt = 1;
         for (auto &proc : procVec) {
-            cout << "center: " << to_string(cnt++) << endl;
             for (auto &sb : proc->getBlocks()) {
                 auto fromState = getState(sb->getName(), sb);
             }
         }
-//        for (auto &proc : procVec) {
-//            for (auto &block : proc->getBlocks()) {
-//                cout << "from " << block->getName() << " to: ";
-//                for (auto& stmt : block->getStatements()) {
-//                    if (stmt->getKind() == Stmt::GOTO) {
-//                        auto p = (GotoStmt*) stmt;
-//                        auto t = p->getTargets();
-//                        for (auto &to : t) cout << to << " ";
-//                    }
-//                }
-//                cout << endl;
-//            }
-//        }
+
         for (auto &proc : procVec) {
             for (auto &sb : proc->getBlocks()) {
                 auto fromState = getState(sb->getName());

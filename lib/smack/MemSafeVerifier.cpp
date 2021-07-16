@@ -27,8 +27,6 @@ namespace smack {
         std::cout << "Begin verifying" << std::endl;
         CFGUtil cfgUtil(program);
         auto mainGraph = cfgUtil.getMainCFG();
-        mainGraph->printSCCNumber();
-        mainGraph->printStateInfo();
         StatePtr state = mainGraph->getEntryState();
         // std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
         // Block* block = state->getStateBlock();
@@ -42,7 +40,7 @@ namespace smack {
         CFGExecutor cfgExec(mainGraph);
         cfgExec.generatePathByUpperBound();
         cfgExec.printPath();
-
+/*
         for(ExecutionPath p : cfgExec.getExecPathVec()){
 
             std::cout << "=========== DO SYMBOLIC EXECUTION FOR ONE PATH" << std::endl;
@@ -95,7 +93,7 @@ namespace smack {
         }
 
         
-        std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
+        std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;*/
         return false;
     }
 

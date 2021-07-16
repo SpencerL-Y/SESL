@@ -11,6 +11,7 @@
 #include "CFGEdge.h"
 #include <memory>
 #include "smack/VarFactory.h"
+#include "smack/cfg/ProcManager.h"
 // This is the CFG constructed from the BoogieAST defined program which contains a set of procedure declarations.
 // Currently only support the intraprocedural conversion for main function.
 namespace smack
@@ -37,7 +38,7 @@ namespace smack
         std::pair<std::string, int> getVarDetailType(std::string varName);
         void setProc(ProcDecl* procDecl);
         void setProc(std::vector<ProcDecl*>& procV);
-        void buildCFG();
+        virtual void buildCFG();
         void buildCFG(ProcDecl* procDecl);
         std::vector<StatePtr> getStates();
         StatePtr getState(const std::string& blockName, Block* block = nullptr);

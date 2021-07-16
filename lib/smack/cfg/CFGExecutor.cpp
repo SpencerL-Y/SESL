@@ -16,11 +16,13 @@ namespace smack {
             visNum[state] --;
             return;
         }
+#if CENTER_DEBUG
         cout << "In pro:" << state->getBlockName() << " " << visNum[state] << " ";
         for (const auto& successor : successors) {
             cout << successor.lock()->getBlockName() << " ";
         }
         cout << endl;
+#endif
         for (const auto& successor : successors) {
             auto to = successor.lock();
             if (visNum[to] < bound) DFSByBound(to);
@@ -34,7 +36,7 @@ namespace smack {
         path.push_back(state);
         auto successors = state->getSuccessors();
         if (successors.empty()) {
-            exePathVec.push_back(ExecutionPath(path));
+            exePathVec.emplace_back(path);
             path.pop_back();
             return;
         }
@@ -63,9 +65,11 @@ namespace smack {
 
     void CFGExecutor::printPath() {
         cout << "Printing path:" << std::endl;
+        int cnt = 1;
         for (auto &path : exePathVec) {
+            cout << "\tpath No." << cnt ++ << ": ";
             for (int i = 0; i < path.length(); ++ i) {
-                cout << path[i]->getBlockName() << " ";
+                cout << path[i]->getBlockName() << "->";
             }
             cout << endl;
         }

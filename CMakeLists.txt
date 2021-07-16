@@ -191,7 +191,10 @@ add_library(smackTranslator STATIC
   lib/smack/VarFactory.cpp
   lib/smack/StoreSplitter.cpp
         lib/smack/cfg/CFGExecutor.cpp
-        lib/smack/cfg/ProcManager.cpp include/smack/cfg/ProcManager.h lib/smack/cfg/CFGUtils.cpp include/smack/cfg/CFGUtils.h)
+        lib/smack/cfg/ProcManager.cpp
+        include/smack/cfg/ProcManager.h
+        lib/smack/cfg/CFGUtils.cpp
+        include/smack/cfg/CFGUtils.h)
 
 add_executable(llvm2bpl
   tools/llvm2bpl/llvm2bpl.cpp

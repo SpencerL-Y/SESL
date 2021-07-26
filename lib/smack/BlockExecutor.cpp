@@ -31,12 +31,6 @@ namespace smack{
                 CFDEBUG(std::cout << "ERROR: This should not happen.");
             }
 
-            // TODOsh: if the lhs variable is a return variable
-            if(lhsVarName.find("$r") != std::string::npos){
-                CFDEBUG(std::cout << "INFO: TODOsh: add interprocedural analysis later" << std::endl;);
-                return sh;
-            }
-
             if(lhsVarName.find("$M") != std::string::npos){
                 this->cfg->addVarType(lhsVarOrigName, "M" + std::to_string(8 * PTR_BYTEWIDTH));
             }
@@ -185,7 +179,8 @@ namespace smack{
                     this->varEquiv->addNewName(lhsVarName);
                     
                     const Expr* rhsExpr = this->parseVarArithmeticExpr(rhsFun);
-                    CFDEBUG(std::cout << "RIGHT HAND SIDE ARITHMETIC FORMULA: " << rhsFun << std::endl;);
+                    CFDEBUG(std::cout << "RIGHT HAND SIDE ARITHMETIC FORMULA: " << rhsFun << std::endl;rhsExpr->print(std::cout);std::cout << std::endl;);
+                    
                     auto computeIntResult = rhsExpr->translateToInt(this->varEquiv);
                     if(computeIntResult.first){
                         this->varEquiv->addNewVal(lhsVarName, computeIntResult.second);

@@ -39,6 +39,8 @@ namespace smack{
         StoreSplitterPtr storeSplit;
         CFGPtr cfg;
 
+        // var string judgement
+        bool isPtrVar(std::string name);
 
         // funcexpr name judgement functions
         bool isUnaryAssignFuncName(std::string name);

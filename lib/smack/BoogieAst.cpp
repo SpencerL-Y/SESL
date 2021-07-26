@@ -585,8 +585,8 @@ namespace smack {
         const z3::expr left = lhs->translateToZ3(z3Ctx, cfg, varFac);
         const z3::expr right = rhs->translateToZ3(z3Ctx, cfg, varFac);
         CDEBUG(std::cout << "In binExpr function!" << std::endl);
-        CDEBUG(std::cout << "left: " << left.to_string() << " right: " << right.to_string() << " op: " << op
-                         << std::endl);
+        //CDEBUG(std::cout << "left: " << left.to_string() << " right: " << right.to_string() << " op: " << op
+        //                 << std::endl);
         switch (op) {
             case Iff:
                 // Q: correct?

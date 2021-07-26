@@ -44,6 +44,7 @@ namespace smack
         void addNewBlkName(std::string name);
         void linkBlkName(std::string newname, std::string blkname);
         std::string getBlkName(std::string name);
+        bool hasBlkName(std::string name);
 
         // pointsToBlkOffset operations
         void addNewOffset(std::string name, int offset);

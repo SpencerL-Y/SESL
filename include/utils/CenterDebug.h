@@ -9,11 +9,11 @@
 #pragma once
 #include <iostream>
 #include <unordered_map>
-#define CENTER_DEBUG 0
+#define CENTER_DEBUG 1
 const bool hasColor = true;
 
 
-#define OPEN_CDEBUG false
+#define OPEN_CDEBUG true
 
 #define CDEBUG(X) do { \
     if (CENTER_DEBUG && OPEN_CDEBUG) {\

@@ -316,8 +316,15 @@ namespace smack{
         return sh;
     }
 
-    
-    
+    // ----------- Util functions for string judgement -------------
+    bool BlockExecutor::isPtrVar(std::string name){
+        if(name.find("$p") != std::string::npos){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     // ----------- Util functions for assignment symbolic execution ----------- 
 
     bool BlockExecutor::isUnaryAssignFuncName(std::string name){
@@ -412,9 +419,11 @@ namespace smack{
                 const VarExpr* varOrig = (const VarExpr*) arithExpr;
                 std::string varOrigName = varOrig->name();
                 const VarExpr* varGet = this->varFactory->getVar(varOrigName);
-
-                CFDEBUG(std::cout << "Link arithmetic operation: " <<  lhsName << " " << varGet->name() << std::endl;);
-                this->varEquiv->linkBlkName(lhsName, varGet->name());  
+                if(varGet->name().find("$p") != std::string::npos){
+                    // link if it is a pointer variable
+                    CFDEBUG(std::cout << "Link arithmetic operation: " <<  lhsName << " " << varGet->name() << std::endl;);
+                    this->varEquiv->linkBlkName(lhsName, varGet->name());  
+                }
                 return varGet;
             } else {
                 return arithExpr;
@@ -887,7 +896,18 @@ namespace smack{
 
             int offset = this->varEquiv->getOffset(varArg1->name());
             std::string mallocName = this->varEquiv->getBlkName(varArg1->name());
-
+            int mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+            CFDEBUG(std::cout << "STORE: offset " << offset << " Blk size: " << mallocBlkSize << std::endl;);
+            // if the store is out of bound, set inference error
+            if(offset >= mallocBlkSize){
+                std::list<const SpatialLiteral*> newSpatial;
+                // the symbolic heap is set to error
+                newSpatial.push_back(SpatialLiteral::errlit(true));
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
+                newSH->print(std::cout);
+                std::cout << std::endl;
+                return newSH;
+            }
             int splitBlkIndex = this->storeSplit->addSplit(mallocName, offset);
             CFDEBUG(std::cout << "malloc name: " << mallocName << " splitIndex: " << splitBlkIndex <<  std::endl);
             int currentIndex = 1;
@@ -937,6 +957,12 @@ namespace smack{
 
                             std::string oldname = varArg2->name();
                             this->varEquiv->linkName(freshVar->name(), oldname);
+                            
+                            if(this->varEquiv->hasBlkName(oldname)){
+                                // link fresh variable if there is malloc linked to the stored variable
+                                this->varEquiv->linkBlkName(freshVar->name(), oldname);
+                            }
+
                             if(varArg2->translateToInt(this->varEquiv).first){
                                 this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                             }
@@ -945,6 +971,7 @@ namespace smack{
                         else {
                             //CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable or val !!" << std::endl;);
                             const Expr* storedExpr = this->parseVarArithmeticExpr(arg2);
+                            // TODOsh: add link to freshVar if the expression is a ptr arithmetic expression linked to some malloced blk
                             if(storedExpr->translateToInt(this->varEquiv).first){
                                 this->varEquiv->addNewVal(freshVar->name(), storedExpr->translateToInt(this->varEquiv).second);
                             }
@@ -996,6 +1023,9 @@ namespace smack{
 
                             std::string oldname = varArg2->name();
                             this->varEquiv->linkName(freshVar->name(), oldname);
+                            if(this->varEquiv->hasBlkName(oldname)){
+                                this->varEquiv->linkBlkName(freshVar->name(), oldname);
+                            }
 
                             if(varArg2->translateToInt(this->varEquiv).first){
                                 this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
@@ -1005,6 +1035,7 @@ namespace smack{
                         else {
                             //CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable or val !!" << std::endl;);
                             const Expr* storedExpr = this->parseVarArithmeticExpr(arg2);
+                            // TODOsh: add link to freshVar if the expression is a ptr arithmetic expression linked to some malloced blk
                             if(storedExpr->translateToInt(this->varEquiv).first){
                                 this->varEquiv->addNewVal(freshVar->name(), storedExpr->translateToInt(this->varEquiv).second);
                             }
@@ -1121,6 +1152,9 @@ namespace smack{
                                     )
                                 );
                                 this->varEquiv->linkName(lhsVarName, loadedVarName);
+                                if(this->varEquiv->hasBlkName(loadedVarName)){
+                                    this->varEquiv->linkBlkName(lhsVarName, loadedVarName);
+                                }
                                 this->varEquiv->linkIntVar(lhsVarName, loadedVarName);
                                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
                                 newSH->print(std::cout);

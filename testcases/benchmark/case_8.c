@@ -26,11 +26,11 @@ void test_1() {
     foo(a, b, n);
     if (b[-1]) {
         free(a);
-        free(b);
+        free(b-1);
     } /* invalid free (b was iterated) */
     else {
         free(a);
-        free(b);
+        free(b-1);
     } /* ditto */
 }
 

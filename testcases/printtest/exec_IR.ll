@@ -1,4 +1,4 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/b-swomlwo3.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/b-nt8bkwxi.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
@@ -9,7 +9,7 @@ target triple = "x86_64-pc-linux-gnu"
 
 ; Function Attrs: noinline nounwind uwtable
 define dso_local i32 @main() #0 !dbg !21 {
-  store i32 4, i32* @n, align 4, !dbg !24, !verifier.code !25
+  store i32 3, i32* @n, align 4, !dbg !24, !verifier.code !25
   %1 = load i32, i32* @n, align 4, !dbg !26, !verifier.code !25
   %2 = sext i32 %1 to i64, !dbg !26, !verifier.code !25
   %3 = mul i64 %2, 4, !dbg !27, !verifier.code !25
@@ -70,7 +70,7 @@ define dso_local i32 @main() #0 !dbg !21 {
   store i32 -1, i32* %28, align 4, !dbg !52, !verifier.code !25
   br label %42, !dbg !50, !verifier.code !25
 
-29:                                               ; preds = %45
+29:                                               ; preds = %42
   %30 = load i32*, i32** @a, align 8, !dbg !53, !verifier.code !25
   %31 = bitcast i32* %30 to i8*, !dbg !53, !verifier.code !25
   call void @free(i8* %31) #3, !dbg !56, !verifier.code !25
@@ -80,7 +80,7 @@ define dso_local i32 @main() #0 !dbg !21 {
   call void @free(i8* %34) #3, !dbg !59, !verifier.code !25
   br label %41, !dbg !60, !verifier.code !25
 
-35:                                               ; preds = %45
+35:                                               ; preds = %42
   %36 = load i32*, i32** @a, align 8, !dbg !61, !verifier.code !25
   %37 = bitcast i32* %36 to i8*, !dbg !61, !verifier.code !25
   call void @free(i8* %37) #3, !dbg !63, !verifier.code !25
@@ -95,18 +95,11 @@ define dso_local i32 @main() #0 !dbg !21 {
 
 42:                                               ; preds = %26
   call void @llvm.dbg.value(metadata i32 2, metadata !36, metadata !DIExpression()), !dbg !37, !verifier.code !25
-  %43 = load i32*, i32** @b, align 8, !dbg !50, !verifier.code !25
-  %44 = getelementptr inbounds i32, i32* %43, i64 2, !dbg !50, !verifier.code !25
-  store i32 -1, i32* %44, align 4, !dbg !52, !verifier.code !25
-  br label %45, !dbg !50, !verifier.code !25
-
-45:                                               ; preds = %42
-  call void @llvm.dbg.value(metadata i32 3, metadata !36, metadata !DIExpression()), !dbg !37, !verifier.code !25
-  %46 = load i32*, i32** @b, align 8, !dbg !68, !verifier.code !25
-  %47 = getelementptr inbounds i32, i32* %46, i64 -2, !dbg !68, !verifier.code !25
-  %48 = load i32, i32* %47, align 4, !dbg !68, !verifier.code !25
-  %49 = icmp ne i32 %48, 0, !dbg !68, !verifier.code !25
-  br i1 %49, label %29, label %35, !dbg !69, !verifier.code !25
+  %43 = load i32*, i32** @b, align 8, !dbg !68, !verifier.code !25
+  %44 = getelementptr inbounds i32, i32* %43, i64 -2, !dbg !68, !verifier.code !25
+  %45 = load i32, i32* %44, align 4, !dbg !68, !verifier.code !25
+  %46 = icmp ne i32 %45, 0, !dbg !68, !verifier.code !25
+  br i1 %46, label %29, label %35, !dbg !69, !verifier.code !25
 
 forwarder:                                        ; preds = %19
   br label %15, !verifier.code !25
@@ -165,49 +158,49 @@ attributes #3 = { nounwind }
 !21 = distinct !DISubprogram(name: "main", scope: !3, file: !3, line: 20, type: !22, scopeLine: 20, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !4)
 !22 = !DISubroutineType(types: !23)
 !23 = !{!9}
-!24 = !DILocation(line: 67, column: 7, scope: !21)
+!24 = !DILocation(line: 117, column: 7, scope: !21)
 !25 = !{i1 false}
-!26 = !DILocation(line: 68, column: 17, scope: !21)
-!27 = !DILocation(line: 68, column: 19, scope: !21)
-!28 = !DILocation(line: 68, column: 9, scope: !21)
-!29 = !DILocation(line: 68, column: 7, scope: !21)
-!30 = !DILocation(line: 69, column: 17, scope: !21)
-!31 = !DILocation(line: 69, column: 19, scope: !21)
-!32 = !DILocation(line: 69, column: 9, scope: !21)
-!33 = !DILocation(line: 69, column: 7, scope: !21)
-!34 = !DILocation(line: 70, column: 7, scope: !21)
-!35 = !DILocation(line: 70, column: 10, scope: !21)
-!36 = !DILocalVariable(name: "i", scope: !21, file: !3, line: 71, type: !9)
+!26 = !DILocation(line: 118, column: 17, scope: !21)
+!27 = !DILocation(line: 118, column: 19, scope: !21)
+!28 = !DILocation(line: 118, column: 9, scope: !21)
+!29 = !DILocation(line: 118, column: 7, scope: !21)
+!30 = !DILocation(line: 119, column: 17, scope: !21)
+!31 = !DILocation(line: 119, column: 19, scope: !21)
+!32 = !DILocation(line: 119, column: 9, scope: !21)
+!33 = !DILocation(line: 119, column: 7, scope: !21)
+!34 = !DILocation(line: 120, column: 7, scope: !21)
+!35 = !DILocation(line: 120, column: 10, scope: !21)
+!36 = !DILocalVariable(name: "i", scope: !21, file: !3, line: 121, type: !9)
 !37 = !DILocation(line: 0, scope: !21)
-!38 = !DILocation(line: 72, column: 21, scope: !39)
-!39 = distinct !DILexicalBlock(scope: !40, file: !3, line: 72, column: 5)
-!40 = distinct !DILexicalBlock(scope: !21, file: !3, line: 72, column: 5)
-!41 = !DILocation(line: 72, column: 19, scope: !39)
-!42 = !DILocation(line: 72, column: 5, scope: !40)
-!43 = !DILocation(line: 73, column: 9, scope: !39)
-!44 = !DILocation(line: 73, column: 14, scope: !39)
-!45 = !DILocation(line: 72, column: 25, scope: !39)
+!38 = !DILocation(line: 122, column: 21, scope: !39)
+!39 = distinct !DILexicalBlock(scope: !40, file: !3, line: 122, column: 5)
+!40 = distinct !DILexicalBlock(scope: !21, file: !3, line: 122, column: 5)
+!41 = !DILocation(line: 122, column: 19, scope: !39)
+!42 = !DILocation(line: 122, column: 5, scope: !40)
+!43 = !DILocation(line: 123, column: 9, scope: !39)
+!44 = !DILocation(line: 123, column: 14, scope: !39)
+!45 = !DILocation(line: 122, column: 25, scope: !39)
 !46 = distinct !{!46, !42, !47}
-!47 = !DILocation(line: 73, column: 17, scope: !40)
-!48 = !DILocation(line: 74, column: 5, scope: !49)
-!49 = distinct !DILexicalBlock(scope: !21, file: !3, line: 74, column: 5)
-!50 = !DILocation(line: 75, column: 9, scope: !51)
-!51 = distinct !DILexicalBlock(scope: !49, file: !3, line: 74, column: 5)
-!52 = !DILocation(line: 75, column: 14, scope: !51)
-!53 = !DILocation(line: 77, column: 12, scope: !54)
-!54 = distinct !DILexicalBlock(scope: !55, file: !3, line: 77, column: 5)
-!55 = distinct !DILexicalBlock(scope: !21, file: !3, line: 76, column: 9)
-!56 = !DILocation(line: 77, column: 7, scope: !54)
-!57 = !DILocation(line: 77, column: 21, scope: !54)
-!58 = !DILocation(line: 77, column: 22, scope: !54)
-!59 = !DILocation(line: 77, column: 16, scope: !54)
-!60 = !DILocation(line: 77, column: 27, scope: !54)
-!61 = !DILocation(line: 79, column: 12, scope: !62)
-!62 = distinct !DILexicalBlock(scope: !55, file: !3, line: 79, column: 5)
-!63 = !DILocation(line: 79, column: 7, scope: !62)
-!64 = !DILocation(line: 79, column: 21, scope: !62)
-!65 = !DILocation(line: 79, column: 22, scope: !62)
-!66 = !DILocation(line: 79, column: 16, scope: !62)
-!67 = !DILocation(line: 117, column: 1, scope: !21)
-!68 = !DILocation(line: 76, column: 9, scope: !55)
-!69 = !DILocation(line: 76, column: 9, scope: !21)
+!47 = !DILocation(line: 123, column: 17, scope: !40)
+!48 = !DILocation(line: 124, column: 5, scope: !49)
+!49 = distinct !DILexicalBlock(scope: !21, file: !3, line: 124, column: 5)
+!50 = !DILocation(line: 125, column: 9, scope: !51)
+!51 = distinct !DILexicalBlock(scope: !49, file: !3, line: 124, column: 5)
+!52 = !DILocation(line: 125, column: 14, scope: !51)
+!53 = !DILocation(line: 127, column: 12, scope: !54)
+!54 = distinct !DILexicalBlock(scope: !55, file: !3, line: 127, column: 5)
+!55 = distinct !DILexicalBlock(scope: !21, file: !3, line: 126, column: 9)
+!56 = !DILocation(line: 127, column: 7, scope: !54)
+!57 = !DILocation(line: 127, column: 21, scope: !54)
+!58 = !DILocation(line: 127, column: 22, scope: !54)
+!59 = !DILocation(line: 127, column: 16, scope: !54)
+!60 = !DILocation(line: 127, column: 27, scope: !54)
+!61 = !DILocation(line: 129, column: 12, scope: !62)
+!62 = distinct !DILexicalBlock(scope: !55, file: !3, line: 129, column: 5)
+!63 = !DILocation(line: 129, column: 7, scope: !62)
+!64 = !DILocation(line: 129, column: 21, scope: !62)
+!65 = !DILocation(line: 129, column: 22, scope: !62)
+!66 = !DILocation(line: 129, column: 16, scope: !62)
+!67 = !DILocation(line: 130, column: 1, scope: !21)
+!68 = !DILocation(line: 126, column: 9, scope: !55)
+!69 = !DILocation(line: 126, column: 9, scope: !21)

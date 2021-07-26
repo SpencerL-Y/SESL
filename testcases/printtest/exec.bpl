@@ -48,14 +48,12 @@ procedure {:entrypoint} main()
   var $p33: ref8;
   var $p34: ref32;
   var $p35: ref32;
-  var $p36: ref32;
-  var $p37: ref32;
-  var $i38: i32;
-  var $i39: i1;
+  var $i36: i32;
+  var $i37: i1;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  $M.0 := 4;
-  call {:cexpr "n"} boogie_si_record_i32(4);
+  $M.0 := 3;
+  call {:cexpr "n"} boogie_si_record_i32(3);
   $i0 := $M.0;
   $i1 := $sext.i32.i64($i0);
   $i2 := $mul.i64($i1, 4);
@@ -116,11 +114,13 @@ $bb9:
   goto $bb10;
 $bb10:
   $p34 := $M.2;
-  $p35 := $add.ref($p34, $mul.ref(2, 4));
-  $M.3 := $store.i32($M.3, $p35, $sub.i32(0, 1));
-  goto $bb14;
+  $p35 := $add.ref($p34, $mul.ref($sub.ref(0, 2), 4));
+  $i36 := $load.i32($M.3, $p35);
+  $i37 := $ne.i32($i36, 0);
+  assume {:branchcond $i37} true;
+  goto $bb11, $bb13;
 $bb11:
-  assume ($i39 == 1);
+  assume ($i37 == 1);
   $p24 := $M.1;
   $p25 := $bitcast.ref.ref($p24);
   call free_($p25);
@@ -133,7 +133,7 @@ $bb12:
   $r := 0;
   return;
 $bb13:
-  assume !(($i39 == 1));
+  assume !(($i37 == 1));
   $p29 := $M.1;
   $p30 := $bitcast.ref.ref($p29);
   call free_($p30);
@@ -142,13 +142,6 @@ $bb13:
   $p33 := $bitcast.ref.ref($p32);
   call free_($p33);
   goto $bb12;
-$bb14:
-  $p36 := $M.2;
-  $p37 := $add.ref($p36, $mul.ref($sub.ref(0, 2), 4));
-  $i38 := $load.i32($M.3, $p37);
-  $i39 := $ne.i32($i38, 0);
-  assume {:branchcond $i39} true;
-  goto $bb11, $bb13;
 }
 const malloc: ref;
 axiom (malloc == $sub.ref(0, 5156));

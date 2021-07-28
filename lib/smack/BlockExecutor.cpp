@@ -701,14 +701,38 @@ namespace smack{
                 return this->executeFree(sh, call);
             } else if(!call->getProc().compare("$alloc")){
                 return this->executeAlloc(sh, call);
-            }
-            else {
+            } else {
+                this->executeUnintepreted(sh, call);
                 CFDEBUG(std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl);
             }
         } else {
             CFDEBUG(std::cout << "ERROR: execute call stmt kind error" << std::endl);
         }
         return sh;
+    }
+
+
+    SHExprPtr 
+    BlockExecutor::executeUnintepreted
+    (SHExprPtr sh, const CallStmt* stmt){
+        if(stmt->getReturns().size() > 0){
+            CFDEBUG(std::cout << "INFO: execute Unintepreted function. " << stmt->getProc() << std::endl;);
+            std::string retOrigVarName = stmt->getReturns().front();
+            const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
+            std::string retVarName = retVar->name();
+            std::pair<std::string, int> typeInfo = this->cfg->getVarDetailType(retOrigVarName);
+            const VarExpr* freshVar = this->varFactory->getFreshVar(typeInfo.second);
+
+            const Expr* newConj = Expr::eq(retVar, freshVar);
+            const Expr* newPure = Expr::and_(sh->getPure(), newConj);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            newSH->print(std::cout);
+            std::cout << std::endl;
+            return newSH;
+        } else {
+            return sh;
+        }
+        
     }
 
     SHExprPtr  

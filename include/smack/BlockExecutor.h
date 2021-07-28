@@ -81,6 +81,8 @@ namespace smack{
 
         SHExprPtr executeFree(SHExprPtr sh, const CallStmt* stmt);
 
+        SHExprPtr executeUnintepreted(SHExprPtr sh, const CallStmt* stmt);
+
         SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
 
         SHExprPtr executeLoad(SHExprPtr sh, std::string lhsVarName, std::string lhsVarOrigName, const FunExpr* rhsFun);

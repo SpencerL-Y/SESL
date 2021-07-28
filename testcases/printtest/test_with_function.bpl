@@ -4,62 +4,114 @@
 const llvm.dbg.declare: ref;
 axiom (llvm.dbg.declare == $sub.ref(0, 1032));
 procedure  llvm.dbg.declare($p0: ref, $p1: ref, $p2: ref);
-const recursive: ref;
-axiom (recursive == $sub.ref(0, 2064));
-procedure  recursive($i0: i32)
-  returns ($r: i32)
+const malloc: ref;
+axiom (malloc == $sub.ref(0, 2064));
+procedure  malloc($i0: i64)
+  returns ($r: ref)
 {
-  var $i1: i1;
-  var $i3: i32;
-  var $i4: i32;
-  var $i5: i32;
+  call $r := $malloc($i0);
+}
+const free_: ref;
+axiom (free_ == $sub.ref(0, 3096));
+procedure  free_($p0: ref)
+{
+  call $free($p0);
+}
+const add_1: ref;
+axiom (add_1 == $sub.ref(0, 4128));
+procedure  add_1($p0: ref)
+{
+  var $i1: i32;
   var $i2: i32;
 $bb0:
-  call {:cexpr "recursive:arg:n"} boogie_si_record_i32($i0);
-  $i1 := $eq.i32($i0, 1);
-  assume {:branchcond $i1} true;
-  goto $bb1, $bb2;
+  $i1 := $load.i32($M.0, $p0);
+  $i2 := $add.i32($i1, 1);
+  $M.0 := $store.i32($M.0, $p0, $i2);
+  return;
+}
+const add_2: ref;
+axiom (add_2 == $sub.ref(0, 5160));
+procedure  add_2($p0: ref)
+{
+  var $i1: i32;
+  var $i2: i32;
+$bb0:
+  $i1 := $load.i32($M.1, $p0);
+  $i2 := $add.i32($i1, 2);
+  $M.1 := $store.i32($M.1, $p0, $i2);
+  return;
+}
+const test_3: ref;
+axiom (test_3 == $sub.ref(0, 6192));
+procedure  test_3()
+{
+  var $p0: ref8;
+  var $p1: ref32;
+  var $p2: ref32;
+  var $p3: ref32;
+  var $p4: ref32;
+  var $p5: ref8;
+  var $p6: ref32;
+  var $i7: i32;
+  var $p8: ref32;
+  var $i9: i32;
+  var $i10: i32;
+  var $p11: ref8;
+  var $i12: i1;
+$bb0:
+  call $p0 := malloc(8);
+  $p1 := $bitcast.ref.ref($p0);
+  $p2 := $add.ref($p1, $mul.ref(1, 4));
+  $M.1 := $store.i32($M.1, $p2, 0);
+  $p3 := $add.ref($p1, $mul.ref(0, 4));
+  $M.0 := $store.i32($M.0, $p3, 0);
+  call add_1($p1);
+  $p4 := $add.ref($p1, $mul.ref(1, 4));
+  call add_2($p4);
+  call $p5 := malloc(12);
+  $p6 := $bitcast.ref.ref($p5);
+  goto $bb1;
 $bb1:
-  assume ($i1 == 1);
-  $i2 := 1;
-  goto $bb3;
+  $i7 := $load.i32($M.0, $p1);
+  call {:cexpr "sum"} boogie_si_record_i32($i7);
+  goto $bb2;
 $bb2:
-  assume !(($i1 == 1));
-  $i3 := $sub.i32($i0, 1);
-  call $i4 := recursive($i3);
-  $i5 := $add.i32($i4, 1);
-  $i2 := $i5;
+  $p8 := $add.ref($p1, $mul.ref(1, 4));
+  $i9 := $load.i32($M.1, $p8);
+  $i10 := $add.i32($i7, $i9);
+  call {:cexpr "sum"} boogie_si_record_i32($i10);
   goto $bb3;
 $bb3:
-  $r := $i2;
+  $i12 := $eq.i32($i10, 3);
+  assume {:branchcond $i12} true;
+  goto $bb4, $bb6;
+$bb4:
+  assume ($i12 == 1);
+  $p11 := $bitcast.ref.ref($p6);
+  call free_($p11);
+  goto $bb5;
+$bb5:
   return;
-}
-const test_2: ref;
-axiom (test_2 == $sub.ref(0, 3096));
-procedure  test_2()
-{
-  var $i0: i32;
-$bb0:
-  call $i0 := recursive(2);
-  call {:cexpr "t"} boogie_si_record_i32($i0);
-  return;
+$bb6:
+  assume !(($i12 == 1));
+  goto $bb5;
 }
 const main: ref;
-axiom (main == $sub.ref(0, 4128));
+axiom (main == $sub.ref(0, 7224));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  call test_2();
+  call test_3();
   $r := 0;
   return;
 }
 const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 5160));
+axiom (llvm.dbg.value == $sub.ref(0, 8256));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 6192));
+axiom (__SMACK_static_init == $sub.ref(0, 9288));
 procedure  __SMACK_static_init()
 {
 $bb0:

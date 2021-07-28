@@ -131,8 +131,9 @@ int test_6() {
 int main() {
 // Passed
 //    test_1();
+// Passed
 //    test_2();
-//    test_3();
+    test_3();
 //    test_4();
 //    test_5();
 //    test_6();

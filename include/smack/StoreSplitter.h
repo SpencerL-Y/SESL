@@ -39,6 +39,7 @@
             void createAxis(std::string ptrName);
             void setMaxOffset(std::string ptrName, int max);
             int addSplit(std::string allocName, int offset);
+            bool hasOffset(std::string allocName, int offset);
             std::pair<bool, int> getOffsetPos(std::string allocName, int offset);
 
             void setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap);

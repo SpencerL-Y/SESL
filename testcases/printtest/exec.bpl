@@ -8,24 +8,20 @@ procedure {:entrypoint} main()
 {
   var $p0: ref8;
   var $p1: ref32;
-  var $i2: i1;
-  var $p3: ref8;
+  var $p2: ref32;
+  var $p3: ref32;
+  var $p4: ref8;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  call $p0 := malloc(4);
+  call $p0 := malloc(32);
   $p1 := $bitcast.ref.ref($p0);
-  $i2 := $sgt.i32(11, 10);
-  assume {:branchcond $i2} true;
-  goto $bb1, $bb2;
-$bb1:
-  assume ($i2 == 1);
-  $p3 := $bitcast.ref.ref($p1);
-  call free_($p3);
-  goto $bb3;
-$bb2:
-  assume !(($i2 == 1));
-  goto $bb3;
-$bb3:
+  $p2 := $add.ref($p1, $mul.ref(3, 4));
+  $M.0 := $store.i32($M.0, $p2, 10);
+  $M.1 := $store.i32($M.1, $p1, 100);
+  $p3 := $add.ref($p1, $mul.ref(3, 4));
+  $M.0 := $store.i32($M.0, $p3, 11);
+  $p4 := $bitcast.ref.ref($p1);
+  call free_($p4);
   $r := 0;
   return;
 }

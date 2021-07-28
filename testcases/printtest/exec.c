@@ -114,10 +114,10 @@ int main(){
     // char* p = ((char*) &a) + 1;
     // memcpy(mc, p, sizeof(int));
     // return c;
-    int a = 11;
-    int* j = malloc(4);
-    if(a > 10){
-        free(j);
-    }
+    int *j = (int*)malloc(8*sizeof(int));
+    *(j+3) = 10;
+    *j = 100;
+    *(j+3) = 11;
+    free(j);
 } 
 

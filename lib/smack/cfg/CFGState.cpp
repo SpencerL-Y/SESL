@@ -41,4 +41,28 @@ namespace smack
     void CFGState::addAttr(const std::string &s) {
         return attr.push_back(s);
     }
+
+    bool CFGState::isLoopEntry() {
+        return containAttr("entry_point");
+    }
+
+    bool CFGState::isLoopExit() {
+        return containAttr("loop_exit");
+    }
+
+    bool CFGState::containAttr(std::string attr) {
+        for (auto &att : this->attr) {
+            if (att == attr) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::shared_ptr<CFGState> CFGState::copy() {
+        auto* newBlock = new Block(stateBlock->getName(), stateBlock->getStatements());
+        auto ptr = std::make_shared<CFGState>(newBlock);
+        return ptr;
+    }
+
 } // namespace smack

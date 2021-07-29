@@ -57,7 +57,8 @@ procedure  test_3()
   var $i9: i32;
   var $i10: i32;
   var $p11: ref8;
-  var $i12: i1;
+  var $p12: ref8;
+  var $i13: i1;
 $bb0:
   call $p0 := malloc(8);
   $p1 := $bitcast.ref.ref($p0);
@@ -82,18 +83,20 @@ $bb2:
   call {:cexpr "sum"} boogie_si_record_i32($i10);
   goto $bb3;
 $bb3:
-  $i12 := $eq.i32($i10, 3);
-  assume {:branchcond $i12} true;
+  $i13 := $eq.i32($i10, 3);
+  assume {:branchcond $i13} true;
   goto $bb4, $bb6;
 $bb4:
-  assume ($i12 == 1);
+  assume ($i13 == 1);
   $p11 := $bitcast.ref.ref($p6);
   call free_($p11);
   goto $bb5;
 $bb5:
+  $p12 := $bitcast.ref.ref($p1);
+  call free_($p12);
   return;
 $bb6:
-  assume !(($i12 == 1));
+  assume !(($i13 == 1));
   goto $bb5;
 }
 const main: ref;

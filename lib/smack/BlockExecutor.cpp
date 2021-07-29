@@ -944,11 +944,76 @@ namespace smack{
                         SpatialLiteral::Kind::PT == i->getId() && 
                         currentIndex == modifyIndex){
                         const PtLit* ptLiteral = (const PtLit*)i;
+                        std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigiArg1Name);
+                        stepSize.second = stepSize.second/8;
+                        if(stepSize.second == 0){
+                                // If the step size is 0, we regard it as the step size of the size of ptr
+                                stepSize.second = PTR_BYTEWIDTH;
+                            }
+                            assert(stepSize.second > 0);
+                            const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
+                            this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * PTR_BYTEWIDTH));
 
                         if(this->varEquiv->isStructArrayPtr(mallocName)){
-                            // TODOsh: add new pt literal
-                        } else {
+                            const SpatialLiteral* newPt = SpatialLiteral::gcPt(ptLiteral->getFrom(), freshVar, mallocName);
+                            if(arg2->isVar()){
+                                const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
+                                std::string varOrigArg2Name = varOrigArg2->name();
+                                const VarExpr* varArg2 = this->varFactory->getVar(varOrigArg2Name);
 
+                                std::string oldname = varArg2->name();
+                                this->varEquiv->linkName(freshVar->name(), oldname);
+
+                                if(this->varEquiv->hasBlkName(oldname)){
+                                    // link fresh variable if there is malloc linked to the stored variable
+                                    this->varEquiv->linkBlkName(freshVar->name(), oldname);
+                                }
+
+                                if(varArg2->translateToInt(this->varEquiv).first){
+                                    this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
+                                }
+                                newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
+                            } else {
+                                //CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable or val !!" << std::endl;);
+                                const Expr* storedExpr = this->parseVarArithmeticExpr(arg2);
+                                // TODOsh: add link to freshVar if the expression is a ptr arithmetic expression linked to some malloced blk
+                                if(storedExpr->translateToInt(this->varEquiv).first){
+                                    this->varEquiv->addNewVal(freshVar->name(), storedExpr->translateToInt(this->varEquiv).second);
+                                }
+                                newPure = Expr::and_(newPure, Expr::eq(freshVar, storedExpr));
+                                this->varEquiv->addNewName(freshVar->name());
+                            }
+                            newSpatial.push_back(newPt);
+                        } else {
+                            const SpatialLiteral* newPt = SpatialLiteral::pt(ptLiteral->getFrom(), freshVar, mallocName);
+                            if(arg2->isVar()){
+                                const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
+                                std::string varOrigArg2Name = varOrigArg2->name();
+                                const VarExpr* varArg2 = this->varFactory->getVar(varOrigArg2Name);
+
+                                std::string oldname = varArg2->name();
+                                this->varEquiv->linkName(freshVar->name(), oldname);
+
+                                if(this->varEquiv->hasBlkName(oldname)){
+                                    // link fresh variable if there is malloc linked to the stored variable
+                                    this->varEquiv->linkBlkName(freshVar->name(), oldname);
+                                }
+
+                                if(varArg2->translateToInt(this->varEquiv).first){
+                                    this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
+                                }
+                                newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
+                            } else {
+                                //CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable or val !!" << std::endl;);
+                                const Expr* storedExpr = this->parseVarArithmeticExpr(arg2);
+                                // TODOsh: add link to freshVar if the expression is a ptr arithmetic expression linked to some malloced blk
+                                if(storedExpr->translateToInt(this->varEquiv).first){
+                                    this->varEquiv->addNewVal(freshVar->name(), storedExpr->translateToInt(this->varEquiv).second);
+                                }
+                                newPure = Expr::and_(newPure, Expr::eq(freshVar, storedExpr));
+                                this->varEquiv->addNewName(freshVar->name());
+                            }
+                            newSpatial.push_back(newPt);
                         }
 
                         currentIndex += 1;
@@ -964,7 +1029,9 @@ namespace smack{
                 }
 
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-
+                newSH->print(std::cout);
+                std::cout << std::endl;
+                return newSH;
             } else {
                 // if the position is not stored yet
                 int splitBlkIndex = this->storeSplit->addSplit(mallocName, offset);

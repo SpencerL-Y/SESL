@@ -68,6 +68,7 @@ void test_3() {
     if (sum == 3) {
         free(p);
     }
+    free(a);
 }
 
 void test_4() {

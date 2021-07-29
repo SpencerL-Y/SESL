@@ -1,4 +1,4 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/b-csa7rsiw.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/b-jtfwrag5.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
@@ -64,27 +64,29 @@ define internal void @test_3() #2 !dbg !24 {
   %12 = load i32, i32* %11, align 4, !dbg !46, !verifier.code !16
   %13 = add nsw i32 %9, %12, !dbg !50, !verifier.code !16
   call void @llvm.dbg.value(metadata i32 %13, metadata !38, metadata !DIExpression()), !dbg !30, !verifier.code !16
-  br label %17, !dbg !49, !verifier.code !16
+  br label %18, !dbg !49, !verifier.code !16
 
-14:                                               ; preds = %17
+14:                                               ; preds = %18
   %15 = bitcast i32* %7 to i8*, !dbg !51, !verifier.code !16
   call void @free(i8* %15) #3, !dbg !54, !verifier.code !16
   br label %16, !dbg !55, !verifier.code !16
 
-16:                                               ; preds = %14, %17
-  ret void, !dbg !56, !verifier.code !16
+16:                                               ; preds = %14, %18
+  %17 = bitcast i32* %2 to i8*, !dbg !56, !verifier.code !16
+  call void @free(i8* %17) #3, !dbg !57, !verifier.code !16
+  ret void, !dbg !58, !verifier.code !16
 
-17:                                               ; preds = %10
+18:                                               ; preds = %10
   call void @llvm.dbg.value(metadata i32 2, metadata !42, metadata !DIExpression()), !dbg !44, !verifier.code !16
   call void @llvm.dbg.value(metadata i32 %13, metadata !38, metadata !DIExpression()), !dbg !30, !verifier.code !16
-  %18 = icmp eq i32 %13, 3, !dbg !57, !verifier.code !16
-  br i1 %18, label %14, label %16, !dbg !58, !verifier.code !16
+  %19 = icmp eq i32 %13, 3, !dbg !59, !verifier.code !16
+  br i1 %19, label %14, label %16, !dbg !60, !verifier.code !16
 }
 
 ; Function Attrs: noinline nounwind uwtable
-define dso_local i32 @main() #2 !dbg !59 {
-  call void @test_3(), !dbg !62, !verifier.code !16
-  ret i32 0, !dbg !63, !verifier.code !16
+define dso_local i32 @main() #2 !dbg !61 {
+  call void @test_3(), !dbg !64, !verifier.code !16
+  ret i32 0, !dbg !65, !verifier.code !16
 }
 
 ; Function Attrs: nounwind readnone speculatable willreturn
@@ -160,11 +162,13 @@ attributes #3 = { nounwind }
 !53 = distinct !DILexicalBlock(scope: !24, file: !1, line: 68, column: 9)
 !54 = !DILocation(line: 69, column: 9, scope: !52)
 !55 = !DILocation(line: 70, column: 5, scope: !52)
-!56 = !DILocation(line: 71, column: 1, scope: !24)
-!57 = !DILocation(line: 68, column: 13, scope: !53)
-!58 = !DILocation(line: 68, column: 9, scope: !24)
-!59 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 131, type: !60, scopeLine: 131, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
-!60 = !DISubroutineType(types: !61)
-!61 = !{!5}
-!62 = !DILocation(line: 136, column: 5, scope: !59)
-!63 = !DILocation(line: 140, column: 5, scope: !59)
+!56 = !DILocation(line: 71, column: 10, scope: !24)
+!57 = !DILocation(line: 71, column: 5, scope: !24)
+!58 = !DILocation(line: 72, column: 1, scope: !24)
+!59 = !DILocation(line: 68, column: 13, scope: !53)
+!60 = !DILocation(line: 68, column: 9, scope: !24)
+!61 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 132, type: !62, scopeLine: 132, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
+!62 = !DISubroutineType(types: !63)
+!63 = !{!5}
+!64 = !DILocation(line: 137, column: 5, scope: !61)
+!65 = !DILocation(line: 141, column: 5, scope: !61)

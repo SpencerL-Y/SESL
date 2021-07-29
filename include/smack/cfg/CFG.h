@@ -28,9 +28,11 @@ namespace smack
         void generateTypeInfo();
         // SCC related
         std::unordered_map<std::string, int> dfn, low, inStack, SCCNumber;
+        std::unordered_map<int, int> sccGroupNum;
         int sccNumber = 0, step = 0;
     public:
         void markSCC(std::string start);
+        void markExit(const std::string& start, bool fresh = true);
         void printVarInfo();
         explicit CFG(ProcDecl* procDecl = nullptr);
         explicit CFG(ProcDecl* procDecl, std::string entryBlock);

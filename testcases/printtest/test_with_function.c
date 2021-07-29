@@ -128,12 +128,21 @@ int test_6() {
     return 0;
 }
 
+int loopN(int n) {
+    int sum = 0;
+    for (int i = 0; i < n; ++ i) {
+        sum += i;
+    }
+    return sum;
+}
 int main() {
 //    test_1();
 //    test_2();
 //    test_3();
 //    test_4();
 //    test_5();
-    test_6();
+//    test_6();
+    int t = 3;
+    loopN(t);
     return 0;
 }

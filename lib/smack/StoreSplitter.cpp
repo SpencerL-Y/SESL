@@ -13,16 +13,25 @@ namespace smack
     }
 
     int BlkSplitUtil::addSplit(int offset){
-        auto iter = this->splitAxis.begin();
-        for(int i = 0; iter != this->splitAxis.end(); i++, ++iter){
-            if(this->splitAxis[i] > offset){
-                this->splitAxis.insert(iter, offset);
-                return i + 1;
+        if(0 == offset && 0 == this->splitAxis[0]){
+            CFDEBUG(std::cout << "ERROR: add split error, this should not happen" << std::endl;);
+            return -1;
+        } else if(0 == offset && -1 == this->splitAxis[0]){
+            // offset pos 0 has still not been stored, return 1 
+            return 1;
+        } else {
+            // other situations
+            auto iter = this->splitAxis.begin();
+            for(int i = 0; iter != this->splitAxis.end(); i++, ++iter){
+                if(this->splitAxis[i] > offset){
+                    this->splitAxis.insert(iter, offset);
+                    return i + 1;
+                }
             }
+            int originalIndex = this->splitAxis.size();
+            this->splitAxis.push_back(offset);
+            return originalIndex;
         }
-        int originalIndex = this->splitAxis.size();
-        this->splitAxis.push_back(offset);
-        return originalIndex;
     }
 
     void BlkSplitUtil::setMaxOffset(int max){
@@ -70,6 +79,16 @@ namespace smack
         }
     }
 
+
+    bool StoreSplitter::hasOffset(std::string allocName, int offset){
+        if(this->splitMap.find(allocName) != this->splitMap.end()){
+            std::pair<bool, int> findPos = this->splitMap[allocName]->getOffsetPos(offset);
+            return findPos.first;
+        } else {
+            CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
+            return false;
+        }
+    }
 
     std::pair<bool, int> StoreSplitter::getOffsetPos(std::string allocName, int offset){
         if(this->splitMap.find(allocName) != this->splitMap.end()){

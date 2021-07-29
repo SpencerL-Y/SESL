@@ -39,6 +39,8 @@ namespace smack{
         StoreSplitterPtr storeSplit;
         CFGPtr cfg;
 
+        // var string judgement
+        bool isPtrVar(std::string name);
 
         // funcexpr name judgement functions
         bool isUnaryAssignFuncName(std::string name);
@@ -78,6 +80,8 @@ namespace smack{
         SHExprPtr executeAlloc(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeFree(SHExprPtr sh, const CallStmt* stmt);
+
+        SHExprPtr executeUnintepreted(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
 

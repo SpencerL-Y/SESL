@@ -64,19 +64,19 @@ int main(){
     // call graph, variable rename
 
     // example 3
-    n = 4;
-    a = malloc (n * sizeof(*a));
-    b = malloc (n * sizeof(*b));
-    *b++ = 0;
-    int i;
-    for (i = 0; i < n; i++)
-        a[i] = -1;
-    for (i = 0; i < 4 - 1; i++)
-        b[i] = -1;
-    if (b[-2]) /* invalid deref */
-    { free(a); free(b-1); }
-    else
-    { free(a); free(b-1); }
+    // n = 4;
+    // a = malloc (n * sizeof(*a));
+    // b = malloc (n * sizeof(*b));
+    // *b++ = 0;
+    // int i;
+    // for (i = 0; i < n; i++)
+    //     a[i] = -1;
+    // for (i = 0; i < 4 - 1; i++)
+    //     b[i] = -1;
+    // if (b[-2]) /* invalid deref */
+    // { free(a); free(b-1); }
+    // else
+    // { free(a); free(b-1); }
     // example 4
     // for(int i = 0; i < 5; i ++){
     //     int *j = (int*)malloc(sizeof(int));
@@ -114,5 +114,11 @@ int main(){
     // char* p = ((char*) &a) + 1;
     // memcpy(mc, p, sizeof(int));
     // return c;
+
+    int a = 10;
+    int* j = malloc(4);
+    if(a > 10){
+        free(j);
+    }
 } 
 

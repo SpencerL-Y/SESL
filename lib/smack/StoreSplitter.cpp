@@ -18,6 +18,7 @@ namespace smack
             return -1;
         } else if(0 == offset && -1 == this->splitAxis[0]){
             // offset pos 0 has still not been stored, return 1 
+            this->splitAxis[0] = 0;
             return 1;
         } else {
             // other situations

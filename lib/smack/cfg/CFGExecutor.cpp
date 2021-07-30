@@ -5,13 +5,18 @@
 #include "smack/cfg/CFGExecutor.h"
 
 namespace smack {
-    void CFGExecutor::DFSByBound(StatePtr& state) {
+    void CFGExecutor::DFSByBound(StatePtr &state, StatePtr father) {
         static vector<StatePtr> path;
-        path.push_back(state);
+//        cout << "Loop: " << state->getBlockName() << " " << (father == nullptr) << " " << visNum[father] << " " << state->isLoopExit() << endl;
+        if (father && visNum[father] == bound && state->isLoopExit()) {
+            path.push_back(forceAssumeToBeTrue(state->copy()));
+        } else {
+            path.push_back(state);
+        }
         visNum[state] ++;
         auto successors = state->getSuccessors();
         if (successors.empty()) {
-            exePathVec.push_back(ExecutionPath(path));
+            exePathVec.emplace_back(path);
             path.pop_back();
             visNum[state] --;
             return;
@@ -25,7 +30,7 @@ namespace smack {
 #endif
         for (const auto& successor : successors) {
             auto to = successor.lock();
-            if (visNum[to] < bound) DFSByBound(to);
+            if (visNum[to] < bound) DFSByBound(to, state);
         }
         path.pop_back();
         visNum[state] --;
@@ -63,7 +68,7 @@ namespace smack {
         return cfg->getState(cfg->getEntryBlockName());
     }
 
-    void CFGExecutor::printPath() {
+    void CFGExecutor::printPath(bool printDetail) {
         cout << "Printing path:" << std::endl;
         int cnt = 1;
         for (auto &path : exePathVec) {
@@ -72,6 +77,13 @@ namespace smack {
                 cout << path[i]->getBlockName() << "->";
             }
             cout << endl;
+            if (printDetail) {
+                cout << "=========================PATH=========================";
+                for (int i = 0; i < path.length(); ++ i) {
+                    path[i]->getStateBlock()->print(cout);cout << endl;
+                }
+                cout << "=========================+END=========================";
+            }
         }
     }
 
@@ -86,6 +98,13 @@ namespace smack {
 
     void CFGExecutor::setStep(int step) {
         this->step = step;
+    }
+
+    StatePtr CFGExecutor::forceAssumeToBeTrue(const StatePtr& statePtr) {
+        auto& stmts = statePtr->getStateBlock()->getStatements();
+        assert(Stmt::ASSUME == stmts.front()->getKind());
+        stmts.pop_front();
+        return statePtr;
     }
 
     StatePtr ExecutionPath::operator[](int pos) const {

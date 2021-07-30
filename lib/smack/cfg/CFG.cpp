@@ -153,7 +153,7 @@ namespace smack {
                 std::cout << i.first << " " << i.second << " " << varName << std::endl;
             }
             CFDEBUG(std::cout << "ERROR: vartype not found: " << varName << std::endl;);
-            return nullptr;
+            return "";
         }
     }
 
@@ -220,14 +220,14 @@ namespace smack {
                 stk.pop_back();
                 inStack[top] = 0;
                 SCCNumber[top] = sccNumber;
+                sccGroupNum[sccNumber] ++;
                 DEBUG_WITH_COLOR(cout << "pop: " << top << endl;, color::white);
             } while (top != start);
             DEBUG_WITH_COLOR(cout << "pop finished" << endl;, color::white);
-            if (successors.empty()) return;
             for (auto &toPtr : successors) {
                 if (SCCNumber[toPtr.lock()->getBlockName()] == sccNumber) {
                     getState(start)->addAttr("entry_point");
-                    return;
+                    break;
                 }
             }
         }
@@ -264,9 +264,11 @@ namespace smack {
         low.clear();
         inStack.clear();
         SCCNumber.clear();
+        sccGroupNum.clear();
         sccNumber = step = 0;
         if (states.count(getEntryBlockName())) {
             markSCC(getEntryBlockName());
+            markExit(getEntryBlockName(), true);
         }
     }
 
@@ -281,7 +283,31 @@ namespace smack {
             for (const auto &s : state->getSuccessors()) {
                 cout << s.lock()->getBlockName() << " ";
             }
+            auto scc = SCCNumber[state->getBlockName()];
+            cout << " { "; cout << scc  << "," << sccGroupNum[scc] << " ";
+            for (auto& attr : state->getAttr()) {
+                cout << attr << " ";
+            }
+            cout << " }";
             cout << endl;
+        }
+    }
+
+    void CFG::markExit(const std::string& start, bool fresh) {
+        static unordered_map<std::string, int> isVisited;
+        if (fresh) isVisited.clear();
+        isVisited[start] = 1;
+        shared_ptr<CFGState> thisStatePtr = getState(start);
+        for (auto& toPtr : thisStatePtr->getSuccessors()) {
+            auto toName = toPtr.lock()->getBlockName();
+            if (SCCNumber[start] != SCCNumber[toName]) {
+                if (sccGroupNum[SCCNumber[start]] > 1) {
+                    toPtr.lock()->addAttr("loop_exit");
+                }
+            }
+            if (!isVisited.count(toName)) {
+                markExit(toName, false);
+            }
         }
     }
 

@@ -129,6 +129,13 @@ int test_6() {
     return 0;
 }
 
+int loopN(int n) {
+    int sum = 0;
+    for (int i = 0; i < n; ++ i) {
+        sum += i;
+    }
+    return sum;
+}
 int main() {
 // Passed
 //    test_1();

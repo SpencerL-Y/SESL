@@ -31,7 +31,8 @@ namespace smack {
 
         unordered_map<StatePtr, int> visNum;
 
-        void DFSByBound(StatePtr& state);
+        static StatePtr forceAssumeToBeTrue(const StatePtr& statePtr);
+        void DFSByBound(StatePtr &state, StatePtr father = nullptr);
         void DFSByStep(StatePtr& state, int remainStep);
         StatePtr getEntryState();
     public:
@@ -40,7 +41,7 @@ namespace smack {
         void setStep(int step);
         void generatePathByUpperBound();
         void generatePathByStep();
-        void printPath();
+        void printPath(bool printDetail = false);
         vector<ExecutionPath> getExecPathVec();
     };
 }

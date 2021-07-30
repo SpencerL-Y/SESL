@@ -25,16 +25,21 @@ namespace smack
         friend class CFG;
         std::vector<std::string> attr;
     public:
+        std::shared_ptr<CFGState> copy();
         std::vector<std::string> getAttr() {return attr;}
         void addAttr(const std::string& s);
         explicit CFGState(Block* block = nullptr) : stateBlock(block) {}
         void addEdge(const EdgePtr& edgePtr);
+        bool isLoopEntry();
+        bool isLoopExit();
+        bool containAttr(std::string attr);
         void addEdge(const std::string& blockName, EdgePtr edgePtr);
         std::weak_ptr<CFG> getCFGPtr();
         void setCFG(const std::weak_ptr<CFG> &cfgWPtr);
         std::unordered_map<std::string, EdgePtr> getEdges() {return this->edges;};
         Block* getStateBlock() { return this->stateBlock;}
         std::string getBlockName();
+
         std::vector<std::weak_ptr<CFGState>> getPredecessors();
         std::vector<std::weak_ptr<CFGState>> getSuccessors();
         ~CFGState() = default;

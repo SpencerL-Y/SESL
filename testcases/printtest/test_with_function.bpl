@@ -17,104 +17,87 @@ procedure  free_($p0: ref)
 {
   call $free($p0);
 }
-const add_1: ref;
-axiom (add_1 == $sub.ref(0, 4128));
-procedure  add_1($p0: ref)
-{
-  var $i1: i32;
-  var $i2: i32;
-$bb0:
-  $i1 := $load.i32($M.0, $p0);
-  $i2 := $add.i32($i1, 1);
-  $M.0 := $store.i32($M.0, $p0, $i2);
-  return;
-}
-const add_2: ref;
-axiom (add_2 == $sub.ref(0, 5160));
-procedure  add_2($p0: ref)
-{
-  var $i1: i32;
-  var $i2: i32;
-$bb0:
-  $i1 := $load.i32($M.1, $p0);
-  $i2 := $add.i32($i1, 2);
-  $M.1 := $store.i32($M.1, $p0, $i2);
-  return;
-}
-const test_3: ref;
-axiom (test_3 == $sub.ref(0, 6192));
-procedure  test_3()
+const test_4: ref;
+axiom (test_4 == $sub.ref(0, 4128));
+procedure  test_4()
 {
   var $p0: ref8;
   var $p1: ref32;
   var $p2: ref32;
   var $p3: ref32;
   var $p4: ref32;
-  var $p5: ref8;
-  var $p6: ref32;
-  var $i7: i32;
-  var $p8: ref32;
+  var $i5: i32;
+  var $i6: i32;
+  var $p7: ref32;
+  var $i8: i32;
   var $i9: i32;
-  var $i10: i32;
-  var $p11: ref8;
-  var $p12: ref8;
-  var $i13: i1;
+  var $p10: ref8;
+  var $p11: ref32;
+  var $i12: i32;
+  var $p13: ref32;
+  var $i14: i32;
+  var $i15: i32;
+  var $p16: ref8;
+  var $i17: i1;
 $bb0:
   call $p0 := malloc(8);
   $p1 := $bitcast.ref.ref($p0);
   $p2 := $add.ref($p1, $mul.ref(1, 4));
-  $M.1 := $store.i32($M.1, $p2, 0);
+  $M.0 := $store.i32($M.0, $p2, 0);
   $p3 := $add.ref($p1, $mul.ref(0, 4));
-  $M.0 := $store.i32($M.0, $p3, 0);
-  call add_1($p1);
-  $p4 := $add.ref($p1, $mul.ref(1, 4));
-  call add_2($p4);
-  call $p5 := malloc(12);
-  $p6 := $bitcast.ref.ref($p5);
+  $M.1 := $store.i32($M.1, $p3, 0);
+  $p4 := $add.ref($p1, $mul.ref(0, 4));
+  $i5 := $load.i32($M.1, $p4);
+  $i6 := $add.i32($i5, 1);
+  $M.1 := $store.i32($M.1, $p4, $i6);
+  $p7 := $add.ref($p1, $mul.ref(1, 4));
+  $i8 := $load.i32($M.0, $p7);
+  $i9 := $add.i32($i8, 2);
+  $M.0 := $store.i32($M.0, $p7, $i9);
+  call $p10 := malloc(12);
+  $p11 := $bitcast.ref.ref($p10);
   goto $bb1;
 $bb1:
-  $i7 := $load.i32($M.0, $p1);
-  call {:cexpr "sum"} boogie_si_record_i32($i7);
+  $i12 := $load.i32($M.1, $p1);
+  call {:cexpr "sum"} boogie_si_record_i32($i12);
   goto $bb2;
 $bb2:
-  $p8 := $add.ref($p1, $mul.ref(1, 4));
-  $i9 := $load.i32($M.1, $p8);
-  $i10 := $add.i32($i7, $i9);
-  call {:cexpr "sum"} boogie_si_record_i32($i10);
+  $p13 := $add.ref($p1, $mul.ref(1, 4));
+  $i14 := $load.i32($M.0, $p13);
+  $i15 := $add.i32($i12, $i14);
+  call {:cexpr "sum"} boogie_si_record_i32($i15);
   goto $bb3;
 $bb3:
-  $i13 := $eq.i32($i10, 3);
-  assume {:branchcond $i13} true;
+  $i17 := $eq.i32($i15, 3);
+  assume {:branchcond $i17} true;
   goto $bb4, $bb6;
 $bb4:
-  assume ($i13 == 1);
-  $p11 := $bitcast.ref.ref($p6);
-  call free_($p11);
+  assume ($i17 == 1);
+  $p16 := $bitcast.ref.ref($p11);
+  call free_($p16);
   goto $bb5;
 $bb5:
-  $p12 := $bitcast.ref.ref($p1);
-  call free_($p12);
   return;
 $bb6:
-  assume !(($i13 == 1));
+  assume !(($i17 == 1));
   goto $bb5;
 }
 const main: ref;
-axiom (main == $sub.ref(0, 7224));
+axiom (main == $sub.ref(0, 5160));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  call test_3();
+  call test_4();
   $r := 0;
   return;
 }
 const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 8256));
+axiom (llvm.dbg.value == $sub.ref(0, 6192));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 9288));
+axiom (__SMACK_static_init == $sub.ref(0, 7224));
 procedure  __SMACK_static_init()
 {
 $bb0:

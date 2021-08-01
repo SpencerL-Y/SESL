@@ -117,6 +117,9 @@ int main(){
 
     int a = 10;
     int* j = malloc(4);
+    *j = 10;
+    *j = 11;
+    *j = 12;
     if(a > 10){
         free(j);
     }

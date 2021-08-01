@@ -31,6 +31,11 @@ namespace smack
             }
             int originalIndex = this->splitAxis.size();
             this->splitAxis.push_back(offset);
+            // if the first element is not -1, which means it has been stored.
+            // the index should be increased by 1
+            if(0 == this->splitAxis[0]){
+                originalIndex += 1;
+            }
             return originalIndex;
         }
     }
@@ -42,8 +47,14 @@ namespace smack
 
     std::pair<bool, int> BlkSplitUtil::getOffsetPos(int offset){
         for(int index = 0; index < this->splitAxis.size(); index ++){
-            if(this->splitAxis[index] == offset){
-                return std::pair<bool, int>(true, index);
+            if(this->splitAxis[0] == 0){
+                if(this->splitAxis[index] == offset){
+                    return std::pair<bool, int>(true, index + 1);
+                }
+            } else {
+                if(this->splitAxis[index] == offset){
+                    return std::pair<bool, int>(true, index);
+                }
             }
         }
         return std::pair<bool, int>(false, 0);

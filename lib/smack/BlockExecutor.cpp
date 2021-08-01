@@ -929,10 +929,11 @@ namespace smack{
             }
             
             if(this->storeSplit->hasOffset(mallocName, offset)){
+                CFDEBUG(std::cout << "INFO: store offset exists" << std::endl;);
                 // if the position has already been stored
                 std::pair<bool, int> posInfo = this->storeSplit->getOffsetPos(mallocName, offset);
                 assert(posInfo.first);
-                int modifyIndex = posInfo.second + 1;
+                int modifyIndex = posInfo.second;
 
                 const Expr* newPure = sh->getPure();
                 std::list<const SpatialLiteral*> newSpatial;
@@ -947,12 +948,12 @@ namespace smack{
                         std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigiArg1Name);
                         stepSize.second = stepSize.second/8;
                         if(stepSize.second == 0){
-                                // If the step size is 0, we regard it as the step size of the size of ptr
-                                stepSize.second = PTR_BYTEWIDTH;
-                            }
-                            assert(stepSize.second > 0);
-                            const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
-                            this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * PTR_BYTEWIDTH));
+                            // If the step size is 0, we regard it as the step size of the size of ptr
+                            stepSize.second = PTR_BYTEWIDTH;
+                        }
+                        assert(stepSize.second > 0);
+                        const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
+                        this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second *PTR_BYTEWIDTH));
 
                         if(this->varEquiv->isStructArrayPtr(mallocName)){
                             const SpatialLiteral* newPt = SpatialLiteral::gcPt(ptLiteral->getFrom(), freshVar, mallocName);
@@ -1033,6 +1034,8 @@ namespace smack{
                 std::cout << std::endl;
                 return newSH;
             } else {
+
+                CFDEBUG(std::cout << "INFO: new store offset" << std::endl;);
                 // if the position is not stored yet
                 int splitBlkIndex = this->storeSplit->addSplit(mallocName, offset);
                 CFDEBUG(std::cout << "malloc name: " << mallocName << " splitIndex: " << splitBlkIndex <<  std::endl);
@@ -1290,6 +1293,7 @@ namespace smack{
                             } 
                         } else {
                             CFDEBUG(std::cout << "ERROR: load error, this should be a PT predicate." << std::endl;);
+                            spl->print(std::cout);std::cout << std::endl;
                             return sh;
                         }
                     }

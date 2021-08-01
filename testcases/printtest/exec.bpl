@@ -14,6 +14,9 @@ $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
   call $p0 := malloc(4);
   $p1 := $bitcast.ref.ref($p0);
+  $M.0 := $store.i32($M.0, $p1, 10);
+  $M.0 := $store.i32($M.0, $p1, 11);
+  $M.0 := $store.i32($M.0, $p1, 12);
   $i2 := $sgt.i32(10, 10);
   assume {:branchcond $i2} true;
   goto $bb1, $bb2;

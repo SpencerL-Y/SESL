@@ -53,13 +53,13 @@ class TestRunner():
     def run(self):
         for name, prop in self.testCases:
             try:
-                command = 'smack ./{} -ll ./{}_IR.ll --bpl ./{}.bpl -t --sh-mem-leak 2>&1 1>>{}.log'.format(name + '.c', name, name, name)
+                command = 'smack {}/{} -ll {}/{}_IR.ll --bpl {}/{}.bpl -t --sh-mem-leak 2>1 1>>{}.log'.format(self.path, name + '.c', self.path, name, self.path, name, self.path + '/' + name)
                 # print(command, os.system(command))
                 os.system(command)
             except Exception as e:
                 print('hahahhaah')
 
-            command = 'rm -rf {}_IR.ll {}.bpl main.mem.dot'.format(name, name)
+            command = 'rm -rf {}_IR.ll {}.bpl main.mem.dot 1'.format(name, name)
             # print(command, os.system(command))
             os.system(command)
             
@@ -75,7 +75,7 @@ class TestRunner():
                         ret = "RAISE EXCEPTION"
                 return ret
 
-            filePath = name + '.log'
+            filePath = self.path + '/' + name + '.log'
             result = checkVerify(filePath)
             print("Running test: [{}]".format(name + '.c'))
             print("Tool: " + result + '\nReal: ' + prop + "\n")
@@ -91,7 +91,7 @@ class TestRunner():
                 self.success.append(name)
 
     def processPrpertyFile(self, outFileName):
-        f = open(outFileName)
+        f = open(self.path + '/' + outFileName)
         programProperty = "UNKNOWN"
         if self.propertyType == 'out':
             for line in f.readlines():

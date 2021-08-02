@@ -112,8 +112,7 @@ namespace smack {
     }
 
     bool MemSafeChecker::checkCurrentMemLeak(){
-        z3::expr pureCond = this->trans->getPure();
-        z3::expr tempFormula = pureCond;
+        z3::expr tempFormula = this->trans->getFinalExpr();
         z3::check_result pathCond = slah_api::checkSat(tempFormula);
         if(pathCond == z3::unsat){
             DEBUG_WITH_COLOR(std::cout << "CHECK: Satisfied, path condition false!" << std::endl, color::green);
@@ -142,8 +141,7 @@ namespace smack {
 
     std::pair<bool, const Stmt*> MemSafeChecker::checkInferenceError(){
         //this->trans->translate();
-        z3::expr pureCond = this->trans->getPure();
-        z3::expr tempFormula = pureCond;
+        z3::expr tempFormula = this->trans->getFinalExpr();
         z3::check_result pathCond = slah_api::checkSat(tempFormula);
         if(pathCond == z3::unsat){
             DEBUG_WITH_COLOR(std::cout << "CHECK: Inference check pass! Path condition unsat..." << std::endl;, color::green);

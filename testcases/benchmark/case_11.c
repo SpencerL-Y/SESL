@@ -114,13 +114,13 @@ static void free_data(TData *data)
     void *lo = data->lo;
     void *hi = data->hi;
 
-    if (lo != hi) {
+    if (lo == hi) {
         free(lo);
         free(hi);
     }
 
-    lo = (void *) 0;
-    hi = (void *) 0;
+    data->lo = (void *) 0;
+    data->hi = (void *) 0;
 }
 
 int test_6() {
@@ -144,7 +144,7 @@ int main() {
 //    test_2();
 //    test_3();
 //    test_4();
-//    test_5();
-    test_6();
+    test_5();
+//    test_6();
     return 0;
 }

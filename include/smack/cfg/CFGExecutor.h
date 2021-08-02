@@ -32,7 +32,7 @@ namespace smack {
         unordered_map<StatePtr, int> visNum;
 
         static StatePtr forceAssumeToBeTrue(const StatePtr& statePtr);
-        void DFSByBound(StatePtr &state, StatePtr father = nullptr);
+        void DFSByBound(StatePtr &state, StatePtr father = nullptr, int pathLength = 50);
         void DFSByStep(StatePtr& state, int remainStep);
         StatePtr getEntryState();
     public:

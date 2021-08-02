@@ -5,8 +5,9 @@
 #include "smack/cfg/CFGExecutor.h"
 
 namespace smack {
-    void CFGExecutor::DFSByBound(StatePtr &state, StatePtr father) {
+    void CFGExecutor::DFSByBound(StatePtr &state, StatePtr father, int pathLength) {
         static vector<StatePtr> path;
+        if (exePathVec.size() > 1000) return;
 //        cout << "Loop: " << state->getBlockName() << " " << (father == nullptr) << " " << visNum[father] << " " << state->isLoopExit() << endl;
         if (father && visNum[father] == bound && state->isLoopExit()) {
             path.push_back(forceAssumeToBeTrue(state->copy()));
@@ -30,7 +31,7 @@ namespace smack {
 #endif
         for (const auto& successor : successors) {
             auto to = successor.lock();
-            if (visNum[to] < bound) DFSByBound(to, state);
+            if (visNum[to] < bound && pathLength > 0) DFSByBound(to, state, pathLength - 1);
         }
         path.pop_back();
         visNum[state] --;
@@ -55,7 +56,7 @@ namespace smack {
 
     void CFGExecutor::generatePathByUpperBound() {
         auto entry = getEntryState();
-        DFSByBound(entry);
+        DFSByBound(entry, 0);
         visNum.clear();
     }
 

@@ -121,7 +121,11 @@ namespace smack {
                 statementList.push_back(stmt);
                 if (Stmt::GOTO == stmt->getKind() || Stmt::RETURN == stmt->getKind()) {
                     stmtListVec.push_back(statementList);
+                    statementList.clear();
                 }
+            }
+            if (not statementList.empty()) {
+                stmtListVec.push_back(statementList);
             }
         }
         vector<Block *> newBlocks;
@@ -136,6 +140,17 @@ namespace smack {
         }
 
         // split by call stmt, n call stmt will split the block into n + 1 blocks
+        cout << blockPtr->getName() << " " << stmtListVec.size() << " " << callStmtVec.size() << endl;
+        for (auto stmtList : stmtListVec) {
+            cout << "New stmts! " << endl;
+            for (auto stmt : stmtList) {
+              stmt->print(cout);cout << endl;
+            }
+            cout << endl;
+        }
+        for (auto callStmt : callStmtVec) {
+            callStmt->print(cout); cout << endl;
+        }
         assert(stmtListVec.size() == callStmtVec.size() + 1);
 
         for (int i = 0; i < n; ++i) {

@@ -114,7 +114,7 @@ static void free_data(TData *data)
     void *lo = data->lo;
     void *hi = data->hi;
 
-    if (lo == hi) {
+    if (lo != hi) {
         free(lo);
         free(hi);
     }

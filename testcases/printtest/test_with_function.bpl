@@ -62,7 +62,7 @@ $bb0:
   $p2 := $load.ref($M.0, $p1);
   $p3 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(8, 1));
   $p4 := $load.ref($M.1, $p3);
-  $i5 := $ne.ref($p2, $p4);
+  $i5 := $eq.ref($p2, $p4);
   assume {:branchcond $i5} true;
   goto $bb1, $bb2;
 $bb1:

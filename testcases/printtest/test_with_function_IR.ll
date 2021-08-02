@@ -1,4 +1,4 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/b-ipdm2i20.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/b-g7empq8e.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
@@ -44,7 +44,7 @@ define internal void @free_data(%struct.TData* %0) #2 !dbg !38 {
   %4 = getelementptr inbounds %struct.TData, %struct.TData* %0, i32 0, i32 1, !dbg !43, !verifier.code !14
   %5 = load i8*, i8** %4, align 8, !dbg !43, !verifier.code !14
   call void @llvm.dbg.value(metadata i8* %5, metadata !44, metadata !DIExpression()), !dbg !40, !verifier.code !14
-  %6 = icmp ne i8* %3, %5, !dbg !45, !verifier.code !14
+  %6 = icmp eq i8* %3, %5, !dbg !45, !verifier.code !14
   br i1 %6, label %7, label %8, !dbg !47, !verifier.code !14
 
 7:                                                ; preds = %1

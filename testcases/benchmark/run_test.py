@@ -53,21 +53,28 @@ class TestRunner():
     def run(self):
         print(self.testCases)
         for name, prop in self.testCases:
-            command = 'smack ./{} -ll ./{}_IR.ll --bpl ./{}.bpl -t --sh-mem-leak >>{}.log'.format(name + '.c', name, name, name)
-            # print(command, os.system(command))
-            os.system(command)
+            try:
+                command = 'smack ./{} -ll ./{}_IR.ll --bpl ./{}.bpl -t --sh-mem-leak 2>1 1>>{}.log'.format(name + '.c', name, name, name)
+                # print(command, os.system(command))
+                os.system(command)
+            except Exception as e:
+                print('hahahhaah')
+
             command = 'rm -rf {}_IR.ll {}.bpl main.mem.dot'.format(name, name)
             # print(command, os.system(command))
             os.system(command)
             
             def checkVerify(filePath):
                 f = open(filePath)
+                ret = "SAFE"
                 for line in f.readlines():
                     if 'BUG FOUND' in line:
-                        return "UNSAFE"
-                    elif 'Exception' in line:
-                        return "RAISE EXCEPTION"
-                    return "SAFE"
+                        ret = "UNSAFE"
+                    if 'Exception'  in line:
+                        ret = "RAISE EXCEPTION"
+                    if 'Stack dump' in line:
+                        ret = "RAISE EXCEPTION"
+                return ret
 
             filePath = name + '.log'
             print("Running test: [{}]".format(name + '.c'))

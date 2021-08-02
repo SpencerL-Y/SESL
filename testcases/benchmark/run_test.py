@@ -53,6 +53,7 @@ class TestRunner():
     def run(self):
         for name, prop in self.testCases:
             try:
+                print("Running test case: [{}]".format(name))
                 command = 'smack {}/{} -ll {}/{}_IR.ll --bpl {}/{}.bpl -t --sh-mem-leak 2>1 1>>{}.log'.format(self.path, name + '.c', self.path, name, self.path, name, self.path + '/' + name)
                 # print(command, os.system(command))
                 os.system(command)
@@ -81,7 +82,8 @@ class TestRunner():
             print("Tool: " + result + '\nReal: ' + prop + "\n")
             command = 'rm -rf ' + filePath
             # print(command, os.system(command))
-            os.system(command)
+            if result != "RAISE EXCEPTION":
+                os.system(command)
 
             if result == "RAISE EXCEPTION":
                 self.raiseExeception.append(name)

@@ -120,10 +120,18 @@ class TestRunner():
         print('Raise exception: {}'.format(len(self.raiseExeception)))
         for re in self.raiseExeception:
             print(re)
-        
+
+    def clean(self):
+        for name, prop in self.testCases:
+            llPath = '{}/{}_IR.ll'.format(self.path, name)
+            bplPath = '{}/{}.bpl'.format(self.path, name)
+            os.system('rm -rf {}'.format(llPath))
+            os.system('rm -rf {}'.format(bplPath))
+
 if __name__ == "__main__":
     in_path = sys.argv[1] or './'
     type = sys.argv[2] or 'out'
     testRunner = TestRunner(in_path, type)
     testRunner.run()
     testRunner.printCheckInfo()
+    testRunner.clean()

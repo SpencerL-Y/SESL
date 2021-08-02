@@ -37,9 +37,9 @@ class TestRunner():
             f = open(outFileName)
             for line in f.readlines():
                 if 'UNSAFE' == line:
-                    programProperty = 'SAFE'
+                    programProperty = 'UNSAFE'
                 elif 'SAFE' == line:
-                    programProperty = 'UNSAFE'  
+                    programProperty = 'SAFE'  
             f.close()     
             self.testCases.append((name, programProperty))
 
@@ -51,13 +51,31 @@ class TestRunner():
         self.walkDict()
 
     def run(self):
-        name = 'case_1'
-        command = 'smack ./{} -ll ./{}_IR.ll --bpl ./{}.bpl -t --sh-mem-leak >>{}.log'.format(name + '.c', name, name, name)
-        print(command, os.system(command))
-        command = 'rm -rf {}_IR.ll {}.bpl main.mem.dot'.format(name, name)
-        print(command, os.system(command))
-        pass
+        print(self.testCases)
+        for name, prop in self.testCases:
+            command = 'smack ./{} -ll ./{}_IR.ll --bpl ./{}.bpl -t --sh-mem-leak >>{}.log'.format(name + '.c', name, name, name)
+            # print(command, os.system(command))
+            os.system(command)
+            command = 'rm -rf {}_IR.ll {}.bpl main.mem.dot'.format(name, name)
+            # print(command, os.system(command))
+            os.system(command)
+            
+            def checkVerify(filePath):
+                f = open(filePath)
+                for line in f.readlines():
+                    if 'BUG FOUND' in line:
+                        return "UNSAFE"
+                    elif 'Exception' in line:
+                        return "RAISE EXCEPTION"
+                    return "SAFE"
 
+            filePath = name + '.log'
+            print("Running test: [{}]".format(name + '.c'))
+            print("Tool: " + checkVerify(filePath) + '\nReal: ' + prop + "\n")
+            command = 'rm -rf ' + filePath
+            # print(command, os.system(command))
+            os.system(command)
+        
 if __name__ == "__main__":
     testRunner = TestRunner()
     testRunner.run()

@@ -930,9 +930,13 @@ namespace smack {
     void VarExpr::print(std::ostream &os) const { os << var; }
 
     const Expr* VarExpr::renameClone(std::string funcName, int usedNum) const{
-        std::string renamedVar = this->var + "_" + funcName + std::to_string(usedNum);
-        const Expr* clonedExpr = new VarExpr(renamedVar);
-        return clonedExpr;
+        if(this->name().find("$M") != std::string::npos){
+            return this;
+        } else {
+            std::string renamedVar = this->var + "_" + funcName + std::to_string(usedNum);
+            const Expr* clonedExpr = new VarExpr(renamedVar);
+            return clonedExpr;
+        }
     }
     
     z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
@@ -978,6 +982,9 @@ namespace smack {
     }
 
     std::pair<bool, int> VarExpr::translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const {
+        if(!this->name().compare("NULLVAR")){
+            return std::pair<bool, int>(true, 0);
+        }
         auto res = varEquivPtr->getIntVal(var);
         CDEBUG(std::cout << "in varExpr! " << res.first << " " << res.second << std::endl;);
         return res;

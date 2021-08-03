@@ -252,8 +252,9 @@ namespace smack{
                 }
             } else {
                 // If RHS is not a function, directly equal them and update varEquiv accordingly..
-                CFDEBUG(std::cout << "INFO: ASSIGN RHS is not a funcExpr"; rhs->print(cout); lhs->print(cout); cout << std::endl;);
+                CFDEBUG(std::cout << "INFO: ASSIGN RHS is not a funcExpr"; rhs->print(cout); std::cout << " ";; lhs->print(cout); cout << std::endl;);
                 if(rhs->isVar()){
+                    CFDEBUG(std::cout << "INFO: RHS is Var" << std::endl;);
                     const VarExpr* rhsOrigVar = (const VarExpr*) rhs;
                     std::string rhsOrigVarName = rhsOrigVar->name();
                     const VarExpr* rhsVar = this->varFactory->getVar(rhsOrigVarName);
@@ -268,10 +269,12 @@ namespace smack{
                         this->varFactory->getVar(lhsVarOrigName),
                         this->varFactory->getVar(rhsOrigVarName)
                     );
-                    this->varEquiv->linkName(lhsVarName, rhsVarName);
-                    if(rhsOrigVarName.find("$p") != std::string::npos || lhsVarOrigName.find("$p") != std::string::npos){
-                        this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
-                        this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(rhsVarName));
+                    if(rhsOrigVarName.find("$0.ref") == std::string::npos){
+                        this->varEquiv->linkName(lhsVarName, rhsVarName);
+                        if(rhsOrigVarName.find("$p") != std::string::npos || lhsVarOrigName.find("$p") !=   std::string::npos){
+                            this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
+                            this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(rhsVarName));
+                        }
                     }
                     const Expr* newPure = Expr::and_(
                         sh->getPure(),

@@ -123,6 +123,7 @@ int main(){
     *j = 12;
     if(*j > 10){
         free(j);
+        assert(a == 10);
     }
 } 
 

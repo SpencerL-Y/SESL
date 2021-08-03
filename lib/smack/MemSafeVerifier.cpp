@@ -55,7 +55,9 @@ namespace smack {
             // initialization for the symbolic heap
             SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(boolTrue, splist);
             //---------------------- initialization of auxillaries
-            // Initialize the equivalent class for allocation
+            // Initialize the equivalent class for 
+            // initialization for the symbolic heap
+            // initialization for the symbolic heap
             VarEquivPtr allocEquiv = std::make_shared<VarEquiv>();
             // Initialize the varFactory class for variable         remembering
             VarFactoryPtr varFac = std::make_shared<VarFactory>();

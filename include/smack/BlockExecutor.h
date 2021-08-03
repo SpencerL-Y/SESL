@@ -15,6 +15,7 @@
 #include "smack/VarFactory.h"
 #include "smack/StoreSplitter.h"
 #include "smack/cfg/CFG.h"
+#include "smack/SVNaming.h"
 #include "utils/CenterDebug.h"
 
 // This object is for dealing with symbolic execution
@@ -81,6 +82,8 @@ namespace smack{
 
         SHExprPtr executeFree(SHExprPtr sh, const CallStmt* stmt);
 
+        SHExprPtr executeVeriCall(SHExprPtr sh, const CallStmt* stmt);
+
         SHExprPtr executeUnintepreted(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
@@ -92,6 +95,7 @@ namespace smack{
         SHExprPtr executeOther(SHExprPtr sh, const Stmt* stmt);
 
         //----------------------- Execution for library functions
+
 
         SHExprPtr executeMemcpy(SHExprPtr sh, const FunExpr* rhsFun);
 

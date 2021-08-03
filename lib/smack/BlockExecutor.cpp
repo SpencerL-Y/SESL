@@ -269,13 +269,13 @@ namespace smack{
                         this->varFactory->getVar(lhsVarOrigName),
                         this->varFactory->getVar(rhsOrigVarName)
                     );
-                    if(rhsOrigVarName.find("$0.ref") == std::string::npos){
-                        this->varEquiv->linkName(lhsVarName, rhsVarName);
-                        if(rhsOrigVarName.find("$p") != std::string::npos || lhsVarOrigName.find("$p") !=   std::string::npos){
-                            this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
-                            this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(rhsVarName));
-                        }
+                   
+                    this->varEquiv->linkName(lhsVarName, rhsVarName);
+                    if(rhsOrigVarName.find("$p") != std::string::npos || lhsVarOrigName.find("$p") !=   std::string::npos){
+                        this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
+                        this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(rhsVarName));
                     }
+                    
                     const Expr* newPure = Expr::and_(
                         sh->getPure(),
                         eq
@@ -704,7 +704,10 @@ namespace smack{
                 return this->executeFree(sh, call);
             } else if(!call->getProc().compare("$alloc")){
                 return this->executeAlloc(sh, call);
-            } else {
+            } else if(call->getProc().find("__VERIFIER") != std::string::npos){
+                return this->executeVeriCall(sh, call);
+            } 
+            else {
                 this->executeUnintepreted(sh, call);
                 CFDEBUG(std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl);
             }
@@ -716,6 +719,41 @@ namespace smack{
 
 
     SHExprPtr 
+    BlockExecutor::executeVeriCall
+    (SHExprPtr sh, const CallStmt* stmt){
+        CFDEBUG(std::cout << "INFO: execute VERIFIER Call." << std::endl;);
+        assert(stmt->getProc().find("__VERIFIER") != std::string::npos);
+        if(!stmt->getProc().compare(SVNaming::SV_NONDET_INT)){
+            std::string retOrigVarName = stmt->getReturns().front();
+            const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
+            std::string retVarName = retVar->name();
+
+            std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(retOrigVarName);
+            assert(sizeInfo.second/8 == 4);
+
+
+            int byteSize = INT_BYTEWIDTH;
+            const VarExpr* nondetIntVar = this->varFactory->getFreshVar(byteSize);
+            this->varEquiv->addNewName(nondetIntVar->name());
+            this->varEquiv->linkName(retVarName, nondetIntVar->name());
+
+            const Expr* newPure = Expr::and_(
+                sh->getPure(),
+                Expr::eq(retVar, nondetIntVar)
+            );
+
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            newSH->print(std::cout);
+            std::cout << std::endl;
+            return newSH;
+        } 
+        else {
+            CFDEBUG(std::cout << "UNSOLVED VERIFIER FUNC: " << stmt->getProc() << std::endl;);
+            return sh;
+        }
+    }
+
+    SHExprPtr 
     BlockExecutor::executeUnintepreted
     (SHExprPtr sh, const CallStmt* stmt){
         if(stmt->getReturns().size() > 0){
@@ -725,6 +763,9 @@ namespace smack{
             std::string retVarName = retVar->name();
             std::pair<std::string, int> typeInfo = this->cfg->getVarDetailType(retOrigVarName);
             const VarExpr* freshVar = this->varFactory->getFreshVar(typeInfo.second);
+
+            this->varEquiv->addNewName(freshVar->name());
+            this->varEquiv->linkName(retVarName, freshVar->name());
 
             const Expr* newConj = Expr::eq(retVar, freshVar);
             const Expr* newPure = Expr::and_(sh->getPure(), newConj);

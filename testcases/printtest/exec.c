@@ -119,11 +119,10 @@ int main(){
     int* j = malloc(4);
     *j = 9;
     *j = 10;
-    *j = 11;
-    *j = 12;
+    // *j = 11;
+    // *j = 12;
     if(*j > 10){
         free(j);
-        assert(a == 10);
     }
 } 
 

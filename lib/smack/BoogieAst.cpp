@@ -982,7 +982,7 @@ namespace smack {
     }
 
     std::pair<bool, int> VarExpr::translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const {
-        if(!this->name().compare("NULLVAR")){
+        if(!this->name().compare("$Null")){
             return std::pair<bool, int>(true, 0);
         }
         auto res = varEquivPtr->getIntVal(var);

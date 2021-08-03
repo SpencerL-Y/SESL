@@ -32,7 +32,12 @@ namespace smack
         std::map<std::string, bool> structArrayPtr;
         typedef std::shared_ptr<VarEquiv> VarEquivPtr;
     public:
-        VarEquiv(/* args */){this->addNewName("NULLVAR"); this->addNewVal("NULLVAR", 0);};
+        VarEquiv(/* args */){
+            this->addNewName("$Null"); 
+            this->addNewVal("$Null", 0);
+            this->addNewBlkName("$Null");
+            this->addNewOffset("$Null", 0);
+        };
         ~VarEquiv() {};
         // varAllocEqualMap operations
         void addNewName(std::string name);

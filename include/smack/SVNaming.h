@@ -1,21 +1,23 @@
 #ifndef SVNAMING_H
 #define SVNAMING_H
 
-class SVNaming
-{
-public:
+#include <stdlib.h>
+#include <string>
 
-    SVNaming(/* args */);
-    ~SVNaming();
-};
+// This is a class used for remember the naming of SV-COMP
 
-SVNaming::SVNaming(/* args */)
+namespace smack
 {
-}
 
-SVNaming::~SVNaming()
-{
-}
+    class SVNaming
+    {
+    public:
+        static const std::string SV_NONDET_INT;
+        static const std::string SV_NONDET_BOOL;
+    };
+
+} // namespace smack
+
 
 
 #endif

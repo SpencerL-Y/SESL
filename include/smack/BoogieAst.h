@@ -14,6 +14,7 @@
 #include "smack/VarEquiv.h"
 
 #define PTR_BYTEWIDTH 8
+#define INT_BYTEWIDTH 4
 
 namespace smack {
 

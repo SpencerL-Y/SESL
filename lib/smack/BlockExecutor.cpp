@@ -961,6 +961,17 @@ namespace smack{
             std::string mallocName = this->varEquiv->getBlkName(varArg1->name());
             int mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
             CFDEBUG(std::cout << "STORE: offset " << offset << " Blk size: " << mallocBlkSize << std::endl;);
+            // if the stored ptr is a nullptr, set inference error
+            if(!mallocName.compare("$Null")){
+                std::list<const SpatialLiteral*> newSpatial;
+                // the symbolic heap is set to error
+                newSpatial.push_back(SpatialLiteral::errlit(true));
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
+                newSH->print(std::cout);
+                std::cout << std::endl;
+                CFDEBUG(std::cout << "INFERROR: store null ptr" << std::endl;);
+                return newSH;
+            }
             // if the store is out of bound, set inference error
             if(offset >= mallocBlkSize){
                 std::list<const SpatialLiteral*> newSpatial;
@@ -1270,6 +1281,20 @@ namespace smack{
             int loadPosOffset = this->varEquiv->getOffset(ldPtrName);
             std::string mallocName = this->varEquiv->getBlkName(ldPtrName);
             int blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+            
+            if(!mallocName.compare("$Null")){
+                // if the loaded ptr is a null ptr
+                // If the ptr offset is overflow
+                std::list<const SpatialLiteral*> newSpatial;
+                // the symbolic heap is set to error
+                newSpatial.push_back(SpatialLiteral::errlit(true));
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
+                newSH->print(std::cout);
+                std::cout << std::endl;
+                CFDEBUG(std::cout << "INFERROR: load null ptr" << std::endl;);
+                return newSH;
+            }
+
             if(loadPosOffset >= blkSize){
                 // If the ptr offset is overflow
                 std::list<const SpatialLiteral*> newSpatial;

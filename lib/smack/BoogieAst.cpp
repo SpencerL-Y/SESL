@@ -1248,6 +1248,9 @@ namespace smack {
 
 
     const Expr *SymbolicHeapExpr::getBlkSize(std::string blkName) const {
+        if(!blkName.compare("$Null")){
+            return new IntLit((long long)0);
+        }
         for (const SpatialLiteral *sp : this->spatialExpr) {
             if (SpatialLiteral::Kind::SPT == sp->getId() &&
                 !sp->getBlkName().compare(blkName)) {

@@ -1,0 +1,1512 @@
+SMACK program verifier version 2.6.3
+Running clang -c -emit-llvm -O0 -g -gcolumn-info -Xclang -disable-O0-optnone -I/usr/local/share/smack/include -DMEMORY_MODEL_NO_REUSE_IMPLS -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/test-0219-1ht75l_l.bc ../svcomp/memsafety//test-0219.c
+Running llvm-link -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/a-qrahz61j.bc /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/test-0219-1ht75l_l.bc
+Running llvm-link -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-iv6wctmx.bc /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/a-qrahz61j.bc
+Running llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-iv6wctmx.bc -bpl ../svcomp/memsafety//test-0219.bpl -warn-type unsound -sea-dsa=ci -source-loc-syms -entry-points main -ll ../svcomp/memsafety//test-0219_IR.ll -mem-mod-impls -llvm-assumes=none -sh-mem-leak
+[regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %8 = getelementptr inbounds %struct.L1, %struct.L1* %7, i32 0, i32 0, !dbg !36, !verifier.code !27
+   in function: main
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %11 = getelementptr inbounds %struct.L1, %struct.L1* %10, i32 0, i32 1, !dbg !40, !verifier.code !27
+   in function: main
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.L1** %0
+   at instruction:   %13 = load %struct.L1*, %struct.L1** %0, align 8, !dbg !46, !verifier.code !32
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %14 = getelementptr inbounds %struct.L1, %struct.L1* %3, i32 0, i32 0, !dbg !47, !verifier.code !32
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 1: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L1** %0
+   at instruction:   %13 = load %struct.L1*, %struct.L1** %0, align 8, !dbg !46, !verifier.code !32
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.L2, %struct.L2* %.0, i32 0, i32 1, !dbg !33, !verifier.code !31
+   in function: l2_destroy
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+    found overlap at index 2: <Node:%struct.L2*>[8,16]{A}
+ [regions]   merged region: <Node:%struct.L2*>[8,16]{A}
+ [regions]   returning index: 2
+ 
+ [regions] for:   %5 = getelementptr inbounds %struct.L2, %struct.L2* %.0, i32 0, i32 0, !dbg !37, !verifier.code !31
+   in function: l2_destroy
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 1: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %4 = call noalias i8* @malloc(i64 %3) #6, !dbg !37, !verifier.code !34 with length 4294967295
+   in function: calloc_model
+ [regions]   using region: <Node:i8>[0,4294967295]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   found extra overlap at index 2: <Node:%struct.L2*>[8,16]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %8 = getelementptr inbounds %struct.L2, %struct.L2* %3, i32 0, i32 0, !dbg !40, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %9 = getelementptr inbounds %struct.L2, %struct.L2* %3, i32 0, i32 0, !dbg !42, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L2** %0
+   at instruction:   %14 = load %struct.L2*, %struct.L2** %0, align 8, !dbg !47, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %15 = getelementptr inbounds %struct.L2, %struct.L2* %3, i32 0, i32 1, !dbg !48, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L2** %0
+   at instruction:   %14 = load %struct.L2*, %struct.L2** %0, align 8, !dbg !47, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ We are now translating the program to boogie...
+ Analyzing globals...
+ -------INSERT: Global Variables main.list
+ Analyzing functions...
+ Analyzing function: main
+ -------INSERT: Global Variables main
+ Analyzing function body: main
+ Generating body for main
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitBranch
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitLoad
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %8 = getelementptr inbounds %struct.L1, %struct.L1* %7, i32 0, i32 0, !dbg !36, !verifier.code !27
+   in function: main
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ visitDbgValue
+ visitLoad
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %11 = getelementptr inbounds %struct.L1, %struct.L1* %10, i32 0, i32 1, !dbg !40, !verifier.code !27
+   in function: main
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ visitCall
+ smackrep call
+ visitLoad
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitCast
+ visitCast not vector
+ visitCall
+ smackrep call
+ visitStore
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitBranch
+ visitBasicBlock
+ visitLoad
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitReturn
+ 
+ insert initial SH to main
+ Finished analyzing function: main
+ 
+ Analyzing function: l1_insert
+ -------INSERT: Global Variables l1_insert
+ Analyzing function body: l1_insert
+ Generating body for l1_insert
+ visitBasicBlock
+ visitDbgValue
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitUnreachable
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitGetElementPtr
+ visitCall
+ smackrep call
+ visitBranch
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitLoad
+ [regions] for: %struct.L1** %0
+   at instruction:   %13 = load %struct.L1*, %struct.L1** %0, align 8, !dbg !46, !verifier.code !32
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %14 = getelementptr inbounds %struct.L1, %struct.L1* %3, i32 0, i32 0, !dbg !47, !verifier.code !32
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %14 = getelementptr inbounds %struct.L1, %struct.L1* %3, i32 0, i32 0, !dbg !47, !verifier.code !32
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ visitStore
+ [regions] for: %struct.L1** %0
+   at instruction:   %13 = load %struct.L1*, %struct.L1** %0, align 8, !dbg !46, !verifier.code !32
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.L1** %0
+   at instruction:   %13 = load %struct.L1*, %struct.L1** %0, align 8, !dbg !46, !verifier.code !32
+   in function: l1_insert
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitReturn
+ 
+ Finished analyzing function: l1_insert
+ 
+ Analyzing function: __VERIFIER_nondet_int
+ -------INSERT: Global Variables __VERIFIER_nondet_int
+ Analyzing function: llvm.dbg.declare
+ -------INSERT: Global Variables llvm.dbg.declare
+ Analyzing function: l2_destroy
+ -------INSERT: Global Variables l2_destroy
+ Analyzing function body: l2_destroy
+ Generating body for l2_destroy
+ visitBasicBlock
+ visitDbgValue
+ visitBranch
+ visitBasicBlock
+ visitPHINode
+ visitDbgValue
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %3 = getelementptr inbounds %struct.L2, %struct.L2* %.0, i32 0, i32 1, !dbg !33, !verifier.code !31
+   in function: l2_destroy
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ visitDbgValue
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %5 = getelementptr inbounds %struct.L2, %struct.L2* %.0, i32 0, i32 0, !dbg !37, !verifier.code !31
+   in function: l2_destroy
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitCall
+ smackrep call
+ visitDbgValue
+ visitBranch
+ visitBasicBlock
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitReturn
+ visitBasicBlock
+ visitBranch
+ 
+ Finished analyzing function: l2_destroy
+ 
+ Analyzing function: free_
+ -------INSERT: Global Variables free_
+ Analyzing function: calloc_model
+ -------INSERT: Global Variables calloc_model
+ Analyzing function body: calloc_model
+ Generating body for calloc_model
+ visitBasicBlock
+ visitDbgValue
+ visitDbgValue
+ visitBinary
+ visitCall
+ smackrep call
+ visitDbgValue
+ visitBinary
+ visitMemSet
+ [regions] for:   %4 = call noalias i8* @malloc(i64 %3) #6, !dbg !37, !verifier.code !34 with length 4294967295
+   in function: calloc_model
+ [regions]   using region: <Node:i8>[0,4294967295]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ visitReturn
+ 
+ Finished analyzing function: calloc_model
+ 
+ Analyzing function: abort
+ -------INSERT: Global Variables abort
+ Analyzing function: l2_insert
+ -------INSERT: Global Variables l2_insert
+ Analyzing function body: l2_insert
+ Generating body for l2_insert
+ visitBasicBlock
+ visitDbgValue
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitUnreachable
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %8 = getelementptr inbounds %struct.L2, %struct.L2* %3, i32 0, i32 0, !dbg !40, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %8 = getelementptr inbounds %struct.L2, %struct.L2* %3, i32 0, i32 0, !dbg !40, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %9 = getelementptr inbounds %struct.L2, %struct.L2* %3, i32 0, i32 0, !dbg !42, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitUnreachable
+ visitBasicBlock
+ visitLoad
+ [regions] for: %struct.L2** %0
+   at instruction:   %14 = load %struct.L2*, %struct.L2** %0, align 8, !dbg !47, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %15 = getelementptr inbounds %struct.L2, %struct.L2* %3, i32 0, i32 1, !dbg !48, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %15 = getelementptr inbounds %struct.L2, %struct.L2* %3, i32 0, i32 1, !dbg !48, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ visitStore
+ [regions] for: %struct.L2** %0
+   at instruction:   %14 = load %struct.L2*, %struct.L2** %0, align 8, !dbg !47, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: %struct.L2** %0
+   at instruction:   %14 = load %struct.L2*, %struct.L2** %0, align 8, !dbg !47, !verifier.code !32
+   in function: l2_insert
+ [regions]   using region: <Node:%struct.L2*>[8,16]{A}
+    found overlap at index 1: <Node:*>[0,4294967295]{A}
+ [regions]   merged region: <Node:*>[0,4294967295]{A}
+ [regions]   returning index: 1
+ 
+ visitReturn
+ 
+ Finished analyzing function: l2_insert
+ 
+ Analyzing function: malloc
+ -------INSERT: Global Variables malloc
+ Analyzing function: llvm.memset.p0i8.i64
+ -------INSERT: Global Variables llvm.memset.p0i8.i64
+ Analyzing function: llvm.dbg.value
+ -------INSERT: Global Variables llvm.dbg.value
+ Analyzing function: __SMACK_static_init
+ -------INSERT: Global Variables __SMACK_static_init
+ Analyzing function body: __SMACK_static_init
+ Generating body for __SMACK_static_init
+ visitBasicBlock
+ visitStore
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: @main.list = internal global %struct.L1* null, align 8, !dbg !0
+   at instruction:   store %struct.L1* null, %struct.L1** @main.list
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.L1*>[0,8]{A}
+    found overlap at index 0: <Node:%struct.L1*>[0,8]{A}
+ [regions]   merged region: <Node:%struct.L1*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitReturn
+ 
+ Finished analyzing function: __SMACK_static_init
+ 
+ Start Analyzing Prelude: main
+ 
+ Start Analyzing Prelude: l1_insert
+ 
+ Start Analyzing Prelude: __VERIFIER_nondet_int
+ 
+ Start Analyzing Prelude: llvm.dbg.declare
+ 
+ Start Analyzing Prelude: l2_destroy
+ 
+ Start Analyzing Prelude: free_
+ 
+ Start Analyzing Prelude: calloc_model
+ 
+ Start Analyzing Prelude: abort
+ 
+ Start Analyzing Prelude: l2_insert
+ 
+ Start Analyzing Prelude: malloc
+ 
+ Start Analyzing Prelude: llvm.memset.p0i8.i64
+ 
+ Start Analyzing Prelude: llvm.dbg.value
+ 
+ Start Analyzing Prelude: __SMACK_static_init
+ 
+ Start Analyzing Prelude: boogie_si_record_i32
+ 
+ Start Analyzing Prelude: boogie_si_record_i64
+ 
+ Start Analyzing Prelude: boogie_si_record_ref
+ 
+ Start Analyzing Prelude: $initialize
+ 
+ -----------------START MEMSAFE ANALYSIS---------------
+ Begin verifying
+ Adding procedure: main
+ Empty block name founded in proc main
+ Empty block name founded in proc main
+ Empty block name founded in proc main
+ Empty block name founded in proc main
+ Empty block name founded in proc main
+ Empty block name founded in proc main
+ Empty block name founded in proc main
+ Empty block name founded in proc main
+ Empty block name founded in proc main
+ Adding procedure: l1_insert
+ Empty block name founded in proc l1_insert
+ Empty block name founded in proc l1_insert
+ Empty block name founded in proc l1_insert
+ Empty block name founded in proc l1_insert
+ Empty block name founded in proc l1_insert
+ Empty block name founded in proc l1_insert
+ Empty block name founded in proc l1_insert
+ Adding procedure: __VERIFIER_nondet_int
+ Empty blocks of proc __VERIFIER_nondet_int
+ Adding procedure: llvm.dbg.declare
+ Empty blocks of proc llvm.dbg.declare
+ Adding procedure: l2_destroy
+ Empty block name founded in proc l2_destroy
+ Empty block name founded in proc l2_destroy
+ Empty block name founded in proc l2_destroy
+ Empty block name founded in proc l2_destroy
+ Empty block name founded in proc l2_destroy
+ Adding procedure: free_
+ Empty block name founded in proc free_
+ Adding procedure: calloc_model
+ Empty block name founded in proc calloc_model
+ Adding procedure: abort
+ Empty blocks of proc abort
+ Adding procedure: l2_insert
+ Empty block name founded in proc l2_insert
+ Empty block name founded in proc l2_insert
+ Empty block name founded in proc l2_insert
+ Empty block name founded in proc l2_insert
+ Empty block name founded in proc l2_insert
+ Adding procedure: malloc
+ Empty block name founded in proc malloc
+ Adding procedure: llvm.memset.p0i8.i64
+ Empty blocks of proc llvm.memset.p0i8.i64
+ Adding procedure: llvm.dbg.value
+ Empty blocks of proc llvm.dbg.value
+ Adding procedure: __SMACK_static_init
+ Empty block name founded in proc __SMACK_static_init
+ Adding procedure: boogie_si_record_i32
+ Empty blocks of proc boogie_si_record_i32
+ Adding procedure: boogie_si_record_i64
+ Empty blocks of proc boogie_si_record_i64
+ Adding procedure: boogie_si_record_ref
+ Empty blocks of proc boogie_si_record_ref
+ Adding procedure: $initialize
+ Empty block name founded in proc $initialize
+ inlining procedure: main
+ $bb0_main_0 1 0
+ New stmts! 
+ call {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);
+ goto $bb1_main_0;
+ 
+ $bb1_main_0 2 1
+ New stmts! 
+ 
+ New stmts! 
+ goto $bb2_main_0;
+ 
+ call l1_insert(main.list_main0);
+ inlining procedure: l1_insert
+ $bb0_l1_insert_0 2 1
+ New stmts! 
+ 
+ New stmts! 
+ $p2_l1_insert0 := $bitcast.ref.ref($p1_l1_insert0);
+ $i3_l1_insert0 := $ne.ref($p2_l1_insert0, $0.ref_l1_insert0);
+ assume true;
+ goto $bb1_l1_insert_0, $bb2_l1_insert_0;
+ 
+ call $p1_l1_insert0 := calloc_model(1, 16);
+ inlining procedure: calloc_model
+ $bb0_calloc_model_0 1 0
+ New stmts! 
+ call {:cexpr "calloc_model:arg:nmemb"} boogie_si_record_i64($i0_calloc_model0);
+ call {:cexpr "calloc_model:arg:size"} boogie_si_record_i64($i1_calloc_model0);
+ $i2_calloc_model0 := $mul.i64($i0_calloc_model0, $i1_calloc_model0);
+ call $p3_calloc_model0 := malloc($i2_calloc_model0);
+ $i4_calloc_model0 := $mul.i64($i0_calloc_model0, $i1_calloc_model0);
+ call $M.1_calloc_model0 := $memset.i8($M.1, $p3_calloc_model0, 0, $i4_calloc_model0, false);
+ $r_calloc_model0 := $p3_calloc_model0;
+ return;
+ 
+ Splitting return block
+ 
+ Inlining procedure: calloc_model 0
+ arguments: 
+ 	1 16 
+ parameter: 
+ 	$i0_calloc_model0 $i1_calloc_model0 
+ processing return block $bb0_calloc_model_0
+ return param of 'call $p1_l1_insert0 := calloc_model(1, 16);': 
+ 	[$r_calloc_model0, ref32]
+ return to: 
+ 	$p1_l1_insert0
+ Add assign statement: $p1_l1_insert0 := $r_calloc_model0;
+ Add goto relation: $bb8_l1_insert_0 -> $bb7_l1_insert_0
+ Return block: $bb0_calloc_model_0:
+   call {:cexpr "calloc_model:arg:nmemb"} boogie_si_record_i64($i0_calloc_model0);
+   call {:cexpr "calloc_model:arg:size"} boogie_si_record_i64($i1_calloc_model0);
+   $i2_calloc_model0 := $mul.i64($i0_calloc_model0, $i1_calloc_model0);
+   call $p3_calloc_model0 := malloc($i2_calloc_model0);
+   $i4_calloc_model0 := $mul.i64($i0_calloc_model0, $i1_calloc_model0);
+   call $M.1_calloc_model0 := $memset.i8($M.1, $p3_calloc_model0, 0, $i4_calloc_model0, false);
+   $r_calloc_model0 := $p3_calloc_model0;
+   goto $bb8_l1_insert_0;
+ Return process block: $bb8_l1_insert_0:
+   $p1_l1_insert0 := $r_calloc_model0;
+   goto $bb7_l1_insert_0;
+ 	add statement: $i0_calloc_model0 := 1;
+ 	add statement: $i1_calloc_model0 := 16;
+ Current block: $bb0_l1_insert_0:
+   goto $bb9_l1_insert_0;
+ Pass block: $bb9_l1_insert_0:
+   $i0_calloc_model0 := 1;
+   $i1_calloc_model0 := 16;
+   goto $bb0_calloc_model_0;
+ $bb2_l1_insert_0 1 0
+ New stmts! 
+ assume !(($i3_l1_insert0 == 1));
+ call abort();
+ assume false;
+ 
+ $bb3_l1_insert_0 2 1
+ New stmts! 
+ $p4_l1_insert0 := $add.ref($add.ref($p2_l1_insert0, $mul.ref(0, 16)), $mul.ref(8, 1));
+ 
+ New stmts! 
+ goto $bb4_l1_insert_0;
+ 
+ call l2_insert($p4_l1_insert0);
+ inlining procedure: l2_insert
+ $bb0_l2_insert_0 2 1
+ New stmts! 
+ 
+ New stmts! 
+ $p2_l2_insert0 := $bitcast.ref.ref($p1_l2_insert0);
+ $i3_l2_insert0 := $ne.ref($p2_l2_insert0, $0.ref_l2_insert0);
+ assume true;
+ goto $bb1_l2_insert_0, $bb2_l2_insert_0;
+ 
+ call $p1_l2_insert0 := calloc_model(1, 16);
+ 
+ Inlining procedure: calloc_model 1
+ arguments: 
+ 	1 16 
+ parameter: 
+ 	$i0_calloc_model1 $i1_calloc_model1 
+ processing return block $bb0_calloc_model_1
+ return param of 'call $p1_l2_insert0 := calloc_model(1, 16);': 
+ 	[$r_calloc_model1, ref32]
+ return to: 
+ 	$p1_l2_insert0
+ Add assign statement: $p1_l2_insert0 := $r_calloc_model1;
+ Add goto relation: $bb6_l2_insert_0 -> $bb5_l2_insert_0
+ Return block: $bb0_calloc_model_1:
+   call {:cexpr "calloc_model:arg:nmemb"} boogie_si_record_i64($i0_calloc_model1);
+   call {:cexpr "calloc_model:arg:size"} boogie_si_record_i64($i1_calloc_model1);
+   $i2_calloc_model1 := $mul.i64($i0_calloc_model1, $i1_calloc_model1);
+   call $p3_calloc_model1 := malloc($i2_calloc_model1);
+   $i4_calloc_model1 := $mul.i64($i0_calloc_model1, $i1_calloc_model1);
+   call $M.1_calloc_model1 := $memset.i8($M.1, $p3_calloc_model1, 0, $i4_calloc_model1, false);
+   $r_calloc_model1 := $p3_calloc_model1;
+   goto $bb6_l2_insert_0;
+ Return process block: $bb6_l2_insert_0:
+   $p1_l2_insert0 := $r_calloc_model1;
+   goto $bb5_l2_insert_0;
+ 	add statement: $i0_calloc_model1 := 1;
+ 	add statement: $i1_calloc_model1 := 16;
+ Current block: $bb0_l2_insert_0:
+   goto $bb7_l2_insert_0;
+ Pass block: $bb7_l2_insert_0:
+   $i0_calloc_model1 := 1;
+   $i1_calloc_model1 := 16;
+   goto $bb0_calloc_model_1;
+ $bb1_l2_insert_0 1 0
+ New stmts! 
+ assume ($i3_l2_insert0 == 1);
+ call $p4_l2_insert0 := malloc(119);
+ $p5_l2_insert0 := $add.ref($add.ref($p2_l2_insert0, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $M.1 := $store.ref($M.1, $p5_l2_insert0, $p4_l2_insert0);
+ $p6_l2_insert0 := $add.ref($add.ref($p2_l2_insert0, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $p7_l2_insert0 := $load.ref($M.1, $p6_l2_insert0);
+ $i8_l2_insert0 := $ne.ref($p7_l2_insert0, $0.ref_l2_insert0);
+ assume true;
+ goto $bb3_l2_insert_0, $bb4_l2_insert_0;
+ 
+ $bb2_l2_insert_0 1 0
+ New stmts! 
+ assume !(($i3_l2_insert0 == 1));
+ call abort();
+ assume false;
+ 
+ $bb4_l2_insert_0 1 0
+ New stmts! 
+ assume !(($i8_l2_insert0 == 1));
+ call abort();
+ assume false;
+ 
+ 
+ Inlining procedure: l2_insert 0
+ arguments: 
+ 	$p4_l1_insert0 
+ parameter: 
+ 	$p0_l2_insert0 
+ processing return block $bb3_l2_insert_0
+ return param of 'call l2_insert($p4_l1_insert0);': 
+ 	return to: 
+ 	Add goto relation: $bb11_l1_insert_0 -> $bb10_l1_insert_0
+ Return block: $bb3_l2_insert_0:
+   assume ($i8_l2_insert0 == 1);
+   $p9_l2_insert0 := $load.ref($M.1, $p0_l2_insert0);
+   $p10_l2_insert0 := $add.ref($add.ref($p2_l2_insert0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.1 := $store.ref($M.1, $p10_l2_insert0, $p9_l2_insert0);
+   $M.1 := $store.ref($M.1, $p0_l2_insert0, $p1_l2_insert0);
+   goto $bb11_l1_insert_0;
+ Return process block: $bb11_l1_insert_0:
+   goto $bb10_l1_insert_0;
+ 	add statement: $p0_l2_insert0 := $p4_l1_insert0;
+ Current block: $bb3_l1_insert_0:
+   $p4_l1_insert0 := $add.ref($add.ref($p2_l1_insert0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   goto $bb12_l1_insert_0;
+ Pass block: $bb12_l1_insert_0:
+   $p0_l2_insert0 := $p4_l1_insert0;
+   goto $bb0_l2_insert_0;
+ $bb4_l1_insert_0 1 0
+ New stmts! 
+ call $i5_l1_insert0 := __VERIFIER_nondet_int();
+ call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i5_l1_insert0);
+ $i6_l1_insert0 := $ne.i32($i5_l1_insert0, 0);
+ assume true;
+ goto $bb5_l1_insert_0, $bb6_l1_insert_0;
+ 
+ 
+ Inlining procedure: l1_insert 0
+ arguments: 
+ 	main.list_main0 
+ parameter: 
+ 	$p0_l1_insert0 
+ processing return block $bb6_l1_insert_0
+ return param of 'call l1_insert(main.list_main0);': 
+ 	return to: 
+ 	Add goto relation: $bb10_main_0 -> $bb9_main_0
+ Return block: $bb6_l1_insert_0:
+   assume !(($i6_l1_insert0 == 1));
+   $p7_l1_insert0 := $load.ref($M.0, $p0_l1_insert0);
+   $p8_l1_insert0 := $add.ref($add.ref($p2_l1_insert0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.1 := $store.ref($M.1, $p8_l1_insert0, $p7_l1_insert0);
+   $M.0 := $store.ref($M.0, $p0_l1_insert0, $p1_l1_insert0);
+   goto $bb10_main_0;
+ Return process block: $bb10_main_0:
+   goto $bb9_main_0;
+ 	add statement: $p0_l1_insert0 := main.list_main0;
+ Current block: $bb1_main_0:
+   goto $bb11_main_0;
+ Pass block: $bb11_main_0:
+   $p0_l1_insert0 := main.list_main0;
+   goto $bb0_l1_insert_0;
+ $bb2_main_0 1 0
+ New stmts! 
+ call $i0_main0 := __VERIFIER_nondet_int();
+ call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i0_main0);
+ $i1_main0 := $ne.i32($i0_main0, 0);
+ assume true;
+ goto $bb3_main_0, $bb4_main_0;
+ 
+ $bb5_main_0 2 1
+ New stmts! 
+ $p2_main0 := $load.ref($M.0, main.list_main0);
+ $p3_main0 := $add.ref($add.ref($p2_main0, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $p4_main0 := $load.ref($M.1, $p3_main0);
+ $p5_main0 := $load.ref($M.0, main.list_main0);
+ $p6_main0 := $add.ref($add.ref($p5_main0, $mul.ref(0, 16)), $mul.ref(8, 1));
+ $p7_main0 := $load.ref($M.1, $p6_main0);
+ 
+ New stmts! 
+ $p8_main0 := $load.ref($M.0, main.list_main0);
+ $p9_main0 := $bitcast.ref.ref($p8_main0);
+ call free_($p9_main0);
+ $M.0 := $store.ref($M.0, main.list_main0, $p4_main0);
+ goto $bb6_main_0;
+ 
+ call l2_destroy($p7_main0);
+ inlining procedure: l2_destroy
+ $bb1_l2_destroy_0 1 0
+ New stmts! 
+ $p2_l2_destroy0 := $add.ref($add.ref($p1_l2_destroy0, $mul.ref(0, 16)), $mul.ref(8, 1));
+ $p3_l2_destroy0 := $load.ref($M.1, $p2_l2_destroy0);
+ $p4_l2_destroy0 := $add.ref($add.ref($p1_l2_destroy0, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $p5_l2_destroy0 := $load.ref($M.1, $p4_l2_destroy0);
+ call free_($p5_l2_destroy0);
+ $p6_l2_destroy0 := $bitcast.ref.ref($p1_l2_destroy0);
+ call free_($p6_l2_destroy0);
+ goto $bb2_l2_destroy_0;
+ 
+ 
+ Inlining procedure: l2_destroy 0
+ arguments: 
+ 	$p7_main0 
+ parameter: 
+ 	$p0_l2_destroy0 
+ processing return block $bb4_l2_destroy_0
+ return param of 'call l2_destroy($p7_main0);': 
+ 	return to: 
+ 	Add goto relation: $bb13_main_0 -> $bb12_main_0
+ Return block: $bb4_l2_destroy_0:
+   assume !(($i7_l2_destroy0 == 1));
+   goto $bb13_main_0;
+ Return process block: $bb13_main_0:
+   goto $bb12_main_0;
+ 	add statement: $p0_l2_destroy0 := $p7_main0;
+ Current block: $bb5_main_0:
+   $p2_main0 := $load.ref($M.0, main.list_main0);
+   $p3_main0 := $add.ref($add.ref($p2_main0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p4_main0 := $load.ref($M.1, $p3_main0);
+   $p5_main0 := $load.ref($M.0, main.list_main0);
+   $p6_main0 := $add.ref($add.ref($p5_main0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $p7_main0 := $load.ref($M.1, $p6_main0);
+   goto $bb14_main_0;
+ Pass block: $bb14_main_0:
+   $p0_l2_destroy0 := $p7_main0;
+   goto $bb0_l2_destroy_0;
+ =====================CENTER NEW===================
+ procedure main()
+   returns ($r_main0: i32)
+ {
+   var $i0_main0: i32;
+   var $i1_main0: i1;
+   var $p2_main0: ref;
+   var $p3_main0: ref;
+   var $p4_main0: ref;
+   var $p5_main0: ref;
+   var $p6_main0: ref;
+   var $p7_main0: ref;
+   var $p8_main0: ref;
+   var $p9_main0: ref8;
+   var $p10_main0: ref;
+   var $i11_main0: i1;
+   var $r_main0: i32;
+   var $p0_l1_insert0: ref32;
+   var $p1_l1_insert0: ref8;
+   var $p2_l1_insert0: ref;
+   var $i3_l1_insert0: i1;
+   var $p4_l1_insert0: ref;
+   var $i5_l1_insert0: i32;
+   var $i6_l1_insert0: i1;
+   var $p7_l1_insert0: ref;
+   var $p8_l1_insert0: ref;
+   var $i0_calloc_model0: i64;
+   var $i1_calloc_model0: i64;
+   var $i2_calloc_model0: i64;
+   var $p3_calloc_model0: ref8;
+   var $i4_calloc_model0: i64;
+   var $r_calloc_model0: ref32;
+   var $p0_l2_insert0: ref32;
+   var $p1_l2_insert0: ref8;
+   var $p2_l2_insert0: ref;
+   var $i3_l2_insert0: i1;
+   var $p4_l2_insert0: ref8;
+   var $p5_l2_insert0: ref;
+   var $p6_l2_insert0: ref;
+   var $p7_l2_insert0: ref8;
+   var $i8_l2_insert0: i1;
+   var $p9_l2_insert0: ref;
+   var $p10_l2_insert0: ref;
+   var $i0_calloc_model1: i64;
+   var $i1_calloc_model1: i64;
+   var $i2_calloc_model1: i64;
+   var $p3_calloc_model1: ref8;
+   var $i4_calloc_model1: i64;
+   var $r_calloc_model1: ref32;
+   var $p0_l2_destroy0: ref32;
+   var $p1_l2_destroy0: ref;
+   var $p2_l2_destroy0: ref;
+   var $p3_l2_destroy0: ref;
+   var $p4_l2_destroy0: ref;
+   var $p5_l2_destroy0: ref8;
+   var $p6_l2_destroy0: ref8;
+   var $i7_l2_destroy0: i1;
+ $bb0_main_0:
+   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);
+   goto $bb1_main_0;
+ $bb1_main_0:
+   goto $bb11_main_0;
+ $bb2_main_0:
+   call $i0_main0 := __VERIFIER_nondet_int();
+   call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i0_main0);
+   $i1_main0 := $ne.i32($i0_main0, 0);
+   assume true;
+   goto $bb3_main_0, $bb4_main_0;
+ $bb3_main_0:
+   assume ($i1_main0 == 1);
+   goto $bb1_main_0;
+ $bb4_main_0:
+   assume !(($i1_main0 == 1));
+   goto $bb5_main_0;
+ $bb5_main_0:
+   $p2_main0 := $load.ref($M.0, main.list_main0);
+   $p3_main0 := $add.ref($add.ref($p2_main0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p4_main0 := $load.ref($M.1, $p3_main0);
+   $p5_main0 := $load.ref($M.0, main.list_main0);
+   $p6_main0 := $add.ref($add.ref($p5_main0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $p7_main0 := $load.ref($M.1, $p6_main0);
+   goto $bb14_main_0;
+ $bb6_main_0:
+   $p10_main0 := $load.ref($M.0, main.list_main0);
+   $i11_main0 := $ne.ref($p10_main0, $0.ref_main0);
+   assume true;
+   goto $bb7_main_0, $bb8_main_0;
+ $bb7_main_0:
+   assume ($i11_main0 == 1);
+   goto $bb5_main_0;
+ $bb8_main_0:
+   assume !(($i11_main0 == 1));
+   $r_main0 := 0;
+   return;
+ $bb10_main_0:
+   goto $bb9_main_0;
+ $bb11_main_0:
+   $p0_l1_insert0 := main.list_main0;
+   goto $bb0_l1_insert_0;
+ $bb9_main_0:
+   goto $bb2_main_0;
+ $bb13_main_0:
+   goto $bb12_main_0;
+ $bb14_main_0:
+   $p0_l2_destroy0 := $p7_main0;
+   goto $bb0_l2_destroy_0;
+ $bb12_main_0:
+   $p8_main0 := $load.ref($M.0, main.list_main0);
+   $p9_main0 := $bitcast.ref.ref($p8_main0);
+   call free_($p9_main0);
+   $M.0 := $store.ref($M.0, main.list_main0, $p4_main0);
+   goto $bb6_main_0;
+ $bb0_l1_insert_0:
+   goto $bb9_l1_insert_0;
+ $bb1_l1_insert_0:
+   assume ($i3_l1_insert0 == 1);
+   goto $bb3_l1_insert_0;
+ $bb2_l1_insert_0:
+   assume !(($i3_l1_insert0 == 1));
+   call abort();
+   assume false;
+ $bb3_l1_insert_0:
+   $p4_l1_insert0 := $add.ref($add.ref($p2_l1_insert0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   goto $bb12_l1_insert_0;
+ $bb4_l1_insert_0:
+   call $i5_l1_insert0 := __VERIFIER_nondet_int();
+   call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i5_l1_insert0);
+   $i6_l1_insert0 := $ne.i32($i5_l1_insert0, 0);
+   assume true;
+   goto $bb5_l1_insert_0, $bb6_l1_insert_0;
+ $bb5_l1_insert_0:
+   assume ($i6_l1_insert0 == 1);
+   goto $bb3_l1_insert_0;
+ $bb6_l1_insert_0:
+   assume !(($i6_l1_insert0 == 1));
+   $p7_l1_insert0 := $load.ref($M.0, $p0_l1_insert0);
+   $p8_l1_insert0 := $add.ref($add.ref($p2_l1_insert0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.1 := $store.ref($M.1, $p8_l1_insert0, $p7_l1_insert0);
+   $M.0 := $store.ref($M.0, $p0_l1_insert0, $p1_l1_insert0);
+   goto $bb10_main_0;
+ $bb8_l1_insert_0:
+   $p1_l1_insert0 := $r_calloc_model0;
+   goto $bb7_l1_insert_0;
+ $bb9_l1_insert_0:
+   $i0_calloc_model0 := 1;
+   $i1_calloc_model0 := 16;
+   goto $bb0_calloc_model_0;
+ $bb7_l1_insert_0:
+   $p2_l1_insert0 := $bitcast.ref.ref($p1_l1_insert0);
+   $i3_l1_insert0 := $ne.ref($p2_l1_insert0, $0.ref_l1_insert0);
+   assume true;
+   goto $bb1_l1_insert_0, $bb2_l1_insert_0;
+ $bb11_l1_insert_0:
+   goto $bb10_l1_insert_0;
+ $bb12_l1_insert_0:
+   $p0_l2_insert0 := $p4_l1_insert0;
+   goto $bb0_l2_insert_0;
+ $bb10_l1_insert_0:
+   goto $bb4_l1_insert_0;
+ $bb0_calloc_model_0:
+   call {:cexpr "calloc_model:arg:nmemb"} boogie_si_record_i64($i0_calloc_model0);
+   call {:cexpr "calloc_model:arg:size"} boogie_si_record_i64($i1_calloc_model0);
+   $i2_calloc_model0 := $mul.i64($i0_calloc_model0, $i1_calloc_model0);
+   call $p3_calloc_model0 := malloc($i2_calloc_model0);
+   $i4_calloc_model0 := $mul.i64($i0_calloc_model0, $i1_calloc_model0);
+   call $M.1_calloc_model0 := $memset.i8($M.1, $p3_calloc_model0, 0, $i4_calloc_model0, false);
+   $r_calloc_model0 := $p3_calloc_model0;
+   goto $bb8_l1_insert_0;
+ $bb0_l2_insert_0:
+   goto $bb7_l2_insert_0;
+ $bb1_l2_insert_0:
+   assume ($i3_l2_insert0 == 1);
+   call $p4_l2_insert0 := malloc(119);
+   $p5_l2_insert0 := $add.ref($add.ref($p2_l2_insert0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.1 := $store.ref($M.1, $p5_l2_insert0, $p4_l2_insert0);
+   $p6_l2_insert0 := $add.ref($add.ref($p2_l2_insert0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p7_l2_insert0 := $load.ref($M.1, $p6_l2_insert0);
+   $i8_l2_insert0 := $ne.ref($p7_l2_insert0, $0.ref_l2_insert0);
+   assume true;
+   goto $bb3_l2_insert_0, $bb4_l2_insert_0;
+ $bb2_l2_insert_0:
+   assume !(($i3_l2_insert0 == 1));
+   call abort();
+   assume false;
+ $bb3_l2_insert_0:
+   assume ($i8_l2_insert0 == 1);
+   $p9_l2_insert0 := $load.ref($M.1, $p0_l2_insert0);
+   $p10_l2_insert0 := $add.ref($add.ref($p2_l2_insert0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.1 := $store.ref($M.1, $p10_l2_insert0, $p9_l2_insert0);
+   $M.1 := $store.ref($M.1, $p0_l2_insert0, $p1_l2_insert0);
+   goto $bb11_l1_insert_0;
+ $bb4_l2_insert_0:
+   assume !(($i8_l2_insert0 == 1));
+   call abort();
+   assume false;
+ $bb6_l2_insert_0:
+   $p1_l2_insert0 := $r_calloc_model1;
+   goto $bb5_l2_insert_0;
+ $bb7_l2_insert_0:
+   $i0_calloc_model1 := 1;
+   $i1_calloc_model1 := 16;
+   goto $bb0_calloc_model_1;
+ $bb5_l2_insert_0:
+   $p2_l2_insert0 := $bitcast.ref.ref($p1_l2_insert0);
+   $i3_l2_insert0 := $ne.ref($p2_l2_insert0, $0.ref_l2_insert0);
+   assume true;
+   goto $bb1_l2_insert_0, $bb2_l2_insert_0;
+ $bb0_calloc_model_1:
+   call {:cexpr "calloc_model:arg:nmemb"} boogie_si_record_i64($i0_calloc_model1);
+   call {:cexpr "calloc_model:arg:size"} boogie_si_record_i64($i1_calloc_model1);
+   $i2_calloc_model1 := $mul.i64($i0_calloc_model1, $i1_calloc_model1);
+   call $p3_calloc_model1 := malloc($i2_calloc_model1);
+   $i4_calloc_model1 := $mul.i64($i0_calloc_model1, $i1_calloc_model1);
+   call $M.1_calloc_model1 := $memset.i8($M.1, $p3_calloc_model1, 0, $i4_calloc_model1, false);
+   $r_calloc_model1 := $p3_calloc_model1;
+   goto $bb6_l2_insert_0;
+ $bb0_l2_destroy_0:
+   $p1_l2_destroy0 := $p0_l2_destroy0;
+   goto $bb1_l2_destroy_0;
+ $bb1_l2_destroy_0:
+   $p2_l2_destroy0 := $add.ref($add.ref($p1_l2_destroy0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $p3_l2_destroy0 := $load.ref($M.1, $p2_l2_destroy0);
+   $p4_l2_destroy0 := $add.ref($add.ref($p1_l2_destroy0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p5_l2_destroy0 := $load.ref($M.1, $p4_l2_destroy0);
+   call free_($p5_l2_destroy0);
+   $p6_l2_destroy0 := $bitcast.ref.ref($p1_l2_destroy0);
+   call free_($p6_l2_destroy0);
+   goto $bb2_l2_destroy_0;
+ $bb2_l2_destroy_0:
+   $i7_l2_destroy0 := $ne.ref($p3_l2_destroy0, $0.ref_l2_destroy0);
+   assume true;
+   goto $bb3_l2_destroy_0, $bb4_l2_destroy_0;
+ $bb3_l2_destroy_0:
+   assume ($i7_l2_destroy0 == 1);
+   $p1_l2_destroy0 := $p3_l2_destroy0;
+   goto $bb1_l2_destroy_0;
+ $bb4_l2_destroy_0:
+   assume !(($i7_l2_destroy0 == 1));
+   goto $bb13_main_0;
+ }
+ =====================CENTER NEW===================
+ from bb: $bb0_main_0 to bb: $bb1_main_0 
+ from bb: $bb1_main_0 to bb: $bb11_main_0 
+ from bb: $bb2_main_0 to bb: $bb3_main_0 $bb4_main_0 
+ from bb: $bb3_main_0 to bb: $bb1_main_0 
+ from bb: $bb4_main_0 to bb: $bb5_main_0 
+ from bb: $bb5_main_0 to bb: $bb14_main_0 
+ from bb: $bb6_main_0 to bb: $bb7_main_0 $bb8_main_0 
+ from bb: $bb7_main_0 to bb: $bb5_main_0 
+ from bb: $bb10_main_0 to bb: $bb9_main_0 
+ from bb: $bb11_main_0 to bb: $bb0_l1_insert_0 
+ from bb: $bb9_main_0 to bb: $bb2_main_0 
+ from bb: $bb13_main_0 to bb: $bb12_main_0 
+ from bb: $bb14_main_0 to bb: $bb0_l2_destroy_0 
+ from bb: $bb12_main_0 to bb: $bb6_main_0 
+ from bb: $bb0_l1_insert_0 to bb: $bb9_l1_insert_0 
+ from bb: $bb1_l1_insert_0 to bb: $bb3_l1_insert_0 
+ from bb: $bb3_l1_insert_0 to bb: $bb12_l1_insert_0 
+ from bb: $bb4_l1_insert_0 to bb: $bb5_l1_insert_0 $bb6_l1_insert_0 
+ from bb: $bb5_l1_insert_0 to bb: $bb3_l1_insert_0 
+ from bb: $bb6_l1_insert_0 to bb: $bb10_main_0 
+ from bb: $bb8_l1_insert_0 to bb: $bb7_l1_insert_0 
+ from bb: $bb9_l1_insert_0 to bb: $bb0_calloc_model_0 
+ from bb: $bb7_l1_insert_0 to bb: $bb1_l1_insert_0 $bb2_l1_insert_0 
+ from bb: $bb11_l1_insert_0 to bb: $bb10_l1_insert_0 
+ from bb: $bb12_l1_insert_0 to bb: $bb0_l2_insert_0 
+ from bb: $bb10_l1_insert_0 to bb: $bb4_l1_insert_0 
+ from bb: $bb0_calloc_model_0 to bb: $bb8_l1_insert_0 
+ from bb: $bb0_l2_insert_0 to bb: $bb7_l2_insert_0 
+ from bb: $bb1_l2_insert_0 to bb: $bb3_l2_insert_0 $bb4_l2_insert_0 
+ from bb: $bb3_l2_insert_0 to bb: $bb11_l1_insert_0 
+ from bb: $bb6_l2_insert_0 to bb: $bb5_l2_insert_0 
+ from bb: $bb7_l2_insert_0 to bb: $bb0_calloc_model_1 
+ from bb: $bb5_l2_insert_0 to bb: $bb1_l2_insert_0 $bb2_l2_insert_0 
+ from bb: $bb0_calloc_model_1 to bb: $bb6_l2_insert_0 
+ from bb: $bb0_l2_destroy_0 to bb: $bb1_l2_destroy_0 
+ from bb: $bb1_l2_destroy_0 to bb: $bb2_l2_destroy_0 
+ from bb: $bb2_l2_destroy_0 to bb: $bb3_l2_destroy_0 $bb4_l2_destroy_0 
+ from bb: $bb3_l2_destroy_0 to bb: $bb1_l2_destroy_0 
+ from bb: $bb4_l2_destroy_0 to bb: $bb13_main_0 
+ In $bb8_main_0
+ [0mpop: $bb8_main_0
+ [0mpop finished
+ [0mIn $bb5_main_0
+ [0mpop: $bb7_main_0
+ [0mpop: $bb6_main_0
+ [0mpop: $bb12_main_0
+ [0mpop: $bb13_main_0
+ [0mpop: $bb4_l2_destroy_0
+ [0mpop: $bb3_l2_destroy_0
+ [0mpop: $bb2_l2_destroy_0
+ [0mpop: $bb1_l2_destroy_0
+ [0mpop: $bb0_l2_destroy_0
+ [0mpop: $bb14_main_0
+ [0mpop: $bb5_main_0
+ [0mpop finished
+ [0mIn $bb4_main_0
+ [0mpop: $bb4_main_0
+ [0mpop finished
+ [0mIn $bb4_l2_insert_0
+ [0mpop: $bb4_l2_insert_0
+ [0mpop finished
+ [0mIn $bb2_l2_insert_0
+ [0mpop: $bb2_l2_insert_0
+ [0mpop finished
+ [0mIn $bb2_l1_insert_0
+ [0mpop: $bb2_l1_insert_0
+ [0mpop finished
+ [0mIn $bb1_main_0
+ [0mpop: $bb3_main_0
+ [0mpop: $bb2_main_0
+ [0mpop: $bb9_main_0
+ [0mpop: $bb10_main_0
+ [0mpop: $bb6_l1_insert_0
+ [0mpop: $bb5_l1_insert_0
+ [0mpop: $bb4_l1_insert_0
+ [0mpop: $bb10_l1_insert_0
+ [0mpop: $bb11_l1_insert_0
+ [0mpop: $bb3_l2_insert_0
+ [0mpop: $bb1_l2_insert_0
+ [0mpop: $bb5_l2_insert_0
+ [0mpop: $bb6_l2_insert_0
+ [0mpop: $bb0_calloc_model_1
+ [0mpop: $bb7_l2_insert_0
+ [0mpop: $bb0_l2_insert_0
+ [0mpop: $bb12_l1_insert_0
+ [0mpop: $bb3_l1_insert_0
+ [0mpop: $bb1_l1_insert_0
+ [0mpop: $bb7_l1_insert_0
+ [0mpop: $bb8_l1_insert_0
+ [0mpop: $bb0_calloc_model_0
+ [0mpop: $bb9_l1_insert_0
+ [0mpop: $bb0_l1_insert_0
+ [0mpop: $bb11_main_0
+ [0mpop: $bb1_main_0
+ [0mpop finished
+ [0mIn $bb0_main_0
+ [0mpop: $bb0_main_0
+ [0mpop finished
+ [0mIn pro:$bb0_main_0 1 $bb1_main_0 
+ In pro:$bb1_main_0 1 $bb11_main_0 
+ In pro:$bb11_main_0 1 $bb0_l1_insert_0 
+ In pro:$bb0_l1_insert_0 1 $bb9_l1_insert_0 
+ In pro:$bb9_l1_insert_0 1 $bb0_calloc_model_0 
+ In pro:$bb0_calloc_model_0 1 $bb8_l1_insert_0 
+ In pro:$bb8_l1_insert_0 1 $bb7_l1_insert_0 
+ In pro:$bb7_l1_insert_0 1 $bb1_l1_insert_0 $bb2_l1_insert_0 
+ In pro:$bb1_l1_insert_0 1 $bb3_l1_insert_0 
+ In pro:$bb3_l1_insert_0 1 $bb12_l1_insert_0 
+ In pro:$bb12_l1_insert_0 1 $bb0_l2_insert_0 
+ In pro:$bb0_l2_insert_0 1 $bb7_l2_insert_0 
+ In pro:$bb7_l2_insert_0 1 $bb0_calloc_model_1 
+ In pro:$bb0_calloc_model_1 1 $bb6_l2_insert_0 
+ In pro:$bb6_l2_insert_0 1 $bb5_l2_insert_0 
+ In pro:$bb5_l2_insert_0 1 $bb1_l2_insert_0 $bb2_l2_insert_0 
+ In pro:$bb1_l2_insert_0 1 $bb3_l2_insert_0 $bb4_l2_insert_0 
+ In pro:$bb3_l2_insert_0 1 $bb11_l1_insert_0 
+ In pro:$bb11_l1_insert_0 1 $bb10_l1_insert_0 
+ In pro:$bb10_l1_insert_0 1 $bb4_l1_insert_0 
+ In pro:$bb4_l1_insert_0 1 $bb5_l1_insert_0 $bb6_l1_insert_0 
+ In pro:$bb5_l1_insert_0 1 $bb3_l1_insert_0 
+ In pro:$bb3_l1_insert_0 2 $bb12_l1_insert_0 
+ In pro:$bb12_l1_insert_0 2 $bb0_l2_insert_0 
+ In pro:$bb0_l2_insert_0 2 $bb7_l2_insert_0 
+ In pro:$bb7_l2_insert_0 2 $bb0_calloc_model_1 
+ In pro:$bb0_calloc_model_1 2 $bb6_l2_insert_0 
+ In pro:$bb6_l2_insert_0 2 $bb5_l2_insert_0 
+ In pro:$bb5_l2_insert_0 2 $bb1_l2_insert_0 $bb2_l2_insert_0 
+ In pro:$bb1_l2_insert_0 2 $bb3_l2_insert_0 $bb4_l2_insert_0 
+ In pro:$bb3_l2_insert_0 2 $bb11_l1_insert_0 
+ In pro:$bb11_l1_insert_0 2 $bb10_l1_insert_0 
+ In pro:$bb10_l1_insert_0 2 $bb4_l1_insert_0 
+ In pro:$bb4_l1_insert_0 2 $bb5_l1_insert_0 $bb6_l1_insert_0 
+ In pro:$bb5_l1_insert_0 2 $bb3_l1_insert_0 
+ In pro:$bb3_l1_insert_0 3 $bb12_l1_insert_0 
+ In pro:$bb12_l1_insert_0 3 $bb0_l2_insert_0 
+ In pro:$bb0_l2_insert_0 3 $bb7_l2_insert_0 
+ In pro:$bb7_l2_insert_0 3 $bb0_calloc_model_1 
+ In pro:$bb0_calloc_model_1 3 $bb6_l2_insert_0 
+ In pro:$bb6_l2_insert_0 3 $bb5_l2_insert_0 
+ In pro:$bb5_l2_insert_0 3 $bb1_l2_insert_0 $bb2_l2_insert_0 
+ In pro:$bb1_l2_insert_0 3 $bb3_l2_insert_0 $bb4_l2_insert_0 
+ In pro:$bb3_l2_insert_0 3 $bb11_l1_insert_0 
+ In pro:$bb11_l1_insert_0 3 $bb10_l1_insert_0 
+ In pro:$bb10_l1_insert_0 3 $bb4_l1_insert_0 
+ In pro:$bb4_l1_insert_0 3 $bb5_l1_insert_0 $bb6_l1_insert_0 
+ In pro:$bb5_l1_insert_0 3 $bb3_l1_insert_0 
+ In pro:$bb6_l1_insert_0 1 $bb10_main_0 
+ In pro:$bb10_main_0 1 $bb9_main_0 
+ In pro:$bb9_main_0 1 $bb2_main_0 
+ In pro:$bb2_main_0 1 $bb3_main_0 $bb4_main_0 
+ In pro:$bb6_l1_insert_0 1 $bb10_main_0 
+ In pro:$bb10_main_0 1 $bb9_main_0 
+ In pro:$bb9_main_0 1 $bb2_main_0 
+ In pro:$bb2_main_0 1 $bb3_main_0 $bb4_main_0 
+ In pro:$bb3_main_0 1 $bb1_main_0 
+ In pro:$bb1_main_0 2 $bb11_main_0 
+ In pro:$bb11_main_0 2 $bb0_l1_insert_0 
+ In pro:$bb0_l1_insert_0 2 $bb9_l1_insert_0 
+ In pro:$bb9_l1_insert_0 2 $bb0_calloc_model_0 
+ In pro:$bb0_calloc_model_0 2 $bb8_l1_insert_0 
+ In pro:$bb8_l1_insert_0 2 $bb7_l1_insert_0 
+ In pro:$bb7_l1_insert_0 2 $bb1_l1_insert_0 $bb2_l1_insert_0 
+ In pro:$bb1_l1_insert_0 2 $bb3_l1_insert_0 
+ In pro:$bb3_l1_insert_0 3 $bb12_l1_insert_0 
+ In pro:$bb12_l1_insert_0 3 $bb0_l2_insert_0 
+ In pro:$bb0_l2_insert_0 3 $bb7_l2_insert_0 
+ In pro:$bb7_l2_insert_0 3 $bb0_calloc_model_1 
+ In pro:$bb4_main_0 1 $bb5_main_0 
+ In pro:$bb5_main_0 1 $bb14_main_0 
+ In pro:$bb14_main_0 1 $bb0_l2_destroy_0 
+ In pro:$bb0_l2_destroy_0 1 $bb1_l2_destroy_0 
+ In pro:$bb1_l2_destroy_0 1 $bb2_l2_destroy_0 
+ In pro:$bb2_l2_destroy_0 1 $bb3_l2_destroy_0 $bb4_l2_destroy_0 
+ In pro:$bb3_l2_destroy_0 1 $bb1_l2_destroy_0 
+ In pro:$bb1_l2_destroy_0 2 $bb2_l2_destroy_0 
+ In pro:$bb2_l2_destroy_0 2 $bb3_l2_destroy_0 $bb4_l2_destroy_0 
+ In pro:$bb3_l2_destroy_0 2 $bb1_l2_destroy_0 
+ In pro:$bb1_l2_destroy_0 3 $bb2_l2_destroy_0 
+ In pro:$bb2_l2_destroy_0 3 $bb3_l2_destroy_0 $bb4_l2_destroy_0 
+ In pro:$bb3_l2_destroy_0 3 $bb1_l2_destroy_0 
+ In pro:$bb4_l2_destroy_0 1 $bb13_main_0 
+ In pro:$bb4_l2_destroy_0 1 $bb13_main_0 
+ In pro:$bb13_main_0 1 $bb12_main_0 
+ In pro:$bb12_main_0 1 $bb6_main_0 
+ In pro:$bb6_main_0 1 $bb7_main_0 $bb8_main_0 
+ In pro:$bb4_l2_destroy_0 1 $bb13_main_0 
+ In pro:$bb13_main_0 1 $bb12_main_0 
+ In pro:$bb12_main_0 1 $bb6_main_0 
+ In pro:$bb6_main_0 1 $bb7_main_0 $bb8_main_0 
+ In pro:$bb7_main_0 1 $bb5_main_0 
+ In pro:$bb5_main_0 2 $bb14_main_0 
+ In pro:$bb14_main_0 2 $bb0_l2_destroy_0 
+ In pro:$bb6_l1_insert_0 1 $bb10_main_0 
+ In pro:$bb10_main_0 1 $bb9_main_0 
+ In pro:$bb9_main_0 1 $bb2_main_0 
+ In pro:$bb2_main_0 1 $bb3_main_0 $bb4_main_0 
+ In pro:$bb3_main_0 1 $bb1_main_0 
+ In pro:$bb1_main_0 2 $bb11_main_0 
+ In pro:$bb11_main_0 2 $bb0_l1_insert_0 
+ In pro:$bb0_l1_insert_0 2 $bb9_l1_insert_0 
+ In pro:$bb9_l1_insert_0 2 $bb0_calloc_model_0 
+ In pro:$bb0_calloc_model_0 2 $bb8_l1_insert_0 
+ In pro:$bb8_l1_insert_0 2 $bb7_l1_insert_0 
+ In pro:$bb7_l1_insert_0 2 $bb1_l1_insert_0 $bb2_l1_insert_0 
+ In pro:$bb1_l1_insert_0 2 $bb3_l1_insert_0 
+ In pro:$bb3_l1_insert_0 2 $bb12_l1_insert_0 
+ In pro:$bb12_l1_insert_0 2 $bb0_l2_insert_0 
+ In pro:$bb0_l2_insert_0 2 $bb7_l2_insert_0 
+ In pro:$bb7_l2_insert_0 2 $bb0_calloc_model_1 
+ In pro:$bb0_calloc_model_1 2 $bb6_l2_insert_0 
+ In pro:$bb6_l2_insert_0 2 $bb5_l2_insert_0 
+ In pro:$bb5_l2_insert_0 2 $bb1_l2_insert_0 $bb2_l2_insert_0 
+ In pro:$bb1_l2_insert_0 2 $bb3_l2_insert_0 $bb4_l2_insert_0 
+ In pro:$bb3_l2_insert_0 2 $bb11_l1_insert_0 
+ In pro:$bb11_l1_insert_0 2 $bb10_l1_insert_0 
+ In pro:$bb10_l1_insert_0 2 $bb4_l1_insert_0 
+ In pro:$bb4_l1_insert_0 2 $bb5_l1_insert_0 $bb6_l1_insert_0 
+ In pro:$bb5_l1_insert_0 1 $bb3_l1_insert_0 
+ In pro:$bb3_l1_insert_0 3 $bb12_l1_insert_0 
+ In pro:$bb12_l1_insert_0 3 $bb0_l2_insert_0 
+ In pro:$bb0_l2_insert_0 3 $bb7_l2_insert_0 
+ In pro:$bb7_l2_insert_0 3 $bb0_calloc_model_1 
+ In pro:$bb6_l1_insert_0 2 $bb10_main_0 
+ In pro:$bb10_main_0 2 $bb9_main_0 
+ In pro:$bb9_main_0 2 $bb2_main_0 
+ In pro:$bb2_main_0 2 $bb3_main_0 $bb4_main_0 
+ In pro:$bb3_main_0 2 $bb1_main_0 
+ In pro:$bb4_main_0 1 $bb5_main_0 
+ In pro:$bb4_main_0 1 $bb5_main_0 
+ In pro:$bb5_main_0 1 $bb14_main_0 
+ In pro:$bb14_main_0 1 $bb0_l2_destroy_0 
+ In pro:$bb0_l2_destroy_0 1 $bb1_l2_destroy_0 
+ In pro:$bb1_l2_destroy_0 1 $bb2_l2_destroy_0 
+ In pro:$bb2_l2_destroy_0 1 $bb3_l2_destroy_0 $bb4_l2_destroy_0 
+ In pro:$bb3_l2_destroy_0 1 $bb1_l2_destroy_0 
+ In pro:$bb1_l2_destroy_0 2 $bb2_l2_destroy_0 
+ In pro:$bb2_l2_destroy_0 2 $bb3_l2_destroy_0 $bb4_l2_destroy_0 
+ In pro:$bb3_l2_destroy_0 2 $bb1_l2_destroy_0 
+ In pro:$bb1_l2_destroy_0 3 $bb2_l2_destroy_0 
+ In pro:$bb2_l2_destroy_0 3 $bb3_l2_destroy_0 $bb4_l2_destroy_0 
+ In pro:$bb3_l2_destroy_0 3 $bb1_l2_destroy_0 
+ In pro:$bb4_l2_destroy_0 1 $bb13_main_0 
+ In pro:$bb13_main_0 1 $bb12_main_0 
+ In pro:$bb12_main_0 1 $bb6_main_0 
+ In pro:$bb6_main_0 1 $bb7_main_0 $bb8_main_0 
+ In pro:$bb7_main_0 1 $bb5_main_0 
+ In pro:$bb5_main_0 2 $bb14_main_0 
+ In pro:$bb14_main_0 2 $bb0_l2_destroy_0 
+ In pro:$bb0_l2_destroy_0 2 $bb1_l2_destroy_0 
+ In pro:$bb4_l2_destroy_0 1 $bb13_main_0 
+ In pro:$bb13_main_0 1 $bb12_main_0 
+ In pro:$bb12_main_0 1 $bb6_main_0 
+ In pro:$bb6_main_0 1 $bb7_main_0 $bb8_main_0 
+ In pro:$bb7_main_0 1 $bb5_main_0 
+ In pro:$bb5_main_0 2 $bb14_main_0 
+ In pro:$bb14_main_0 2 $bb0_l2_destroy_0 
+ In pro:$bb0_l2_destroy_0 2 $bb1_l2_destroy_0 
+ In pro:$bb1_l2_destroy_0 3 $bb2_l2_destroy_0 
+ In pro:$bb2_l2_destroy_0 3 $bb3_l2_destroy_0 $bb4_l2_destroy_0 
+ In pro:$bb3_l2_destroy_0 2 $bb1_l2_destroy_0 
+ In pro:$bb4_l2_destroy_0 2 $bb13_main_0 
+ In pro:$bb13_main_0 2 $bb12_main_0 
+ In pro:$bb12_main_0 2 $bb6_main_0 
+ In pro:$bb6_main_0 2 $bb7_main_0 $bb8_main_0 
+ In pro:$bb7_main_0 2 $bb5_main_0 
+ In pro:$bb5_main_0 3 $bb14_main_0 
+ In pro:$bb14_main_0 3 $bb0_l2_destroy_0 
+ In pro:$bb4_l2_destroy_0 1 $bb13_main_0 
+ In pro:$bb13_main_0 1 $bb12_main_0 
+ In pro:$bb12_main_0 1 $bb6_main_0 
+ In pro:$bb6_main_0 1 $bb7_main_0 $bb8_main_0 
+ In pro:$bb7_main_0 1 $bb5_main_0 
+ In pro:$bb5_main_0 2 $bb14_main_0 
+ In pro:$bb14_main_0 2 $bb0_l2_destroy_0 
+ In pro:$bb0_l2_destroy_0 2 $bb1_l2_destroy_0 
+ In pro:$bb1_l2_destroy_0 2 $bb2_l2_destroy_0 
+ In pro:$bb2_l2_destroy_0 2 $bb3_l2_destroy_0 $bb4_l2_destroy_0 
+ In pro:$bb3_l2_destroy_0 1 $bb1_l2_destroy_0 
+ In pro:$bb1_l2_destroy_0 3 $bb2_l2_destroy_0 
+ In pro:$bb2_l2_destroy_0 3 $bb3_l2_destroy_0 $bb4_l2_destroy_0 
+ In pro:$bb3_l2_destroy_0 2 $bb1_l2_destroy_0 
+ In pro:$bb4_l2_destroy_0 2 $bb13_main_0 
+ In pro:$bb13_main_0 2 $bb12_main_0 
+ In pro:$bb12_main_0 2 $bb6_main_0 
+ In pro:$bb6_main_0 2 $bb7_main_0 $bb8_main_0 
+ In pro:$bb7_main_0 2 $bb5_main_0 
+ In pro:$bb5_main_0 3 $bb14_main_0 
+ In pro:$bb14_main_0 3 $bb0_l2_destroy_0 
+ In pro:$bb4_l2_destroy_0 2 $bb13_main_0 
+ In pro:$bb13_main_0 2 $bb12_main_0 
+ In pro:$bb12_main_0 2 $bb6_main_0 
+ In pro:$bb6_main_0 2 $bb7_main_0 $bb8_main_0 
+ In pro:$bb7_main_0 2 $bb5_main_0 
+ In pro:$bb5_main_0 3 $bb14_main_0 
+ In pro:$bb14_main_0 3 $bb0_l2_destroy_0 
+ In pro:$bb0_l2_destroy_0 3 $bb1_l2_destroy_0 
+ In pro:$bb1_l2_destroy_0 3 $bb2_l2_destroy_0 
+ In pro:$bb2_l2_destroy_0 3 $bb3_l2_destroy_0 $bb4_l2_destroy_0 
+ =========== DO SYMBOLIC EXECUTION FOR ONE PATH
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: UNsolved proc call: boogie_si_record_ref
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb1_main_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb11_main_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$p0_l1_insert0 := main.list_main0;[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mINFO: ASSIGN RHS is not a funcExprmain.list_main0 $p0_l1_insert0
+ [0m[34mINFO: RHS is Var
+ [0m[34mWARNING: This is not correct use, please check, getVar after useVar
+  #0 0x00007fce6c11c4ff llvm::sys::PrintStackTrace(llvm::raw_ostream&) (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x9814ff)
+  #1 0x00007fce6c11a782 llvm::sys::RunSignalHandlers() (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x97f782)
+  #2 0x00007fce6c11cac5 (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x981ac5)
+  #3 0x00007fce69f36210 (/lib/x86_64-linux-gnu/libc.so.6+0x46210)
+  #4 0x00007fce6a393c08 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (/lib/x86_64-linux-gnu/libstdc++.so.6+0x145c08)
+  #5 0x00000000004d5b9d smack::VarExpr::name[abi:cxx11]() const /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../include/smack/BoogieAst.h:492:43
+  #6 0x000000000050bc80 smack::BlockExecutor::executeAssign(std::shared_ptr<smack::SymbolicHeapExpr>, smack::Stmt const*) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:262:45
+  #7 0x0000000000516f10 smack::BlockExecutor::executeStmt(std::shared_ptr<smack::SymbolicHeapExpr>, smack::Stmt const*) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:1705:13
+  #8 0x00000000005172bc smack::BlockExecutor::execute[abi:cxx11](std::shared_ptr<smack::ExecutionState>) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:1736:31
+  #9 0x00000000004aa77e smack::MemSafeVerifier::runOnModule(llvm::Module&) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/MemSafeVerifier.cpp:76:69
+ #10 0x00007fce6c2224a0 llvm::legacy::PassManagerImpl::run(llvm::Module&) (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0xa874a0)
+ #11 0x000000000042bf91 main /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../tools/llvm2bpl/llvm2bpl.cpp:278:17
+ #12 0x00007fce69f170b3 __libc_start_main /build/glibc-YbNSs7/glibc-2.31/csu/../csu/libc-start.c:342:3
+ #13 0x000000000042a60e _start (/usr/local/bin/llvm2bpl+0x42a60e)
+ Stack dump:
+ 0.	Program arguments: llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-iv6wctmx.bc -bpl ../svcomp/memsafety//test-0219.bpl -warn-type unsound -sea-dsa=ci -source-loc-syms -entry-points main -ll ../svcomp/memsafety//test-0219_IR.ll -mem-mod-impls -llvm-assumes=none -sh-mem-leak 
+ 1.	Running pass 'MemSafeVerifier' on module '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-iv6wctmx.bc'.
+ 

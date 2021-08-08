@@ -734,6 +734,7 @@ namespace smack{
 
             int byteSize = INT_BYTEWIDTH;
             const VarExpr* nondetIntVar = this->varFactory->getFreshVar(byteSize);
+            this->cfg->addVarType(nondetIntVar->name(), "i" + std::to_string(byteSize * 8));
             this->varEquiv->addNewName(nondetIntVar->name());
             this->varEquiv->linkName(retVarName, nondetIntVar->name());
 
@@ -746,7 +747,33 @@ namespace smack{
             newSH->print(std::cout);
             std::cout << std::endl;
             return newSH;
-        } 
+        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_BOOL)){
+            // here we assume that the lhs of __VERIFIER_nondet_bool is always int variable
+            // TODOsh: check what bool variable is translated into
+
+            std::string retOrigVarName = stmt->getReturns().front();
+            const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
+            std::string retVarName = retVar->name();
+
+            std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(retOrigVarName);
+            assert(sizeInfo.second == 1);
+
+            int byteSize = BOOL_BYTEWIDTH;
+            const VarExpr* nondetBoolVar = this->varFactory->getFreshVar(byteSize);
+            this->cfg->addVarType(nondetBoolVar->name(), "i1");
+            this->varEquiv->addNewName(nondetBoolVar->name());
+            this->varEquiv->linkName(retVarName, nondetBoolVar->name());
+
+            const Expr* newPure = Expr::and_(
+                sh->getPure(),
+                Expr::eq(retVar, nondetBoolVar)
+            );
+
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            newSH->print(std::cout);
+            std::cout << std::endl;
+            return newSH;
+        }
         else {
             CFDEBUG(std::cout << "UNSOLVED VERIFIER FUNC: " << stmt->getProc() << std::endl;);
             return sh;
@@ -763,6 +790,7 @@ namespace smack{
             std::string retVarName = retVar->name();
             std::pair<std::string, int> typeInfo = this->cfg->getVarDetailType(retOrigVarName);
             const VarExpr* freshVar = this->varFactory->getFreshVar(typeInfo.second);
+            this->cfg->addVarType(freshVar->name(), "i" + std::to_string(typeInfo.second));
 
             this->varEquiv->addNewName(freshVar->name());
             this->varEquiv->linkName(retVarName, freshVar->name());

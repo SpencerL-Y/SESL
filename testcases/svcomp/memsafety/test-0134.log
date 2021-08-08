@@ -3590,4 +3590,3596 @@ Running llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases
  Stack dump:
  0.	Program arguments: llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-ndk9nkjs.bc -bpl ../svcomp/memsafety//test-0134.bpl -warn-type unsound -sea-dsa=ci -source-loc-syms -entry-points main -ll ../svcomp/memsafety//test-0134_IR.ll -mem-mod-impls -llvm-assumes=none -sh-mem-leak 
  1.	Running pass 'MemSafeVerifier' on module '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-ndk9nkjs.bc'.
+ SMACK program verifier version 2.6.3
+Running clang -c -emit-llvm -O0 -g -gcolumn-info -Xclang -disable-O0-optnone -I/usr/local/share/smack/include -DMEMORY_MODEL_NO_REUSE_IMPLS -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/test-0134-wdqwp8do.bc ../svcomp/memsafety//test-0134.c
+Running llvm-link -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/a-s7h0it91.bc /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/test-0134-wdqwp8do.bc
+Running llvm-link -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-4i8ndor0.bc /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/a-s7h0it91.bc
+Running llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-4i8ndor0.bc -bpl ../svcomp/memsafety//test-0134.bpl -warn-type unsound -sea-dsa=ci -source-loc-syms -entry-points main -ll ../svcomp/memsafety//test-0134_IR.ll -mem-mod-impls -llvm-assumes=none -sh-mem-leak
+[regions] for:   %6 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 0, !dbg !35, !verifier.code !29
+   in function: gl_sort
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 1, !dbg !35, !verifier.code !29
+   in function: gl_sort
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %5 = getelementptr inbounds %struct.list_head, %struct.list_head* %4, i32 0, i32 0, !dbg !35, !verifier.code !30
+   in function: gl_destroy
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %2 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !32, !verifier.code !31
+   in function: list_empty
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.list_head, %struct.list_head* %5, i32 0, i32 0, !dbg !39, !verifier.code !31
+   in function: gl_seek_max
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %16 = getelementptr inbounds %struct.list_head, %struct.list_head* %.018, i32 0, i32 0, !dbg !55, !verifier.code !31
+   in function: gl_seek_max
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 1, !dbg !33, !verifier.code !31
+   in function: list_move
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %5 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !34, !verifier.code !31
+   in function: list_move
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 0, !dbg !33, !verifier.code !31
+   in function: list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %2 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 1, !dbg !32, !verifier.code !31
+   in function: list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %4 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !33, !verifier.code !31
+   in function: list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %6 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !35, !verifier.code !31
+   in function: list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 1, !dbg !37, !verifier.code !31
+   in function: list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 1, !dbg !33, !verifier.code !31
+   in function: __list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %4 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !35, !verifier.code !31
+   in function: __list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %4 = getelementptr inbounds %struct.list_head, %struct.list_head* %2, i32 0, i32 1, !dbg !34, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %5 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !36, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %6 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 1, !dbg !38, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 0, !dbg !40, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %5 = getelementptr inbounds %struct.node, %struct.node* %4, i32 0, i32 0, !dbg !34, !verifier.code !31
+   in function: val_from_node
+ [regions]   using region: <Node:i32>[0,4]{LA}
+    found overlap at index 0: <Node:%struct.list_head*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.node, %struct.node* %3, i32 0, i32 0, !dbg !38, !verifier.code !31
+   in function: gl_insert
+ [regions]   using region: <Node:i32>[0,4]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 1)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ We are now translating the program to boogie...
+ Analyzing globals...
+ -------INSERT: Global Variables gl_list
+ Analyzing functions...
+ Analyzing function: main
+ -------INSERT: Global Variables main
+ Analyzing function body: main
+ Generating body for main
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitCall
+ smackrep call
+ visitCall
+ smackrep call
+ visitReturn
+ 
+ insert initial SH to main
+ Finished analyzing function: main
+ 
+ Analyzing function: gl_read
+ -------INSERT: Global Variables gl_read
+ Analyzing function body: gl_read
+ Generating body for gl_read
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitCall
+ smackrep call
+ visitBranch
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitReturn
+ 
+ Finished analyzing function: gl_read
+ 
+ Analyzing function: gl_sort
+ -------INSERT: Global Variables gl_sort
+ Analyzing function body: gl_sort
+ Generating body for gl_sort
+ visitBasicBlock
+ visitAlloca
+ visitCall
+ smackrep call
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitIntrinsic
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %6 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 0, !dbg !35, !verifier.code !29
+   in function: gl_sort
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %6 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 0, !dbg !35, !verifier.code !29
+   in function: gl_sort
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %7 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 1, !dbg !35, !verifier.code !29
+   in function: gl_sort
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 1, !dbg !35, !verifier.code !29
+   in function: gl_sort
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitCall
+ smackrep call
+ visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitPHINode
+ visitCall
+ smackrep call
+ visitCall
+ smackrep call
+ visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitCall
+ smackrep call
+ visitBranch
+ visitBasicBlock
+ visitReturn
+ visitBasicBlock
+ visitBranch
+ 
+ Finished analyzing function: gl_sort
+ 
+ Analyzing function: gl_destroy
+ -------INSERT: Global Variables gl_destroy
+ Analyzing function body: gl_destroy
+ Generating body for gl_destroy
+ visitBasicBlock
+ visitLoad
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitPHINode
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %5 = getelementptr inbounds %struct.list_head, %struct.list_head* %4, i32 0, i32 0, !dbg !35, !verifier.code !30
+   in function: gl_destroy
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitCast
+ visitCast not vector
+ visitGetElementPtr
+ visitCast
+ visitCast not vector
+ visitCast
+ visitCast not vector
+ visitCall
+ smackrep call
+ visitLoad
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitReturn
+ visitBasicBlock
+ visitBranch
+ 
+ Finished analyzing function: gl_destroy
+ 
+ Analyzing function: llvm.dbg.declare
+ -------INSERT: Global Variables llvm.dbg.declare
+ Analyzing function: free_
+ -------INSERT: Global Variables free_
+ Analyzing function: list_empty
+ -------INSERT: Global Variables list_empty
+ Analyzing function body: list_empty
+ Generating body for list_empty
+ visitBasicBlock
+ visitDbgValue
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %2 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !32, !verifier.code !31
+   in function: list_empty
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitCmp
+ visitCast
+ visitCast not vector
+ visitReturn
+ 
+ Finished analyzing function: list_empty
+ 
+ Analyzing function: gl_seek_max
+ -------INSERT: Global Variables gl_seek_max
+ Analyzing function body: gl_seek_max
+ Generating body for gl_seek_max
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitLoad
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitDbgValue
+ visitCall
+ smackrep call
+ visitDbgValue
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %7 = getelementptr inbounds %struct.list_head, %struct.list_head* %5, i32 0, i32 0, !dbg !39, !verifier.code !31
+   in function: gl_seek_max
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitDbgValue
+ visitDbgValue
+ visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitPHINode
+ visitPHINode
+ visitPHINode
+ visitDbgValue
+ visitDbgValue
+ visitDbgValue
+ visitCall
+ smackrep call
+ visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitBranch
+ visitBasicBlock
+ visitDbgValue
+ visitDbgValue
+ visitBranch
+ visitBasicBlock
+ visitPHINode
+ visitPHINode
+ visitPHINode
+ visitDbgValue
+ visitDbgValue
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %16 = getelementptr inbounds %struct.list_head, %struct.list_head* %.018, i32 0, i32 0, !dbg !55, !verifier.code !31
+   in function: gl_seek_max
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitPHINode
+ visitBranch
+ visitBasicBlock
+ visitPHINode
+ visitDbgValue
+ visitBranch
+ visitBasicBlock
+ visitPHINode
+ visitReturn
+ visitBasicBlock
+ visitBranch
+ 
+ Finished analyzing function: gl_seek_max
+ 
+ Analyzing function: list_move
+ -------INSERT: Global Variables list_move
+ Analyzing function body: list_move
+ Generating body for list_move
+ visitBasicBlock
+ visitDbgValue
+ visitDbgValue
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %3 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 1, !dbg !33, !verifier.code !31
+   in function: list_move
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %5 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !34, !verifier.code !31
+   in function: list_move
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitCall
+ smackrep call
+ visitCall
+ smackrep call
+ visitReturn
+ 
+ Finished analyzing function: list_move
+ 
+ Analyzing function: list_add
+ -------INSERT: Global Variables list_add
+ Analyzing function body: list_add
+ Generating body for list_add
+ visitBasicBlock
+ visitDbgValue
+ visitDbgValue
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %3 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 0, !dbg !33, !verifier.code !31
+   in function: list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitCall
+ smackrep call
+ visitReturn
+ 
+ Finished analyzing function: list_add
+ 
+ Analyzing function: list_del
+ -------INSERT: Global Variables list_del
+ Analyzing function body: list_del
+ Generating body for list_del
+ visitBasicBlock
+ visitDbgValue
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %2 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 1, !dbg !32, !verifier.code !31
+   in function: list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %4 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !33, !verifier.code !31
+   in function: list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitCall
+ smackrep call
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %6 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !35, !verifier.code !31
+   in function: list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %6 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !35, !verifier.code !31
+   in function: list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %7 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 1, !dbg !37, !verifier.code !31
+   in function: list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 1, !dbg !37, !verifier.code !31
+   in function: list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitReturn
+ 
+ Finished analyzing function: list_del
+ 
+ Analyzing function: __list_del
+ -------INSERT: Global Variables __list_del
+ Analyzing function body: __list_del
+ Generating body for __list_del
+ visitBasicBlock
+ visitDbgValue
+ visitDbgValue
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %3 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 1, !dbg !33, !verifier.code !31
+   in function: __list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %3 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 1, !dbg !33, !verifier.code !31
+   in function: __list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %4 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !35, !verifier.code !31
+   in function: __list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %4 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !35, !verifier.code !31
+   in function: __list_del
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitReturn
+ 
+ Finished analyzing function: __list_del
+ 
+ Analyzing function: __list_add
+ -------INSERT: Global Variables __list_add
+ Analyzing function body: __list_add
+ Generating body for __list_add
+ visitBasicBlock
+ visitDbgValue
+ visitDbgValue
+ visitDbgValue
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %4 = getelementptr inbounds %struct.list_head, %struct.list_head* %2, i32 0, i32 1, !dbg !34, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %4 = getelementptr inbounds %struct.list_head, %struct.list_head* %2, i32 0, i32 1, !dbg !34, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %5 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !36, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %5 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 0, !dbg !36, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %6 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 1, !dbg !38, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %6 = getelementptr inbounds %struct.list_head, %struct.list_head* %0, i32 0, i32 1, !dbg !38, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %7 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 0, !dbg !40, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.list_head, %struct.list_head* %1, i32 0, i32 0, !dbg !40, !verifier.code !31
+   in function: __list_add
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitReturn
+ 
+ Finished analyzing function: __list_add
+ 
+ Analyzing function: val_from_node
+ -------INSERT: Global Variables val_from_node
+ Analyzing function body: val_from_node
+ Generating body for val_from_node
+ visitBasicBlock
+ visitDbgValue
+ visitCast
+ visitCast not vector
+ visitGetElementPtr
+ visitCast
+ visitCast not vector
+ visitDbgValue
+ visitGetElementPtr
+ visitLoad
+ [regions] for:   %5 = getelementptr inbounds %struct.node, %struct.node* %4, i32 0, i32 0, !dbg !34, !verifier.code !31
+   in function: val_from_node
+ [regions]   using region: <Node:i32>[0,4]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitReturn
+ 
+ Finished analyzing function: val_from_node
+ 
+ Analyzing function: __VERIFIER_nondet_int
+ -------INSERT: Global Variables __VERIFIER_nondet_int
+ Analyzing function: gl_insert
+ -------INSERT: Global Variables gl_insert
+ Analyzing function body: gl_insert
+ Generating body for gl_insert
+ visitBasicBlock
+ visitDbgValue
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitCall
+ smackrep call
+ visitUnreachable
+ visitBasicBlock
+ visitGetElementPtr
+ visitStore
+ [regions] for:   %7 = getelementptr inbounds %struct.node, %struct.node* %3, i32 0, i32 0, !dbg !38, !verifier.code !31
+   in function: gl_insert
+ [regions]   using region: <Node:i32>[0,4]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %7 = getelementptr inbounds %struct.node, %struct.node* %3, i32 0, i32 0, !dbg !38, !verifier.code !31
+   in function: gl_insert
+ [regions]   using region: <Node:i32>[0,4]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitGetElementPtr
+ visitCall
+ smackrep call
+ visitReturn
+ 
+ Finished analyzing function: gl_insert
+ 
+ Analyzing function: malloc
+ -------INSERT: Global Variables malloc
+ Analyzing function: abort
+ -------INSERT: Global Variables abort
+ Analyzing function: llvm.dbg.value
+ -------INSERT: Global Variables llvm.dbg.value
+ Analyzing function: __SMACK_static_init
+ -------INSERT: Global Variables __SMACK_static_init
+ Analyzing function body: __SMACK_static_init
+ Generating body for __SMACK_static_init
+ visitBasicBlock
+ visitStore
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 1)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ [regions] for: %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 1)
+   at instruction:   store %struct.list_head* @gl_list, %struct.list_head** getelementptr inbounds (%struct.list_head, %struct.list_head* @gl_list, i32 0, i32 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:%struct.list_head*>[0,8]{LA}
+    found overlap at index 0: <Node:*>[0,8]{LA}
+ [regions]   merged region: <Node:*>[0,8]{LA}
+ [regions]   returning index: 0
+ 
+ visitReturn
+ 
+ Finished analyzing function: __SMACK_static_init
+ 
+ Start Analyzing Prelude: main
+ 
+ Start Analyzing Prelude: gl_read
+ 
+ Start Analyzing Prelude: gl_sort
+ 
+ Start Analyzing Prelude: gl_destroy
+ 
+ Start Analyzing Prelude: llvm.dbg.declare
+ 
+ Start Analyzing Prelude: free_
+ 
+ Start Analyzing Prelude: list_empty
+ 
+ Start Analyzing Prelude: gl_seek_max
+ 
+ Start Analyzing Prelude: list_move
+ 
+ Start Analyzing Prelude: list_add
+ 
+ Start Analyzing Prelude: list_del
+ 
+ Start Analyzing Prelude: __list_del
+ 
+ Start Analyzing Prelude: __list_add
+ 
+ Start Analyzing Prelude: val_from_node
+ 
+ Start Analyzing Prelude: __VERIFIER_nondet_int
+ 
+ Start Analyzing Prelude: gl_insert
+ 
+ Start Analyzing Prelude: malloc
+ 
+ Start Analyzing Prelude: abort
+ 
+ Start Analyzing Prelude: llvm.dbg.value
+ 
+ Start Analyzing Prelude: __SMACK_static_init
+ 
+ Start Analyzing Prelude: boogie_si_record_i32
+ 
+ Start Analyzing Prelude: boogie_si_record_ref
+ 
+ Start Analyzing Prelude: $initialize
+ 
+ -----------------START MEMSAFE ANALYSIS---------------
+ Begin verifying
+ Adding procedure: main
+ Empty block name founded in proc main
+ Adding procedure: gl_read
+ Empty block name founded in proc gl_read
+ Empty block name founded in proc gl_read
+ Empty block name founded in proc gl_read
+ Empty block name founded in proc gl_read
+ Empty block name founded in proc gl_read
+ Adding procedure: gl_sort
+ Empty block name founded in proc gl_sort
+ Empty block name founded in proc gl_sort
+ Empty block name founded in proc gl_sort
+ Empty block name founded in proc gl_sort
+ Empty block name founded in proc gl_sort
+ Empty block name founded in proc gl_sort
+ Empty block name founded in proc gl_sort
+ Empty block name founded in proc gl_sort
+ Empty block name founded in proc gl_sort
+ Empty block name founded in proc gl_sort
+ Adding procedure: gl_destroy
+ Empty block name founded in proc gl_destroy
+ Empty block name founded in proc gl_destroy
+ Empty block name founded in proc gl_destroy
+ Empty block name founded in proc gl_destroy
+ Empty block name founded in proc gl_destroy
+ Empty block name founded in proc gl_destroy
+ Empty block name founded in proc gl_destroy
+ Adding procedure: llvm.dbg.declare
+ Empty blocks of proc llvm.dbg.declare
+ Adding procedure: free_
+ Empty block name founded in proc free_
+ Adding procedure: list_empty
+ Empty block name founded in proc list_empty
+ Adding procedure: gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Empty block name founded in proc gl_seek_max
+ Adding procedure: list_move
+ Empty block name founded in proc list_move
+ Adding procedure: list_add
+ Empty block name founded in proc list_add
+ Adding procedure: list_del
+ Empty block name founded in proc list_del
+ Adding procedure: __list_del
+ Empty block name founded in proc __list_del
+ Adding procedure: __list_add
+ Empty block name founded in proc __list_add
+ Adding procedure: val_from_node
+ Empty block name founded in proc val_from_node
+ Adding procedure: __VERIFIER_nondet_int
+ Empty blocks of proc __VERIFIER_nondet_int
+ Adding procedure: gl_insert
+ Empty block name founded in proc gl_insert
+ Empty block name founded in proc gl_insert
+ Empty block name founded in proc gl_insert
+ Adding procedure: malloc
+ Empty block name founded in proc malloc
+ Adding procedure: abort
+ Empty blocks of proc abort
+ Adding procedure: llvm.dbg.value
+ Empty blocks of proc llvm.dbg.value
+ Adding procedure: __SMACK_static_init
+ Empty block name founded in proc __SMACK_static_init
+ Adding procedure: boogie_si_record_i32
+ Empty blocks of proc boogie_si_record_i32
+ Adding procedure: boogie_si_record_ref
+ Empty blocks of proc boogie_si_record_ref
+ Adding procedure: $initialize
+ Empty block name founded in proc $initialize
+ inlining procedure: main
+ $bb0_main_0 4 3
+ New stmts! 
+ call {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);
+ 
+ New stmts! 
+ 
+ New stmts! 
+ 
+ New stmts! 
+ $r_main0 := 0;
+ return;
+ 
+ call gl_read();
+ call gl_sort();
+ call gl_destroy();
+ inlining procedure: gl_read
+ $bb1_gl_read_0 2 1
+ New stmts! 
+ call $i0_gl_read0 := __VERIFIER_nondet_int();
+ call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i0_gl_read0);
+ 
+ New stmts! 
+ goto $bb2_gl_read_0;
+ 
+ call gl_insert($i0_gl_read0);
+ inlining procedure: gl_insert
+ $bb0_gl_insert_0 1 0
+ New stmts! 
+ call {:cexpr "gl_insert:arg:value"} boogie_si_record_i32($i0_gl_insert0);
+ call $p1_gl_insert0 := malloc(24);
+ $p2_gl_insert0 := $bitcast.ref.ref($p1_gl_insert0);
+ $i3_gl_insert0 := $ne.ref($p2_gl_insert0, $0.ref_gl_insert0);
+ assume true;
+ goto $bb1_gl_insert_0, $bb2_gl_insert_0;
+ 
+ $bb1_gl_insert_0 2 1
+ New stmts! 
+ assume ($i3_gl_insert0 == 1);
+ $p4_gl_insert0 := $add.ref($add.ref($p2_gl_insert0, $mul.ref(0, 24)), $mul.ref(0, 1));
+ $M.0 := $store.i32($M.0, $p4_gl_insert0, $i0_gl_insert0);
+ $p5_gl_insert0 := $add.ref($add.ref($p2_gl_insert0, $mul.ref(0, 24)), $mul.ref(8, 1));
+ 
+ New stmts! 
+ return;
+ 
+ call list_add($p5_gl_insert0, gl_list_gl_insert0);
+ 
+ Inlining procedure: list_add 0
+ arguments: 
+ 	$p5_gl_insert0 gl_list_gl_insert0 
+ parameter: 
+ 	$p0_list_add0 $p1_list_add0 
+ processing return block $bb0_list_add_0
+ return param of 'call list_add($p5_gl_insert0, gl_list_gl_insert0);': 
+ 	return to: 
+ 	Add goto relation: $bb4_gl_insert_0 -> $bb3_gl_insert_0
+ Return block: $bb0_list_add_0:
+   $p2_list_add0 := $add.ref($add.ref($p1_list_add0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p3_list_add0 := $load.ref($M.0, $p2_list_add0);
+   call __list_add($p0_list_add0, $p1_list_add0, $p3_list_add0);
+   goto $bb4_gl_insert_0;
+ Return process block: $bb4_gl_insert_0:
+   goto $bb3_gl_insert_0;
+ 	add statement: $p0_list_add0 := $p5_gl_insert0;
+ 	add statement: $p1_list_add0 := gl_list_gl_insert0;
+ Current block: $bb1_gl_insert_0:
+   assume ($i3_gl_insert0 == 1);
+   $p4_gl_insert0 := $add.ref($add.ref($p2_gl_insert0, $mul.ref(0, 24)), $mul.ref(0, 1));
+   $M.0 := $store.i32($M.0, $p4_gl_insert0, $i0_gl_insert0);
+   $p5_gl_insert0 := $add.ref($add.ref($p2_gl_insert0, $mul.ref(0, 24)), $mul.ref(8, 1));
+   goto $bb5_gl_insert_0;
+ Pass block: $bb5_gl_insert_0:
+   $p0_list_add0 := $p5_gl_insert0;
+   $p1_list_add0 := gl_list_gl_insert0;
+   goto $bb0_list_add_0;
+ Splitting return block
+ $bb2_gl_insert_0 1 0
+ New stmts! 
+ assume !(($i3_gl_insert0 == 1));
+ call abort();
+ assume false;
+ 
+ 
+ Inlining procedure: gl_insert 0
+ arguments: 
+ 	$i0_gl_read0 
+ parameter: 
+ 	$i0_gl_insert0 
+ processing return block $bb3_gl_insert_0
+ return param of 'call gl_insert($i0_gl_read0);': 
+ 	return to: 
+ 	Add goto relation: $bb6_gl_read_0 -> $bb5_gl_read_0
+ Return block: $bb3_gl_insert_0:
+   goto $bb6_gl_read_0;
+ Return process block: $bb6_gl_read_0:
+   goto $bb5_gl_read_0;
+ 	add statement: $i0_gl_insert0 := $i0_gl_read0;
+ Current block: $bb1_gl_read_0:
+   call $i0_gl_read0 := __VERIFIER_nondet_int();
+   call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i0_gl_read0);
+   goto $bb7_gl_read_0;
+ Pass block: $bb7_gl_read_0:
+   $i0_gl_insert0 := $i0_gl_read0;
+   goto $bb0_gl_insert_0;
+ $bb2_gl_read_0 1 0
+ New stmts! 
+ call $i1_gl_read0 := __VERIFIER_nondet_int();
+ call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i1_gl_read0);
+ $i2_gl_read0 := $ne.i32($i1_gl_read0, 0);
+ assume true;
+ goto $bb3_gl_read_0, $bb4_gl_read_0;
+ 
+ 
+ Inlining procedure: gl_read 0
+ arguments: 
+ 	
+ parameter: 
+ 	
+ processing return block $bb4_gl_read_0
+ return param of 'call gl_read();': 
+ 	return to: 
+ 	Add goto relation: $bb4_main_0 -> $bb1_main_0
+ Return block: $bb4_gl_read_0:
+   assume !(($i2_gl_read0 == 1));
+   goto $bb4_main_0;
+ Return process block: $bb4_main_0:
+   goto $bb1_main_0;
+ Current block: $bb0_main_0:
+   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);
+   goto $bb5_main_0;
+ Pass block: $bb5_main_0:
+   goto $bb0_gl_read_0;
+ inlining procedure: gl_sort
+ $bb0_gl_sort_0 2 1
+ New stmts! 
+ call $p0_gl_sort0 := $alloc($mul.ref(16, $zext.i32.i64(1)));
+ 
+ New stmts! 
+ $i2_gl_sort0 := $ne.i32($i1_gl_sort0, 0);
+ assume true;
+ goto $bb1_gl_sort_0, $bb2_gl_sort_0;
+ 
+ call $i1_gl_sort0 := list_empty(gl_list_gl_sort0);
+ inlining procedure: list_empty
+ 
+ Inlining procedure: list_empty 0
+ arguments: 
+ 	gl_list_gl_sort0 
+ parameter: 
+ 	$p0_list_empty0 
+ processing return block $bb0_list_empty_0
+ return param of 'call $i1_gl_sort0 := list_empty(gl_list_gl_sort0);': 
+ 	[$r_list_empty0, i32]
+ return to: 
+ 	$i1_gl_sort0
+ Add assign statement: $i1_gl_sort0 := $r_list_empty0;
+ Add goto relation: $bb11_gl_sort_0 -> $bb10_gl_sort_0
+ Return block: $bb0_list_empty_0:
+   $p1_list_empty0 := $add.ref($add.ref($p0_list_empty0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p2_list_empty0 := $load.ref($M.0, $p1_list_empty0);
+   $i3_list_empty0 := $eq.ref($p2_list_empty0, $p0_list_empty0);
+   $i4_list_empty0 := $zext.i1.i32($i3_list_empty0);
+   $r_list_empty0 := $i4_list_empty0;
+   goto $bb11_gl_sort_0;
+ Return process block: $bb11_gl_sort_0:
+   $i1_gl_sort0 := $r_list_empty0;
+   goto $bb10_gl_sort_0;
+ 	add statement: $p0_list_empty0 := gl_list_gl_sort0;
+ Current block: $bb0_gl_sort_0:
+   call $p0_gl_sort0 := $alloc($mul.ref(16, $zext.i32.i64(1)));
+   goto $bb12_gl_sort_0;
+ Pass block: $bb12_gl_sort_0:
+   $p0_list_empty0 := gl_list_gl_sort0;
+   goto $bb0_list_empty_0;
+ $bb2_gl_sort_0 2 1
+ New stmts! 
+ assume !(($i2_gl_sort0 == 1));
+ assume true;
+ $p3_gl_sort0 := $add.ref($add.ref($p0_gl_sort0, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $M.0 := $store.ref($M.0, $p3_gl_sort0, $p0_gl_sort0);
+ $p4_gl_sort0 := $add.ref($add.ref($p0_gl_sort0, $mul.ref(0, 16)), $mul.ref(8, 1));
+ $M.0 := $store.ref($M.0, $p4_gl_sort0, $p0_gl_sort0);
+ 
+ New stmts! 
+ $i6_gl_sort0 := $ne.ref($p5_gl_sort0, $0.ref_gl_sort0);
+ assume true;
+ goto $bb4_gl_sort_0, $bb5_gl_sort_0;
+ 
+ call $p5_gl_sort0 := gl_seek_max();
+ inlining procedure: gl_seek_max
+ $bb0_gl_seek_max_0 2 1
+ New stmts! 
+ 
+ New stmts! 
+ $i1_gl_seek_max0 := $ne.i32($i0_gl_seek_max0, 0);
+ assume true;
+ goto $bb1_gl_seek_max_0, $bb2_gl_seek_max_0;
+ 
+ call $i0_gl_seek_max0 := list_empty(gl_list_gl_seek_max0);
+ 
+ Inlining procedure: list_empty 1
+ arguments: 
+ 	gl_list_gl_seek_max0 
+ parameter: 
+ 	$p0_list_empty1 
+ processing return block $bb0_list_empty_1
+ return param of 'call $i0_gl_seek_max0 := list_empty(gl_list_gl_seek_max0);': 
+ 	[$r_list_empty1, i32]
+ return to: 
+ 	$i0_gl_seek_max0
+ Add assign statement: $i0_gl_seek_max0 := $r_list_empty1;
+ Add goto relation: $bb14_gl_seek_max_0 -> $bb13_gl_seek_max_0
+ Return block: $bb0_list_empty_1:
+   $p1_list_empty1 := $add.ref($add.ref($p0_list_empty1, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p2_list_empty1 := $load.ref($M.0, $p1_list_empty1);
+   $i3_list_empty1 := $eq.ref($p2_list_empty1, $p0_list_empty1);
+   $i4_list_empty1 := $zext.i1.i32($i3_list_empty1);
+   $r_list_empty1 := $i4_list_empty1;
+   goto $bb14_gl_seek_max_0;
+ Return process block: $bb14_gl_seek_max_0:
+   $i0_gl_seek_max0 := $r_list_empty1;
+   goto $bb13_gl_seek_max_0;
+ 	add statement: $p0_list_empty1 := gl_list_gl_seek_max0;
+ Current block: $bb0_gl_seek_max_0:
+   goto $bb15_gl_seek_max_0;
+ Pass block: $bb15_gl_seek_max_0:
+   $p0_list_empty1 := gl_list_gl_seek_max0;
+   goto $bb0_list_empty_1;
+ $bb2_gl_seek_max_0 2 1
+ New stmts! 
+ assume !(($i1_gl_seek_max0 == 1));
+ $p3_gl_seek_max0 := $load.ref($M.0, gl_list_gl_seek_max0);
+ 
+ New stmts! 
+ call {:cexpr "max"} boogie_si_record_i32($i4_gl_seek_max0);
+ $p5_gl_seek_max0 := $add.ref($add.ref($p3_gl_seek_max0, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $p6_gl_seek_max0 := $load.ref($M.0, $p5_gl_seek_max0);
+ $i7_gl_seek_max0 := $ne.ref(gl_list_gl_seek_max0, $p6_gl_seek_max0);
+ $p8_gl_seek_max0 := $p3_gl_seek_max0;
+ assume true;
+ goto $bb4_gl_seek_max_0, $bb5_gl_seek_max_0;
+ 
+ call $i4_gl_seek_max0 := val_from_node($p3_gl_seek_max0);
+ 
+ Inlining procedure: val_from_node 0
+ arguments: 
+ 	$p3_gl_seek_max0 
+ parameter: 
+ 	$p0_val_from_node0 
+ processing return block $bb0_val_from_node_0
+ return param of 'call $i4_gl_seek_max0 := val_from_node($p3_gl_seek_max0);': 
+ 	[$r_val_from_node0, i32]
+ return to: 
+ 	$i4_gl_seek_max0
+ Add assign statement: $i4_gl_seek_max0 := $r_val_from_node0;
+ Add goto relation: $bb17_gl_seek_max_0 -> $bb16_gl_seek_max_0
+ Return block: $bb0_val_from_node_0:
+   $p1_val_from_node0 := $bitcast.ref.ref($p0_val_from_node0);
+   $p2_val_from_node0 := $add.ref($p1_val_from_node0, $mul.ref($sub.i64(0, $p2i.ref.i64($add.ref($add.ref($0.ref_val_from_node0, $mul.ref(0, 24)), $mul.ref(8, 1)))), 1));
+   $p3_val_from_node0 := $bitcast.ref.ref($p2_val_from_node0);
+   $p4_val_from_node0 := $add.ref($add.ref($p3_val_from_node0, $mul.ref(0, 24)), $mul.ref(0, 1));
+   $i5_val_from_node0 := $load.i32($M.0, $p4_val_from_node0);
+   $r_val_from_node0 := $i5_val_from_node0;
+   goto $bb17_gl_seek_max_0;
+ Return process block: $bb17_gl_seek_max_0:
+   $i4_gl_seek_max0 := $r_val_from_node0;
+   goto $bb16_gl_seek_max_0;
+ 	add statement: $p0_val_from_node0 := $p3_gl_seek_max0;
+ Current block: $bb2_gl_seek_max_0:
+   assume !(($i1_gl_seek_max0 == 1));
+   $p3_gl_seek_max0 := $load.ref($M.0, gl_list_gl_seek_max0);
+   goto $bb18_gl_seek_max_0;
+ Pass block: $bb18_gl_seek_max_0:
+   $p0_val_from_node0 := $p3_gl_seek_max0;
+   goto $bb0_val_from_node_0;
+ $bb7_gl_seek_max_0 2 1
+ New stmts! 
+ 
+ New stmts! 
+ call {:cexpr "value"} boogie_si_record_i32($i12_gl_seek_max0);
+ $i13_gl_seek_max0 := $slt.i32($i12_gl_seek_max0, $i11_gl_seek_max0);
+ assume true;
+ goto $bb8_gl_seek_max_0, $bb9_gl_seek_max_0;
+ 
+ call $i12_gl_seek_max0 := val_from_node($p9_gl_seek_max0);
+ 
+ Inlining procedure: val_from_node 1
+ arguments: 
+ 	$p9_gl_seek_max0 
+ parameter: 
+ 	$p0_val_from_node1 
+ processing return block $bb0_val_from_node_1
+ return param of 'call $i12_gl_seek_max0 := val_from_node($p9_gl_seek_max0);': 
+ 	[$r_val_from_node1, i32]
+ return to: 
+ 	$i12_gl_seek_max0
+ Add assign statement: $i12_gl_seek_max0 := $r_val_from_node1;
+ Add goto relation: $bb20_gl_seek_max_0 -> $bb19_gl_seek_max_0
+ Return block: $bb0_val_from_node_1:
+   $p1_val_from_node1 := $bitcast.ref.ref($p0_val_from_node1);
+   $p2_val_from_node1 := $add.ref($p1_val_from_node1, $mul.ref($sub.i64(0, $p2i.ref.i64($add.ref($add.ref($0.ref_val_from_node1, $mul.ref(0, 24)), $mul.ref(8, 1)))), 1));
+   $p3_val_from_node1 := $bitcast.ref.ref($p2_val_from_node1);
+   $p4_val_from_node1 := $add.ref($add.ref($p3_val_from_node1, $mul.ref(0, 24)), $mul.ref(0, 1));
+   $i5_val_from_node1 := $load.i32($M.0, $p4_val_from_node1);
+   $r_val_from_node1 := $i5_val_from_node1;
+   goto $bb20_gl_seek_max_0;
+ Return process block: $bb20_gl_seek_max_0:
+   $i12_gl_seek_max0 := $r_val_from_node1;
+   goto $bb19_gl_seek_max_0;
+ 	add statement: $p0_val_from_node1 := $p9_gl_seek_max0;
+ Current block: $bb7_gl_seek_max_0:
+   goto $bb21_gl_seek_max_0;
+ Pass block: $bb21_gl_seek_max_0:
+   $p0_val_from_node1 := $p9_gl_seek_max0;
+   goto $bb0_val_from_node_1;
+ 
+ Inlining procedure: gl_seek_max 0
+ arguments: 
+ 	
+ parameter: 
+ 	
+ processing return block $bb3_gl_seek_max_0
+ return param of 'call $p5_gl_sort0 := gl_seek_max();': 
+ 	[$r_gl_seek_max0, ref32]
+ return to: 
+ 	$p5_gl_sort0
+ Add assign statement: $p5_gl_sort0 := $r_gl_seek_max0;
+ Add goto relation: $bb14_gl_sort_0 -> $bb13_gl_sort_0
+ Return block: $bb3_gl_seek_max_0:
+   $r_gl_seek_max0 := $p2_gl_seek_max0;
+   goto $bb14_gl_sort_0;
+ Return process block: $bb14_gl_sort_0:
+   $p5_gl_sort0 := $r_gl_seek_max0;
+   goto $bb13_gl_sort_0;
+ Current block: $bb2_gl_sort_0:
+   assume !(($i2_gl_sort0 == 1));
+   assume true;
+   $p3_gl_sort0 := $add.ref($add.ref($p0_gl_sort0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p3_gl_sort0, $p0_gl_sort0);
+   $p4_gl_sort0 := $add.ref($add.ref($p0_gl_sort0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p4_gl_sort0, $p0_gl_sort0);
+   goto $bb15_gl_sort_0;
+ Pass block: $bb15_gl_sort_0:
+   goto $bb0_gl_seek_max_0;
+ $bb6_gl_sort_0 3 2
+ New stmts! 
+ 
+ New stmts! 
+ 
+ New stmts! 
+ goto $bb3_gl_sort_0;
+ 
+ call list_add(gl_list_gl_sort0, $p0_gl_sort0);
+ call list_del($p0_gl_sort0);
+ inlining procedure: list_add
+ $bb0_list_add_1 2 1
+ New stmts! 
+ $p2_list_add1 := $add.ref($add.ref($p1_list_add1, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $p3_list_add1 := $load.ref($M.0, $p2_list_add1);
+ 
+ New stmts! 
+ return;
+ 
+ call __list_add($p0_list_add1, $p1_list_add1, $p3_list_add1);
+ 
+ Inlining procedure: __list_add 0
+ arguments: 
+ 	$p0_list_add1 $p1_list_add1 $p3_list_add1 
+ parameter: 
+ 	$p0___list_add0 $p1___list_add0 $p2___list_add0 
+ processing return block $bb0___list_add_0
+ return param of 'call __list_add($p0_list_add1, $p1_list_add1, $p3_list_add1);': 
+ 	return to: 
+ 	Add goto relation: $bb2_list_add_1 -> $bb1_list_add_1
+ Return block: $bb0___list_add_0:
+   $p3___list_add0 := $add.ref($add.ref($p2___list_add0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p3___list_add0, $p0___list_add0);
+   $p4___list_add0 := $add.ref($add.ref($p0___list_add0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p4___list_add0, $p2___list_add0);
+   $p5___list_add0 := $add.ref($add.ref($p0___list_add0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p5___list_add0, $p1___list_add0);
+   $p6___list_add0 := $add.ref($add.ref($p1___list_add0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p6___list_add0, $p0___list_add0);
+   goto $bb2_list_add_1;
+ Return process block: $bb2_list_add_1:
+   goto $bb1_list_add_1;
+ 	add statement: $p0___list_add0 := $p0_list_add1;
+ 	add statement: $p1___list_add0 := $p1_list_add1;
+ 	add statement: $p2___list_add0 := $p3_list_add1;
+ Current block: $bb0_list_add_1:
+   $p2_list_add1 := $add.ref($add.ref($p1_list_add1, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p3_list_add1 := $load.ref($M.0, $p2_list_add1);
+   goto $bb3_list_add_1;
+ Pass block: $bb3_list_add_1:
+   $p0___list_add0 := $p0_list_add1;
+   $p1___list_add0 := $p1_list_add1;
+   $p2___list_add0 := $p3_list_add1;
+   goto $bb0___list_add_0;
+ Splitting return block
+ 
+ Inlining procedure: list_add 1
+ arguments: 
+ 	gl_list_gl_sort0 $p0_gl_sort0 
+ parameter: 
+ 	$p0_list_add1 $p1_list_add1 
+ processing return block $bb1_list_add_1
+ return param of 'call list_add(gl_list_gl_sort0, $p0_gl_sort0);': 
+ 	return to: 
+ 	Add goto relation: $bb18_gl_sort_0 -> $bb16_gl_sort_0
+ Return block: $bb1_list_add_1:
+   goto $bb18_gl_sort_0;
+ Return process block: $bb18_gl_sort_0:
+   goto $bb16_gl_sort_0;
+ 	add statement: $p0_list_add1 := gl_list_gl_sort0;
+ 	add statement: $p1_list_add1 := $p0_gl_sort0;
+ Current block: $bb6_gl_sort_0:
+   goto $bb19_gl_sort_0;
+ Pass block: $bb19_gl_sort_0:
+   $p0_list_add1 := gl_list_gl_sort0;
+   $p1_list_add1 := $p0_gl_sort0;
+   goto $bb0_list_add_1;
+ inlining procedure: list_del
+ $bb0_list_del_0 2 1
+ New stmts! 
+ $p1_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(8, 1));
+ $p2_list_del0 := $load.ref($M.0, $p1_list_del0);
+ $p3_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $p4_list_del0 := $load.ref($M.0, $p3_list_del0);
+ 
+ New stmts! 
+ $p5_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $M.0 := $store.ref($M.0, $p5_list_del0, $0.ref_list_del0);
+ $p6_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(8, 1));
+ $M.0 := $store.ref($M.0, $p6_list_del0, $0.ref_list_del0);
+ return;
+ 
+ call __list_del($p2_list_del0, $p4_list_del0);
+ 
+ Inlining procedure: __list_del 0
+ arguments: 
+ 	$p2_list_del0 $p4_list_del0 
+ parameter: 
+ 	$p0___list_del0 $p1___list_del0 
+ processing return block $bb0___list_del_0
+ return param of 'call __list_del($p2_list_del0, $p4_list_del0);': 
+ 	return to: 
+ 	Add goto relation: $bb2_list_del_0 -> $bb1_list_del_0
+ Return block: $bb0___list_del_0:
+   $p2___list_del0 := $add.ref($add.ref($p1___list_del0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p2___list_del0, $p0___list_del0);
+   $p3___list_del0 := $add.ref($add.ref($p0___list_del0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p3___list_del0, $p1___list_del0);
+   goto $bb2_list_del_0;
+ Return process block: $bb2_list_del_0:
+   goto $bb1_list_del_0;
+ 	add statement: $p0___list_del0 := $p2_list_del0;
+ 	add statement: $p1___list_del0 := $p4_list_del0;
+ Current block: $bb0_list_del_0:
+   $p1_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $p2_list_del0 := $load.ref($M.0, $p1_list_del0);
+   $p3_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p4_list_del0 := $load.ref($M.0, $p3_list_del0);
+   goto $bb3_list_del_0;
+ Pass block: $bb3_list_del_0:
+   $p0___list_del0 := $p2_list_del0;
+   $p1___list_del0 := $p4_list_del0;
+   goto $bb0___list_del_0;
+ Splitting return block
+ 
+ Inlining procedure: list_del 0
+ arguments: 
+ 	$p0_gl_sort0 
+ parameter: 
+ 	$p0_list_del0 
+ processing return block $bb1_list_del_0
+ return param of 'call list_del($p0_gl_sort0);': 
+ 	return to: 
+ 	Add goto relation: $bb20_gl_sort_0 -> $bb17_gl_sort_0
+ Return block: $bb1_list_del_0:
+   $p5_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p5_list_del0, $0.ref_list_del0);
+   $p6_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p6_list_del0, $0.ref_list_del0);
+   goto $bb20_gl_sort_0;
+ Return process block: $bb20_gl_sort_0:
+   goto $bb17_gl_sort_0;
+ 	add statement: $p0_list_del0 := $p0_gl_sort0;
+ Current block: $bb16_gl_sort_0:
+   goto $bb21_gl_sort_0;
+ Pass block: $bb21_gl_sort_0:
+   $p0_list_del0 := $p0_gl_sort0;
+   goto $bb0_list_del_0;
+ $bb7_gl_sort_0 3 2
+ New stmts! 
+ 
+ New stmts! 
+ 
+ New stmts! 
+ $i9_gl_sort0 := $ne.ref($p8_gl_sort0, $0.ref_gl_sort0);
+ assume true;
+ goto $bb8_gl_sort_0, $bb9_gl_sort_0;
+ 
+ call list_move($p7_gl_sort0, $p0_gl_sort0);
+ call $p8_gl_sort0 := gl_seek_max();
+ inlining procedure: list_move
+ $bb0_list_move_0 3 2
+ New stmts! 
+ $p2_list_move0 := $add.ref($add.ref($p0_list_move0, $mul.ref(0, 16)), $mul.ref(8, 1));
+ $p3_list_move0 := $load.ref($M.0, $p2_list_move0);
+ $p4_list_move0 := $add.ref($add.ref($p0_list_move0, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $p5_list_move0 := $load.ref($M.0, $p4_list_move0);
+ 
+ New stmts! 
+ 
+ New stmts! 
+ return;
+ 
+ call __list_del($p3_list_move0, $p5_list_move0);
+ call list_add($p0_list_move0, $p1_list_move0);
+ 
+ Inlining procedure: __list_del 1
+ arguments: 
+ 	$p3_list_move0 $p5_list_move0 
+ parameter: 
+ 	$p0___list_del1 $p1___list_del1 
+ processing return block $bb0___list_del_1
+ return param of 'call __list_del($p3_list_move0, $p5_list_move0);': 
+ 	return to: 
+ 	Add goto relation: $bb3_list_move_0 -> $bb1_list_move_0
+ Return block: $bb0___list_del_1:
+   $p2___list_del1 := $add.ref($add.ref($p1___list_del1, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p2___list_del1, $p0___list_del1);
+   $p3___list_del1 := $add.ref($add.ref($p0___list_del1, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p3___list_del1, $p1___list_del1);
+   goto $bb3_list_move_0;
+ Return process block: $bb3_list_move_0:
+   goto $bb1_list_move_0;
+ 	add statement: $p0___list_del1 := $p3_list_move0;
+ 	add statement: $p1___list_del1 := $p5_list_move0;
+ Current block: $bb0_list_move_0:
+   $p2_list_move0 := $add.ref($add.ref($p0_list_move0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $p3_list_move0 := $load.ref($M.0, $p2_list_move0);
+   $p4_list_move0 := $add.ref($add.ref($p0_list_move0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p5_list_move0 := $load.ref($M.0, $p4_list_move0);
+   goto $bb4_list_move_0;
+ Pass block: $bb4_list_move_0:
+   $p0___list_del1 := $p3_list_move0;
+   $p1___list_del1 := $p5_list_move0;
+   goto $bb0___list_del_1;
+ 
+ Inlining procedure: list_add 2
+ arguments: 
+ 	$p0_list_move0 $p1_list_move0 
+ parameter: 
+ 	$p0_list_add2 $p1_list_add2 
+ processing return block $bb0_list_add_2
+ return param of 'call list_add($p0_list_move0, $p1_list_move0);': 
+ 	return to: 
+ 	Add goto relation: $bb5_list_move_0 -> $bb2_list_move_0
+ Return block: $bb0_list_add_2:
+   $p2_list_add2 := $add.ref($add.ref($p1_list_add2, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p3_list_add2 := $load.ref($M.0, $p2_list_add2);
+   call __list_add($p0_list_add2, $p1_list_add2, $p3_list_add2);
+   goto $bb5_list_move_0;
+ Return process block: $bb5_list_move_0:
+   goto $bb2_list_move_0;
+ 	add statement: $p0_list_add2 := $p0_list_move0;
+ 	add statement: $p1_list_add2 := $p1_list_move0;
+ Current block: $bb1_list_move_0:
+   goto $bb6_list_move_0;
+ Pass block: $bb6_list_move_0:
+   $p0_list_add2 := $p0_list_move0;
+   $p1_list_add2 := $p1_list_move0;
+   goto $bb0_list_add_2;
+ Splitting return block
+ 
+ Inlining procedure: list_move 0
+ arguments: 
+ 	$p7_gl_sort0 $p0_gl_sort0 
+ parameter: 
+ 	$p0_list_move0 $p1_list_move0 
+ processing return block $bb2_list_move_0
+ return param of 'call list_move($p7_gl_sort0, $p0_gl_sort0);': 
+ 	return to: 
+ 	Add goto relation: $bb24_gl_sort_0 -> $bb22_gl_sort_0
+ Return block: $bb2_list_move_0:
+   goto $bb24_gl_sort_0;
+ Return process block: $bb24_gl_sort_0:
+   goto $bb22_gl_sort_0;
+ 	add statement: $p0_list_move0 := $p7_gl_sort0;
+ 	add statement: $p1_list_move0 := $p0_gl_sort0;
+ Current block: $bb7_gl_sort_0:
+   goto $bb25_gl_sort_0;
+ Pass block: $bb25_gl_sort_0:
+   $p0_list_move0 := $p7_gl_sort0;
+   $p1_list_move0 := $p0_gl_sort0;
+   goto $bb0_list_move_0;
+ inlining procedure: gl_seek_max
+ $bb0_gl_seek_max_1 2 1
+ New stmts! 
+ 
+ New stmts! 
+ $i1_gl_seek_max1 := $ne.i32($i0_gl_seek_max1, 0);
+ assume true;
+ goto $bb1_gl_seek_max_1, $bb2_gl_seek_max_1;
+ 
+ call $i0_gl_seek_max1 := list_empty(gl_list_gl_seek_max1);
+ 
+ Inlining procedure: list_empty 2
+ arguments: 
+ 	gl_list_gl_seek_max1 
+ parameter: 
+ 	$p0_list_empty2 
+ processing return block $bb0_list_empty_2
+ return param of 'call $i0_gl_seek_max1 := list_empty(gl_list_gl_seek_max1);': 
+ 	[$r_list_empty2, i32]
+ return to: 
+ 	$i0_gl_seek_max1
+ Add assign statement: $i0_gl_seek_max1 := $r_list_empty2;
+ Add goto relation: $bb14_gl_seek_max_1 -> $bb13_gl_seek_max_1
+ Return block: $bb0_list_empty_2:
+   $p1_list_empty2 := $add.ref($add.ref($p0_list_empty2, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p2_list_empty2 := $load.ref($M.0, $p1_list_empty2);
+   $i3_list_empty2 := $eq.ref($p2_list_empty2, $p0_list_empty2);
+   $i4_list_empty2 := $zext.i1.i32($i3_list_empty2);
+   $r_list_empty2 := $i4_list_empty2;
+   goto $bb14_gl_seek_max_1;
+ Return process block: $bb14_gl_seek_max_1:
+   $i0_gl_seek_max1 := $r_list_empty2;
+   goto $bb13_gl_seek_max_1;
+ 	add statement: $p0_list_empty2 := gl_list_gl_seek_max1;
+ Current block: $bb0_gl_seek_max_1:
+   goto $bb15_gl_seek_max_1;
+ Pass block: $bb15_gl_seek_max_1:
+   $p0_list_empty2 := gl_list_gl_seek_max1;
+   goto $bb0_list_empty_2;
+ $bb2_gl_seek_max_1 2 1
+ New stmts! 
+ assume !(($i1_gl_seek_max1 == 1));
+ $p3_gl_seek_max1 := $load.ref($M.0, gl_list_gl_seek_max1);
+ 
+ New stmts! 
+ call {:cexpr "max"} boogie_si_record_i32($i4_gl_seek_max1);
+ $p5_gl_seek_max1 := $add.ref($add.ref($p3_gl_seek_max1, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $p6_gl_seek_max1 := $load.ref($M.0, $p5_gl_seek_max1);
+ $i7_gl_seek_max1 := $ne.ref(gl_list_gl_seek_max1, $p6_gl_seek_max1);
+ $p8_gl_seek_max1 := $p3_gl_seek_max1;
+ assume true;
+ goto $bb4_gl_seek_max_1, $bb5_gl_seek_max_1;
+ 
+ call $i4_gl_seek_max1 := val_from_node($p3_gl_seek_max1);
+ 
+ Inlining procedure: val_from_node 2
+ arguments: 
+ 	$p3_gl_seek_max1 
+ parameter: 
+ 	$p0_val_from_node2 
+ processing return block $bb0_val_from_node_2
+ return param of 'call $i4_gl_seek_max1 := val_from_node($p3_gl_seek_max1);': 
+ 	[$r_val_from_node2, i32]
+ return to: 
+ 	$i4_gl_seek_max1
+ Add assign statement: $i4_gl_seek_max1 := $r_val_from_node2;
+ Add goto relation: $bb17_gl_seek_max_1 -> $bb16_gl_seek_max_1
+ Return block: $bb0_val_from_node_2:
+   $p1_val_from_node2 := $bitcast.ref.ref($p0_val_from_node2);
+   $p2_val_from_node2 := $add.ref($p1_val_from_node2, $mul.ref($sub.i64(0, $p2i.ref.i64($add.ref($add.ref($0.ref_val_from_node2, $mul.ref(0, 24)), $mul.ref(8, 1)))), 1));
+   $p3_val_from_node2 := $bitcast.ref.ref($p2_val_from_node2);
+   $p4_val_from_node2 := $add.ref($add.ref($p3_val_from_node2, $mul.ref(0, 24)), $mul.ref(0, 1));
+   $i5_val_from_node2 := $load.i32($M.0, $p4_val_from_node2);
+   $r_val_from_node2 := $i5_val_from_node2;
+   goto $bb17_gl_seek_max_1;
+ Return process block: $bb17_gl_seek_max_1:
+   $i4_gl_seek_max1 := $r_val_from_node2;
+   goto $bb16_gl_seek_max_1;
+ 	add statement: $p0_val_from_node2 := $p3_gl_seek_max1;
+ Current block: $bb2_gl_seek_max_1:
+   assume !(($i1_gl_seek_max1 == 1));
+   $p3_gl_seek_max1 := $load.ref($M.0, gl_list_gl_seek_max1);
+   goto $bb18_gl_seek_max_1;
+ Pass block: $bb18_gl_seek_max_1:
+   $p0_val_from_node2 := $p3_gl_seek_max1;
+   goto $bb0_val_from_node_2;
+ $bb7_gl_seek_max_1 2 1
+ New stmts! 
+ 
+ New stmts! 
+ call {:cexpr "value"} boogie_si_record_i32($i12_gl_seek_max1);
+ $i13_gl_seek_max1 := $slt.i32($i12_gl_seek_max1, $i11_gl_seek_max1);
+ assume true;
+ goto $bb8_gl_seek_max_1, $bb9_gl_seek_max_1;
+ 
+ call $i12_gl_seek_max1 := val_from_node($p9_gl_seek_max1);
+ 
+ Inlining procedure: val_from_node 3
+ arguments: 
+ 	$p9_gl_seek_max1 
+ parameter: 
+ 	$p0_val_from_node3 
+ processing return block $bb0_val_from_node_3
+ return param of 'call $i12_gl_seek_max1 := val_from_node($p9_gl_seek_max1);': 
+ 	[$r_val_from_node3, i32]
+ return to: 
+ 	$i12_gl_seek_max1
+ Add assign statement: $i12_gl_seek_max1 := $r_val_from_node3;
+ Add goto relation: $bb20_gl_seek_max_1 -> $bb19_gl_seek_max_1
+ Return block: $bb0_val_from_node_3:
+   $p1_val_from_node3 := $bitcast.ref.ref($p0_val_from_node3);
+   $p2_val_from_node3 := $add.ref($p1_val_from_node3, $mul.ref($sub.i64(0, $p2i.ref.i64($add.ref($add.ref($0.ref_val_from_node3, $mul.ref(0, 24)), $mul.ref(8, 1)))), 1));
+   $p3_val_from_node3 := $bitcast.ref.ref($p2_val_from_node3);
+   $p4_val_from_node3 := $add.ref($add.ref($p3_val_from_node3, $mul.ref(0, 24)), $mul.ref(0, 1));
+   $i5_val_from_node3 := $load.i32($M.0, $p4_val_from_node3);
+   $r_val_from_node3 := $i5_val_from_node3;
+   goto $bb20_gl_seek_max_1;
+ Return process block: $bb20_gl_seek_max_1:
+   $i12_gl_seek_max1 := $r_val_from_node3;
+   goto $bb19_gl_seek_max_1;
+ 	add statement: $p0_val_from_node3 := $p9_gl_seek_max1;
+ Current block: $bb7_gl_seek_max_1:
+   goto $bb21_gl_seek_max_1;
+ Pass block: $bb21_gl_seek_max_1:
+   $p0_val_from_node3 := $p9_gl_seek_max1;
+   goto $bb0_val_from_node_3;
+ 
+ Inlining procedure: gl_seek_max 1
+ arguments: 
+ 	
+ parameter: 
+ 	
+ processing return block $bb3_gl_seek_max_1
+ return param of 'call $p8_gl_sort0 := gl_seek_max();': 
+ 	[$r_gl_seek_max1, ref32]
+ return to: 
+ 	$p8_gl_sort0
+ Add assign statement: $p8_gl_sort0 := $r_gl_seek_max1;
+ Add goto relation: $bb26_gl_sort_0 -> $bb23_gl_sort_0
+ Return block: $bb3_gl_seek_max_1:
+   $r_gl_seek_max1 := $p2_gl_seek_max1;
+   goto $bb26_gl_sort_0;
+ Return process block: $bb26_gl_sort_0:
+   $p8_gl_sort0 := $r_gl_seek_max1;
+   goto $bb23_gl_sort_0;
+ Current block: $bb22_gl_sort_0:
+   goto $bb27_gl_sort_0;
+ Pass block: $bb27_gl_sort_0:
+   goto $bb0_gl_seek_max_1;
+ 
+ Inlining procedure: gl_sort 0
+ arguments: 
+ 	
+ parameter: 
+ 	
+ processing return block $bb3_gl_sort_0
+ return param of 'call gl_sort();': 
+ 	return to: 
+ 	Add goto relation: $bb6_main_0 -> $bb2_main_0
+ Return block: $bb3_gl_sort_0:
+   goto $bb6_main_0;
+ Return process block: $bb6_main_0:
+   goto $bb2_main_0;
+ Current block: $bb1_main_0:
+   goto $bb7_main_0;
+ Pass block: $bb7_main_0:
+   goto $bb0_gl_sort_0;
+ inlining procedure: gl_destroy
+ $bb4_gl_destroy_0 1 0
+ New stmts! 
+ $p3_gl_destroy0 := $add.ref($add.ref($p2_gl_destroy0, $mul.ref(0, 16)), $mul.ref(0, 1));
+ $p4_gl_destroy0 := $load.ref($M.0, $p3_gl_destroy0);
+ $M.0 := $store.ref($M.0, gl_list_gl_destroy0, $p4_gl_destroy0);
+ $p5_gl_destroy0 := $bitcast.ref.ref($p2_gl_destroy0);
+ $p6_gl_destroy0 := $add.ref($p5_gl_destroy0, $mul.ref($sub.i64(0, $p2i.ref.i64($add.ref($add.ref($0.ref_gl_destroy0, $mul.ref(0, 24)), $mul.ref(8, 1)))), 1));
+ $p7_gl_destroy0 := $bitcast.ref.ref($p6_gl_destroy0);
+ $p8_gl_destroy0 := $bitcast.ref.ref($p7_gl_destroy0);
+ call free_($p8_gl_destroy0);
+ $p9_gl_destroy0 := $load.ref($M.0, gl_list_gl_destroy0);
+ $i10_gl_destroy0 := $ne.ref(gl_list_gl_destroy0, $p9_gl_destroy0);
+ assume true;
+ goto $bb5_gl_destroy_0, $bb6_gl_destroy_0;
+ 
+ 
+ Inlining procedure: gl_destroy 0
+ arguments: 
+ 	
+ parameter: 
+ 	
+ processing return block $bb3_gl_destroy_0
+ return param of 'call gl_destroy();': 
+ 	return to: 
+ 	Add goto relation: $bb8_main_0 -> $bb3_main_0
+ Return block: $bb3_gl_destroy_0:
+   goto $bb8_main_0;
+ Return process block: $bb8_main_0:
+   goto $bb3_main_0;
+ Current block: $bb2_main_0:
+   goto $bb9_main_0;
+ Pass block: $bb9_main_0:
+   goto $bb0_gl_destroy_0;
+ Splitting return block
+ =====================CENTER NEW===================
+ procedure main()
+   returns ($r_main0: i32)
+ {
+   var $r_main0: i32;
+   var $i0_gl_read0: i32;
+   var $i1_gl_read0: i32;
+   var $i2_gl_read0: i1;
+   var $i0_gl_insert0: i32;
+   var $p1_gl_insert0: ref8;
+   var $p2_gl_insert0: ref;
+   var $i3_gl_insert0: i1;
+   var $p4_gl_insert0: ref32;
+   var $p5_gl_insert0: ref;
+   var $p0_list_add0: ref32;
+   var $p1_list_add0: ref32;
+   var $p2_list_add0: ref;
+   var $p3_list_add0: ref;
+   var $p0_gl_sort0: ref;
+   var $i1_gl_sort0: i32;
+   var $i2_gl_sort0: i1;
+   var $p3_gl_sort0: ref;
+   var $p4_gl_sort0: ref;
+   var $p5_gl_sort0: ref;
+   var $i6_gl_sort0: i1;
+   var $p7_gl_sort0: ref;
+   var $p8_gl_sort0: ref;
+   var $i9_gl_sort0: i1;
+   var $p0_list_empty0: ref32;
+   var $p1_list_empty0: ref;
+   var $p2_list_empty0: ref;
+   var $i3_list_empty0: i1;
+   var $i4_list_empty0: i32;
+   var $r_list_empty0: i32;
+   var $i0_gl_seek_max0: i32;
+   var $i1_gl_seek_max0: i1;
+   var $p3_gl_seek_max0: ref;
+   var $i4_gl_seek_max0: i32;
+   var $p5_gl_seek_max0: ref;
+   var $p6_gl_seek_max0: ref;
+   var $i7_gl_seek_max0: i1;
+   var $p9_gl_seek_max0: ref;
+   var $p10_gl_seek_max0: ref;
+   var $i11_gl_seek_max0: i32;
+   var $i12_gl_seek_max0: i32;
+   var $i13_gl_seek_max0: i1;
+   var $p14_gl_seek_max0: ref;
+   var $i15_gl_seek_max0: i32;
+   var $p16_gl_seek_max0: ref;
+   var $p17_gl_seek_max0: ref;
+   var $p18_gl_seek_max0: ref;
+   var $i19_gl_seek_max0: i1;
+   var $p20_gl_seek_max0: ref;
+   var $p8_gl_seek_max0: ref;
+   var $p2_gl_seek_max0: ref;
+   var $r_gl_seek_max0: ref32;
+   var $p0_list_empty1: ref32;
+   var $p1_list_empty1: ref;
+   var $p2_list_empty1: ref;
+   var $i3_list_empty1: i1;
+   var $i4_list_empty1: i32;
+   var $r_list_empty1: i32;
+   var $p0_val_from_node0: ref32;
+   var $p1_val_from_node0: ref8;
+   var $p2_val_from_node0: ref8;
+   var $p3_val_from_node0: ref;
+   var $p4_val_from_node0: ref32;
+   var $i5_val_from_node0: i32;
+   var $r_val_from_node0: i32;
+   var $p0_val_from_node1: ref32;
+   var $p1_val_from_node1: ref8;
+   var $p2_val_from_node1: ref8;
+   var $p3_val_from_node1: ref;
+   var $p4_val_from_node1: ref32;
+   var $i5_val_from_node1: i32;
+   var $r_val_from_node1: i32;
+   var $p0_list_add1: ref32;
+   var $p1_list_add1: ref32;
+   var $p2_list_add1: ref;
+   var $p3_list_add1: ref;
+   var $p0___list_add0: ref32;
+   var $p1___list_add0: ref32;
+   var $p2___list_add0: ref32;
+   var $p3___list_add0: ref;
+   var $p4___list_add0: ref;
+   var $p5___list_add0: ref;
+   var $p6___list_add0: ref;
+   var $p0_list_del0: ref32;
+   var $p1_list_del0: ref;
+   var $p2_list_del0: ref;
+   var $p3_list_del0: ref;
+   var $p4_list_del0: ref;
+   var $p5_list_del0: ref;
+   var $p6_list_del0: ref;
+   var $p0___list_del0: ref32;
+   var $p1___list_del0: ref32;
+   var $p2___list_del0: ref;
+   var $p3___list_del0: ref;
+   var $p0_list_move0: ref32;
+   var $p1_list_move0: ref32;
+   var $p2_list_move0: ref;
+   var $p3_list_move0: ref;
+   var $p4_list_move0: ref;
+   var $p5_list_move0: ref;
+   var $p0___list_del1: ref32;
+   var $p1___list_del1: ref32;
+   var $p2___list_del1: ref;
+   var $p3___list_del1: ref;
+   var $p0_list_add2: ref32;
+   var $p1_list_add2: ref32;
+   var $p2_list_add2: ref;
+   var $p3_list_add2: ref;
+   var $i0_gl_seek_max1: i32;
+   var $i1_gl_seek_max1: i1;
+   var $p3_gl_seek_max1: ref;
+   var $i4_gl_seek_max1: i32;
+   var $p5_gl_seek_max1: ref;
+   var $p6_gl_seek_max1: ref;
+   var $i7_gl_seek_max1: i1;
+   var $p9_gl_seek_max1: ref;
+   var $p10_gl_seek_max1: ref;
+   var $i11_gl_seek_max1: i32;
+   var $i12_gl_seek_max1: i32;
+   var $i13_gl_seek_max1: i1;
+   var $p14_gl_seek_max1: ref;
+   var $i15_gl_seek_max1: i32;
+   var $p16_gl_seek_max1: ref;
+   var $p17_gl_seek_max1: ref;
+   var $p18_gl_seek_max1: ref;
+   var $i19_gl_seek_max1: i1;
+   var $p20_gl_seek_max1: ref;
+   var $p8_gl_seek_max1: ref;
+   var $p2_gl_seek_max1: ref;
+   var $r_gl_seek_max1: ref32;
+   var $p0_list_empty2: ref32;
+   var $p1_list_empty2: ref;
+   var $p2_list_empty2: ref;
+   var $i3_list_empty2: i1;
+   var $i4_list_empty2: i32;
+   var $r_list_empty2: i32;
+   var $p0_val_from_node2: ref32;
+   var $p1_val_from_node2: ref8;
+   var $p2_val_from_node2: ref8;
+   var $p3_val_from_node2: ref;
+   var $p4_val_from_node2: ref32;
+   var $i5_val_from_node2: i32;
+   var $r_val_from_node2: i32;
+   var $p0_val_from_node3: ref32;
+   var $p1_val_from_node3: ref8;
+   var $p2_val_from_node3: ref8;
+   var $p3_val_from_node3: ref;
+   var $p4_val_from_node3: ref32;
+   var $i5_val_from_node3: i32;
+   var $r_val_from_node3: i32;
+   var $p0_gl_destroy0: ref;
+   var $i1_gl_destroy0: i1;
+   var $p2_gl_destroy0: ref;
+   var $p3_gl_destroy0: ref;
+   var $p4_gl_destroy0: ref;
+   var $p5_gl_destroy0: ref8;
+   var $p6_gl_destroy0: ref8;
+   var $p7_gl_destroy0: ref;
+   var $p8_gl_destroy0: ref8;
+   var $p9_gl_destroy0: ref;
+   var $i10_gl_destroy0: i1;
+ $bb0_main_0:
+   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);
+   goto $bb5_main_0;
+ $bb4_main_0:
+   goto $bb1_main_0;
+ $bb5_main_0:
+   goto $bb0_gl_read_0;
+ $bb6_main_0:
+   goto $bb2_main_0;
+ $bb7_main_0:
+   goto $bb0_gl_sort_0;
+ $bb8_main_0:
+   goto $bb3_main_0;
+ $bb9_main_0:
+   goto $bb0_gl_destroy_0;
+ $bb1_main_0:
+   goto $bb7_main_0;
+ $bb2_main_0:
+   goto $bb9_main_0;
+ $bb3_main_0:
+   $r_main0 := 0;
+   return;
+ $bb0_gl_read_0:
+   goto $bb1_gl_read_0;
+ $bb1_gl_read_0:
+   call $i0_gl_read0 := __VERIFIER_nondet_int();
+   call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i0_gl_read0);
+   goto $bb7_gl_read_0;
+ $bb2_gl_read_0:
+   call $i1_gl_read0 := __VERIFIER_nondet_int();
+   call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i1_gl_read0);
+   $i2_gl_read0 := $ne.i32($i1_gl_read0, 0);
+   assume true;
+   goto $bb3_gl_read_0, $bb4_gl_read_0;
+ $bb3_gl_read_0:
+   assume ($i2_gl_read0 == 1);
+   goto $bb1_gl_read_0;
+ $bb4_gl_read_0:
+   assume !(($i2_gl_read0 == 1));
+   goto $bb4_main_0;
+ $bb6_gl_read_0:
+   goto $bb5_gl_read_0;
+ $bb7_gl_read_0:
+   $i0_gl_insert0 := $i0_gl_read0;
+   goto $bb0_gl_insert_0;
+ $bb5_gl_read_0:
+   goto $bb2_gl_read_0;
+ $bb0_gl_insert_0:
+   call {:cexpr "gl_insert:arg:value"} boogie_si_record_i32($i0_gl_insert0);
+   call $p1_gl_insert0 := malloc(24);
+   $p2_gl_insert0 := $bitcast.ref.ref($p1_gl_insert0);
+   $i3_gl_insert0 := $ne.ref($p2_gl_insert0, $0.ref_gl_insert0);
+   assume true;
+   goto $bb1_gl_insert_0, $bb2_gl_insert_0;
+ $bb1_gl_insert_0:
+   assume ($i3_gl_insert0 == 1);
+   $p4_gl_insert0 := $add.ref($add.ref($p2_gl_insert0, $mul.ref(0, 24)), $mul.ref(0, 1));
+   $M.0 := $store.i32($M.0, $p4_gl_insert0, $i0_gl_insert0);
+   $p5_gl_insert0 := $add.ref($add.ref($p2_gl_insert0, $mul.ref(0, 24)), $mul.ref(8, 1));
+   goto $bb5_gl_insert_0;
+ $bb2_gl_insert_0:
+   assume !(($i3_gl_insert0 == 1));
+   call abort();
+   assume false;
+ $bb4_gl_insert_0:
+   goto $bb3_gl_insert_0;
+ $bb5_gl_insert_0:
+   $p0_list_add0 := $p5_gl_insert0;
+   $p1_list_add0 := gl_list_gl_insert0;
+   goto $bb0_list_add_0;
+ $bb3_gl_insert_0:
+   goto $bb6_gl_read_0;
+ $bb0_list_add_0:
+   $p2_list_add0 := $add.ref($add.ref($p1_list_add0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p3_list_add0 := $load.ref($M.0, $p2_list_add0);
+   call __list_add($p0_list_add0, $p1_list_add0, $p3_list_add0);
+   goto $bb4_gl_insert_0;
+ $bb0_gl_sort_0:
+   call $p0_gl_sort0 := $alloc($mul.ref(16, $zext.i32.i64(1)));
+   goto $bb12_gl_sort_0;
+ $bb1_gl_sort_0:
+   assume ($i2_gl_sort0 == 1);
+   goto $bb3_gl_sort_0;
+ $bb2_gl_sort_0:
+   assume !(($i2_gl_sort0 == 1));
+   assume true;
+   $p3_gl_sort0 := $add.ref($add.ref($p0_gl_sort0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p3_gl_sort0, $p0_gl_sort0);
+   $p4_gl_sort0 := $add.ref($add.ref($p0_gl_sort0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p4_gl_sort0, $p0_gl_sort0);
+   goto $bb15_gl_sort_0;
+ $bb3_gl_sort_0:
+   goto $bb6_main_0;
+ $bb4_gl_sort_0:
+   assume ($i6_gl_sort0 == 1);
+   $p7_gl_sort0 := $p5_gl_sort0;
+   goto $bb7_gl_sort_0;
+ $bb5_gl_sort_0:
+   assume !(($i6_gl_sort0 == 1));
+   goto $bb6_gl_sort_0;
+ $bb6_gl_sort_0:
+   goto $bb19_gl_sort_0;
+ $bb7_gl_sort_0:
+   goto $bb25_gl_sort_0;
+ $bb8_gl_sort_0:
+   assume ($i9_gl_sort0 == 1);
+   $p7_gl_sort0 := $p8_gl_sort0;
+   goto $bb7_gl_sort_0;
+ $bb9_gl_sort_0:
+   assume !(($i9_gl_sort0 == 1));
+   goto $bb6_gl_sort_0;
+ $bb11_gl_sort_0:
+   $i1_gl_sort0 := $r_list_empty0;
+   goto $bb10_gl_sort_0;
+ $bb12_gl_sort_0:
+   $p0_list_empty0 := gl_list_gl_sort0;
+   goto $bb0_list_empty_0;
+ $bb10_gl_sort_0:
+   $i2_gl_sort0 := $ne.i32($i1_gl_sort0, 0);
+   assume true;
+   goto $bb1_gl_sort_0, $bb2_gl_sort_0;
+ $bb14_gl_sort_0:
+   $p5_gl_sort0 := $r_gl_seek_max0;
+   goto $bb13_gl_sort_0;
+ $bb15_gl_sort_0:
+   goto $bb0_gl_seek_max_0;
+ $bb13_gl_sort_0:
+   $i6_gl_sort0 := $ne.ref($p5_gl_sort0, $0.ref_gl_sort0);
+   assume true;
+   goto $bb4_gl_sort_0, $bb5_gl_sort_0;
+ $bb18_gl_sort_0:
+   goto $bb16_gl_sort_0;
+ $bb19_gl_sort_0:
+   $p0_list_add1 := gl_list_gl_sort0;
+   $p1_list_add1 := $p0_gl_sort0;
+   goto $bb0_list_add_1;
+ $bb20_gl_sort_0:
+   goto $bb17_gl_sort_0;
+ $bb21_gl_sort_0:
+   $p0_list_del0 := $p0_gl_sort0;
+   goto $bb0_list_del_0;
+ $bb16_gl_sort_0:
+   goto $bb21_gl_sort_0;
+ $bb17_gl_sort_0:
+   goto $bb3_gl_sort_0;
+ $bb24_gl_sort_0:
+   goto $bb22_gl_sort_0;
+ $bb25_gl_sort_0:
+   $p0_list_move0 := $p7_gl_sort0;
+   $p1_list_move0 := $p0_gl_sort0;
+   goto $bb0_list_move_0;
+ $bb26_gl_sort_0:
+   $p8_gl_sort0 := $r_gl_seek_max1;
+   goto $bb23_gl_sort_0;
+ $bb27_gl_sort_0:
+   goto $bb0_gl_seek_max_1;
+ $bb22_gl_sort_0:
+   goto $bb27_gl_sort_0;
+ $bb23_gl_sort_0:
+   $i9_gl_sort0 := $ne.ref($p8_gl_sort0, $0.ref_gl_sort0);
+   assume true;
+   goto $bb8_gl_sort_0, $bb9_gl_sort_0;
+ $bb0_list_empty_0:
+   $p1_list_empty0 := $add.ref($add.ref($p0_list_empty0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p2_list_empty0 := $load.ref($M.0, $p1_list_empty0);
+   $i3_list_empty0 := $eq.ref($p2_list_empty0, $p0_list_empty0);
+   $i4_list_empty0 := $zext.i1.i32($i3_list_empty0);
+   $r_list_empty0 := $i4_list_empty0;
+   goto $bb11_gl_sort_0;
+ $bb0_gl_seek_max_0:
+   goto $bb15_gl_seek_max_0;
+ $bb1_gl_seek_max_0:
+   assume ($i1_gl_seek_max0 == 1);
+   $p2_gl_seek_max0 := $0.ref_gl_seek_max0;
+   goto $bb3_gl_seek_max_0;
+ $bb2_gl_seek_max_0:
+   assume !(($i1_gl_seek_max0 == 1));
+   $p3_gl_seek_max0 := $load.ref($M.0, gl_list_gl_seek_max0);
+   goto $bb18_gl_seek_max_0;
+ $bb3_gl_seek_max_0:
+   $r_gl_seek_max0 := $p2_gl_seek_max0;
+   goto $bb14_gl_sort_0;
+ $bb4_gl_seek_max_0:
+   assume ($i7_gl_seek_max0 == 1);
+   $p9_gl_seek_max0, $p10_gl_seek_max0, $i11_gl_seek_max0 := $p6_gl_seek_max0, $p3_gl_seek_max0, $i4_gl_seek_max0;
+   goto $bb7_gl_seek_max_0;
+ $bb5_gl_seek_max_0:
+   assume !(($i7_gl_seek_max0 == 1));
+   goto $bb6_gl_seek_max_0;
+ $bb6_gl_seek_max_0:
+   $p2_gl_seek_max0 := $p8_gl_seek_max0;
+   goto $bb3_gl_seek_max_0;
+ $bb7_gl_seek_max_0:
+   goto $bb21_gl_seek_max_0;
+ $bb8_gl_seek_max_0:
+   assume ($i13_gl_seek_max0 == 1);
+   $p14_gl_seek_max0, $i15_gl_seek_max0, $p16_gl_seek_max0 := $p9_gl_seek_max0, $i11_gl_seek_max0, $p10_gl_seek_max0;
+   goto $bb10_gl_seek_max_0;
+ $bb9_gl_seek_max_0:
+   assume !(($i13_gl_seek_max0 == 1));
+   $p14_gl_seek_max0, $i15_gl_seek_max0, $p16_gl_seek_max0 := $p9_gl_seek_max0, $i12_gl_seek_max0, $p9_gl_seek_max0;
+   goto $bb10_gl_seek_max_0;
+ $bb10_gl_seek_max_0:
+   $p17_gl_seek_max0 := $add.ref($add.ref($p14_gl_seek_max0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p18_gl_seek_max0 := $load.ref($M.0, $p17_gl_seek_max0);
+   $i19_gl_seek_max0 := $ne.ref(gl_list_gl_seek_max0, $p18_gl_seek_max0);
+   $p20_gl_seek_max0 := $p16_gl_seek_max0;
+   assume true;
+   goto $bb11_gl_seek_max_0, $bb12_gl_seek_max_0;
+ $bb11_gl_seek_max_0:
+   assume ($i19_gl_seek_max0 == 1);
+   $p9_gl_seek_max0, $p10_gl_seek_max0, $i11_gl_seek_max0 := $p18_gl_seek_max0, $p16_gl_seek_max0, $i15_gl_seek_max0;
+   goto $bb7_gl_seek_max_0;
+ $bb12_gl_seek_max_0:
+   assume !(($i19_gl_seek_max0 == 1));
+   $p8_gl_seek_max0 := $p20_gl_seek_max0;
+   goto $bb6_gl_seek_max_0;
+ $bb14_gl_seek_max_0:
+   $i0_gl_seek_max0 := $r_list_empty1;
+   goto $bb13_gl_seek_max_0;
+ $bb15_gl_seek_max_0:
+   $p0_list_empty1 := gl_list_gl_seek_max0;
+   goto $bb0_list_empty_1;
+ $bb13_gl_seek_max_0:
+   $i1_gl_seek_max0 := $ne.i32($i0_gl_seek_max0, 0);
+   assume true;
+   goto $bb1_gl_seek_max_0, $bb2_gl_seek_max_0;
+ $bb17_gl_seek_max_0:
+   $i4_gl_seek_max0 := $r_val_from_node0;
+   goto $bb16_gl_seek_max_0;
+ $bb18_gl_seek_max_0:
+   $p0_val_from_node0 := $p3_gl_seek_max0;
+   goto $bb0_val_from_node_0;
+ $bb16_gl_seek_max_0:
+   call {:cexpr "max"} boogie_si_record_i32($i4_gl_seek_max0);
+   $p5_gl_seek_max0 := $add.ref($add.ref($p3_gl_seek_max0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p6_gl_seek_max0 := $load.ref($M.0, $p5_gl_seek_max0);
+   $i7_gl_seek_max0 := $ne.ref(gl_list_gl_seek_max0, $p6_gl_seek_max0);
+   $p8_gl_seek_max0 := $p3_gl_seek_max0;
+   assume true;
+   goto $bb4_gl_seek_max_0, $bb5_gl_seek_max_0;
+ $bb20_gl_seek_max_0:
+   $i12_gl_seek_max0 := $r_val_from_node1;
+   goto $bb19_gl_seek_max_0;
+ $bb21_gl_seek_max_0:
+   $p0_val_from_node1 := $p9_gl_seek_max0;
+   goto $bb0_val_from_node_1;
+ $bb19_gl_seek_max_0:
+   call {:cexpr "value"} boogie_si_record_i32($i12_gl_seek_max0);
+   $i13_gl_seek_max0 := $slt.i32($i12_gl_seek_max0, $i11_gl_seek_max0);
+   assume true;
+   goto $bb8_gl_seek_max_0, $bb9_gl_seek_max_0;
+ $bb0_list_empty_1:
+   $p1_list_empty1 := $add.ref($add.ref($p0_list_empty1, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p2_list_empty1 := $load.ref($M.0, $p1_list_empty1);
+   $i3_list_empty1 := $eq.ref($p2_list_empty1, $p0_list_empty1);
+   $i4_list_empty1 := $zext.i1.i32($i3_list_empty1);
+   $r_list_empty1 := $i4_list_empty1;
+   goto $bb14_gl_seek_max_0;
+ $bb0_val_from_node_0:
+   $p1_val_from_node0 := $bitcast.ref.ref($p0_val_from_node0);
+   $p2_val_from_node0 := $add.ref($p1_val_from_node0, $mul.ref($sub.i64(0, $p2i.ref.i64($add.ref($add.ref($0.ref_val_from_node0, $mul.ref(0, 24)), $mul.ref(8, 1)))), 1));
+   $p3_val_from_node0 := $bitcast.ref.ref($p2_val_from_node0);
+   $p4_val_from_node0 := $add.ref($add.ref($p3_val_from_node0, $mul.ref(0, 24)), $mul.ref(0, 1));
+   $i5_val_from_node0 := $load.i32($M.0, $p4_val_from_node0);
+   $r_val_from_node0 := $i5_val_from_node0;
+   goto $bb17_gl_seek_max_0;
+ $bb0_val_from_node_1:
+   $p1_val_from_node1 := $bitcast.ref.ref($p0_val_from_node1);
+   $p2_val_from_node1 := $add.ref($p1_val_from_node1, $mul.ref($sub.i64(0, $p2i.ref.i64($add.ref($add.ref($0.ref_val_from_node1, $mul.ref(0, 24)), $mul.ref(8, 1)))), 1));
+   $p3_val_from_node1 := $bitcast.ref.ref($p2_val_from_node1);
+   $p4_val_from_node1 := $add.ref($add.ref($p3_val_from_node1, $mul.ref(0, 24)), $mul.ref(0, 1));
+   $i5_val_from_node1 := $load.i32($M.0, $p4_val_from_node1);
+   $r_val_from_node1 := $i5_val_from_node1;
+   goto $bb20_gl_seek_max_0;
+ $bb0_list_add_1:
+   $p2_list_add1 := $add.ref($add.ref($p1_list_add1, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p3_list_add1 := $load.ref($M.0, $p2_list_add1);
+   goto $bb3_list_add_1;
+ $bb2_list_add_1:
+   goto $bb1_list_add_1;
+ $bb3_list_add_1:
+   $p0___list_add0 := $p0_list_add1;
+   $p1___list_add0 := $p1_list_add1;
+   $p2___list_add0 := $p3_list_add1;
+   goto $bb0___list_add_0;
+ $bb1_list_add_1:
+   goto $bb18_gl_sort_0;
+ $bb0___list_add_0:
+   $p3___list_add0 := $add.ref($add.ref($p2___list_add0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p3___list_add0, $p0___list_add0);
+   $p4___list_add0 := $add.ref($add.ref($p0___list_add0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p4___list_add0, $p2___list_add0);
+   $p5___list_add0 := $add.ref($add.ref($p0___list_add0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p5___list_add0, $p1___list_add0);
+   $p6___list_add0 := $add.ref($add.ref($p1___list_add0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p6___list_add0, $p0___list_add0);
+   goto $bb2_list_add_1;
+ $bb0_list_del_0:
+   $p1_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $p2_list_del0 := $load.ref($M.0, $p1_list_del0);
+   $p3_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p4_list_del0 := $load.ref($M.0, $p3_list_del0);
+   goto $bb3_list_del_0;
+ $bb2_list_del_0:
+   goto $bb1_list_del_0;
+ $bb3_list_del_0:
+   $p0___list_del0 := $p2_list_del0;
+   $p1___list_del0 := $p4_list_del0;
+   goto $bb0___list_del_0;
+ $bb1_list_del_0:
+   $p5_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p5_list_del0, $0.ref_list_del0);
+   $p6_list_del0 := $add.ref($add.ref($p0_list_del0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p6_list_del0, $0.ref_list_del0);
+   goto $bb20_gl_sort_0;
+ $bb0___list_del_0:
+   $p2___list_del0 := $add.ref($add.ref($p1___list_del0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p2___list_del0, $p0___list_del0);
+   $p3___list_del0 := $add.ref($add.ref($p0___list_del0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p3___list_del0, $p1___list_del0);
+   goto $bb2_list_del_0;
+ $bb0_list_move_0:
+   $p2_list_move0 := $add.ref($add.ref($p0_list_move0, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $p3_list_move0 := $load.ref($M.0, $p2_list_move0);
+   $p4_list_move0 := $add.ref($add.ref($p0_list_move0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p5_list_move0 := $load.ref($M.0, $p4_list_move0);
+   goto $bb4_list_move_0;
+ $bb3_list_move_0:
+   goto $bb1_list_move_0;
+ $bb4_list_move_0:
+   $p0___list_del1 := $p3_list_move0;
+   $p1___list_del1 := $p5_list_move0;
+   goto $bb0___list_del_1;
+ $bb5_list_move_0:
+   goto $bb2_list_move_0;
+ $bb6_list_move_0:
+   $p0_list_add2 := $p0_list_move0;
+   $p1_list_add2 := $p1_list_move0;
+   goto $bb0_list_add_2;
+ $bb1_list_move_0:
+   goto $bb6_list_move_0;
+ $bb2_list_move_0:
+   goto $bb24_gl_sort_0;
+ $bb0___list_del_1:
+   $p2___list_del1 := $add.ref($add.ref($p1___list_del1, $mul.ref(0, 16)), $mul.ref(8, 1));
+   $M.0 := $store.ref($M.0, $p2___list_del1, $p0___list_del1);
+   $p3___list_del1 := $add.ref($add.ref($p0___list_del1, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $M.0 := $store.ref($M.0, $p3___list_del1, $p1___list_del1);
+   goto $bb3_list_move_0;
+ $bb0_list_add_2:
+   $p2_list_add2 := $add.ref($add.ref($p1_list_add2, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p3_list_add2 := $load.ref($M.0, $p2_list_add2);
+   call __list_add($p0_list_add2, $p1_list_add2, $p3_list_add2);
+   goto $bb5_list_move_0;
+ $bb0_gl_seek_max_1:
+   goto $bb15_gl_seek_max_1;
+ $bb1_gl_seek_max_1:
+   assume ($i1_gl_seek_max1 == 1);
+   $p2_gl_seek_max1 := $0.ref_gl_seek_max1;
+   goto $bb3_gl_seek_max_1;
+ $bb2_gl_seek_max_1:
+   assume !(($i1_gl_seek_max1 == 1));
+   $p3_gl_seek_max1 := $load.ref($M.0, gl_list_gl_seek_max1);
+   goto $bb18_gl_seek_max_1;
+ $bb3_gl_seek_max_1:
+   $r_gl_seek_max1 := $p2_gl_seek_max1;
+   goto $bb26_gl_sort_0;
+ $bb4_gl_seek_max_1:
+   assume ($i7_gl_seek_max1 == 1);
+   $p9_gl_seek_max1, $p10_gl_seek_max1, $i11_gl_seek_max1 := $p6_gl_seek_max1, $p3_gl_seek_max1, $i4_gl_seek_max1;
+   goto $bb7_gl_seek_max_1;
+ $bb5_gl_seek_max_1:
+   assume !(($i7_gl_seek_max1 == 1));
+   goto $bb6_gl_seek_max_1;
+ $bb6_gl_seek_max_1:
+   $p2_gl_seek_max1 := $p8_gl_seek_max1;
+   goto $bb3_gl_seek_max_1;
+ $bb7_gl_seek_max_1:
+   goto $bb21_gl_seek_max_1;
+ $bb8_gl_seek_max_1:
+   assume ($i13_gl_seek_max1 == 1);
+   $p14_gl_seek_max1, $i15_gl_seek_max1, $p16_gl_seek_max1 := $p9_gl_seek_max1, $i11_gl_seek_max1, $p10_gl_seek_max1;
+   goto $bb10_gl_seek_max_1;
+ $bb9_gl_seek_max_1:
+   assume !(($i13_gl_seek_max1 == 1));
+   $p14_gl_seek_max1, $i15_gl_seek_max1, $p16_gl_seek_max1 := $p9_gl_seek_max1, $i12_gl_seek_max1, $p9_gl_seek_max1;
+   goto $bb10_gl_seek_max_1;
+ $bb10_gl_seek_max_1:
+   $p17_gl_seek_max1 := $add.ref($add.ref($p14_gl_seek_max1, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p18_gl_seek_max1 := $load.ref($M.0, $p17_gl_seek_max1);
+   $i19_gl_seek_max1 := $ne.ref(gl_list_gl_seek_max1, $p18_gl_seek_max1);
+   $p20_gl_seek_max1 := $p16_gl_seek_max1;
+   assume true;
+   goto $bb11_gl_seek_max_1, $bb12_gl_seek_max_1;
+ $bb11_gl_seek_max_1:
+   assume ($i19_gl_seek_max1 == 1);
+   $p9_gl_seek_max1, $p10_gl_seek_max1, $i11_gl_seek_max1 := $p18_gl_seek_max1, $p16_gl_seek_max1, $i15_gl_seek_max1;
+   goto $bb7_gl_seek_max_1;
+ $bb12_gl_seek_max_1:
+   assume !(($i19_gl_seek_max1 == 1));
+   $p8_gl_seek_max1 := $p20_gl_seek_max1;
+   goto $bb6_gl_seek_max_1;
+ $bb14_gl_seek_max_1:
+   $i0_gl_seek_max1 := $r_list_empty2;
+   goto $bb13_gl_seek_max_1;
+ $bb15_gl_seek_max_1:
+   $p0_list_empty2 := gl_list_gl_seek_max1;
+   goto $bb0_list_empty_2;
+ $bb13_gl_seek_max_1:
+   $i1_gl_seek_max1 := $ne.i32($i0_gl_seek_max1, 0);
+   assume true;
+   goto $bb1_gl_seek_max_1, $bb2_gl_seek_max_1;
+ $bb17_gl_seek_max_1:
+   $i4_gl_seek_max1 := $r_val_from_node2;
+   goto $bb16_gl_seek_max_1;
+ $bb18_gl_seek_max_1:
+   $p0_val_from_node2 := $p3_gl_seek_max1;
+   goto $bb0_val_from_node_2;
+ $bb16_gl_seek_max_1:
+   call {:cexpr "max"} boogie_si_record_i32($i4_gl_seek_max1);
+   $p5_gl_seek_max1 := $add.ref($add.ref($p3_gl_seek_max1, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p6_gl_seek_max1 := $load.ref($M.0, $p5_gl_seek_max1);
+   $i7_gl_seek_max1 := $ne.ref(gl_list_gl_seek_max1, $p6_gl_seek_max1);
+   $p8_gl_seek_max1 := $p3_gl_seek_max1;
+   assume true;
+   goto $bb4_gl_seek_max_1, $bb5_gl_seek_max_1;
+ $bb20_gl_seek_max_1:
+   $i12_gl_seek_max1 := $r_val_from_node3;
+   goto $bb19_gl_seek_max_1;
+ $bb21_gl_seek_max_1:
+   $p0_val_from_node3 := $p9_gl_seek_max1;
+   goto $bb0_val_from_node_3;
+ $bb19_gl_seek_max_1:
+   call {:cexpr "value"} boogie_si_record_i32($i12_gl_seek_max1);
+   $i13_gl_seek_max1 := $slt.i32($i12_gl_seek_max1, $i11_gl_seek_max1);
+   assume true;
+   goto $bb8_gl_seek_max_1, $bb9_gl_seek_max_1;
+ $bb0_list_empty_2:
+   $p1_list_empty2 := $add.ref($add.ref($p0_list_empty2, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p2_list_empty2 := $load.ref($M.0, $p1_list_empty2);
+   $i3_list_empty2 := $eq.ref($p2_list_empty2, $p0_list_empty2);
+   $i4_list_empty2 := $zext.i1.i32($i3_list_empty2);
+   $r_list_empty2 := $i4_list_empty2;
+   goto $bb14_gl_seek_max_1;
+ $bb0_val_from_node_2:
+   $p1_val_from_node2 := $bitcast.ref.ref($p0_val_from_node2);
+   $p2_val_from_node2 := $add.ref($p1_val_from_node2, $mul.ref($sub.i64(0, $p2i.ref.i64($add.ref($add.ref($0.ref_val_from_node2, $mul.ref(0, 24)), $mul.ref(8, 1)))), 1));
+   $p3_val_from_node2 := $bitcast.ref.ref($p2_val_from_node2);
+   $p4_val_from_node2 := $add.ref($add.ref($p3_val_from_node2, $mul.ref(0, 24)), $mul.ref(0, 1));
+   $i5_val_from_node2 := $load.i32($M.0, $p4_val_from_node2);
+   $r_val_from_node2 := $i5_val_from_node2;
+   goto $bb17_gl_seek_max_1;
+ $bb0_val_from_node_3:
+   $p1_val_from_node3 := $bitcast.ref.ref($p0_val_from_node3);
+   $p2_val_from_node3 := $add.ref($p1_val_from_node3, $mul.ref($sub.i64(0, $p2i.ref.i64($add.ref($add.ref($0.ref_val_from_node3, $mul.ref(0, 24)), $mul.ref(8, 1)))), 1));
+   $p3_val_from_node3 := $bitcast.ref.ref($p2_val_from_node3);
+   $p4_val_from_node3 := $add.ref($add.ref($p3_val_from_node3, $mul.ref(0, 24)), $mul.ref(0, 1));
+   $i5_val_from_node3 := $load.i32($M.0, $p4_val_from_node3);
+   $r_val_from_node3 := $i5_val_from_node3;
+   goto $bb20_gl_seek_max_1;
+ $bb0_gl_destroy_0:
+   $p0_gl_destroy0 := $load.ref($M.0, gl_list_gl_destroy0);
+   $i1_gl_destroy0 := $ne.ref(gl_list_gl_destroy0, $p0_gl_destroy0);
+   assume true;
+   goto $bb1_gl_destroy_0, $bb2_gl_destroy_0;
+ $bb1_gl_destroy_0:
+   assume ($i1_gl_destroy0 == 1);
+   $p2_gl_destroy0 := $p0_gl_destroy0;
+   goto $bb4_gl_destroy_0;
+ $bb2_gl_destroy_0:
+   assume !(($i1_gl_destroy0 == 1));
+   goto $bb3_gl_destroy_0;
+ $bb3_gl_destroy_0:
+   goto $bb8_main_0;
+ $bb4_gl_destroy_0:
+   $p3_gl_destroy0 := $add.ref($add.ref($p2_gl_destroy0, $mul.ref(0, 16)), $mul.ref(0, 1));
+   $p4_gl_destroy0 := $load.ref($M.0, $p3_gl_destroy0);
+   $M.0 := $store.ref($M.0, gl_list_gl_destroy0, $p4_gl_destroy0);
+   $p5_gl_destroy0 := $bitcast.ref.ref($p2_gl_destroy0);
+   $p6_gl_destroy0 := $add.ref($p5_gl_destroy0, $mul.ref($sub.i64(0, $p2i.ref.i64($add.ref($add.ref($0.ref_gl_destroy0, $mul.ref(0, 24)), $mul.ref(8, 1)))), 1));
+   $p7_gl_destroy0 := $bitcast.ref.ref($p6_gl_destroy0);
+   $p8_gl_destroy0 := $bitcast.ref.ref($p7_gl_destroy0);
+   call free_($p8_gl_destroy0);
+   $p9_gl_destroy0 := $load.ref($M.0, gl_list_gl_destroy0);
+   $i10_gl_destroy0 := $ne.ref(gl_list_gl_destroy0, $p9_gl_destroy0);
+   assume true;
+   goto $bb5_gl_destroy_0, $bb6_gl_destroy_0;
+ $bb5_gl_destroy_0:
+   assume ($i10_gl_destroy0 == 1);
+   $p2_gl_destroy0 := $p9_gl_destroy0;
+   goto $bb4_gl_destroy_0;
+ $bb6_gl_destroy_0:
+   assume !(($i10_gl_destroy0 == 1));
+   goto $bb3_gl_destroy_0;
+ }
+ =====================CENTER NEW===================
+ from bb: $bb0_main_0 to bb: $bb5_main_0 
+ from bb: $bb4_main_0 to bb: $bb1_main_0 
+ from bb: $bb5_main_0 to bb: $bb0_gl_read_0 
+ from bb: $bb6_main_0 to bb: $bb2_main_0 
+ from bb: $bb7_main_0 to bb: $bb0_gl_sort_0 
+ from bb: $bb8_main_0 to bb: $bb3_main_0 
+ from bb: $bb9_main_0 to bb: $bb0_gl_destroy_0 
+ from bb: $bb1_main_0 to bb: $bb7_main_0 
+ from bb: $bb2_main_0 to bb: $bb9_main_0 
+ from bb: $bb0_gl_read_0 to bb: $bb1_gl_read_0 
+ from bb: $bb1_gl_read_0 to bb: $bb7_gl_read_0 
+ from bb: $bb2_gl_read_0 to bb: $bb3_gl_read_0 $bb4_gl_read_0 
+ from bb: $bb3_gl_read_0 to bb: $bb1_gl_read_0 
+ from bb: $bb4_gl_read_0 to bb: $bb4_main_0 
+ from bb: $bb6_gl_read_0 to bb: $bb5_gl_read_0 
+ from bb: $bb7_gl_read_0 to bb: $bb0_gl_insert_0 
+ from bb: $bb5_gl_read_0 to bb: $bb2_gl_read_0 
+ from bb: $bb0_gl_insert_0 to bb: $bb1_gl_insert_0 $bb2_gl_insert_0 
+ from bb: $bb1_gl_insert_0 to bb: $bb5_gl_insert_0 
+ from bb: $bb4_gl_insert_0 to bb: $bb3_gl_insert_0 
+ from bb: $bb5_gl_insert_0 to bb: $bb0_list_add_0 
+ from bb: $bb3_gl_insert_0 to bb: $bb6_gl_read_0 
+ from bb: $bb0_list_add_0 to bb: $bb4_gl_insert_0 
+ from bb: $bb0_gl_sort_0 to bb: $bb12_gl_sort_0 
+ from bb: $bb1_gl_sort_0 to bb: $bb3_gl_sort_0 
+ from bb: $bb2_gl_sort_0 to bb: $bb15_gl_sort_0 
+ from bb: $bb3_gl_sort_0 to bb: $bb6_main_0 
+ from bb: $bb4_gl_sort_0 to bb: $bb7_gl_sort_0 
+ from bb: $bb5_gl_sort_0 to bb: $bb6_gl_sort_0 
+ from bb: $bb6_gl_sort_0 to bb: $bb19_gl_sort_0 
+ from bb: $bb7_gl_sort_0 to bb: $bb25_gl_sort_0 
+ from bb: $bb8_gl_sort_0 to bb: $bb7_gl_sort_0 
+ from bb: $bb9_gl_sort_0 to bb: $bb6_gl_sort_0 
+ from bb: $bb11_gl_sort_0 to bb: $bb10_gl_sort_0 
+ from bb: $bb12_gl_sort_0 to bb: $bb0_list_empty_0 
+ from bb: $bb10_gl_sort_0 to bb: $bb1_gl_sort_0 $bb2_gl_sort_0 
+ from bb: $bb14_gl_sort_0 to bb: $bb13_gl_sort_0 
+ from bb: $bb15_gl_sort_0 to bb: $bb0_gl_seek_max_0 
+ from bb: $bb13_gl_sort_0 to bb: $bb4_gl_sort_0 $bb5_gl_sort_0 
+ from bb: $bb18_gl_sort_0 to bb: $bb16_gl_sort_0 
+ from bb: $bb19_gl_sort_0 to bb: $bb0_list_add_1 
+ from bb: $bb20_gl_sort_0 to bb: $bb17_gl_sort_0 
+ from bb: $bb21_gl_sort_0 to bb: $bb0_list_del_0 
+ from bb: $bb16_gl_sort_0 to bb: $bb21_gl_sort_0 
+ from bb: $bb17_gl_sort_0 to bb: $bb3_gl_sort_0 
+ from bb: $bb24_gl_sort_0 to bb: $bb22_gl_sort_0 
+ from bb: $bb25_gl_sort_0 to bb: $bb0_list_move_0 
+ from bb: $bb26_gl_sort_0 to bb: $bb23_gl_sort_0 
+ from bb: $bb27_gl_sort_0 to bb: $bb0_gl_seek_max_1 
+ from bb: $bb22_gl_sort_0 to bb: $bb27_gl_sort_0 
+ from bb: $bb23_gl_sort_0 to bb: $bb8_gl_sort_0 $bb9_gl_sort_0 
+ from bb: $bb0_list_empty_0 to bb: $bb11_gl_sort_0 
+ from bb: $bb0_gl_seek_max_0 to bb: $bb15_gl_seek_max_0 
+ from bb: $bb1_gl_seek_max_0 to bb: $bb3_gl_seek_max_0 
+ from bb: $bb2_gl_seek_max_0 to bb: $bb18_gl_seek_max_0 
+ from bb: $bb3_gl_seek_max_0 to bb: $bb14_gl_sort_0 
+ from bb: $bb4_gl_seek_max_0 to bb: $bb7_gl_seek_max_0 
+ from bb: $bb5_gl_seek_max_0 to bb: $bb6_gl_seek_max_0 
+ from bb: $bb6_gl_seek_max_0 to bb: $bb3_gl_seek_max_0 
+ from bb: $bb7_gl_seek_max_0 to bb: $bb21_gl_seek_max_0 
+ from bb: $bb8_gl_seek_max_0 to bb: $bb10_gl_seek_max_0 
+ from bb: $bb9_gl_seek_max_0 to bb: $bb10_gl_seek_max_0 
+ from bb: $bb10_gl_seek_max_0 to bb: $bb11_gl_seek_max_0 $bb12_gl_seek_max_0 
+ from bb: $bb11_gl_seek_max_0 to bb: $bb7_gl_seek_max_0 
+ from bb: $bb12_gl_seek_max_0 to bb: $bb6_gl_seek_max_0 
+ from bb: $bb14_gl_seek_max_0 to bb: $bb13_gl_seek_max_0 
+ from bb: $bb15_gl_seek_max_0 to bb: $bb0_list_empty_1 
+ from bb: $bb13_gl_seek_max_0 to bb: $bb1_gl_seek_max_0 $bb2_gl_seek_max_0 
+ from bb: $bb17_gl_seek_max_0 to bb: $bb16_gl_seek_max_0 
+ from bb: $bb18_gl_seek_max_0 to bb: $bb0_val_from_node_0 
+ from bb: $bb16_gl_seek_max_0 to bb: $bb4_gl_seek_max_0 $bb5_gl_seek_max_0 
+ from bb: $bb20_gl_seek_max_0 to bb: $bb19_gl_seek_max_0 
+ from bb: $bb21_gl_seek_max_0 to bb: $bb0_val_from_node_1 
+ from bb: $bb19_gl_seek_max_0 to bb: $bb8_gl_seek_max_0 $bb9_gl_seek_max_0 
+ from bb: $bb0_list_empty_1 to bb: $bb14_gl_seek_max_0 
+ from bb: $bb0_val_from_node_0 to bb: $bb17_gl_seek_max_0 
+ from bb: $bb0_val_from_node_1 to bb: $bb20_gl_seek_max_0 
+ from bb: $bb0_list_add_1 to bb: $bb3_list_add_1 
+ from bb: $bb2_list_add_1 to bb: $bb1_list_add_1 
+ from bb: $bb3_list_add_1 to bb: $bb0___list_add_0 
+ from bb: $bb1_list_add_1 to bb: $bb18_gl_sort_0 
+ from bb: $bb0___list_add_0 to bb: $bb2_list_add_1 
+ from bb: $bb0_list_del_0 to bb: $bb3_list_del_0 
+ from bb: $bb2_list_del_0 to bb: $bb1_list_del_0 
+ from bb: $bb3_list_del_0 to bb: $bb0___list_del_0 
+ from bb: $bb1_list_del_0 to bb: $bb20_gl_sort_0 
+ from bb: $bb0___list_del_0 to bb: $bb2_list_del_0 
+ from bb: $bb0_list_move_0 to bb: $bb4_list_move_0 
+ from bb: $bb3_list_move_0 to bb: $bb1_list_move_0 
+ from bb: $bb4_list_move_0 to bb: $bb0___list_del_1 
+ from bb: $bb5_list_move_0 to bb: $bb2_list_move_0 
+ from bb: $bb6_list_move_0 to bb: $bb0_list_add_2 
+ from bb: $bb1_list_move_0 to bb: $bb6_list_move_0 
+ from bb: $bb2_list_move_0 to bb: $bb24_gl_sort_0 
+ from bb: $bb0___list_del_1 to bb: $bb3_list_move_0 
+ from bb: $bb0_list_add_2 to bb: $bb5_list_move_0 
+ from bb: $bb0_gl_seek_max_1 to bb: $bb15_gl_seek_max_1 
+ from bb: $bb1_gl_seek_max_1 to bb: $bb3_gl_seek_max_1 
+ from bb: $bb2_gl_seek_max_1 to bb: $bb18_gl_seek_max_1 
+ from bb: $bb3_gl_seek_max_1 to bb: $bb26_gl_sort_0 
+ from bb: $bb4_gl_seek_max_1 to bb: $bb7_gl_seek_max_1 
+ from bb: $bb5_gl_seek_max_1 to bb: $bb6_gl_seek_max_1 
+ from bb: $bb6_gl_seek_max_1 to bb: $bb3_gl_seek_max_1 
+ from bb: $bb7_gl_seek_max_1 to bb: $bb21_gl_seek_max_1 
+ from bb: $bb8_gl_seek_max_1 to bb: $bb10_gl_seek_max_1 
+ from bb: $bb9_gl_seek_max_1 to bb: $bb10_gl_seek_max_1 
+ from bb: $bb10_gl_seek_max_1 to bb: $bb11_gl_seek_max_1 $bb12_gl_seek_max_1 
+ from bb: $bb11_gl_seek_max_1 to bb: $bb7_gl_seek_max_1 
+ from bb: $bb12_gl_seek_max_1 to bb: $bb6_gl_seek_max_1 
+ from bb: $bb14_gl_seek_max_1 to bb: $bb13_gl_seek_max_1 
+ from bb: $bb15_gl_seek_max_1 to bb: $bb0_list_empty_2 
+ from bb: $bb13_gl_seek_max_1 to bb: $bb1_gl_seek_max_1 $bb2_gl_seek_max_1 
+ from bb: $bb17_gl_seek_max_1 to bb: $bb16_gl_seek_max_1 
+ from bb: $bb18_gl_seek_max_1 to bb: $bb0_val_from_node_2 
+ from bb: $bb16_gl_seek_max_1 to bb: $bb4_gl_seek_max_1 $bb5_gl_seek_max_1 
+ from bb: $bb20_gl_seek_max_1 to bb: $bb19_gl_seek_max_1 
+ from bb: $bb21_gl_seek_max_1 to bb: $bb0_val_from_node_3 
+ from bb: $bb19_gl_seek_max_1 to bb: $bb8_gl_seek_max_1 $bb9_gl_seek_max_1 
+ from bb: $bb0_list_empty_2 to bb: $bb14_gl_seek_max_1 
+ from bb: $bb0_val_from_node_2 to bb: $bb17_gl_seek_max_1 
+ from bb: $bb0_val_from_node_3 to bb: $bb20_gl_seek_max_1 
+ from bb: $bb0_gl_destroy_0 to bb: $bb1_gl_destroy_0 $bb2_gl_destroy_0 
+ from bb: $bb1_gl_destroy_0 to bb: $bb4_gl_destroy_0 
+ from bb: $bb2_gl_destroy_0 to bb: $bb3_gl_destroy_0 
+ from bb: $bb3_gl_destroy_0 to bb: $bb8_main_0 
+ from bb: $bb4_gl_destroy_0 to bb: $bb5_gl_destroy_0 $bb6_gl_destroy_0 
+ from bb: $bb5_gl_destroy_0 to bb: $bb4_gl_destroy_0 
+ from bb: $bb6_gl_destroy_0 to bb: $bb3_gl_destroy_0 
+ In $bb3_main_0
+ [0mpop: $bb3_main_0
+ [0mpop finished
+ [0mIn $bb8_main_0
+ [0mpop: $bb8_main_0
+ [0mpop finished
+ [0mIn $bb3_gl_destroy_0
+ [0mpop: $bb3_gl_destroy_0
+ [0mpop finished
+ [0mIn $bb6_gl_destroy_0
+ [0mpop: $bb6_gl_destroy_0
+ [0mpop finished
+ [0mIn $bb4_gl_destroy_0
+ [0mpop: $bb5_gl_destroy_0
+ [0mpop: $bb4_gl_destroy_0
+ [0mpop finished
+ [0mIn $bb1_gl_destroy_0
+ [0mpop: $bb1_gl_destroy_0
+ [0mpop finished
+ [0mIn $bb2_gl_destroy_0
+ [0mpop: $bb2_gl_destroy_0
+ [0mpop finished
+ [0mIn $bb0_gl_destroy_0
+ [0mpop: $bb0_gl_destroy_0
+ [0mpop finished
+ [0mIn $bb9_main_0
+ [0mpop: $bb9_main_0
+ [0mpop finished
+ [0mIn $bb2_main_0
+ [0mpop: $bb2_main_0
+ [0mpop finished
+ [0mIn $bb6_main_0
+ [0mpop: $bb6_main_0
+ [0mpop finished
+ [0mIn $bb3_gl_sort_0
+ [0mpop: $bb3_gl_sort_0
+ [0mpop finished
+ [0mIn $bb1_gl_sort_0
+ [0mpop: $bb1_gl_sort_0
+ [0mpop finished
+ [0mIn $bb17_gl_sort_0
+ [0mpop: $bb17_gl_sort_0
+ [0mpop finished
+ [0mIn $bb20_gl_sort_0
+ [0mpop: $bb20_gl_sort_0
+ [0mpop finished
+ [0mIn $bb1_list_del_0
+ [0mpop: $bb1_list_del_0
+ [0mpop finished
+ [0mIn $bb2_list_del_0
+ [0mpop: $bb2_list_del_0
+ [0mpop finished
+ [0mIn $bb0___list_del_0
+ [0mpop: $bb0___list_del_0
+ [0mpop finished
+ [0mIn $bb3_list_del_0
+ [0mpop: $bb3_list_del_0
+ [0mpop finished
+ [0mIn $bb0_list_del_0
+ [0mpop: $bb0_list_del_0
+ [0mpop finished
+ [0mIn $bb21_gl_sort_0
+ [0mpop: $bb21_gl_sort_0
+ [0mpop finished
+ [0mIn $bb16_gl_sort_0
+ [0mpop: $bb16_gl_sort_0
+ [0mpop finished
+ [0mIn $bb18_gl_sort_0
+ [0mpop: $bb18_gl_sort_0
+ [0mpop finished
+ [0mIn $bb1_list_add_1
+ [0mpop: $bb1_list_add_1
+ [0mpop finished
+ [0mIn $bb2_list_add_1
+ [0mpop: $bb2_list_add_1
+ [0mpop finished
+ [0mIn $bb0___list_add_0
+ [0mpop: $bb0___list_add_0
+ [0mpop finished
+ [0mIn $bb3_list_add_1
+ [0mpop: $bb3_list_add_1
+ [0mpop finished
+ [0mIn $bb0_list_add_1
+ [0mpop: $bb0_list_add_1
+ [0mpop finished
+ [0mIn $bb19_gl_sort_0
+ [0mpop: $bb19_gl_sort_0
+ [0mpop finished
+ [0mIn $bb6_gl_sort_0
+ [0mpop: $bb6_gl_sort_0
+ [0mpop finished
+ [0mIn $bb9_gl_sort_0
+ [0mpop: $bb9_gl_sort_0
+ [0mpop finished
+ [0mIn $bb7_gl_sort_0
+ [0mpop: $bb5_gl_seek_max_1
+ [0mpop: $bb9_gl_seek_max_1
+ [0mpop: $bb6_gl_seek_max_1
+ [0mpop: $bb12_gl_seek_max_1
+ [0mpop: $bb11_gl_seek_max_1
+ [0mpop: $bb10_gl_seek_max_1
+ [0mpop: $bb8_gl_seek_max_1
+ [0mpop: $bb19_gl_seek_max_1
+ [0mpop: $bb20_gl_seek_max_1
+ [0mpop: $bb0_val_from_node_3
+ [0mpop: $bb21_gl_seek_max_1
+ [0mpop: $bb7_gl_seek_max_1
+ [0mpop: $bb4_gl_seek_max_1
+ [0mpop: $bb16_gl_seek_max_1
+ [0mpop: $bb17_gl_seek_max_1
+ [0mpop: $bb0_val_from_node_2
+ [0mpop: $bb18_gl_seek_max_1
+ [0mpop: $bb2_gl_seek_max_1
+ [0mpop: $bb8_gl_sort_0
+ [0mpop: $bb23_gl_sort_0
+ [0mpop: $bb26_gl_sort_0
+ [0mpop: $bb3_gl_seek_max_1
+ [0mpop: $bb1_gl_seek_max_1
+ [0mpop: $bb13_gl_seek_max_1
+ [0mpop: $bb14_gl_seek_max_1
+ [0mpop: $bb0_list_empty_2
+ [0mpop: $bb15_gl_seek_max_1
+ [0mpop: $bb0_gl_seek_max_1
+ [0mpop: $bb27_gl_sort_0
+ [0mpop: $bb22_gl_sort_0
+ [0mpop: $bb24_gl_sort_0
+ [0mpop: $bb2_list_move_0
+ [0mpop: $bb5_list_move_0
+ [0mpop: $bb0_list_add_2
+ [0mpop: $bb6_list_move_0
+ [0mpop: $bb1_list_move_0
+ [0mpop: $bb3_list_move_0
+ [0mpop: $bb0___list_del_1
+ [0mpop: $bb4_list_move_0
+ [0mpop: $bb0_list_move_0
+ [0mpop: $bb25_gl_sort_0
+ [0mpop: $bb7_gl_sort_0
+ [0mpop finished
+ [0mIn $bb4_gl_sort_0
+ [0mpop: $bb4_gl_sort_0
+ [0mpop finished
+ [0mIn $bb5_gl_sort_0
+ [0mpop: $bb5_gl_sort_0
+ [0mpop finished
+ [0mIn $bb13_gl_sort_0
+ [0mpop: $bb13_gl_sort_0
+ [0mpop finished
+ [0mIn $bb14_gl_sort_0
+ [0mpop: $bb14_gl_sort_0
+ [0mpop finished
+ [0mIn $bb3_gl_seek_max_0
+ [0mpop: $bb3_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb1_gl_seek_max_0
+ [0mpop: $bb1_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb6_gl_seek_max_0
+ [0mpop: $bb6_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb12_gl_seek_max_0
+ [0mpop: $bb12_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb7_gl_seek_max_0
+ [0mpop: $bb9_gl_seek_max_0
+ [0mpop: $bb11_gl_seek_max_0
+ [0mpop: $bb10_gl_seek_max_0
+ [0mpop: $bb8_gl_seek_max_0
+ [0mpop: $bb19_gl_seek_max_0
+ [0mpop: $bb20_gl_seek_max_0
+ [0mpop: $bb0_val_from_node_1
+ [0mpop: $bb21_gl_seek_max_0
+ [0mpop: $bb7_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb4_gl_seek_max_0
+ [0mpop: $bb4_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb5_gl_seek_max_0
+ [0mpop: $bb5_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb16_gl_seek_max_0
+ [0mpop: $bb16_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb17_gl_seek_max_0
+ [0mpop: $bb17_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb0_val_from_node_0
+ [0mpop: $bb0_val_from_node_0
+ [0mpop finished
+ [0mIn $bb18_gl_seek_max_0
+ [0mpop: $bb18_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb2_gl_seek_max_0
+ [0mpop: $bb2_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb13_gl_seek_max_0
+ [0mpop: $bb13_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb14_gl_seek_max_0
+ [0mpop: $bb14_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb0_list_empty_1
+ [0mpop: $bb0_list_empty_1
+ [0mpop finished
+ [0mIn $bb15_gl_seek_max_0
+ [0mpop: $bb15_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb0_gl_seek_max_0
+ [0mpop: $bb0_gl_seek_max_0
+ [0mpop finished
+ [0mIn $bb15_gl_sort_0
+ [0mpop: $bb15_gl_sort_0
+ [0mpop finished
+ [0mIn $bb2_gl_sort_0
+ [0mpop: $bb2_gl_sort_0
+ [0mpop finished
+ [0mIn $bb10_gl_sort_0
+ [0mpop: $bb10_gl_sort_0
+ [0mpop finished
+ [0mIn $bb11_gl_sort_0
+ [0mpop: $bb11_gl_sort_0
+ [0mpop finished
+ [0mIn $bb0_list_empty_0
+ [0mpop: $bb0_list_empty_0
+ [0mpop finished
+ [0mIn $bb12_gl_sort_0
+ [0mpop: $bb12_gl_sort_0
+ [0mpop finished
+ [0mIn $bb0_gl_sort_0
+ [0mpop: $bb0_gl_sort_0
+ [0mpop finished
+ [0mIn $bb7_main_0
+ [0mpop: $bb7_main_0
+ [0mpop finished
+ [0mIn $bb1_main_0
+ [0mpop: $bb1_main_0
+ [0mpop finished
+ [0mIn $bb4_main_0
+ [0mpop: $bb4_main_0
+ [0mpop finished
+ [0mIn $bb4_gl_read_0
+ [0mpop: $bb4_gl_read_0
+ [0mpop finished
+ [0mIn $bb2_gl_insert_0
+ [0mpop: $bb2_gl_insert_0
+ [0mpop finished
+ [0mIn $bb1_gl_read_0
+ [0mpop: $bb3_gl_read_0
+ [0mpop: $bb2_gl_read_0
+ [0mpop: $bb5_gl_read_0
+ [0mpop: $bb6_gl_read_0
+ [0mpop: $bb3_gl_insert_0
+ [0mpop: $bb4_gl_insert_0
+ [0mpop: $bb0_list_add_0
+ [0mpop: $bb5_gl_insert_0
+ [0mpop: $bb1_gl_insert_0
+ [0mpop: $bb0_gl_insert_0
+ [0mpop: $bb7_gl_read_0
+ [0mpop: $bb1_gl_read_0
+ [0mpop finished
+ [0mIn $bb0_gl_read_0
+ [0mpop: $bb0_gl_read_0
+ [0mpop finished
+ [0mIn $bb5_main_0
+ [0mpop: $bb5_main_0
+ [0mpop finished
+ [0mIn $bb0_main_0
+ [0mpop: $bb0_main_0
+ [0mpop finished
+ [0mIn pro:$bb0_main_0 1 $bb5_main_0 
+ In pro:$bb5_main_0 1 $bb0_gl_read_0 
+ In pro:$bb0_gl_read_0 1 $bb1_gl_read_0 
+ In pro:$bb1_gl_read_0 1 $bb7_gl_read_0 
+ In pro:$bb7_gl_read_0 1 $bb0_gl_insert_0 
+ In pro:$bb0_gl_insert_0 1 $bb1_gl_insert_0 $bb2_gl_insert_0 
+ In pro:$bb1_gl_insert_0 1 $bb5_gl_insert_0 
+ In pro:$bb5_gl_insert_0 1 $bb0_list_add_0 
+ In pro:$bb0_list_add_0 1 $bb4_gl_insert_0 
+ In pro:$bb4_gl_insert_0 1 $bb3_gl_insert_0 
+ In pro:$bb3_gl_insert_0 1 $bb6_gl_read_0 
+ In pro:$bb6_gl_read_0 1 $bb5_gl_read_0 
+ In pro:$bb5_gl_read_0 1 $bb2_gl_read_0 
+ In pro:$bb2_gl_read_0 1 $bb3_gl_read_0 $bb4_gl_read_0 
+ In pro:$bb3_gl_read_0 1 $bb1_gl_read_0 
+ In pro:$bb1_gl_read_0 2 $bb7_gl_read_0 
+ In pro:$bb7_gl_read_0 2 $bb0_gl_insert_0 
+ In pro:$bb0_gl_insert_0 2 $bb1_gl_insert_0 $bb2_gl_insert_0 
+ In pro:$bb1_gl_insert_0 2 $bb5_gl_insert_0 
+ In pro:$bb5_gl_insert_0 2 $bb0_list_add_0 
+ In pro:$bb0_list_add_0 2 $bb4_gl_insert_0 
+ In pro:$bb4_gl_insert_0 2 $bb3_gl_insert_0 
+ In pro:$bb3_gl_insert_0 2 $bb6_gl_read_0 
+ In pro:$bb6_gl_read_0 2 $bb5_gl_read_0 
+ In pro:$bb5_gl_read_0 2 $bb2_gl_read_0 
+ In pro:$bb2_gl_read_0 2 $bb3_gl_read_0 $bb4_gl_read_0 
+ In pro:$bb3_gl_read_0 2 $bb1_gl_read_0 
+ In pro:$bb1_gl_read_0 3 $bb7_gl_read_0 
+ In pro:$bb7_gl_read_0 3 $bb0_gl_insert_0 
+ In pro:$bb0_gl_insert_0 3 $bb1_gl_insert_0 $bb2_gl_insert_0 
+ In pro:$bb1_gl_insert_0 3 $bb5_gl_insert_0 
+ In pro:$bb5_gl_insert_0 3 $bb0_list_add_0 
+ In pro:$bb0_list_add_0 3 $bb4_gl_insert_0 
+ In pro:$bb4_gl_insert_0 3 $bb3_gl_insert_0 
+ In pro:$bb3_gl_insert_0 3 $bb6_gl_read_0 
+ In pro:$bb6_gl_read_0 3 $bb5_gl_read_0 
+ In pro:$bb5_gl_read_0 3 $bb2_gl_read_0 
+ In pro:$bb2_gl_read_0 3 $bb3_gl_read_0 $bb4_gl_read_0 
+ In pro:$bb3_gl_read_0 3 $bb1_gl_read_0 
+ In pro:$bb4_gl_read_0 1 $bb4_main_0 
+ In pro:$bb4_main_0 1 $bb1_main_0 
+ In pro:$bb1_main_0 1 $bb7_main_0 
+ In pro:$bb7_main_0 1 $bb0_gl_sort_0 
+ In pro:$bb0_gl_sort_0 1 $bb12_gl_sort_0 
+ In pro:$bb12_gl_sort_0 1 $bb0_list_empty_0 
+ In pro:$bb0_list_empty_0 1 $bb11_gl_sort_0 
+ In pro:$bb11_gl_sort_0 1 $bb10_gl_sort_0 
+ In pro:$bb10_gl_sort_0 1 $bb1_gl_sort_0 $bb2_gl_sort_0 
+ In pro:$bb1_gl_sort_0 1 $bb3_gl_sort_0 
+ In pro:$bb3_gl_sort_0 1 $bb6_main_0 
+ In pro:$bb6_main_0 1 $bb2_main_0 
+ In pro:$bb2_main_0 1 $bb9_main_0 
+ In pro:$bb2_gl_sort_0 1 $bb15_gl_sort_0 
+ In pro:$bb15_gl_sort_0 1 $bb0_gl_seek_max_0 
+ In pro:$bb0_gl_seek_max_0 1 $bb15_gl_seek_max_0 
+ In pro:$bb15_gl_seek_max_0 1 $bb0_list_empty_1 
+ In pro:$bb4_gl_read_0 1 $bb4_main_0 
+ In pro:$bb4_main_0 1 $bb1_main_0 
+ In pro:$bb1_main_0 1 $bb7_main_0 
+ In pro:$bb7_main_0 1 $bb0_gl_sort_0 
+ In pro:$bb0_gl_sort_0 1 $bb12_gl_sort_0 
+ In pro:$bb12_gl_sort_0 1 $bb0_list_empty_0 
+ In pro:$bb0_list_empty_0 1 $bb11_gl_sort_0 
+ In pro:$bb11_gl_sort_0 1 $bb10_gl_sort_0 
+ In pro:$bb10_gl_sort_0 1 $bb1_gl_sort_0 $bb2_gl_sort_0 
+ In pro:$bb1_gl_sort_0 1 $bb3_gl_sort_0 
+ In pro:$bb3_gl_sort_0 1 $bb6_main_0 
+ In pro:$bb6_main_0 1 $bb2_main_0 
+ In pro:$bb2_main_0 1 $bb9_main_0 
+ In pro:$bb9_main_0 1 $bb0_gl_destroy_0 
+ In pro:$bb0_gl_destroy_0 1 $bb1_gl_destroy_0 $bb2_gl_destroy_0 
+ In pro:$bb1_gl_destroy_0 1 $bb4_gl_destroy_0 
+ In pro:$bb4_gl_destroy_0 1 $bb5_gl_destroy_0 $bb6_gl_destroy_0 
+ In pro:$bb5_gl_destroy_0 1 $bb4_gl_destroy_0 
+ In pro:$bb4_gl_destroy_0 2 $bb5_gl_destroy_0 $bb6_gl_destroy_0 
+ In pro:$bb5_gl_destroy_0 2 $bb4_gl_destroy_0 
+ In pro:$bb4_gl_destroy_0 3 $bb5_gl_destroy_0 $bb6_gl_destroy_0 
+ In pro:$bb5_gl_destroy_0 3 $bb4_gl_destroy_0 
+ In pro:$bb6_gl_destroy_0 1 $bb3_gl_destroy_0 
+ In pro:$bb3_gl_destroy_0 1 $bb8_main_0 
+ In pro:$bb8_main_0 1 $bb3_main_0 
+ In pro:$bb6_gl_destroy_0 1 $bb3_gl_destroy_0 
+ In pro:$bb3_gl_destroy_0 1 $bb8_main_0 
+ In pro:$bb8_main_0 1 $bb3_main_0 
+ In pro:$bb6_gl_destroy_0 1 $bb3_gl_destroy_0 
+ In pro:$bb3_gl_destroy_0 1 $bb8_main_0 
+ In pro:$bb8_main_0 1 $bb3_main_0 
+ In pro:$bb2_gl_destroy_0 1 $bb3_gl_destroy_0 
+ In pro:$bb3_gl_destroy_0 1 $bb8_main_0 
+ In pro:$bb8_main_0 1 $bb3_main_0 
+ In pro:$bb2_gl_sort_0 1 $bb15_gl_sort_0 
+ In pro:$bb15_gl_sort_0 1 $bb0_gl_seek_max_0 
+ In pro:$bb0_gl_seek_max_0 1 $bb15_gl_seek_max_0 
+ In pro:$bb15_gl_seek_max_0 1 $bb0_list_empty_1 
+ In pro:$bb0_list_empty_1 1 $bb14_gl_seek_max_0 
+ In pro:$bb14_gl_seek_max_0 1 $bb13_gl_seek_max_0 
+ In pro:$bb13_gl_seek_max_0 1 $bb1_gl_seek_max_0 $bb2_gl_seek_max_0 
+ In pro:$bb1_gl_seek_max_0 1 $bb3_gl_seek_max_0 
+ In pro:$bb3_gl_seek_max_0 1 $bb14_gl_sort_0 
+ In pro:$bb14_gl_sort_0 1 $bb13_gl_sort_0 
+ In pro:$bb13_gl_sort_0 1 $bb4_gl_sort_0 $bb5_gl_sort_0 
+ In pro:$bb4_gl_sort_0 1 $bb7_gl_sort_0 
+ In pro:$bb7_gl_sort_0 1 $bb25_gl_sort_0 
+ In pro:$bb25_gl_sort_0 1 $bb0_list_move_0 
+ In pro:$bb0_list_move_0 1 $bb4_list_move_0 
+ In pro:$bb4_list_move_0 1 $bb0___list_del_1 
+ In pro:$bb5_gl_sort_0 1 $bb6_gl_sort_0 
+ In pro:$bb6_gl_sort_0 1 $bb19_gl_sort_0 
+ In pro:$bb19_gl_sort_0 1 $bb0_list_add_1 
+ In pro:$bb0_list_add_1 1 $bb3_list_add_1 
+ In pro:$bb3_list_add_1 1 $bb0___list_add_0 
+ In pro:$bb2_gl_seek_max_0 1 $bb18_gl_seek_max_0 
+ In pro:$bb18_gl_seek_max_0 1 $bb0_val_from_node_0 
+ In pro:$bb0_val_from_node_0 1 $bb17_gl_seek_max_0 
+ In pro:$bb17_gl_seek_max_0 1 $bb16_gl_seek_max_0 
+ In pro:$bb16_gl_seek_max_0 1 $bb4_gl_seek_max_0 $bb5_gl_seek_max_0 
+ In pro:$bb4_gl_seek_max_0 1 $bb7_gl_seek_max_0 
+ In pro:$bb7_gl_seek_max_0 1 $bb21_gl_seek_max_0 
+ In pro:$bb21_gl_seek_max_0 1 $bb0_val_from_node_1 
+ In pro:$bb0_val_from_node_1 1 $bb20_gl_seek_max_0 
+ In pro:$bb5_gl_seek_max_0 1 $bb6_gl_seek_max_0 
+ In pro:$bb6_gl_seek_max_0 1 $bb3_gl_seek_max_0 
+ In pro:$bb3_gl_seek_max_0 1 $bb14_gl_sort_0 
+ In pro:$bb14_gl_sort_0 1 $bb13_gl_sort_0 
+ In pro:$bb4_gl_read_0 1 $bb4_main_0 
+ In pro:$bb4_main_0 1 $bb1_main_0 
+ In pro:$bb1_main_0 1 $bb7_main_0 
+ In pro:$bb7_main_0 1 $bb0_gl_sort_0 
+ In pro:$bb0_gl_sort_0 1 $bb12_gl_sort_0 
+ In pro:$bb12_gl_sort_0 1 $bb0_list_empty_0 
+ In pro:$bb0_list_empty_0 1 $bb11_gl_sort_0 
+ In pro:$bb11_gl_sort_0 1 $bb10_gl_sort_0 
+ In pro:$bb10_gl_sort_0 1 $bb1_gl_sort_0 $bb2_gl_sort_0 
+ In pro:$bb1_gl_sort_0 1 $bb3_gl_sort_0 
+ In pro:$bb3_gl_sort_0 1 $bb6_main_0 
+ In pro:$bb6_main_0 1 $bb2_main_0 
+ In pro:$bb2_main_0 1 $bb9_main_0 
+ In pro:$bb9_main_0 1 $bb0_gl_destroy_0 
+ In pro:$bb0_gl_destroy_0 1 $bb1_gl_destroy_0 $bb2_gl_destroy_0 
+ In pro:$bb1_gl_destroy_0 1 $bb4_gl_destroy_0 
+ In pro:$bb4_gl_destroy_0 1 $bb5_gl_destroy_0 $bb6_gl_destroy_0 
+ In pro:$bb5_gl_destroy_0 1 $bb4_gl_destroy_0 
+ In pro:$bb4_gl_destroy_0 2 $bb5_gl_destroy_0 $bb6_gl_destroy_0 
+ In pro:$bb5_gl_destroy_0 2 $bb4_gl_destroy_0 
+ In pro:$bb4_gl_destroy_0 3 $bb5_gl_destroy_0 $bb6_gl_destroy_0 
+ In pro:$bb5_gl_destroy_0 3 $bb4_gl_destroy_0 
+ In pro:$bb6_gl_destroy_0 1 $bb3_gl_destroy_0 
+ In pro:$bb3_gl_destroy_0 1 $bb8_main_0 
+ In pro:$bb8_main_0 1 $bb3_main_0 
+ In pro:$bb6_gl_destroy_0 1 $bb3_gl_destroy_0 
+ In pro:$bb3_gl_destroy_0 1 $bb8_main_0 
+ In pro:$bb8_main_0 1 $bb3_main_0 
+ In pro:$bb6_gl_destroy_0 1 $bb3_gl_destroy_0 
+ In pro:$bb3_gl_destroy_0 1 $bb8_main_0 
+ In pro:$bb8_main_0 1 $bb3_main_0 
+ In pro:$bb2_gl_destroy_0 1 $bb3_gl_destroy_0 
+ In pro:$bb3_gl_destroy_0 1 $bb8_main_0 
+ In pro:$bb8_main_0 1 $bb3_main_0 
+ In pro:$bb2_gl_sort_0 1 $bb15_gl_sort_0 
+ In pro:$bb15_gl_sort_0 1 $bb0_gl_seek_max_0 
+ In pro:$bb0_gl_seek_max_0 1 $bb15_gl_seek_max_0 
+ In pro:$bb15_gl_seek_max_0 1 $bb0_list_empty_1 
+ In pro:$bb0_list_empty_1 1 $bb14_gl_seek_max_0 
+ In pro:$bb14_gl_seek_max_0 1 $bb13_gl_seek_max_0 
+ In pro:$bb13_gl_seek_max_0 1 $bb1_gl_seek_max_0 $bb2_gl_seek_max_0 
+ In pro:$bb1_gl_seek_max_0 1 $bb3_gl_seek_max_0 
+ In pro:$bb3_gl_seek_max_0 1 $bb14_gl_sort_0 
+ In pro:$bb14_gl_sort_0 1 $bb13_gl_sort_0 
+ In pro:$bb13_gl_sort_0 1 $bb4_gl_sort_0 $bb5_gl_sort_0 
+ In pro:$bb4_gl_sort_0 1 $bb7_gl_sort_0 
+ In pro:$bb7_gl_sort_0 1 $bb25_gl_sort_0 
+ In pro:$bb25_gl_sort_0 1 $bb0_list_move_0 
+ In pro:$bb0_list_move_0 1 $bb4_list_move_0 
+ In pro:$bb4_list_move_0 1 $bb0___list_del_1 
+ In pro:$bb0___list_del_1 1 $bb3_list_move_0 
+ In pro:$bb3_list_move_0 1 $bb1_list_move_0 
+ In pro:$bb1_list_move_0 1 $bb6_list_move_0 
+ In pro:$bb6_list_move_0 1 $bb0_list_add_2 
+ In pro:$bb0_list_add_2 1 $bb5_list_move_0 
+ In pro:$bb5_list_move_0 1 $bb2_list_move_0 
+ In pro:$bb2_list_move_0 1 $bb24_gl_sort_0 
+ In pro:$bb24_gl_sort_0 1 $bb22_gl_sort_0 
+ In pro:$bb22_gl_sort_0 1 $bb27_gl_sort_0 
+ In pro:$bb27_gl_sort_0 1 $bb0_gl_seek_max_1 
+ In pro:$bb0_gl_seek_max_1 1 $bb15_gl_seek_max_1 
+ In pro:$bb15_gl_seek_max_1 1 $bb0_list_empty_2 
+ In pro:$bb5_gl_sort_0 1 $bb6_gl_sort_0 
+ In pro:$bb6_gl_sort_0 1 $bb19_gl_sort_0 
+ In pro:$bb19_gl_sort_0 1 $bb0_list_add_1 
+ In pro:$bb0_list_add_1 1 $bb3_list_add_1 
+ In pro:$bb3_list_add_1 1 $bb0___list_add_0 
+ In pro:$bb0___list_add_0 1 $bb2_list_add_1 
+ In pro:$bb2_list_add_1 1 $bb1_list_add_1 
+ In pro:$bb1_list_add_1 1 $bb18_gl_sort_0 
+ In pro:$bb18_gl_sort_0 1 $bb16_gl_sort_0 
+ In pro:$bb16_gl_sort_0 1 $bb21_gl_sort_0 
+ In pro:$bb21_gl_sort_0 1 $bb0_list_del_0 
+ In pro:$bb0_list_del_0 1 $bb3_list_del_0 
+ In pro:$bb3_list_del_0 1 $bb0___list_del_0 
+ In pro:$bb0___list_del_0 1 $bb2_list_del_0 
+ In pro:$bb2_list_del_0 1 $bb1_list_del_0 
+ In pro:$bb1_list_del_0 1 $bb20_gl_sort_0 
+ In pro:$bb20_gl_sort_0 1 $bb17_gl_sort_0 
+ In pro:$bb2_gl_seek_max_0 1 $bb18_gl_seek_max_0 
+ In pro:$bb18_gl_seek_max_0 1 $bb0_val_from_node_0 
+ In pro:$bb0_val_from_node_0 1 $bb17_gl_seek_max_0 
+ In pro:$bb17_gl_seek_max_0 1 $bb16_gl_seek_max_0 
+ In pro:$bb16_gl_seek_max_0 1 $bb4_gl_seek_max_0 $bb5_gl_seek_max_0 
+ In pro:$bb4_gl_seek_max_0 1 $bb7_gl_seek_max_0 
+ In pro:$bb7_gl_seek_max_0 1 $bb21_gl_seek_max_0 
+ In pro:$bb21_gl_seek_max_0 1 $bb0_val_from_node_1 
+ In pro:$bb0_val_from_node_1 1 $bb20_gl_seek_max_0 
+ In pro:$bb20_gl_seek_max_0 1 $bb19_gl_seek_max_0 
+ In pro:$bb19_gl_seek_max_0 1 $bb8_gl_seek_max_0 $bb9_gl_seek_max_0 
+ In pro:$bb8_gl_seek_max_0 1 $bb10_gl_seek_max_0 
+ In pro:$bb10_gl_seek_max_0 1 $bb11_gl_seek_max_0 $bb12_gl_seek_max_0 
+ In pro:$bb11_gl_seek_max_0 1 $bb7_gl_seek_max_0 
+ In pro:$bb7_gl_seek_max_0 2 $bb21_gl_seek_max_0 
+ In pro:$bb21_gl_seek_max_0 2 $bb0_val_from_node_1 
+ In pro:$bb0_val_from_node_1 2 $bb20_gl_seek_max_0 
+ In pro:$bb20_gl_seek_max_0 2 $bb19_gl_seek_max_0 
+ In pro:$bb19_gl_seek_max_0 2 $bb8_gl_seek_max_0 $bb9_gl_seek_max_0 
+ In pro:$bb8_gl_seek_max_0 2 $bb10_gl_seek_max_0 
+ In pro:$bb10_gl_seek_max_0 2 $bb11_gl_seek_max_0 $bb12_gl_seek_max_0 
+ In pro:$bb9_gl_seek_max_0 1 $bb10_gl_seek_max_0 
+ In pro:$bb10_gl_seek_max_0 2 $bb11_gl_seek_max_0 $bb12_gl_seek_max_0 
+ In pro:$bb12_gl_seek_max_0 1 $bb6_gl_seek_max_0 
+ In pro:$bb6_gl_seek_max_0 1 $bb3_gl_seek_max_0 
+ In pro:$bb3_gl_seek_max_0 1 $bb14_gl_sort_0 
+ In pro:$bb14_gl_sort_0 1 $bb13_gl_sort_0 
+ In pro:$bb13_gl_sort_0 1 $bb4_gl_sort_0 $bb5_gl_sort_0 
+ In pro:$bb4_gl_sort_0 1 $bb7_gl_sort_0 
+ In pro:$bb7_gl_sort_0 1 $bb25_gl_sort_0 
+ In pro:$bb25_gl_sort_0 1 $bb0_list_move_0 
+ In pro:$bb5_gl_sort_0 1 $bb6_gl_sort_0 
+ In pro:$bb6_gl_sort_0 1 $bb19_gl_sort_0 
+ In pro:$bb19_gl_sort_0 1 $bb0_list_add_1 
+ In pro:$bb9_gl_seek_max_0 1 $bb10_gl_seek_max_0 
+ In pro:$bb10_gl_seek_max_0 1 $bb11_gl_seek_max_0 $bb12_gl_seek_max_0 
+ In pro:$bb11_gl_seek_max_0 1 $bb7_gl_seek_max_0 
+ In pro:$bb7_gl_seek_max_0 2 $bb21_gl_seek_max_0 
+ In pro:$bb21_gl_seek_max_0 2 $bb0_val_from_node_1 
+ In pro:$bb0_val_from_node_1 2 $bb20_gl_seek_max_0 
+ In pro:$bb20_gl_seek_max_0 2 $bb19_gl_seek_max_0 
+ In pro:$bb19_gl_seek_max_0 2 $bb8_gl_seek_max_0 $bb9_gl_seek_max_0 
+ In pro:$bb8_gl_seek_max_0 1 $bb10_gl_seek_max_0 
+ In pro:$bb10_gl_seek_max_0 2 $bb11_gl_seek_max_0 $bb12_gl_seek_max_0 
+ In pro:$bb9_gl_seek_max_0 2 $bb10_gl_seek_max_0 
+ In pro:$bb10_gl_seek_max_0 2 $bb11_gl_seek_max_0 $bb12_gl_seek_max_0 
+ In pro:$bb12_gl_seek_max_0 1 $bb6_gl_seek_max_0 
+ In pro:$bb6_gl_seek_max_0 1 $bb3_gl_seek_max_0 
+ In pro:$bb3_gl_seek_max_0 1 $bb14_gl_sort_0 
+ In pro:$bb14_gl_sort_0 1 $bb13_gl_sort_0 
+ In pro:$bb13_gl_sort_0 1 $bb4_gl_sort_0 $bb5_gl_sort_0 
+ In pro:$bb4_gl_sort_0 1 $bb7_gl_sort_0 
+ In pro:$bb7_gl_sort_0 1 $bb25_gl_sort_0 
+ In pro:$bb25_gl_sort_0 1 $bb0_list_move_0 
+ In pro:$bb5_gl_sort_0 1 $bb6_gl_sort_0 
+ In pro:$bb6_gl_sort_0 1 $bb19_gl_sort_0 
+ In pro:$bb19_gl_sort_0 1 $bb0_list_add_1 
+ In pro:$bb5_gl_seek_max_0 1 $bb6_gl_seek_max_0 
+ In pro:$bb6_gl_seek_max_0 1 $bb3_gl_seek_max_0 
+ In pro:$bb3_gl_seek_max_0 1 $bb14_gl_sort_0 
+ In pro:$bb14_gl_sort_0 1 $bb13_gl_sort_0 
+ In pro:$bb13_gl_sort_0 1 $bb4_gl_sort_0 $bb5_gl_sort_0 
+ In pro:$bb4_gl_sort_0 1 $bb7_gl_sort_0 
+ In pro:$bb7_gl_sort_0 1 $bb25_gl_sort_0 
+ In pro:$bb25_gl_sort_0 1 $bb0_list_move_0 
+ In pro:$bb0_list_move_0 1 $bb4_list_move_0 
+ In pro:$bb4_list_move_0 1 $bb0___list_del_1 
+ In pro:$bb0___list_del_1 1 $bb3_list_move_0 
+ In pro:$bb3_list_move_0 1 $bb1_list_move_0 
+ In pro:$bb1_list_move_0 1 $bb6_list_move_0 
+ In pro:$bb6_list_move_0 1 $bb0_list_add_2 
+ In pro:$bb0_list_add_2 1 $bb5_list_move_0 
+ In pro:$bb5_list_move_0 1 $bb2_list_move_0 
+ In pro:$bb5_gl_sort_0 1 $bb6_gl_sort_0 
+ In pro:$bb6_gl_sort_0 1 $bb19_gl_sort_0 
+ In pro:$bb19_gl_sort_0 1 $bb0_list_add_1 
+ In pro:$bb0_list_add_1 1 $bb3_list_add_1 
+ In pro:$bb3_list_add_1 1 $bb0___list_add_0 
+ In pro:$bb0___list_add_0 1 $bb2_list_add_1 
+ In pro:$bb2_list_add_1 1 $bb1_list_add_1 
+ In pro:$bb1_list_add_1 1 $bb18_gl_sort_0 
+ In pro:$bb18_gl_sort_0 1 $bb16_gl_sort_0 
+ In pro:$bb16_gl_sort_0 1 $bb21_gl_sort_0 
+ In pro:$bb21_gl_sort_0 1 $bb0_list_del_0 
+ =========== DO SYMBOLIC EXECUTION FOR ONE PATH
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: UNsolved proc call: boogie_si_record_ref
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb5_main_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb0_gl_read_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb1_gl_read_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $i0_gl_read0 := __VERIFIER_nondet_int();[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: execute VERIFIER Call.
+ [0mSymbHeap((true && ($i0_gl_read0_bb0 == $fresh0))|emp)
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i0_gl_read0);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: UNsolved proc call: boogie_si_record_i32
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb7_gl_read_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$i0_gl_insert0 := $i0_gl_read0;[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mINFO: ASSIGN RHS is not a funcExpr$i0_gl_read0 $i0_gl_insert0
+ [0m[34mINFO: RHS is Var
+ [0m[32mWARNING: VarIntMap get warning. $i0_gl_read0_bb0
+ [0m[33min varExpr! 0 0
+ [0m[34mINFO: cannot compute int value..
+ [0mSymbHeap(((true && ($i0_gl_read0_bb0 == $fresh0)) && ($i0_gl_insert0_bb0 == $i0_gl_read0_bb0))|emp)
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb0_gl_insert_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall {:cexpr "gl_insert:arg:value"} boogie_si_record_i32($i0_gl_insert0);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: UNsolved proc call: boogie_si_record_i32
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $p1_gl_insert0 := malloc(24);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[33mIn intLint : 24
+ [0m[33mIn intLint : 24
+ [0mSymbHeap(((true && ($i0_gl_read0_bb0 == $fresh0)) && ($i0_gl_insert0_bb0 == $i0_gl_read0_bb0))|emp # $p1_gl_insert0_bb0 >-s-> 24 # Blk($p1_gl_insert0_bb0, ($p1_gl_insert0_bb0 + 24)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$p2_gl_insert0 := $bitcast.ref.ref($p1_gl_insert0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs Unary ptr cast
+ [0m[34mArg1 Type: 13
+ [0mSymbHeap((((true && ($i0_gl_read0_bb0 == $fresh0)) && ($i0_gl_insert0_bb0 == $i0_gl_read0_bb0)) && ($p2_gl_insert0_bb0 == $p1_gl_insert0_bb0))|emp # $p1_gl_insert0_bb0 >-s-> 24 # Blk($p1_gl_insert0_bb0, ($p1_gl_insert0_bb0 + 24)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$i3_gl_insert0 := $ne.ref($p2_gl_insert0, $0.ref_gl_insert0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs binary boolean function
+ [0mSymbHeap((($i3_gl_insert0_bb0 <==> ($p2_gl_insert0_bb0 != $Null)) && (((true && ($i0_gl_read0_bb0 == $fresh0)) && ($i0_gl_insert0_bb0 == $i0_gl_read0_bb0)) && ($p2_gl_insert0_bb0 == $p1_gl_insert0_bb0)))|emp # $p1_gl_insert0_bb0 >-s-> 24 # Blk($p1_gl_insert0_bb0, ($p1_gl_insert0_bb0 + 24)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0massume true;[34m
+ [0m[34mINFO: stmt kind ASSUME
+ [0m[34mINFO: Basic Parse condition, 2
+ [0mSymbHeap(((($i3_gl_insert0_bb0 <==> ($p2_gl_insert0_bb0 != $Null)) && (((true && ($i0_gl_read0_bb0 == $fresh0)) && ($i0_gl_insert0_bb0 == $i0_gl_read0_bb0)) && ($p2_gl_insert0_bb0 == $p1_gl_insert0_bb0))) && true)|emp # $p1_gl_insert0_bb0 >-s-> 24 # Blk($p1_gl_insert0_bb0, ($p1_gl_insert0_bb0 + 24)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb1_gl_insert_0, $bb2_gl_insert_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0massume ($i3_gl_insert0 == 1);[34m
+ [0m[34mINFO: stmt kind ASSUME
+ [0m[34mINFO: Basic Parse condition, 4
+ [0mSymbHeap((((($i3_gl_insert0_bb0 <==> ($p2_gl_insert0_bb0 != $Null)) && (((true && ($i0_gl_read0_bb0 == $fresh0)) && ($i0_gl_insert0_bb0 == $i0_gl_read0_bb0)) && ($p2_gl_insert0_bb0 == $p1_gl_insert0_bb0))) && true) && ($i3_gl_insert0_bb0 == 1))|emp # $p1_gl_insert0_bb0 >-s-> 24 # Blk($p1_gl_insert0_bb0, ($p1_gl_insert0_bb0 + 24)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$p4_gl_insert0 := $add.ref($add.ref($p2_gl_insert0, $mul.ref(0, 24)), $mul.ref(0, 1));[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs ptr arithmetic
+ [0m[34mLink arithmetic operation: $p4_gl_insert0_bb0 $p2_gl_insert0_bb0
+ [0mSymbHeap(((((($i3_gl_insert0_bb0 <==> ($p2_gl_insert0_bb0 != $Null)) && (((true && ($i0_gl_read0_bb0 == $fresh0)) && ($i0_gl_insert0_bb0 == $i0_gl_read0_bb0)) && ($p2_gl_insert0_bb0 == $p1_gl_insert0_bb0))) && true) && ($i3_gl_insert0_bb0 == 1)) && ($p4_gl_insert0_bb0 == (($p2_gl_insert0_bb0 + (0 * 24)) + (0 * 1))))|emp # $p1_gl_insert0_bb0 >-s-> 24 # Blk($p1_gl_insert0_bb0, ($p1_gl_insert0_bb0 + 24)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: $p4_gl_insert0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$M.0 := $store.i32($M.0, $p4_gl_insert0, $i0_gl_insert0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs store or load
+ [0m[34mSTORE: arg1 $p4_gl_insert0 arg2: $i0_gl_insert0
+ [0m[33mIn intLint : 24
+ [0m[34mSTORE: offset 0 Blk size: 24
+ [0m[34mINFO: new store offset
+ [0m[34mmalloc name: $p1_gl_insert0_bb0 splitIndex: 1
+ [0m[32mWARNING: VarIntMap get warning. $i0_gl_insert0_bb0
+ [0m[33min varExpr! 0 0
+ [0m[34mStore type: ref32 Store stepsize: 4
+ [0mSymbHeap((((((($i3_gl_insert0_bb0 <==> ($p2_gl_insert0_bb0 != $Null)) && (((true && ($i0_gl_read0_bb0 == $fresh0)) && ($i0_gl_insert0_bb0 == $i0_gl_read0_bb0)) && ($p2_gl_insert0_bb0 == $p1_gl_insert0_bb0))) && true) && ($i3_gl_insert0_bb0 == 1)) && ($p4_gl_insert0_bb0 == (($p2_gl_insert0_bb0 + (0 * 24)) + (0 * 1)))) && ($fresh1 == $i0_gl_insert0_bb0))|emp # $p1_gl_insert0_bb0 >-s-> 24 # Blk($p1_gl_insert0_bb0, $p4_gl_insert0_bb0) # $p4_gl_insert0_bb0 >--> $fresh1 # Blk(($p4_gl_insert0_bb0 + 4), ($p1_gl_insert0_bb0 + 24)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $fresh1| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: $p4_gl_insert0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$p5_gl_insert0 := $add.ref($add.ref($p2_gl_insert0, $mul.ref(0, 24)), $mul.ref(8, 1));[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs ptr arithmetic
+ [0m[34mLink arithmetic operation: $p5_gl_insert0_bb0 $p2_gl_insert0_bb0
+ [0mSymbHeap(((((((($i3_gl_insert0_bb0 <==> ($p2_gl_insert0_bb0 != $Null)) && (((true && ($i0_gl_read0_bb0 == $fresh0)) && ($i0_gl_insert0_bb0 == $i0_gl_read0_bb0)) && ($p2_gl_insert0_bb0 == $p1_gl_insert0_bb0))) && true) && ($i3_gl_insert0_bb0 == 1)) && ($p4_gl_insert0_bb0 == (($p2_gl_insert0_bb0 + (0 * 24)) + (0 * 1)))) && ($fresh1 == $i0_gl_insert0_bb0)) && ($p5_gl_insert0_bb0 == (($p2_gl_insert0_bb0 + (0 * 24)) + (8 * 1))))|emp # $p1_gl_insert0_bb0 >-s-> 24 # Blk($p1_gl_insert0_bb0, $p4_gl_insert0_bb0) # $p4_gl_insert0_bb0 >--> $fresh1 # Blk(($p4_gl_insert0_bb0 + 4), ($p1_gl_insert0_bb0 + 24)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $fresh1| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: $p4_gl_insert0_bb0
+ [0m[32mKey: $p5_gl_insert0_bb0| Var: $p5_gl_insert0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p5_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p5_gl_insert0_bb0| Var: 8
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb5_gl_insert_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $fresh1| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: $p4_gl_insert0_bb0
+ [0m[32mKey: $p5_gl_insert0_bb0| Var: $p5_gl_insert0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p5_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p5_gl_insert0_bb0| Var: 8
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$p0_list_add0 := $p5_gl_insert0;[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mINFO: ASSIGN RHS is not a funcExpr$p5_gl_insert0 $p0_list_add0
+ [0m[34mINFO: RHS is Var
+ [0m[32mWARNING: VarIntMap get warning. $p5_gl_insert0_bb0
+ [0m[33min varExpr! 0 0
+ [0m[34mINFO: cannot compute int value..
+ [0mSymbHeap((((((((($i3_gl_insert0_bb0 <==> ($p2_gl_insert0_bb0 != $Null)) && (((true && ($i0_gl_read0_bb0 == $fresh0)) && ($i0_gl_insert0_bb0 == $i0_gl_read0_bb0)) && ($p2_gl_insert0_bb0 == $p1_gl_insert0_bb0))) && true) && ($i3_gl_insert0_bb0 == 1)) && ($p4_gl_insert0_bb0 == (($p2_gl_insert0_bb0 + (0 * 24)) + (0 * 1)))) && ($fresh1 == $i0_gl_insert0_bb0)) && ($p5_gl_insert0_bb0 == (($p2_gl_insert0_bb0 + (0 * 24)) + (8 * 1)))) && ($p0_list_add0_bb0 == $p5_gl_insert0_bb0))|emp # $p1_gl_insert0_bb0 >-s-> 24 # Blk($p1_gl_insert0_bb0, $p4_gl_insert0_bb0) # $p4_gl_insert0_bb0 >--> $fresh1 # Blk(($p4_gl_insert0_bb0 + 4), ($p1_gl_insert0_bb0 + 24)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $fresh0
+ [0m[32mKey: $fresh1| Var: $fresh0
+ [0m[32mKey: $i0_gl_insert0_bb0| Var: $fresh0
+ [0m[32mKey: $i0_gl_read0_bb0| Var: $fresh0
+ [0m[32mKey: $p0_list_add0_bb0| Var: $p5_gl_insert0_bb0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: $p4_gl_insert0_bb0
+ [0m[32mKey: $p5_gl_insert0_bb0| Var: $p5_gl_insert0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_list_add0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mKey: $p5_gl_insert0_bb0| Var: $p1_gl_insert0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_list_add0_bb0| Var: 8
+ [0m[32mKey: $p1_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p2_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p4_gl_insert0_bb0| Var: 0
+ [0m[32mKey: $p5_gl_insert0_bb0| Var: 8
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$p1_list_add0 := gl_list_gl_insert0;[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mINFO: ASSIGN RHS is not a funcExprgl_list_gl_insert0 $p1_list_add0
+ [0m[34mINFO: RHS is Var
+ [0m[34mWARNING: This is not correct use, please check, getVar after useVar
+  #0 0x00007f43fc4ec4ff llvm::sys::PrintStackTrace(llvm::raw_ostream&) (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x9814ff)
+  #1 0x00007f43fc4ea782 llvm::sys::RunSignalHandlers() (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x97f782)
+  #2 0x00007f43fc4ecac5 (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x981ac5)
+  #3 0x00007f43fa306210 (/lib/x86_64-linux-gnu/libc.so.6+0x46210)
+  #4 0x00007f43fa763c08 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (/lib/x86_64-linux-gnu/libstdc++.so.6+0x145c08)
+  #5 0x00000000004d5b9d smack::VarExpr::name[abi:cxx11]() const /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../include/smack/BoogieAst.h:492:43
+  #6 0x000000000050bc80 smack::BlockExecutor::executeAssign(std::shared_ptr<smack::SymbolicHeapExpr>, smack::Stmt const*) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:262:45
+  #7 0x0000000000516f10 smack::BlockExecutor::executeStmt(std::shared_ptr<smack::SymbolicHeapExpr>, smack::Stmt const*) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:1705:13
+  #8 0x00000000005172bc smack::BlockExecutor::execute[abi:cxx11](std::shared_ptr<smack::ExecutionState>) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:1736:31
+  #9 0x00000000004aa77e smack::MemSafeVerifier::runOnModule(llvm::Module&) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/MemSafeVerifier.cpp:76:69
+ #10 0x00007f43fc5f24a0 llvm::legacy::PassManagerImpl::run(llvm::Module&) (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0xa874a0)
+ #11 0x000000000042bf91 main /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../tools/llvm2bpl/llvm2bpl.cpp:278:17
+ #12 0x00007f43fa2e70b3 __libc_start_main /build/glibc-YbNSs7/glibc-2.31/csu/../csu/libc-start.c:342:3
+ #13 0x000000000042a60e _start (/usr/local/bin/llvm2bpl+0x42a60e)
+ Stack dump:
+ 0.	Program arguments: llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-4i8ndor0.bc -bpl ../svcomp/memsafety//test-0134.bpl -warn-type unsound -sea-dsa=ci -source-loc-syms -entry-points main -ll ../svcomp/memsafety//test-0134_IR.ll -mem-mod-impls -llvm-assumes=none -sh-mem-leak 
+ 1.	Running pass 'MemSafeVerifier' on module '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-4i8ndor0.bc'.
  

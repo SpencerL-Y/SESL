@@ -15,6 +15,7 @@
 
 #define PTR_BYTEWIDTH 8
 #define INT_BYTEWIDTH 4
+#define BOOL_BYTEWIDTH 1
 
 namespace smack {
 

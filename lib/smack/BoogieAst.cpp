@@ -1069,8 +1069,8 @@ namespace smack {
         return new GCBlkLit(from, to, blkName, empty);
     }
 
-    const SpatialLiteral *SpatialLiteral::errlit(bool f) {
-        return new ErrorLit(f);
+    const SpatialLiteral *SpatialLiteral::errlit(bool f, ErrType reason) {
+        return new ErrorLit(f, reason);
     }
 
     void EmpLit::print(std::ostream &os) const {
@@ -1169,8 +1169,24 @@ namespace smack {
         }
     }
 
+    std::string ErrorLit::getReasonStr() const {
+        if(this->getReason() == ErrType::INVALID_FREE){
+            return "INVALID_FREE";
+        } else if(this->getReason() == ErrType::LOAD_EMP){
+            return "LOAD_EMP";
+        } else if(this->getReason() == ErrType::NULL_REF){
+            return "NULL_REF";
+        } else if(this->getReason() == ErrType::OUT_OF_RANGE){
+            return "OUT_OF_RANGE";
+        } else if(this->getReason() == ErrType::STORE_EMP){
+            return "STORE_EMP";
+        } else {
+            return "UNKNOWN";
+        }
+    }
+
     void ErrorLit::print(std::ostream &os) const {
-        os << " XXXXXXX(" << fresh << ")XXXXXXX";
+        os << " XXXXXXX( isFresh: " << fresh << ", ErrorType: " << this->reason << ")XXXXXXX";
     }
 
     z3::expr ErrorLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {

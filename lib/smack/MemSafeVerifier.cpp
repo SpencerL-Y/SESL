@@ -57,7 +57,7 @@ namespace smack {
         CFGExecutor cfgExec(mainGraph);
         cfgExec.generatePathByUpperBound();
 //        cfgExec.printPath();
-/*
+
         for(ExecutionPath p : cfgExec.getExecPathVec()){
 
             std::cout << "=========== DO SYMBOLIC EXECUTION FOR ONE PATH" << std::endl;
@@ -113,7 +113,7 @@ namespace smack {
 
         
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
-        */
+        
         return false;
     }
 
@@ -173,7 +173,8 @@ namespace smack {
                     const SHStmt* shs = (const SHStmt*) s;
                     if(SpatialLiteral::Kind::ERR == 
                         shs->getSymbHeap()->getSpatialExpr().front()->getId()){
-                            DEBUG_WITH_COLOR(std::cout << "CHECK: Inference error:" << std::endl;, color::red);
+                            const ErrorLit* err = (const ErrorLit*)(shs->getSymbHeap()->getSpatialExpr().front());
+                            DEBUG_WITH_COLOR(std::cout << "CHECK: Inference error:" << err->getReasonStr() << std::endl;, color::red);
                             previous->print(std::cout);
                             std::cout << std::endl;
                             return std::pair<bool, const Stmt*>(false, previous);

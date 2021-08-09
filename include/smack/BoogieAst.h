@@ -57,6 +57,14 @@ namespace smack {
         CODE
     };
 
+    enum ErrType{
+        INVALID_FREE,
+        NULL_REF,
+        OUT_OF_RANGE,
+        STORE_EMP,
+        LOAD_EMP
+    };
+
     class Expr {
     public:
         virtual ~Expr() {}
@@ -592,7 +600,7 @@ namespace smack {
 
         static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName);
 
-        static const SpatialLiteral *errlit(bool f);
+        static const SpatialLiteral *errlit(bool f, ErrType r);
 
         SpatialLiteral::Kind getId() const { return id; }
 
@@ -701,18 +709,26 @@ namespace smack {
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
     };
 
+    
 
     class ErrorLit : public SpatialLiteral {
         bool fresh;
-
+        ErrType reason;
     public:
-        ErrorLit(bool f) {
+        
+
+        ErrorLit(bool f, ErrType r) {
             setId(SpatialLiteral::Kind::ERR);
             fresh = f;
+            reason = r;
         };
 
         bool isFresh() const { return fresh; }
 
+        ErrType getReason() const { return reason;}
+
+        std::string getReasonStr() const;
+        
         void print(std::ostream &os) const;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;

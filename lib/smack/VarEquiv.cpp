@@ -55,6 +55,11 @@ namespace smack
         for(auto i : this->varToIntVal){
             DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Val: " << i.second << std::endl, color::green);
         }
+        DEBUG_WITH_COLOR(std::cout << "Debug freedBlkName: " << std::endl, color::green);
+        for(auto i : this->getFreedBlkName()){
+            DEBUG_WITH_COLOR(std::cout << i << " ";, color::green);
+        }
+        DEBUG_WITH_COLOR(std::cout << std::endl;, color::green);
     }
     // name2blk operations
 
@@ -164,6 +169,24 @@ namespace smack
         return this->structArrayPtr[name];
     }
 
+    // freedBlkName operations
+
+    void VarEquiv::addNewFreedName(std::string name){
+        auto ret = this->freedBlkName.insert(name);
+        if(!ret.second){
+            CDEBUG(std::cout << "ERROR: add new freed name error, this should not happen. freed var exists " << name << std::endl;);
+        }
+    }
+
+    bool VarEquiv::isFreedName(std::string name){
+        if(this->freedBlkName.find(name) == this->freedBlkName.end()){
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+
     // get a copy of the object
 
     VarEquivPtr VarEquiv::clone(){
@@ -173,6 +196,7 @@ namespace smack
         newVarEquiv->setStructArrayPtr(this->getStructArrayPtr());
         newVarEquiv->setVarAllocEqualMap(this->getVarAllocEqualMap());
         newVarEquiv->setVarToIntVal(this->getVarToIntVal());
+        newVarEquiv->setFreedBlkName(this->getFreedBlkName());
         return newVarEquiv;
     }
 
@@ -192,6 +216,10 @@ namespace smack
         return this->structArrayPtr;
     }
 
+    std::set<std::string> VarEquiv::getFreedBlkName(){
+        return this->freedBlkName;
+    }
+
     void VarEquiv::setVarAllocEqualMap(std::map<std::string, std::string> i){
         this->varAllocEqualMap = i;
     }
@@ -206,6 +234,9 @@ namespace smack
     }
     void VarEquiv::setStructArrayPtr(std::map<std::string, bool> i){
         this->structArrayPtr = i;
+    }
+    void VarEquiv::setFreedBlkName(std::set<std::string> i){
+        this->freedBlkName = i;
     }
 
 } // namespace smack

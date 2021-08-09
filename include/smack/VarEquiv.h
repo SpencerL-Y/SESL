@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string>
 #include <map>
+#include <set>
 #include <iostream>
 #include <cstdlib>
 #include <utils/CenterDebug.h>
@@ -30,6 +31,9 @@ namespace smack
         std::map<std::string, int> varToIntVal;
     // structArrayPtr: remember the ptr created by alloc, which is used when struct and array are used
         std::map<std::string, bool> structArrayPtr;
+    // freedBlkName: a set used to store the blkNames freed, used to find double free
+        std::set<std::string> freedBlkName;
+    
         typedef std::shared_ptr<VarEquiv> VarEquivPtr;
     public:
         VarEquiv(/* args */){
@@ -60,9 +64,13 @@ namespace smack
         void linkIntVar(std::string newname, std::string oldname);
         std::pair<bool, int> getIntVal(std::string name);
 
-        // alloc ptr
+        // alloc ptr operations
         void setStructArrayPtr(std::string name, bool val);
         bool isStructArrayPtr(std::string name);
+
+        // freedBlkName operations
+        void addNewFreedName(std::string name);
+        bool isFreedName(std::string name);
 
         VarEquivPtr clone();
 
@@ -72,11 +80,13 @@ namespace smack
         std::map<std::string, int> getPointsToBlkOffset();
         std::map<std::string, int> getVarToIntVal();
         std::map<std::string, bool> getStructArrayPtr();
+        std::set<std::string> getFreedBlkName();
         void setVarAllocEqualMap(std::map<std::string, std::string> i);
         void setPointsToBlkMap(std::map<std::string, std::string> i);
         void setPointsToBlkOffset(std::map<std::string, int> i);
         void setVarToIntVal(std::map<std::string, int> i);
         void setStructArrayPtr(std::map<std::string, bool> i);
+        void setFreedBlkName(std::set<std::string> i);
 
 
         void debugPrint();

@@ -2068,4 +2068,2113 @@ Running llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases
  Stack dump:
  0.	Program arguments: llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-t8aev3tw.bc -bpl ../svcomp/memsafety//test-memleak_nexttime.bpl -warn-type unsound -sea-dsa=ci -source-loc-syms -entry-points main -ll ../svcomp/memsafety//test-memleak_nexttime_IR.ll -mem-mod-impls -llvm-assumes=none -sh-mem-leak 
  1.	Running pass 'MemSafeVerifier' on module '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-t8aev3tw.bc'.
+ SMACK program verifier version 2.6.3
+Running clang -c -emit-llvm -O0 -g -gcolumn-info -Xclang -disable-O0-optnone -I/usr/local/share/smack/include -DMEMORY_MODEL_NO_REUSE_IMPLS -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/test-memleak_nexttime-hetefzzn.bc ../svcomp/memsafety//test-memleak_nexttime.c
+Running llvm-link -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/a-_vgiko5p.bc /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/test-memleak_nexttime-hetefzzn.bc
+Running llvm-link -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-opzhlhim.bc /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/a-_vgiko5p.bc
+Running llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-opzhlhim.bc -bpl ../svcomp/memsafety//test-memleak_nexttime.bpl -warn-type unsound -sea-dsa=ci -source-loc-syms -entry-points main -ll ../svcomp/memsafety//test-memleak_nexttime_IR.ll -mem-mod-impls -llvm-assumes=none -sh-mem-leak
+[regions] for:   %1 = alloca i32*, align 8, !verifier.code !21
+   in function: foo
+ [regions]   using region: <Node:i32*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %1 = alloca i32*, align 8, !verifier.code !21 with length 8
+   in function: foo
+ [regions]   using region: <Node:i32*>[0,8]{A}
+    found overlap at index 0: <Node:i32*>[0,8]{A}
+ [regions]   merged region: <Node:i32*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: @a = internal global [8 x i8] zeroinitializer, align 1, !dbg !0 with length 8
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:[8 x i8]>[0,8]{A}
+    found overlap at index 0: <Node:i32*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: @a = internal global [8 x i8] zeroinitializer, align 1, !dbg !0 with length 8
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:[8 x i8]>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %1 = alloca i8*, align 8, !verifier.code !21 with length 8
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %1 = alloca i8*, align 8, !verifier.code !21
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 1: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[0,1]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[1,2]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[2,3]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[3,4]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[4,5]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[5,6]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[6,7]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[7,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ We are now translating the program to boogie...
+ Analyzing globals...
+ -------INSERT: Global Variables a
+ Analyzing functions...
+ Analyzing function: foo
+ -------INSERT: Global Variables foo
+ Analyzing function body: foo
+ Generating body for foo
+ visitBasicBlock
+ visitAlloca
+ visitIntrinsic
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitStore
+ [regions] for:   %1 = alloca i32*, align 8, !verifier.code !21
+   in function: foo
+ [regions]   using region: <Node:i32*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %1 = alloca i32*, align 8, !verifier.code !21
+   in function: foo
+ [regions]   using region: <Node:i32*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitCast
+ visitCast not vector
+ visitMemCpy
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i64 0, i64 0) with length 8
+   at instruction:   call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 8 %2, i8* align 1 getelementptr inbounds ([8 x i8], [8 x i8]* @a, i64 0, i64 0), i64 8, i1 false), !dbg !26, !verifier.code !21
+   in function: main
+ [regions]   using region: <Node:i8>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %4 = bitcast i32** %1 to i8*, !dbg !26, !verifier.code !21 with length 8
+   in function: foo
+ [regions]   using region: <Node:i8>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitReturn
+ 
+ Finished analyzing function: foo
+ 
+ Analyzing function: llvm.dbg.declare
+ -------INSERT: Global Variables llvm.dbg.declare
+ Analyzing function: malloc
+ -------INSERT: Global Variables malloc
+ Analyzing function: llvm.memcpy.p0i8.p0i8.i64
+ -------INSERT: Global Variables llvm.memcpy.p0i8.p0i8.i64
+ Analyzing function: main
+ -------INSERT: Global Variables main
+ Analyzing function body: main
+ Generating body for main
+ visitBasicBlock
+ visitAlloca
+ visitCall
+ smackrep call
+ visitIntrinsic
+ visitCast
+ visitCast not vector
+ visitMemCpy
+ [regions] for:   %2 = bitcast i8** %1 to i8*, !dbg !26, !verifier.code !21 with length 8
+   in function: main
+ [regions]   using region: <Node:i8>[0,8]{A}
+    found overlap at index 1: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i64 0, i64 0) with length 8
+   at instruction:   call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 8 %2, i8* align 1 getelementptr inbounds ([8 x i8], [8 x i8]* @a, i64 0, i64 0), i64 8, i1 false), !dbg !26, !verifier.code !21
+   in function: main
+ [regions]   using region: <Node:i8>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitLoad
+ [regions] for:   %1 = alloca i8*, align 8, !verifier.code !21
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ visitCall
+ smackrep call
+ visitReturn
+ 
+ insert initial SH to main
+ Finished analyzing function: main
+ 
+ Analyzing function: free_
+ -------INSERT: Global Variables free_
+ Analyzing function: __SMACK_static_init
+ -------INSERT: Global Variables __SMACK_static_init
+ Analyzing function body: __SMACK_static_init
+ Generating body for __SMACK_static_init
+ visitBasicBlock
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[0,1]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[0,1]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[1,2]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[1,2]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[2,3]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[2,3]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[3,4]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[3,4]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[4,5]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[4,5]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[5,6]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[5,6]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[6,7]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[6,7]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[7,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[7,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitReturn
+ 
+ Finished analyzing function: __SMACK_static_init
+ 
+ Start Analyzing Prelude: foo
+ 
+ Start Analyzing Prelude: llvm.dbg.declare
+ 
+ Start Analyzing Prelude: malloc
+ 
+ Start Analyzing Prelude: llvm.memcpy.p0i8.p0i8.i64
+ 
+ Start Analyzing Prelude: main
+ 
+ Start Analyzing Prelude: free_
+ 
+ Start Analyzing Prelude: __SMACK_static_init
+ 
+ Start Analyzing Prelude: boogie_si_record_ref
+ 
+ Start Analyzing Prelude: $initialize
+ 
+ -----------------START MEMSAFE ANALYSIS---------------
+ Begin verifying
+ Adding procedure: foo
+ Empty block name founded in proc foo
+ Adding procedure: llvm.dbg.declare
+ Empty blocks of proc llvm.dbg.declare
+ Adding procedure: malloc
+ Empty block name founded in proc malloc
+ Adding procedure: llvm.memcpy.p0i8.p0i8.i64
+ Empty blocks of proc llvm.memcpy.p0i8.p0i8.i64
+ Adding procedure: main
+ Empty block name founded in proc main
+ Adding procedure: free_
+ Empty block name founded in proc free_
+ Adding procedure: __SMACK_static_init
+ Empty block name founded in proc __SMACK_static_init
+ Adding procedure: boogie_si_record_ref
+ Empty blocks of proc boogie_si_record_ref
+ Adding procedure: $initialize
+ Empty block name founded in proc $initialize
+ inlining procedure: main
+ $bb0_main_0 2 1
+ New stmts! 
+ call {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);
+ call $p0_main0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+ 
+ New stmts! 
+ assume true;
+ $p1_main0 := $bitcast.ref.ref($p0_main0);
+ call $M.1_main0 := $memcpy.i8($M.1, $M.0, $p1_main0, a_main0, 8, false);
+ $p2_main0 := $load.ref($M.1, $p0_main0);
+ call free_($p2_main0);
+ $r_main0 := 0;
+ return;
+ 
+ call foo();
+ inlining procedure: foo
+ $bb0_foo_0 1 0
+ New stmts! 
+ call $p0_foo0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+ assume true;
+ call $p1_foo0 := malloc(10);
+ $p2_foo0 := $bitcast.ref.ref($p1_foo0);
+ $M.0 := $store.ref($M.0, $p0_foo0, $p1_foo0);
+ $p3_foo0 := $bitcast.ref.ref($p0_foo0);
+ call $M.0_foo0 := $memcpy.i8($M.0, $M.0, a_foo0, $p3_foo0, 8, false);
+ return;
+ 
+ Splitting return block
+ 
+ Inlining procedure: foo 0
+ arguments: 
+ 	
+ parameter: 
+ 	
+ processing return block $bb0_foo_0
+ return param of 'call foo();': 
+ 	return to: 
+ 	Add goto relation: $bb2_main_0 -> $bb1_main_0
+ Return block: $bb0_foo_0:
+   call $p0_foo0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+   assume true;
+   call $p1_foo0 := malloc(10);
+   $p2_foo0 := $bitcast.ref.ref($p1_foo0);
+   $M.0 := $store.ref($M.0, $p0_foo0, $p1_foo0);
+   $p3_foo0 := $bitcast.ref.ref($p0_foo0);
+   call $M.0_foo0 := $memcpy.i8($M.0, $M.0, a_foo0, $p3_foo0, 8, false);
+   goto $bb2_main_0;
+ Return process block: $bb2_main_0:
+   goto $bb1_main_0;
+ Current block: $bb0_main_0:
+   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);
+   call $p0_main0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+   goto $bb3_main_0;
+ Pass block: $bb3_main_0:
+   goto $bb0_foo_0;
+ Splitting return block
+ =====================CENTER NEW===================
+ procedure main()
+   returns ($r_main0: i32)
+ {
+   var $p0_main0: ref;
+   var $p1_main0: ref8;
+   var $p2_main0: ref8;
+   var $r_main0: i32;
+   var $p0_foo0: ref;
+   var $p1_foo0: ref8;
+   var $p2_foo0: ref32;
+   var $p3_foo0: ref8;
+ $bb0_main_0:
+   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);
+   call $p0_main0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+   goto $bb3_main_0;
+ $bb2_main_0:
+   goto $bb1_main_0;
+ $bb3_main_0:
+   goto $bb0_foo_0;
+ $bb1_main_0:
+   assume true;
+   $p1_main0 := $bitcast.ref.ref($p0_main0);
+   call $M.1_main0 := $memcpy.i8($M.1, $M.0, $p1_main0, a_main0, 8, false);
+   $p2_main0 := $load.ref($M.1, $p0_main0);
+   call free_($p2_main0);
+   $r_main0 := 0;
+   return;
+ $bb0_foo_0:
+   call $p0_foo0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+   assume true;
+   call $p1_foo0 := malloc(10);
+   $p2_foo0 := $bitcast.ref.ref($p1_foo0);
+   $M.0 := $store.ref($M.0, $p0_foo0, $p1_foo0);
+   $p3_foo0 := $bitcast.ref.ref($p0_foo0);
+   call $M.0_foo0 := $memcpy.i8($M.0, $M.0, a_foo0, $p3_foo0, 8, false);
+   goto $bb2_main_0;
+ }
+ =====================CENTER NEW===================
+ from bb: $bb0_main_0 to bb: $bb3_main_0 
+ from bb: $bb2_main_0 to bb: $bb1_main_0 
+ from bb: $bb3_main_0 to bb: $bb0_foo_0 
+ from bb: $bb0_foo_0 to bb: $bb2_main_0 
+ In $bb1_main_0
+ [0mpop: $bb1_main_0
+ [0mpop finished
+ [0mIn $bb2_main_0
+ [0mpop: $bb2_main_0
+ [0mpop finished
+ [0mIn $bb0_foo_0
+ [0mpop: $bb0_foo_0
+ [0mpop finished
+ [0mIn $bb3_main_0
+ [0mpop: $bb3_main_0
+ [0mpop finished
+ [0mIn $bb0_main_0
+ [0mpop: $bb0_main_0
+ [0mpop finished
+ [0mIn pro:$bb0_main_0 1 $bb3_main_0 
+ In pro:$bb3_main_0 1 $bb0_foo_0 
+ In pro:$bb0_foo_0 1 $bb2_main_0 
+ In pro:$bb2_main_0 1 $bb1_main_0 
+ =========== DO SYMBOLIC EXECUTION FOR ONE PATH
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: UNsolved proc call: boogie_si_record_ref
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $p0_main0 := $alloc($mul.ref(8, $zext.i32.i64(1)));[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[33mIn intLint : 1
+ [0m[33mIn intLint : 8
+ [0m[33mIn intLint : 8
+ [0mSymbHeap(true|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb3_main_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb0_foo_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $p0_foo0 := $alloc($mul.ref(8, $zext.i32.i64(1)));[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[33mIn intLint : 1
+ [0m[33mIn intLint : 8
+ [0m[33mIn intLint : 8
+ [0mSymbHeap(true|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, ($p0_foo0_bb0 + 8)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0massume true;[34m
+ [0m[34mINFO: stmt kind ASSUME
+ [0m[34mINFO: Basic Parse condition, 2
+ [0mSymbHeap((true && true)|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, ($p0_foo0_bb0 + 8)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $p1_foo0 := malloc(10);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[33mIn intLint : 10
+ [0m[33mIn intLint : 10
+ [0mSymbHeap((true && true)|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$p2_foo0 := $bitcast.ref.ref($p1_foo0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs Unary ptr cast
+ [0m[34mArg1 Type: 13
+ [0mSymbHeap(((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$M.0 := $store.ref($M.0, $p0_foo0, $p1_foo0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs store or load
+ [0m[34mSTORE: arg1 $p0_foo0 arg2: $p1_foo0
+ [0m[33mIn intLint : 8
+ [0m[34mSTORE: offset 0 Blk size: 8
+ [0m[34mINFO: new store offset
+ [0m[34mmalloc name: $p0_foo0_bb0 splitIndex: 1
+ [0m[32mWARNING: VarIntMap get warning. $p1_foo0_bb0
+ [0m[33min varExpr! 0 0
+ [0m[34mStore type: ref Store stepsize: 8
+ [0mSymbHeap((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$p3_foo0 := $bitcast.ref.ref($p0_foo0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs Unary ptr cast
+ [0m[34mArg1 Type: 13
+ [0mSymbHeap(((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $M.0_foo0 := $memcpy.i8($M.0, $M.0, a_foo0, $p3_foo0, 8, false);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: execute Unintepreted function. $memcpy.i8
+ [0m$fresh0 i64 $M.0_foo0
+ $M.0 M64 $M.0_foo0
+ $p3_foo0 ref8 $M.0_foo0
+ $p2_foo0 ref32 $M.0_foo0
+ $p1_foo0 ref8 $M.0_foo0
+ $p0_foo0 ref $M.0_foo0
+ $r_main0 i32 $M.0_foo0
+ $p2_main0 ref8 $M.0_foo0
+ $p1_main0 ref8 $M.0_foo0
+ $p0_main0 ref $M.0_foo0
+ [34mERROR: vartype not found: $M.0_foo0
+ [0mSymbHeap((((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0)) && ($M.0_foo0_bb0 == $fresh1))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [34mINFO: UNsolved proc call: $memcpy.i8
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb2_main_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb1_main_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0massume true;[34m
+ [0m[34mINFO: stmt kind ASSUME
+ [0m[34mINFO: Basic Parse condition, 2
+ [0mSymbHeap((((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0)) && true)|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$p1_main0 := $bitcast.ref.ref($p0_main0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs Unary ptr cast
+ [0m[34mArg1 Type: 13
+ [0mSymbHeap(((((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0)) && true) && ($p1_main0_bb0 == $p0_main0_bb0))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p1_main0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $M.1_main0 := $memcpy.i8($M.1, $M.0, $p1_main0, a_main0, 8, false);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: execute Unintepreted function. $memcpy.i8
+ [0m$fresh1 i0 $M.1_main0
+ $fresh0 i64 $M.1_main0
+ $M.0 M64 $M.1_main0
+ $p3_foo0 ref8 $M.1_main0
+ $p2_foo0 ref32 $M.1_main0
+ $p1_foo0 ref8 $M.1_main0
+ $p0_foo0 ref $M.1_main0
+ $r_main0 i32 $M.1_main0
+ $p2_main0 ref8 $M.1_main0
+ $p1_main0 ref8 $M.1_main0
+ $p0_main0 ref $M.1_main0
+ [34mERROR: vartype not found: $M.1_main0
+ [0mSymbHeap((((((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0)) && true) && ($p1_main0_bb0 == $p0_main0_bb0)) && ($M.1_main0_bb0 == $fresh2))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [34mINFO: UNsolved proc call: $memcpy.i8
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $M.1_main0_bb0| Var: $fresh2
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $fresh2| Var: $fresh2
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p1_main0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0m$p2_main0 := $load.ref($M.1, $p0_main0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs store or load
+ [0m[34mINFO: Load $p0_main0_bb0 to $p2_main0_bb0
+ [0m[33mIn intLint : 8
+ [0m[34mloadPosResult: 0 0
+ [0m[34mWARNING: LOAD Not intialized memory... 
+ [0mload size: 1
+ SymbHeap((((((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0)) && true) && ($p1_main0_bb0 == $p0_main0_bb0)) && ($p2_main0_bb0 == $fresh3))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, $p0_main0_bb0) # $p0_main0_bb0 >--> $fresh3 # Blk(($p0_main0_bb0 + 1), ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $M.1_main0_bb0| Var: $fresh2
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $fresh2| Var: $fresh2
+ [0m[32mKey: $fresh3| Var: $fresh3
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p1_main0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[34mINFO: executing for stmt: 
+ [0mcall free_($p2_main0);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mERROR: getBlkName error: $p2_main0_bb0
+ terminate called after throwing an instance of 'std::logic_error'
+   what():  basic_string::_M_construct null not valid
+  #0 0x00007f83e00f84ff llvm::sys::PrintStackTrace(llvm::raw_ostream&) (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x9814ff)
+  #1 0x00007f83e00f6782 llvm::sys::RunSignalHandlers() (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x97f782)
+  #2 0x00007f83e00f8ac5 (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x981ac5)
+  #3 0x00007f83ddf12210 (/lib/x86_64-linux-gnu/libc.so.6+0x46210)
+  #4 0x00007f83ddf1218b raise /build/glibc-YbNSs7/glibc-2.31/signal/../sysdeps/unix/sysv/linux/raise.c:51:1
+  #5 0x00007f83ddef1859 abort /build/glibc-YbNSs7/glibc-2.31/stdlib/abort.c:81:7
+  #6 0x00007f83de2c8911 (/lib/x86_64-linux-gnu/libstdc++.so.6+0x9e911)
+  #7 0x00007f83de2d438c (/lib/x86_64-linux-gnu/libstdc++.so.6+0xaa38c)
+  #8 0x00007f83de2d43f7 (/lib/x86_64-linux-gnu/libstdc++.so.6+0xaa3f7)
+  #9 0x00007f83de2d46a9 (/lib/x86_64-linux-gnu/libstdc++.so.6+0xaa6a9)
+ #10 0x00007f83de2cb21e std::__throw_logic_error(char const*) (/lib/x86_64-linux-gnu/libstdc++.so.6+0xa121e)
+ #11 0x00007f83e4b7503b void std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_construct<char const*>(char const*, char const*, std::forward_iterator_tag) (/home/clexma/Desktop/Disk_D/Tools/Z3/z3/build/libz3.so+0xd6a03b)
+ #12 0x00000000004b9be5 smack::VarEquiv::getBlkName(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/VarEquiv.cpp:84:13
+ #13 0x000000000051432f smack::BlockExecutor::executeFree(std::shared_ptr<smack::SymbolicHeapExpr>, smack::CallStmt const*) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:925:43
+ #14 0x0000000000512ea6 smack::BlockExecutor::executeCall(std::shared_ptr<smack::SymbolicHeapExpr>, smack::Stmt const*) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:704:17
+ #15 0x00000000005173a0 smack::BlockExecutor::executeStmt(std::shared_ptr<smack::SymbolicHeapExpr>, smack::Stmt const*) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:1730:13
+ #16 0x00000000005177fc smack::BlockExecutor::execute[abi:cxx11](std::shared_ptr<smack::ExecutionState>) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:1764:31
+ #17 0x00000000004aa77e smack::MemSafeVerifier::runOnModule(llvm::Module&) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/MemSafeVerifier.cpp:76:69
+ #18 0x00007f83e01fe4a0 llvm::legacy::PassManagerImpl::run(llvm::Module&) (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0xa874a0)
+ #19 0x000000000042bf91 main /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../tools/llvm2bpl/llvm2bpl.cpp:278:17
+ #20 0x00007f83ddef30b3 __libc_start_main /build/glibc-YbNSs7/glibc-2.31/csu/../csu/libc-start.c:342:3
+ #21 0x000000000042a60e _start (/usr/local/bin/llvm2bpl+0x42a60e)
+ Stack dump:
+ 0.	Program arguments: llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-opzhlhim.bc -bpl ../svcomp/memsafety//test-memleak_nexttime.bpl -warn-type unsound -sea-dsa=ci -source-loc-syms -entry-points main -ll ../svcomp/memsafety//test-memleak_nexttime_IR.ll -mem-mod-impls -llvm-assumes=none -sh-mem-leak 
+ 1.	Running pass 'MemSafeVerifier' on module '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-opzhlhim.bc'.
+ SMACK program verifier version 2.6.3
+Running clang -c -emit-llvm -O0 -g -gcolumn-info -Xclang -disable-O0-optnone -I/usr/local/share/smack/include -DMEMORY_MODEL_NO_REUSE_IMPLS -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/test-memleak_nexttime-ybcu7587.bc ../svcomp/memsafety//test-memleak_nexttime.c
+Running llvm-link -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/a-gpje9a0x.bc /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/test-memleak_nexttime-ybcu7587.bc
+Running llvm-link -o /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-gs5vo9t8.bc /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/a-gpje9a0x.bc
+Running llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-gs5vo9t8.bc -bpl ../svcomp/memsafety//test-memleak_nexttime.bpl -warn-type unsound -sea-dsa=ci -source-loc-syms -entry-points main -ll ../svcomp/memsafety//test-memleak_nexttime_IR.ll -mem-mod-impls -llvm-assumes=none -sh-mem-leak
+[regions] for:   %1 = alloca i32*, align 8, !verifier.code !21
+   in function: foo
+ [regions]   using region: <Node:i32*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %1 = alloca i32*, align 8, !verifier.code !21 with length 8
+   in function: foo
+ [regions]   using region: <Node:i32*>[0,8]{A}
+    found overlap at index 0: <Node:i32*>[0,8]{A}
+ [regions]   merged region: <Node:i32*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: @a = internal global [8 x i8] zeroinitializer, align 1, !dbg !0 with length 8
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:[8 x i8]>[0,8]{A}
+    found overlap at index 0: <Node:i32*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: @a = internal global [8 x i8] zeroinitializer, align 1, !dbg !0 with length 8
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:[8 x i8]>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %1 = alloca i8*, align 8, !verifier.code !21 with length 8
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for:   %1 = alloca i8*, align 8, !verifier.code !21
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 1: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:i8*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[0,1]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[1,2]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[2,3]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[3,4]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[4,5]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[5,6]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[6,7]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[7,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ We are now translating the program to boogie...
+ Analyzing globals...
+ -------INSERT: Global Variables a
+ Analyzing functions...
+ Analyzing function: foo
+ -------INSERT: Global Variables foo
+ Analyzing function body: foo
+ Generating body for foo
+ visitBasicBlock
+ visitAlloca
+ visitIntrinsic
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitStore
+ [regions] for:   %1 = alloca i32*, align 8, !verifier.code !21
+   in function: foo
+ [regions]   using region: <Node:i32*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %1 = alloca i32*, align 8, !verifier.code !21
+   in function: foo
+ [regions]   using region: <Node:i32*>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitCast
+ visitCast not vector
+ visitMemCpy
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i64 0, i64 0) with length 8
+   at instruction:   call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 8 %2, i8* align 1 getelementptr inbounds ([8 x i8], [8 x i8]* @a, i64 0, i64 0), i64 8, i1 false), !dbg !26, !verifier.code !21
+   in function: main
+ [regions]   using region: <Node:i8>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for:   %4 = bitcast i32** %1 to i8*, !dbg !26, !verifier.code !21 with length 8
+   in function: foo
+ [regions]   using region: <Node:i8>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitReturn
+ 
+ Finished analyzing function: foo
+ 
+ Analyzing function: llvm.dbg.declare
+ -------INSERT: Global Variables llvm.dbg.declare
+ Analyzing function: malloc
+ -------INSERT: Global Variables malloc
+ Analyzing function: llvm.memcpy.p0i8.p0i8.i64
+ -------INSERT: Global Variables llvm.memcpy.p0i8.p0i8.i64
+ Analyzing function: main
+ -------INSERT: Global Variables main
+ Analyzing function body: main
+ Generating body for main
+ visitBasicBlock
+ visitAlloca
+ visitCall
+ smackrep call
+ visitIntrinsic
+ visitCast
+ visitCast not vector
+ visitMemCpy
+ [regions] for:   %2 = bitcast i8** %1 to i8*, !dbg !26, !verifier.code !21 with length 8
+   in function: main
+ [regions]   using region: <Node:i8>[0,8]{A}
+    found overlap at index 1: <Node:i8*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i64 0, i64 0) with length 8
+   at instruction:   call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 8 %2, i8* align 1 getelementptr inbounds ([8 x i8], [8 x i8]* @a, i64 0, i64 0), i64 8, i1 false), !dbg !26, !verifier.code !21
+   in function: main
+ [regions]   using region: <Node:i8>[0,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitLoad
+ [regions] for:   %1 = alloca i8*, align 8, !verifier.code !21
+   in function: main
+ [regions]   using region: <Node:i8*>[0,8]{A}
+    found overlap at index 1: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 1
+ 
+ visitCall
+ smackrep call
+ visitReturn
+ 
+ insert initial SH to main
+ Finished analyzing function: main
+ 
+ Analyzing function: free_
+ -------INSERT: Global Variables free_
+ Analyzing function: __SMACK_static_init
+ -------INSERT: Global Variables __SMACK_static_init
+ Analyzing function body: __SMACK_static_init
+ Generating body for __SMACK_static_init
+ visitBasicBlock
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[0,1]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 0)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[0,1]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[1,2]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 1)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[1,2]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[2,3]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 2)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[2,3]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[3,4]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 3)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[3,4]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[4,5]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 4)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[4,5]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[5,6]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 5)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[5,6]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[6,7]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 6)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[6,7]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitStore
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[7,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ [regions] for: i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   at instruction:   store i8 0, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @a, i32 0, i64 7)
+   in function: __SMACK_static_init
+ [regions]   using region: <Node:i8>[7,8]{A}
+    found overlap at index 0: <Node:*>[0,8]{A}
+ [regions]   merged region: <Node:*>[0,8]{A}
+ [regions]   returning index: 0
+ 
+ visitReturn
+ 
+ Finished analyzing function: __SMACK_static_init
+ 
+ Start Analyzing Prelude: foo
+ 
+ Start Analyzing Prelude: llvm.dbg.declare
+ 
+ Start Analyzing Prelude: malloc
+ 
+ Start Analyzing Prelude: llvm.memcpy.p0i8.p0i8.i64
+ 
+ Start Analyzing Prelude: main
+ 
+ Start Analyzing Prelude: free_
+ 
+ Start Analyzing Prelude: __SMACK_static_init
+ 
+ Start Analyzing Prelude: boogie_si_record_ref
+ 
+ Start Analyzing Prelude: $initialize
+ 
+ -----------------START MEMSAFE ANALYSIS---------------
+ Begin verifying
+ Adding procedure: foo
+ Empty block name founded in proc foo
+ Adding procedure: llvm.dbg.declare
+ Empty blocks of proc llvm.dbg.declare
+ Adding procedure: malloc
+ Empty block name founded in proc malloc
+ Adding procedure: llvm.memcpy.p0i8.p0i8.i64
+ Empty blocks of proc llvm.memcpy.p0i8.p0i8.i64
+ Adding procedure: main
+ Empty block name founded in proc main
+ Adding procedure: free_
+ Empty block name founded in proc free_
+ Adding procedure: __SMACK_static_init
+ Empty block name founded in proc __SMACK_static_init
+ Adding procedure: boogie_si_record_ref
+ Empty blocks of proc boogie_si_record_ref
+ Adding procedure: $initialize
+ Empty block name founded in proc $initialize
+ inlining procedure: main
+ $bb0_main_0 2 1
+ New stmts! 
+ call {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);
+ call $p0_main0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+ 
+ New stmts! 
+ assume true;
+ $p1_main0 := $bitcast.ref.ref($p0_main0);
+ call $M.1_main0 := $memcpy.i8($M.1, $M.0, $p1_main0, a_main0, 8, false);
+ $p2_main0 := $load.ref($M.1, $p0_main0);
+ call free_($p2_main0);
+ $r_main0 := 0;
+ return;
+ 
+ call foo();
+ inlining procedure: foo
+ $bb0_foo_0 1 0
+ New stmts! 
+ call $p0_foo0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+ assume true;
+ call $p1_foo0 := malloc(10);
+ $p2_foo0 := $bitcast.ref.ref($p1_foo0);
+ $M.0 := $store.ref($M.0, $p0_foo0, $p1_foo0);
+ $p3_foo0 := $bitcast.ref.ref($p0_foo0);
+ call $M.0_foo0 := $memcpy.i8($M.0, $M.0, a_foo0, $p3_foo0, 8, false);
+ return;
+ 
+ Splitting return block
+ 
+ Inlining procedure: foo 0
+ arguments: 
+ 	
+ parameter: 
+ 	
+ processing return block $bb0_foo_0
+ return param of 'call foo();': 
+ 	return to: 
+ 	Add goto relation: $bb2_main_0 -> $bb1_main_0
+ Return block: $bb0_foo_0:
+   call $p0_foo0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+   assume true;
+   call $p1_foo0 := malloc(10);
+   $p2_foo0 := $bitcast.ref.ref($p1_foo0);
+   $M.0 := $store.ref($M.0, $p0_foo0, $p1_foo0);
+   $p3_foo0 := $bitcast.ref.ref($p0_foo0);
+   call $M.0_foo0 := $memcpy.i8($M.0, $M.0, a_foo0, $p3_foo0, 8, false);
+   goto $bb2_main_0;
+ Return process block: $bb2_main_0:
+   goto $bb1_main_0;
+ Current block: $bb0_main_0:
+   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);
+   call $p0_main0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+   goto $bb3_main_0;
+ Pass block: $bb3_main_0:
+   goto $bb0_foo_0;
+ Splitting return block
+ =====================CENTER NEW===================
+ procedure main()
+   returns ($r_main0: i32)
+ {
+   var $p0_main0: ref;
+   var $p1_main0: ref8;
+   var $p2_main0: ref8;
+   var $r_main0: i32;
+   var $p0_foo0: ref;
+   var $p1_foo0: ref8;
+   var $p2_foo0: ref32;
+   var $p3_foo0: ref8;
+ $bb0_main_0:
+   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);
+   call $p0_main0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+   goto $bb3_main_0;
+ $bb2_main_0:
+   goto $bb1_main_0;
+ $bb3_main_0:
+   goto $bb0_foo_0;
+ $bb1_main_0:
+   assume true;
+   $p1_main0 := $bitcast.ref.ref($p0_main0);
+   call $M.1_main0 := $memcpy.i8($M.1, $M.0, $p1_main0, a_main0, 8, false);
+   $p2_main0 := $load.ref($M.1, $p0_main0);
+   call free_($p2_main0);
+   $r_main0 := 0;
+   return;
+ $bb0_foo_0:
+   call $p0_foo0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+   assume true;
+   call $p1_foo0 := malloc(10);
+   $p2_foo0 := $bitcast.ref.ref($p1_foo0);
+   $M.0 := $store.ref($M.0, $p0_foo0, $p1_foo0);
+   $p3_foo0 := $bitcast.ref.ref($p0_foo0);
+   call $M.0_foo0 := $memcpy.i8($M.0, $M.0, a_foo0, $p3_foo0, 8, false);
+   goto $bb2_main_0;
+ }
+ =====================CENTER NEW===================
+ from bb: $bb0_main_0 to bb: $bb3_main_0 
+ from bb: $bb2_main_0 to bb: $bb1_main_0 
+ from bb: $bb3_main_0 to bb: $bb0_foo_0 
+ from bb: $bb0_foo_0 to bb: $bb2_main_0 
+ In $bb1_main_0
+ [0mpop: $bb1_main_0
+ [0mpop finished
+ [0mIn $bb2_main_0
+ [0mpop: $bb2_main_0
+ [0mpop finished
+ [0mIn $bb0_foo_0
+ [0mpop: $bb0_foo_0
+ [0mpop finished
+ [0mIn $bb3_main_0
+ [0mpop: $bb3_main_0
+ [0mpop finished
+ [0mIn $bb0_main_0
+ [0mpop: $bb0_main_0
+ [0mpop finished
+ [0mVerifying globals
+ In pro:$bb0_main_0 1 $bb3_main_0 
+ In pro:$bb3_main_0 1 $bb0_foo_0 
+ In pro:$bb0_foo_0 1 $bb2_main_0 
+ In pro:$bb2_main_0 1 $bb1_main_0 
+ =========== DO SYMBOLIC EXECUTION FOR ONE PATH
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0mcall {:cexpr "smack:entry:main"} boogie_si_record_ref(main_main0);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: UNsolved proc call: boogie_si_record_ref
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $p0_main0 := $alloc($mul.ref(8, $zext.i32.i64(1)));[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[33mIn intLint : 1
+ [0m[33mIn intLint : 8
+ [0m[33mIn intLint : 8
+ [0mSymbHeap(true|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb3_main_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb0_foo_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $p0_foo0 := $alloc($mul.ref(8, $zext.i32.i64(1)));[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[33mIn intLint : 1
+ [0m[33mIn intLint : 8
+ [0m[33mIn intLint : 8
+ [0mSymbHeap(true|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, ($p0_foo0_bb0 + 8)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0massume true;[34m
+ [0m[34mINFO: stmt kind ASSUME
+ [0m[34mINFO: Basic Parse condition, 2
+ [0mSymbHeap((true && true)|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, ($p0_foo0_bb0 + 8)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $p1_foo0 := malloc(10);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[33mIn intLint : 10
+ [0m[33mIn intLint : 10
+ [0mSymbHeap((true && true)|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0m$p2_foo0 := $bitcast.ref.ref($p1_foo0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs Unary ptr cast
+ [0m[34mArg1 Type: 13
+ [0mSymbHeap(((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0m$M.0 := $store.ref($M.0, $p0_foo0, $p1_foo0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs store or load
+ [0m[34mSTORE: arg1 $p0_foo0 arg2: $p1_foo0
+ [0m[33mIn intLint : 8
+ [0m[34mSTORE: offset 0 Blk size: 8
+ [0m[34mINFO: new store offset
+ [0m[34mmalloc name: $p0_foo0_bb0 splitIndex: 1
+ [0m[32mWARNING: VarIntMap get warning. $p1_foo0_bb0
+ [0m[33min varExpr! 0 0
+ [0m[34mStore type: ref Store stepsize: 8
+ [0mSymbHeap((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0m$p3_foo0 := $bitcast.ref.ref($p0_foo0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs Unary ptr cast
+ [0m[34mArg1 Type: 13
+ [0mSymbHeap(((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $M.0_foo0 := $memcpy.i8($M.0, $M.0, a_foo0, $p3_foo0, 8, false);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: execute Unintepreted function. $memcpy.i8
+ [0m$fresh0 i64 $M.0_foo0
+ $M.0 M64 $M.0_foo0
+ $p3_foo0 ref8 $M.0_foo0
+ $p2_foo0 ref32 $M.0_foo0
+ $p1_foo0 ref8 $M.0_foo0
+ $p0_foo0 ref $M.0_foo0
+ $r_main0 i32 $M.0_foo0
+ $p2_main0 ref8 $M.0_foo0
+ $p1_main0 ref8 $M.0_foo0
+ $p0_main0 ref $M.0_foo0
+ [34mERROR: vartype not found: $M.0_foo0
+ [0mSymbHeap((((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0)) && ($M.0_foo0_bb0 == $fresh1))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [34mINFO: UNsolved proc call: $memcpy.i8
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb2_main_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0mgoto $bb1_main_0;[34m
+ [0m[34mINFO: stmt kind 5
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0massume true;[34m
+ [0m[34mINFO: stmt kind ASSUME
+ [0m[34mINFO: Basic Parse condition, 2
+ [0mSymbHeap((((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0)) && true)|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0m$p1_main0 := $bitcast.ref.ref($p0_main0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs Unary ptr cast
+ [0m[34mArg1 Type: 13
+ [0mSymbHeap(((((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0)) && true) && ($p1_main0_bb0 == $p0_main0_bb0))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))[34m
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p1_main0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0mcall $M.1_main0 := $memcpy.i8($M.1, $M.0, $p1_main0, a_main0, 8, false);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mINFO: execute Unintepreted function. $memcpy.i8
+ [0m$fresh1 i0 $M.1_main0
+ $fresh0 i64 $M.1_main0
+ $M.0 M64 $M.1_main0
+ $p3_foo0 ref8 $M.1_main0
+ $p2_foo0 ref32 $M.1_main0
+ $p1_foo0 ref8 $M.1_main0
+ $p0_foo0 ref $M.1_main0
+ $r_main0 i32 $M.1_main0
+ $p2_main0 ref8 $M.1_main0
+ $p1_main0 ref8 $M.1_main0
+ $p0_main0 ref $M.1_main0
+ [34mERROR: vartype not found: $M.1_main0
+ [0mSymbHeap((((((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0)) && true) && ($p1_main0_bb0 == $p0_main0_bb0)) && ($M.1_main0_bb0 == $fresh2))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [34mINFO: UNsolved proc call: $memcpy.i8
+ [0m[32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $M.1_main0_bb0| Var: $fresh2
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $fresh2| Var: $fresh2
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p1_main0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0m$p2_main0 := $load.ref($M.1, $p0_main0);[34m
+ [0m[34mINFO: stmt kind ASSIGN
+ [0m[34mASSIGN: rhs ExprType::FUNC
+ [0m[34mASSIGN: rhs store or load
+ [0m[34mINFO: Load $p0_main0_bb0 to $p2_main0_bb0
+ [0m[33mIn intLint : 8
+ [0m[34mloadPosResult: 0 0
+ [0m[34mWARNING: LOAD Not intialized memory... 
+ [0mload size: 1
+ SymbHeap((((((((true && true) && ($p2_foo0_bb0 == $p1_foo0_bb0)) && ($fresh0 == $p1_foo0_bb0)) && ($p3_foo0_bb0 == $p0_foo0_bb0)) && true) && ($p1_main0_bb0 == $p0_main0_bb0)) && ($p2_main0_bb0 == $fresh3))|emp # $p0_main0_bb0 >-s-> 8 # Blk($p0_main0_bb0, $p0_main0_bb0) # $p0_main0_bb0 >--> $fresh3 # Blk(($p0_main0_bb0 + 1), ($p0_main0_bb0 + 8)) # $p0_foo0_bb0 >-s-> 8 # Blk($p0_foo0_bb0, $p0_foo0_bb0) # $p0_foo0_bb0 >--> $fresh0 # Blk(($p0_foo0_bb0 + 8), ($p0_foo0_bb0 + 8)) # $p1_foo0_bb0 >-s-> 10 # Blk($p1_foo0_bb0, ($p1_foo0_bb0 + 10)))
+ [32mDebug VarEquiv: 
+ [0m[32mKey: $M.0_foo0_bb0| Var: $fresh1
+ [0m[32mKey: $M.1_main0_bb0| Var: $fresh2
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $fresh1| Var: $fresh1
+ [0m[32mKey: $fresh2| Var: $fresh2
+ [0m[32mKey: $fresh3| Var: $fresh3
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug BlkLinkName: 
+ [0m[32mKey: $Null| Var: $Null
+ [0m[32mKey: $fresh0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p0_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mKey: $p0_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p1_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p1_main0_bb0| Var: $p0_main0_bb0
+ [0m[32mKey: $p2_foo0_bb0| Var: $p1_foo0_bb0
+ [0m[32mKey: $p3_foo0_bb0| Var: $p0_foo0_bb0
+ [0m[32mDebug Offset:
+ [0m[32mKey: $Null| Var: 0
+ [0m[32mKey: $p0_foo0_bb0| Var: 0
+ [0m[32mKey: $p0_main0_bb0| Var: 0
+ [0m[32mKey: $p1_foo0_bb0| Var: 0
+ [0m[32mKey: $p1_main0_bb0| Var: 0
+ [0m[32mKey: $p2_foo0_bb0| Var: 0
+ [0m[32mKey: $p3_foo0_bb0| Var: 0
+ [0m[32mDebug IntVal: 
+ [0m[32mKey: $Null| Val: 0
+ [0m[32mDebug freedBlkName: 
+ [0m[32m
+ [0m[34mINFO: executing for stmt: 
+ [0mcall free_($p2_main0);[34m
+ [0m[34mINFO: stmt kind CALL
+ [0m[34mERROR: getBlkName error: $p2_main0_bb0
+ terminate called after throwing an instance of 'std::logic_error'
+   what():  basic_string::_M_construct null not valid
+  #0 0x00007f52b3b074ff llvm::sys::PrintStackTrace(llvm::raw_ostream&) (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x9814ff)
+  #1 0x00007f52b3b05782 llvm::sys::RunSignalHandlers() (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x97f782)
+  #2 0x00007f52b3b07ac5 (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0x981ac5)
+  #3 0x00007f52b1921210 (/lib/x86_64-linux-gnu/libc.so.6+0x46210)
+  #4 0x00007f52b192118b raise /build/glibc-YbNSs7/glibc-2.31/signal/../sysdeps/unix/sysv/linux/raise.c:51:1
+  #5 0x00007f52b1900859 abort /build/glibc-YbNSs7/glibc-2.31/stdlib/abort.c:81:7
+  #6 0x00007f52b1cd7911 (/lib/x86_64-linux-gnu/libstdc++.so.6+0x9e911)
+  #7 0x00007f52b1ce338c (/lib/x86_64-linux-gnu/libstdc++.so.6+0xaa38c)
+  #8 0x00007f52b1ce33f7 (/lib/x86_64-linux-gnu/libstdc++.so.6+0xaa3f7)
+  #9 0x00007f52b1ce36a9 (/lib/x86_64-linux-gnu/libstdc++.so.6+0xaa6a9)
+ #10 0x00007f52b1cda21e std::__throw_logic_error(char const*) (/lib/x86_64-linux-gnu/libstdc++.so.6+0xa121e)
+ #11 0x00007f52b858403b void std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_construct<char const*>(char const*, char const*, std::forward_iterator_tag) (/home/clexma/Desktop/Disk_D/Tools/Z3/z3/build/libz3.so+0xd6a03b)
+ #12 0x00000000004bb2a5 smack::VarEquiv::getBlkName(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/VarEquiv.cpp:89:13
+ #13 0x0000000000516e0f smack::BlockExecutor::executeFree(std::shared_ptr<smack::SymbolicHeapExpr>, smack::CallStmt const*) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:925:43
+ #14 0x0000000000515986 smack::BlockExecutor::executeCall(std::shared_ptr<smack::SymbolicHeapExpr>, smack::Stmt const*) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:704:17
+ #15 0x000000000051a0ab smack::BlockExecutor::executeStmt(std::shared_ptr<smack::SymbolicHeapExpr>, smack::Stmt const*) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:1743:13
+ #16 0x000000000051a50c smack::BlockExecutor::execute[abi:cxx11](std::shared_ptr<smack::ExecutionState>) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/BlockExecutor.cpp:1777:31
+ #17 0x00000000004aa91f smack::MemSafeVerifier::runOnModule(llvm::Module&) /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../lib/smack/MemSafeVerifier.cpp:93:69
+ #18 0x00007f52b3c0d4a0 llvm::legacy::PassManagerImpl::run(llvm::Module&) (/lib/x86_64-linux-gnu/libLLVM-10.so.1+0xa874a0)
+ #19 0x000000000042bf91 main /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/../tools/llvm2bpl/llvm2bpl.cpp:278:17
+ #20 0x00007f52b19020b3 __libc_start_main /build/glibc-YbNSs7/glibc-2.31/csu/../csu/libc-start.c:342:3
+ #21 0x000000000042a60e _start (/usr/local/bin/llvm2bpl+0x42a60e)
+ Stack dump:
+ 0.	Program arguments: llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-gs5vo9t8.bc -bpl ../svcomp/memsafety//test-memleak_nexttime.bpl -warn-type unsound -sea-dsa=ci -source-loc-syms -entry-points main -ll ../svcomp/memsafety//test-memleak_nexttime_IR.ll -mem-mod-impls -llvm-assumes=none -sh-mem-leak 
+ 1.	Running pass 'MemSafeVerifier' on module '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/testcases/benchmark/b-gs5vo9t8.bc'.
  

@@ -1147,7 +1147,13 @@ namespace smack {
                 : Decl(CONSTANT, n, ax), type(t), unique(u) {}
 
         void print(std::ostream &os) const;
-
+        bool isGlobalVariable() {
+            for (auto attr : this->attrs) {
+                auto name = attr->getName();
+                if (name == "global_variable") return true;
+            }
+            return false;
+        }
         static bool classof(const Decl *D) { return D->getKind() == CONSTANT; }
     };
 

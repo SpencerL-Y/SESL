@@ -311,4 +311,18 @@ namespace smack {
         }
     }
 
+    void CFG::setConstDecls(vector<ConstDecl*> constDs) {
+        constDecls = std::move(constDs);
+    }
+
+    void CFG::printConstDeclsInfo() {
+        for (auto &decl : constDecls) {
+            cout << "Decls: "; decl->print(cout);cout <<endl;
+            cout << "\tvariable: " << decl->getName() << endl;
+        }
+    }
+
+    std::vector<ConstDecl *> CFG::getConstDecls() {
+        return constDecls;
+    }
 } // namespace name

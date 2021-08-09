@@ -13,7 +13,6 @@
 #include "smack/SmackOptions.h"
 #include "smack/SmackRep.h"
 #include "smack/cfg/CFG.h"
-#include "smack/Lasso.h"
 #include "smack/Translator.h"
 
 #include <stdlib.h>

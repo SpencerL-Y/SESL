@@ -21,6 +21,7 @@ namespace smack
     private:
         /* data */
         std::vector<ProcDecl*> procVec;
+        std::vector<ConstDecl*> constDecls;
         std::unordered_map<std::string, std::string> varType;
         std::unordered_map<std::string, StatePtr> states;
         std::string entryBlockName;
@@ -31,6 +32,10 @@ namespace smack
         std::unordered_map<int, int> sccGroupNum;
         int sccNumber = 0, step = 0;
     public:
+        void setConstDecls(vector<ConstDecl*> constDs);
+        void printConstDeclsInfo();
+        std::vector<ConstDecl*> getConstDecls();
+
         void markSCC(std::string start);
         void markExit(const std::string& start, bool fresh = true);
         void printVarInfo();

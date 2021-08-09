@@ -1,15 +1,18 @@
 #include "smack/MemSafeVerifier.h"
-
 #include "smack/BoogieAst.h"
+#include "smack/Debug.h"
+#include "smack/Prelude.h"
+#include "smack/Regions.h"
 #include "smack/SmackModuleGenerator.h"
 #include "smack/cfg/CFG.h"
 #include "smack/Translator.h"
 #include "smack/StoreSplitter.h"
 #include "smack/cfg/CFGExecutor.h"
-#include "llvm/Support/GraphWriter.h"
 #include "smack/cfg/CFGUtils.h"
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
+#include <smack/Naming.h>
+
 namespace smack {
     using llvm::errs;
     char MemSafeVerifier::ID = 1;
@@ -19,7 +22,7 @@ namespace smack {
         AU.addRequired<SmackModuleGenerator>();
     }
 
-    bool MemSafeVerifier::runOnModule(llvm::Module &m){
+    bool MemSafeVerifier::runOnModule(llvm::Module &M){
         std::cout << "-----------------START MEMSAFE ANALYSIS---------------" << std::endl;
         SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
         Program* program = smackGen.getProgram();
@@ -27,6 +30,20 @@ namespace smack {
         std::cout << "Begin verifying" << std::endl;
         CFGUtil cfgUtil(program);
         auto mainGraph = cfgUtil.getMainCFG();
+        {
+            //processing global variables
+            std::cout << "Verifying globals" << std::endl;
+            auto& decls = program->getDeclarations();
+            vector<ConstDecl*> constDecls;
+            for (auto decl : decls) {
+                if (decl->getKind() == Decl::CONSTANT) {
+                    auto constDecl = (ConstDecl*) decl;
+                    if (constDecl->isGlobalVariable())
+                        constDecls.push_back(constDecl);
+                }
+            }
+            mainGraph->setConstDecls(constDecls);
+        }
         StatePtr state = mainGraph->getEntryState();
         // std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
         // Block* block = state->getStateBlock();
@@ -40,7 +57,7 @@ namespace smack {
         CFGExecutor cfgExec(mainGraph);
         cfgExec.generatePathByUpperBound();
 //        cfgExec.printPath();
-
+/*
         for(ExecutionPath p : cfgExec.getExecPathVec()){
 
             std::cout << "=========== DO SYMBOLIC EXECUTION FOR ONE PATH" << std::endl;
@@ -96,6 +113,7 @@ namespace smack {
 
         
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
+        */
         return false;
     }
 

@@ -1,0 +1,10 @@
+# For more information on this file, please see:
+# http://git-scm.com/docs/gitattributes
+
+# detect all text files and automatically normalize them (convert CRLF to LF)
+*       text=auto
+
+# Declare files that will always have LF line endings on checkout.
+*.sh         text eol=lf
+*.py         text eol=lf
+bin/*        text eol=lf

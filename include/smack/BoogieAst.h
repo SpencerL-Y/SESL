@@ -1380,7 +1380,7 @@ namespace smack {
 
         DeclarationList &getDeclarations() { return decls; }
 
-        void appendPrelude(std::string s) { prelude += s; }
+        void appendPrelude(std::string s) { /*prelude += s;*/ }
     };
 
     std::ostream &operator<<(std::ostream &os, const Expr &e);

@@ -6,18 +6,26 @@ axiom (main == $sub.ref(0, 1032));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
-  var $p0: ref8;
-  var $p1: ref32;
-  var $p2: ref8;
+  var $p0: ref;
+  var $p1: ref8;
+  var $p2: ref;
   var $p3: ref8;
+  var $p4: ref;
+  var $p5: ref;
+  var $p6: ref8;
 $bb0:
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  call $p0 := malloc(4);
-  $p1 := $bitcast.ref.ref($p0);
-  $p2 := $bitcast.ref.ref($p1);
-  call free_($p2);
-  $p3 := $bitcast.ref.ref($p1);
-  call free_($p3);
+  call $p0 := $alloc($mul.ref(16, $zext.i32.i64(1)));
+  assume true;
+  call $p1 := malloc(4);
+  $p2 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(1, 8));
+  $M.0 := $store.ref($M.0, $p2, $p1);
+  $p3 := $bitcast.ref.ref($p0);
+  $p4 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(1, 8));
+  $M.0 := $store.ref($M.0, $p4, $p0);
+  $p5 := $add.ref($add.ref($p0, $mul.ref(0, 16)), $mul.ref(1, 8));
+  $p6 := $load.ref($M.0, $p5);
+  call free_($p6);
   $r := 0;
   return;
 }
@@ -37,11 +45,8 @@ procedure  free_($p0: ref)
 {
   call $free($p0);
 }
-const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 5160));
-procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 6192));
+axiom (__SMACK_static_init == $sub.ref(0, 5160));
 procedure  __SMACK_static_init()
 {
 $bb0:

@@ -113,7 +113,7 @@ namespace smack
         if(this->pointsToBlkOffset.find(name) != this->pointsToBlkOffset.end()){
             return pointsToBlkOffset[name];
         } else {
-            DEBUG_WITH_COLOR(std::cout << "ERROR: VarEquiv blkoffset no name exists. " << std::endl, color::green);
+            DEBUG_WITH_COLOR(std::cout << "ERROR: VarEquiv blkoffset no name exists. " << name << std::endl, color::green);
             return -1;
         }
     }

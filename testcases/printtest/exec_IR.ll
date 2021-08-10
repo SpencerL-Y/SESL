@@ -1,18 +1,22 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/b-25wua7i0.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/b-4h1mzgej.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
 ; Function Attrs: noinline nounwind uwtable
 define dso_local i32 @main() #0 !dbg !21 {
-  %1 = call noalias i8* @malloc(i64 4) #3, !dbg !24, !verifier.code !25
-  %2 = bitcast i8* %1 to i32*, !dbg !24, !verifier.code !25
-  call void @llvm.dbg.value(metadata i32* %2, metadata !26, metadata !DIExpression()), !dbg !27, !verifier.code !25
-  %3 = bitcast i32* %2 to i8*, !dbg !28, !verifier.code !25
-  call void @free(i8* %3) #3, !dbg !29, !verifier.code !25
-  %4 = bitcast i32* %2 to i8*, !dbg !30, !verifier.code !25
-  call void @free(i8* %4) #3, !dbg !31, !verifier.code !25
-  ret i32 0, !dbg !32, !verifier.code !25
+  %1 = alloca [2 x i8*], align 16, !verifier.code !24
+  call void @llvm.dbg.declare(metadata [2 x i8*]* %1, metadata !25, metadata !DIExpression()), !dbg !30, !verifier.code !24
+  %2 = call noalias i8* @malloc(i64 4) #3, !dbg !31, !verifier.code !24
+  %3 = getelementptr inbounds [2 x i8*], [2 x i8*]* %1, i64 0, i64 1, !dbg !32, !verifier.code !24
+  store i8* %2, i8** %3, align 8, !dbg !33, !verifier.code !24
+  %4 = bitcast [2 x i8*]* %1 to i8*, !dbg !34, !verifier.code !24
+  %5 = getelementptr inbounds [2 x i8*], [2 x i8*]* %1, i64 0, i64 1, !dbg !35, !verifier.code !24
+  store i8* %4, i8** %5, align 8, !dbg !36, !verifier.code !24
+  %6 = getelementptr inbounds [2 x i8*], [2 x i8*]* %1, i64 0, i64 1, !dbg !37, !verifier.code !24
+  %7 = load i8*, i8** %6, align 8, !dbg !37, !verifier.code !24
+  call void @free(i8* %7) #3, !dbg !38, !verifier.code !24
+  ret i32 0, !dbg !39, !verifier.code !24
 }
 
 ; Function Attrs: nounwind readnone speculatable willreturn
@@ -23,9 +27,6 @@ declare dso_local noalias i8* @malloc(i64) #2
 
 ; Function Attrs: nounwind
 declare dso_local void @free(i8*) #2
-
-; Function Attrs: nounwind readnone speculatable willreturn
-declare void @llvm.dbg.value(metadata, metadata, metadata) #1
 
 define void @__SMACK_static_init() {
 entry:
@@ -65,12 +66,19 @@ attributes #3 = { nounwind }
 !21 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 20, type: !22, scopeLine: 20, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
 !22 = !DISubroutineType(types: !23)
 !23 = !{!7}
-!24 = !DILocation(line: 117, column: 14, scope: !21)
-!25 = !{i1 false}
-!26 = !DILocalVariable(name: "j", scope: !21, file: !1, line: 117, type: !6)
-!27 = !DILocation(line: 0, scope: !21)
-!28 = !DILocation(line: 118, column: 10, scope: !21)
-!29 = !DILocation(line: 118, column: 5, scope: !21)
-!30 = !DILocation(line: 119, column: 10, scope: !21)
-!31 = !DILocation(line: 119, column: 5, scope: !21)
-!32 = !DILocation(line: 120, column: 1, scope: !21)
+!24 = !{i1 false}
+!25 = !DILocalVariable(name: "a", scope: !21, file: !1, line: 117, type: !26)
+!26 = !DICompositeType(tag: DW_TAG_array_type, baseType: !27, size: 128, elements: !28)
+!27 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: null, size: 64)
+!28 = !{!29}
+!29 = !DISubrange(count: 2)
+!30 = !DILocation(line: 117, column: 11, scope: !21)
+!31 = !DILocation(line: 118, column: 12, scope: !21)
+!32 = !DILocation(line: 118, column: 5, scope: !21)
+!33 = !DILocation(line: 118, column: 10, scope: !21)
+!34 = !DILocation(line: 119, column: 12, scope: !21)
+!35 = !DILocation(line: 119, column: 5, scope: !21)
+!36 = !DILocation(line: 119, column: 10, scope: !21)
+!37 = !DILocation(line: 120, column: 10, scope: !21)
+!38 = !DILocation(line: 120, column: 5, scope: !21)
+!39 = !DILocation(line: 121, column: 1, scope: !21)

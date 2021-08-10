@@ -30,7 +30,7 @@ namespace smack{
             } else {
                 CFDEBUG(std::cout << "ERROR: This should not happen.");
             }
-
+            // TODOsh: refactor to make it more compatible with varFactory
             if(lhsVarName.find("$M") != std::string::npos){
                 this->cfg->addVarType(lhsVarOrigName, "M" + std::to_string(8 * PTR_BYTEWIDTH));
             }
@@ -1064,7 +1064,9 @@ namespace smack{
                                     // link fresh variable if there is malloc linked to the stored variable
                                     this->varEquiv->linkBlkName(freshVar->name(), oldname);
                                 }
-
+                                if(this->varEquiv->getOffset(oldname) >= 0){
+                                    this->varEquiv->addNewOffset(freshVar->name(), this->varEquiv->getOffset(oldname));
+                                }
                                 if(varArg2->translateToInt(this->varEquiv).first){
                                     this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                                 }
@@ -1094,7 +1096,9 @@ namespace smack{
                                     // link fresh variable if there is malloc linked to the stored variable
                                     this->varEquiv->linkBlkName(freshVar->name(), oldname);
                                 }
-
+                                if(this->varEquiv->getOffset(oldname) >= 0){
+                                    this->varEquiv->addNewOffset(freshVar->name(), this->varEquiv->getOffset(oldname));
+                                }
                                 if(varArg2->translateToInt(this->varEquiv).first){
                                     this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                                 }
@@ -1187,7 +1191,9 @@ namespace smack{
                                     // link fresh variable if there is malloc linked to the stored variable
                                     this->varEquiv->linkBlkName(freshVar->name(), oldname);
                                 }
-
+                                if(this->varEquiv->getOffset(oldname) >= 0){
+                                    this->varEquiv->addNewOffset(freshVar->name(), this->varEquiv->getOffset(oldname));
+                                }
                                 if(varArg2->translateToInt(this->varEquiv).first){
                                     this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                                 }
@@ -1251,7 +1257,9 @@ namespace smack{
                                 if(this->varEquiv->hasBlkName(oldname)){
                                     this->varEquiv->linkBlkName(freshVar->name(), oldname);
                                 }
-
+                                if(this->varEquiv->getOffset(oldname) >= 0){
+                                    this->varEquiv->addNewOffset(freshVar->name(), this->varEquiv->getOffset(oldname));
+                                }
                                 if(varArg2->translateToInt(this->varEquiv).first){
                                     this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                                 }

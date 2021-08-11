@@ -25,13 +25,15 @@ namespace smack
             std::shared_ptr<TransToZ3> trans;
             z3::context* ctx;
             StatementList stmts;
+            SHExprPtr finalSH;
             // basic check oracle
         public:
-            MemSafeChecker(std::shared_ptr<TransToZ3> trans, StatementList& stmtList);
+            MemSafeChecker(std::shared_ptr<TransToZ3> trans, StatementList& stmtList, SHExprPtr fsh);
             ~MemSafeChecker();
             void setSH(SHExprPtr sh);
             bool checkCurrentMemLeak();
             std::pair<bool, const Stmt*> checkInferenceError(); 
+            bool checkPathFeasibility();
             // Return value: checkResult, Error Stmt
             std::pair<bool, const Stmt*> checkProperty(SHExprPtr property);
     };

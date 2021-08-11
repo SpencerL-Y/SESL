@@ -954,7 +954,7 @@ namespace smack{
                 std::list<const SpatialLiteral*> newSpatial;
                 for(const SpatialLiteral* sp : sh->getSpatialExpr()){
                     if(!sp->getBlkName().compare(allocVarName)){
-
+                        
                     } else {
                         newSpatial.push_back(sp);
                     }
@@ -1400,6 +1400,9 @@ namespace smack{
                                 this->varEquiv->linkName(lhsVarName, loadedVarName);
                                 if(this->varEquiv->hasBlkName(loadedVarName)){
                                     this->varEquiv->linkBlkName(lhsVarName, loadedVarName);
+                                }
+                                if(this->varEquiv->getOffset(loadedVarName) >= 0){
+                                    this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(loadedVarName));
                                 }
                                 this->varEquiv->linkIntVar(lhsVarName, loadedVarName);
                                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());

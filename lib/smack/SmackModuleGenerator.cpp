@@ -125,7 +125,7 @@ namespace smack {
         // NOTE we must do this after instruction generation, since we would not
         // otherwise know how many regions to declare.
         Prelude prelude(rep);
-        //program->appendPrelude(prelude.getPrelude());
+        program->appendPrelude(prelude.getPrelude());
 
         std::list<Decl *> kill_list;
         for (auto D : *program) {

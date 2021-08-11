@@ -13,7 +13,7 @@
 const bool hasColor = true;
 
 
-#define OPEN_CDEBUG true
+#define OPEN_CDEBUG false
 
 #define CDEBUG(X) do { \
     if (CENTER_DEBUG && OPEN_CDEBUG) {\

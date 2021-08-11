@@ -954,7 +954,7 @@ namespace smack{
                 std::list<const SpatialLiteral*> newSpatial;
                 for(const SpatialLiteral* sp : sh->getSpatialExpr()){
                     if(!sp->getBlkName().compare(allocVarName)){
-                        
+
                     } else {
                         newSpatial.push_back(sp);
                     }
@@ -1049,6 +1049,7 @@ namespace smack{
                         assert(stepSize.second > 0);
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second *PTR_BYTEWIDTH));
+                        CFDEBUG(std::cout << "INFO: Fresh var registor: " << freshVar->name() << " " << "i" + std::to_string(stepSize.second *PTR_BYTEWIDTH));
 
                         if(this->varEquiv->isStructArrayPtr(mallocName)){
                             const SpatialLiteral* newPt = SpatialLiteral::gcPt(ptLiteral->getFrom(), freshVar, mallocName);
@@ -1243,7 +1244,10 @@ namespace smack{
                             // CFG use the original var name to store the size information, so we use name of varOrigArg1
                             std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigArg1->name());
                             stepSize.second = stepSize.second/8;
-
+                            if(stepSize.second == 0){
+                                // If the step size is 0, we regard it as the step size of the size of ptr
+                                stepSize.second = PTR_BYTEWIDTH;
+                            }
                             const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                             this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
 

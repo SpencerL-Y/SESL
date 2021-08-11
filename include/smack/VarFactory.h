@@ -24,7 +24,7 @@ namespace smack
         int freshIndex;
         typedef std::shared_ptr<VarFactory> VarFactoryPtr;
     public:
-        VarFactory(/* args */){freshIndex = 0; this->nullVar = new VarExpr("$Null");};
+        VarFactory(/* args */){freshIndex = 0; this->nullVar = new VarExpr("$Null"); varNameRestoreMap["$Null"] = "$Null";};
         const VarExpr* useVar(std::string name);
         const VarExpr* getVar(std::string name);
         const IntLit* getInt(int i);

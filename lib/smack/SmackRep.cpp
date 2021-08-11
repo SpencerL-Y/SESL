@@ -1289,6 +1289,7 @@ namespace smack {
                         name = name;
                         size = storageSize(t->getElementType());
                         ax.push_back(Attr::attr("global_variable"));
+                        ax.push_back(Attr::attr("pointer_to_size", size * 8));
                     }
 
                         // otherwise (e.g. for function declarations), use a default size

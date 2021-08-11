@@ -18,39 +18,39 @@ class TestRunner():
 
 
     def prework4TestCases(self, fileNames):
-        cFile = {}
-        outFile = {}
+        c_file = {}
+        out_file = {}
         files = set()
-        for fileName in fileNames:
-            fileInfo = fileName.split('.')
-            if len(fileInfo) > 2:
-                print('File {} name error! should be xxx.xx'.format(fileName))
+        for file_name in fileNames:
+            file_info = file_name.split('.')
+            # if len(file_info) > 2:
+            #     print('File {} name error! should be xxx.xx'.format(file_name))
+            #     continue
+            file_type = file_info[-1]
+            file_name = file_name[:-len(file_type)-1]
+            if file_type not in {'c', self.propertyType}:
                 continue
-            fileName = fileInfo[0]
-            fileType = fileInfo[-1]
-            if fileType not in {'c', self.propertyType}:
-                continue
-            files.add(fileName)
-            if fileType == 'c':
-                cFile[fileName] = True
-            elif fileType == self.propertyType:
-                outFile[fileName] = True
+            files.add(file_name)
+            if file_type == 'c':
+                c_file[file_name] = True
+            elif file_type == self.propertyType:
+                out_file[file_name] = True
 
         for name in files:
-            if cFile.get(name) == None:
+            if c_file.get(name) is None:
                 print('Test case [{}] leak of .c file'.format(name))
                 continue
-            if outFile.get(name) == None:
+            if out_file.get(name) is None:
                 print('Test case [{}] leak of {} file'.format(name, self.propertyType))
                 continue
             print('Adding testcase [{}]'.format(name))
-            outFileName = '{}.{}'.format(name, self.propertyType)
-            programProperty = self.processPrpertyFile(outFileName)
-            self.testCases.append((name, programProperty))
+            out_file_name = '{}.{}'.format(name, self.propertyType)
+            program_property = self.processPrpertyFile(out_file_name)
+            self.testCases.append((name, program_property))
 
     def walkDict(self):
-        fileNames = os.listdir(self.path)
-        self.prework4TestCases(fileNames)
+        file_names = os.listdir(self.path)
+        self.prework4TestCases(file_names)
 
     def doInit(self):
         self.walkDict()
@@ -70,7 +70,7 @@ class TestRunner():
             except Exception as e:
                 print('hahahhaah')
 
-            command = 'rm -rf {}_IR.ll {}.bpl main.mem.dot 1'.format(name, name)
+            command = 'rm -rf main.mem.dot 1'
             # print(command, os.system(command))
             os.system(command)
 
@@ -89,12 +89,11 @@ class TestRunner():
                 f.close()
                 return ret
 
-            filePath = self.path + '/' + name + '.log'
-            result = checkVerify(filePath, name)
+            file_path = self.path + '/' + name + '.log'
+            result = checkVerify(file_path, name)
             print("Running test: [{}]".format(name + '.c'))
             print("Tool: " + result + '\nReal: ' + prop + "\n")
-            command = 'rm -rf ' + filePath
-            # print(command, os.system(command))
+            command = 'rm -rf ' + file_path
             if result != "RAISE EXCEPTION":
                 os.system(command)
 
@@ -107,31 +106,31 @@ class TestRunner():
 
     def processPrpertyFile(self, outFileName):
         f = open(self.path + '/' + outFileName)
-        fileName = outFileName[:-4]
-        programProperty = "UNKNOWN"
+        file_name = outFileName[:-4]
+        program_property = "UNKNOWN"
         if self.propertyType == 'out':
             for line in f.readlines():
                 if 'UNSAFE' == line:
-                    programProperty = 'UNSAFE'
+                    program_property = 'UNSAFE'
                 elif 'SAFE' == line:
-                    programProperty = 'SAFE'
+                    program_property = 'SAFE'
         elif self.propertyType == 'yml':
             yml = yaml.load(f, Loader=yaml.FullLoader)
             properties = yml['properties']
-            programProperty = 'SAFE'
+            program_property = 'SAFE'
             for prop in properties:
                 if 'expected_verdict' in prop:
                     if not prop['expected_verdict']:
-                        programProperty = 'UNSAFE'
+                        program_property = 'UNSAFE'
                         if 'subproperty' in prop:
-                            self.error.setdefault(fileName, []).append(prop['subproperty'])
+                            self.error.setdefault(file_name, []).append(prop['subproperty'])
                         else:
                             prop_file = prop['property_file']
-                            self.error.setdefault(fileName, []).append(prop_file.split('/')[-1].split('.')[0])
+                            self.error.setdefault(file_name, []).append(prop_file.split('/')[-1].split('.')[0])
         f.close()
-        if programProperty == 'SAFE':
-            self.safeCase.add(fileName)
-        return programProperty
+        if program_property == 'SAFE':
+            self.safeCase.add(file_name)
+        return program_property
 
     def printCheckInfo(self):
         print("Success verified: {}".format(len(self.success)))
@@ -162,16 +161,16 @@ class TestRunner():
 
     def clean(self):
         for name, prop in self.testCases:
-            llPath = '{}/{}_IR.ll'.format(self.path, name)
-            bplPath = '{}/{}.bpl'.format(self.path, name)
-            os.system('rm -rf {}'.format(llPath))
-            os.system('rm -rf {}'.format(bplPath))
+            ll_path = '{}/{}_IR.ll'.format(self.path, name)
+            bpl_path = '{}/{}.bpl'.format(self.path, name)
+            os.system('rm -rf {}'.format(ll_path))
+            os.system('rm -rf {}'.format(bpl_path))
 
 
 if __name__ == "__main__":
     in_path = sys.argv[1] or './'
-    type = sys.argv[2] or 'out'
-    testRunner = TestRunner(in_path, type)
+    prop_type = sys.argv[2] or 'out'
+    testRunner = TestRunner(in_path, prop_type)
     testRunner.run()
     testRunner.printCheckInfo()
     testRunner.clean()

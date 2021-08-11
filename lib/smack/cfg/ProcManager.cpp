@@ -48,6 +48,12 @@ namespace smack {
         auto newName = getBlockNewName(block);
         auto &stmts = block->getStatements();
         StatementList newStmts;
+        if ("main" == procName && "$bb0" == block->getName()) {
+            if (originProcedures.count("__SMACK_static_init")) {
+                cout << "Adding static init..." << endl;
+                newStmts.push_back(Stmt::call("__SMACK_static_init"));
+            }
+        }
         for (auto &stmt : stmts) {
             if (stmt->getKind() == Stmt::CALL) { hasFunctionCall = true; }
             if (stmt->getKind() == Stmt::RETURN) { hasReturn = true; }
@@ -103,8 +109,6 @@ namespace smack {
     void ProcManager::splitBlock(Block *blockPtr, int depth) {
         vector<StatementList> stmtListVec;
         vector<CallStmt *> callStmtVec;
-
-
         {
             auto &stmts = blockPtr->getStatements();
             StatementList statementList;
@@ -140,16 +144,20 @@ namespace smack {
         }
 
         // split by call stmt, n call stmt will split the block into n + 1 blocks
-        cout << blockPtr->getName() << " " << stmtListVec.size() << " " << callStmtVec.size() << endl;
-        for (auto stmtList : stmtListVec) {
-            cout << "New stmts! " << endl;
-            for (auto stmt : stmtList) {
-              stmt->print(cout);cout << endl;
-            }
-            cout << endl;
-        }
-        for (auto callStmt : callStmtVec) {
-            callStmt->print(cout); cout << endl;
+        {   //Debug code
+//            cout << blockPtr->getName() << " " << stmtListVec.size() << " " << callStmtVec.size() << endl;
+//            for (auto stmtList : stmtListVec) {
+//                cout << "New stmts! " << endl;
+//                for (auto stmt : stmtList) {
+//                    stmt->print(cout);
+//                    cout << endl;
+//                }
+//                cout << endl;
+//            }
+//            for (auto callStmt : callStmtVec) {
+//                callStmt->print(cout);
+//                cout << endl;
+//            }
         }
         assert(stmtListVec.size() == callStmtVec.size() + 1);
 
@@ -327,16 +335,18 @@ namespace smack {
         rets.clear();
         params.clear();
         declarationList.clear();
-
+        // copy var info
         for (auto& [name, type] : procDecl->getParameters()) {
             string newName = name +"_" + procName + to_string(renameCounter);
             params.push_back({newName, type == "ref" ? "ref32" : type });
             declarationList.push_back(Decl::variable(newName, type == "ref" ? "ref32" : type));
         }
+        // copy declarations
         for (auto &decl : procDecl->getDeclarations()) {
             Decl* p = const_cast<Decl*>(decl->renameClone(procName, renameCounter));
             declarationList.push_back(p);
         }
+        // copy returns
         for (auto& [name, type] : procDecl->getReturns()) {
             string newName = name +"_" + procName + to_string(renameCounter);
             rets.push_back({newName, type == "ref" ? "ref32" : type});

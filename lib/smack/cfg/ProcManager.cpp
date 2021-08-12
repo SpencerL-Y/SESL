@@ -338,8 +338,8 @@ namespace smack {
         // copy var info
         for (auto& [name, type] : procDecl->getParameters()) {
             string newName = name +"_" + procName + to_string(renameCounter);
-            params.push_back({newName, type == "ref" ? "ref32" : type });
-            declarationList.push_back(Decl::variable(newName, type == "ref" ? "ref32" : type));
+            params.push_back({newName, type == "ref" ? "ref" + to_string(8 * PTR_BYTEWIDTH) : type });
+            declarationList.push_back(Decl::variable(newName, type == "ref" ? "ref" + to_string(8 * PTR_BYTEWIDTH) : type));
         }
         // copy declarations
         for (auto &decl : procDecl->getDeclarations()) {

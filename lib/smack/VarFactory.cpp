@@ -53,6 +53,10 @@ namespace smack
         this->freshIndex++;
         return fresh;
     } 
+
+    const VarExpr* VarFactory::getNullVar(){
+        return this->nullVar;
+    }
     
     int VarFactory::getFreshVarSize(const VarExpr* var){
         if(this->freshVar2Byte.find(var) != this->freshVar2Byte.end()){

@@ -818,6 +818,16 @@ namespace smack{
             std::string retVarName = retVar->name();
             // TODOsh: check, we assume there is only one parameter.
             const Expr* param = stmt->getParams().front();
+            // Assume the malloc always returns a location that is not $Null
+            const Expr* pureConj = Expr::neq(
+                retVar,
+                this->varFactory->getNullVar()
+            );
+            const Expr* newPure = Expr::and_(
+                sh->getPure(),
+                pureConj
+            );
+
             if(param->isVar()){
                 const VarExpr* paramOrigVar = (const VarExpr*)param;
                 std::string paramOrigVarName = paramOrigVar->name();
@@ -829,12 +839,7 @@ namespace smack{
                 this->varEquiv->setStructArrayPtr(retVarName, false);
                 this->storeSplit->createAxis(retVarName);
                 this->storeSplit->setMaxOffset(retVarName, paramVar->translateToInt(this->varEquiv).second);
-
-                /*const Expr* pureConj = Expr::eq(
-                    this->varFactory->getVar(retVarName),
-                    this->varFactory->getVar(paramVarName)
-                );*/
-                const Expr* newPure = sh->getPure();
+                
                 std::list<const SpatialLiteral *> newSpatialExpr;
                 for(const SpatialLiteral* sp : sh->getSpatialExpr()){
                     newSpatialExpr.push_back(sp);
@@ -872,7 +877,7 @@ namespace smack{
                 this->storeSplit->createAxis(retVarName);
                 this->storeSplit->setMaxOffset(retVarName, sizeExpr->translateToInt(this->varEquiv).second);
 
-                const Expr* newPure = sh->getPure();
+               
                 std::list<const SpatialLiteral*> newSpatialExpr;
                 for(const SpatialLiteral* sp : sh->getSpatialExpr()){
                     newSpatialExpr.push_back(sp);
@@ -1049,7 +1054,7 @@ namespace smack{
                         assert(stepSize.second > 0);
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second *PTR_BYTEWIDTH));
-                        CFDEBUG(std::cout << "INFO: Fresh var registor: " << freshVar->name() << " " << "i" + std::to_string(stepSize.second *PTR_BYTEWIDTH));
+                        CFDEBUG(std::cout << "INFO: Fresh var registor: " << freshVar->name() << " " << "i" + std::to_string(stepSize.second *PTR_BYTEWIDTH) << std::endl;);
 
                         if(this->varEquiv->isStructArrayPtr(mallocName)){
                             const SpatialLiteral* newPt = SpatialLiteral::gcPt(ptLiteral->getFrom(), freshVar, mallocName);

@@ -29,6 +29,7 @@ namespace smack
         const VarExpr* getVar(std::string name);
         const IntLit* getInt(int i);
         const VarExpr* getFreshVar(int byteSize);
+        const VarExpr* getNullVar();
         int getFreshVarSize(const VarExpr* var);
 
         std::string getOrigVarName(std::string varName);

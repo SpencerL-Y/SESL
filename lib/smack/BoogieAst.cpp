@@ -626,6 +626,7 @@ namespace smack {
 
                     z3::expr resultEquality = z3Ctx.bool_val(true);
                     if (leftVarSize == rightVarSize) {
+                        CFDEBUG(std::cout << "leftVarSize == rightVarSize" << leftVarSize << " " << rightVarSize << std::endl;);
                         for (int index = 0; index < leftVarSize; index++) {
                             resultEquality = (resultEquality &&
                                               (z3Ctx.int_const(
@@ -635,6 +636,7 @@ namespace smack {
                             );
                         }
                     } else if (leftVarSize < rightVarSize) {
+                        CFDEBUG(std::cout << "leftVarSize < rightVarSize" << leftVarSize << " " << rightVarSize << std::endl;);
                         // Truncated
                         for (int index = 0; index < leftVarSize; index++) {
                             resultEquality = (resultEquality &&
@@ -645,6 +647,7 @@ namespace smack {
                             );
                         }
                     } else if (leftVarSize > rightVarSize) {
+                        CFDEBUG(std::cout << "leftVarSize > rightVarSize: " << leftVarSize << " " << rightVarSize << std::endl;);
                         // Size extended
                         for (int index = 0; index < leftVarSize; index++) {
                             if (index < rightVarSize) {
@@ -940,7 +943,10 @@ namespace smack {
     }
     
     z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+        
+
         CFDEBUG(std::cout << "translating var" << this->name() << std::endl;);
+        // translating $Null
         std::pair<std::string, int> typeResult = cfg->getVarDetailType(varFac->getOrigVarName(this->name()));
         if (typeResult.second == 1) {
 

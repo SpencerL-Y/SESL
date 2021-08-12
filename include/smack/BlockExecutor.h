@@ -66,7 +66,7 @@ namespace smack{
         const Expr* parseCondition(const Expr* cond);
 
     public:
-        BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb);}
+        BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb); this->cfg->addVarType("$Null", "i64");}
 
         // --------------------- Execution for instructions
 

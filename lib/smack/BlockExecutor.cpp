@@ -30,7 +30,7 @@ namespace smack{
             } else {
                 CFDEBUG(std::cout << "ERROR: This should not happen.");
             }
-
+            // TODOsh: refactor to make it more compatible with varFactory
             if(lhsVarName.find("$M") != std::string::npos){
                 this->cfg->addVarType(lhsVarOrigName, "M" + std::to_string(8 * PTR_BYTEWIDTH));
             }
@@ -818,6 +818,16 @@ namespace smack{
             std::string retVarName = retVar->name();
             // TODOsh: check, we assume there is only one parameter.
             const Expr* param = stmt->getParams().front();
+            // Assume the malloc always returns a location that is not $Null
+            const Expr* pureConj = Expr::neq(
+                retVar,
+                this->varFactory->getNullVar()
+            );
+            const Expr* newPure = Expr::and_(
+                sh->getPure(),
+                pureConj
+            );
+
             if(param->isVar()){
                 const VarExpr* paramOrigVar = (const VarExpr*)param;
                 std::string paramOrigVarName = paramOrigVar->name();
@@ -829,12 +839,7 @@ namespace smack{
                 this->varEquiv->setStructArrayPtr(retVarName, false);
                 this->storeSplit->createAxis(retVarName);
                 this->storeSplit->setMaxOffset(retVarName, paramVar->translateToInt(this->varEquiv).second);
-
-                /*const Expr* pureConj = Expr::eq(
-                    this->varFactory->getVar(retVarName),
-                    this->varFactory->getVar(paramVarName)
-                );*/
-                const Expr* newPure = sh->getPure();
+                
                 std::list<const SpatialLiteral *> newSpatialExpr;
                 for(const SpatialLiteral* sp : sh->getSpatialExpr()){
                     newSpatialExpr.push_back(sp);
@@ -872,7 +877,7 @@ namespace smack{
                 this->storeSplit->createAxis(retVarName);
                 this->storeSplit->setMaxOffset(retVarName, sizeExpr->translateToInt(this->varEquiv).second);
 
-                const Expr* newPure = sh->getPure();
+               
                 std::list<const SpatialLiteral*> newSpatialExpr;
                 for(const SpatialLiteral* sp : sh->getSpatialExpr()){
                     newSpatialExpr.push_back(sp);
@@ -1049,6 +1054,7 @@ namespace smack{
                         assert(stepSize.second > 0);
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second *PTR_BYTEWIDTH));
+                        CFDEBUG(std::cout << "INFO: Fresh var registor: " << freshVar->name() << " " << "i" + std::to_string(stepSize.second *PTR_BYTEWIDTH) << std::endl;);
 
                         if(this->varEquiv->isStructArrayPtr(mallocName)){
                             const SpatialLiteral* newPt = SpatialLiteral::gcPt(ptLiteral->getFrom(), freshVar, mallocName);
@@ -1064,7 +1070,9 @@ namespace smack{
                                     // link fresh variable if there is malloc linked to the stored variable
                                     this->varEquiv->linkBlkName(freshVar->name(), oldname);
                                 }
-
+                                if(this->varEquiv->getOffset(oldname) >= 0){
+                                    this->varEquiv->addNewOffset(freshVar->name(), this->varEquiv->getOffset(oldname));
+                                }
                                 if(varArg2->translateToInt(this->varEquiv).first){
                                     this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                                 }
@@ -1094,7 +1102,9 @@ namespace smack{
                                     // link fresh variable if there is malloc linked to the stored variable
                                     this->varEquiv->linkBlkName(freshVar->name(), oldname);
                                 }
-
+                                if(this->varEquiv->getOffset(oldname) >= 0){
+                                    this->varEquiv->addNewOffset(freshVar->name(), this->varEquiv->getOffset(oldname));
+                                }
                                 if(varArg2->translateToInt(this->varEquiv).first){
                                     this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                                 }
@@ -1187,7 +1197,9 @@ namespace smack{
                                     // link fresh variable if there is malloc linked to the stored variable
                                     this->varEquiv->linkBlkName(freshVar->name(), oldname);
                                 }
-
+                                if(this->varEquiv->getOffset(oldname) >= 0){
+                                    this->varEquiv->addNewOffset(freshVar->name(), this->varEquiv->getOffset(oldname));
+                                }
                                 if(varArg2->translateToInt(this->varEquiv).first){
                                     this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                                 }
@@ -1237,7 +1249,10 @@ namespace smack{
                             // CFG use the original var name to store the size information, so we use name of varOrigArg1
                             std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigArg1->name());
                             stepSize.second = stepSize.second/8;
-
+                            if(stepSize.second == 0){
+                                // If the step size is 0, we regard it as the step size of the size of ptr
+                                stepSize.second = PTR_BYTEWIDTH;
+                            }
                             const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                             this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
 
@@ -1251,7 +1266,9 @@ namespace smack{
                                 if(this->varEquiv->hasBlkName(oldname)){
                                     this->varEquiv->linkBlkName(freshVar->name(), oldname);
                                 }
-
+                                if(this->varEquiv->getOffset(oldname) >= 0){
+                                    this->varEquiv->addNewOffset(freshVar->name(), this->varEquiv->getOffset(oldname));
+                                }
                                 if(varArg2->translateToInt(this->varEquiv).first){
                                     this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                                 }
@@ -1392,6 +1409,9 @@ namespace smack{
                                 this->varEquiv->linkName(lhsVarName, loadedVarName);
                                 if(this->varEquiv->hasBlkName(loadedVarName)){
                                     this->varEquiv->linkBlkName(lhsVarName, loadedVarName);
+                                }
+                                if(this->varEquiv->getOffset(loadedVarName) >= 0){
+                                    this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(loadedVarName));
                                 }
                                 this->varEquiv->linkIntVar(lhsVarName, loadedVarName);
                                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());

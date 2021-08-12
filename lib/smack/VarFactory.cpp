@@ -17,9 +17,13 @@ namespace smack
     }
 
     const VarExpr* VarFactory::getVar(std::string name){
+        // null
+        CFDEBUG(std::cout << "INFO: getVar " + name << std::endl;);
         if(name.find("$0.ref") != std::string::npos){
             return this->nullVar;
         }
+        // static complex var
+        
         std::string bb_repeat_str = "_bb";
         if(this->varsMap.find(name) == this->varsMap.end()){
             CFDEBUG(std::cout << "WARNING: This is not correct use, please check, getVar after useVar" << std::endl;);
@@ -49,6 +53,10 @@ namespace smack
         this->freshIndex++;
         return fresh;
     } 
+
+    const VarExpr* VarFactory::getNullVar(){
+        return this->nullVar;
+    }
     
     int VarFactory::getFreshVarSize(const VarExpr* var){
         if(this->freshVar2Byte.find(var) != this->freshVar2Byte.end()){

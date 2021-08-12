@@ -114,8 +114,9 @@ int main(){
     // char* p = ((char*) &a) + 1;
     // memcpy(mc, p, sizeof(int));
     // return c;
-    int *j = malloc(sizeof(int));
-    free(j);
-    free(j);
+    void* a[2];
+    a[1] = malloc(sizeof(int));
+    a[1] = &a;
+    free(a[1]);
 } 
 

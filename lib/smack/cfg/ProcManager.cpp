@@ -100,7 +100,6 @@ namespace smack {
     }
 
 
-
     void ProcManager::doInline(int depth) {
         recursiveInline(this, depth);
         newProc = ProcDecl::procedure(procName, params, rets, declarationList, blockList);
@@ -213,7 +212,7 @@ namespace smack {
                         }
                     }
 #endif
-                    auto index = lReturns.begin();;
+                    auto index = lReturns.begin();
 
                     StatementList retProcessBlockStmt;
                     for (auto &[name, type] : returns) {
@@ -309,7 +308,7 @@ namespace smack {
     void ProcManager::copyProcedure(ProcDecl *procDecl) {
         auto &blk = procDecl->getBlocks();
         toBeMerged.insert(toBeMerged.end(), blk.begin(), blk.end());
-        auto& targetDecls = procDecl->getDeclarations();
+        auto &targetDecls = procDecl->getDeclarations();
         declarationList.insert(declarationList.end(), targetDecls.begin(), targetDecls.end());
     }
 
@@ -336,21 +335,23 @@ namespace smack {
         params.clear();
         declarationList.clear();
         // copy var info
-        for (auto& [name, type] : procDecl->getParameters()) {
-            string newName = name +"_" + procName + to_string(renameCounter);
-            params.push_back({newName, type == "ref" ? "ref" + to_string(8 * PTR_BYTEWIDTH) : type });
-            declarationList.push_back(Decl::variable(newName, type == "ref" ? "ref" + to_string(8 * PTR_BYTEWIDTH) : type));
+        for (auto&[name, type] : procDecl->getParameters()) {
+            string newName = name + "_" + procName + to_string(renameCounter);
+            params.push_back({newName, type == "ref" ? "ref" + to_string(8 * PTR_BYTEWIDTH) : type});
+            declarationList.push_back(
+                    Decl::variable(newName, type == "ref" ? "ref" + to_string(8 * PTR_BYTEWIDTH) : type));
         }
         // copy declarations
         for (auto &decl : procDecl->getDeclarations()) {
-            Decl* p = const_cast<Decl*>(decl->renameClone(procName, renameCounter));
+            Decl *p = const_cast<Decl *>(decl->renameClone(procName, renameCounter));
             declarationList.push_back(p);
         }
         // copy returns
-        for (auto& [name, type] : procDecl->getReturns()) {
-            string newName = name +"_" + procName + to_string(renameCounter);
-            rets.push_back({newName, type == "ref" ? "ref32" : type});
-            declarationList.push_back(Decl::variable(newName, type == "ref" ? "ref32" : type));
+        for (auto&[name, type] : procDecl->getReturns()) {
+            string newName = name + "_" + procName + to_string(renameCounter);
+            rets.push_back({newName, type == "ref" ? "ref" + to_string(8 * PTR_BYTEWIDTH) : type});
+            declarationList.push_back(
+                    Decl::variable(newName, type == "ref" ? "ref" + to_string(8 * PTR_BYTEWIDTH) : type));
         }
     }
 

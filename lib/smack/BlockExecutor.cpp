@@ -1064,7 +1064,8 @@ namespace smack{
                                     // link fresh variable if there is malloc linked to the stored variable
                                     this->varEquiv->linkBlkName(freshVar->name(), oldname);
                                 }
-
+                                
+                                
                                 if(varArg2->translateToInt(this->varEquiv).first){
                                     this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
                                 }

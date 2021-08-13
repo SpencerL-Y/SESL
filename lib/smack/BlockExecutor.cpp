@@ -3,6 +3,73 @@
 
 namespace smack{
     using llvm::errs;   
+    
+    SHExprPtr BlockExecutor::executeGlobal(SHExprPtr sh){
+        CFDEBUG(std::cout << "INFO: static initialization" << std::endl;);
+        std::vector<ConstDecl*> globalDecls = this->cfg->getConstDecls();
+        const Expr* newPure = sh->getPure();
+        std::list<const SpatialLiteral*> newSpatialExpr;
+        for(const SpatialLiteral* sp : sh->getSpatialExpr()){
+            newSpatialExpr.push_back(sp);
+        }
+        for(const ConstDecl* cd : globalDecls){
+            
+            bool sizeAttrFound = false;
+            const Expr* allocSizeExpr = nullptr;
+            for(const Attr* a : cd->getAttrs()){
+                if(!a->getName().compare("pointer_to_size")){
+                    sizeAttrFound = true;
+                    allocSizeExpr = a->getVals().front();
+                }
+            }
+            if(!sizeAttrFound){
+                CFDEBUG(std::cout << "ERROR: global attribute " << cd->getName() << " does not have attribute  ointer_to_size");
+                return nullptr;
+            }
+            // treat the global ptr the same way as $alloc
+            std::string staticVarOrigName = cd->getName();
+            // The var should only be used once since it is global
+            CFDEBUG(std::cout << "INFO: useVar " << staticVarOrigName << std::endl;);
+            const VarExpr* staticVar = this->varFactory->useVar(staticVarOrigName);
+            std::string staticVarName = staticVar->name();
+
+            assert(ExprType::INT == allocSizeExpr->getType());
+            int allocSize = ((IntLit*) allocSizeExpr)->getVal();
+
+            this->varEquiv->addNewName(staticVarName);
+            this->varEquiv->addNewBlkName(staticVarName);
+            this->varEquiv->addNewOffset(staticVarName, 0);
+            this->varEquiv->setStructArrayPtr(staticVarName, true);
+            this->storeSplit->createAxis(staticVarName);
+            this->storeSplit->setMaxOffset(staticVarName, allocSize);
+
+            
+            const SpatialLiteral* sSizePt = SpatialLiteral::spt(
+                staticVar,
+                allocSizeExpr,
+                staticVarName
+            );
+            bool empty = (allocSize > 0) ? false : true;
+
+            const SpatialLiteral* sAllocBlk = SpatialLiteral::gcBlk(
+                staticVar,
+                Expr::add(
+                    staticVar,
+                    allocSizeExpr
+                ),
+                staticVarName,
+                empty
+            );
+
+            newSpatialExpr.push_back(sSizePt);
+            newSpatialExpr.push_back(sAllocBlk);
+            CFDEBUG(std::cout << "INFO: var " << staticVarOrigName << " registered" << std::endl;);
+        }
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+        newSH->print(std::cout);
+        std::cout << std::endl;
+        return newSH;
+    }
     // ---------------------- Execution for Assign stmts ---------------
     SHExprPtr BlockExecutor::executeAssign(SHExprPtr sh, const Stmt* assignStmt){
         if(Stmt::ASSIGN == assignStmt->getKind()){
@@ -1803,5 +1870,24 @@ namespace smack{
         ExecutionStatePtr resultExecState = std::make_shared<ExecutionState>(currSH, this->varEquiv, this->varFactory, this->storeSplit);
         return std::pair<ExecutionStatePtr, StatementList>(resultExecState, newStmts);
     }
+
+    ExecutionStatePtr BlockExecutor::initializeExec(ExecutionStatePtr initialExecState){
+        SHExprPtr previousSH = initialExecState->getSH();
+        
+        // Initialize the equivalent class for allocation
+        this->varEquiv = initialExecState->getVarEquiv();
+        // Initialize the varFactory class for variable remembering
+        this->varFactory = initialExecState->getVarFactory();
+        // Initialize store splitter
+        this->storeSplit = initialExecState->getStoreSplit();
+
+        SHExprPtr newSH = this->executeGlobal(previousSH);
+
+        ExecutionStatePtr resultExecState =  std::make_shared<ExecutionState>(newSH, this->varEquiv, this->varFactory, this->storeSplit);
+        return  resultExecState;
+    }
+
+
+    
     
 }

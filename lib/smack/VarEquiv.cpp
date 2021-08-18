@@ -158,14 +158,14 @@ namespace smack
     // isAllocPtr operations
 
     void VarEquiv::setStructArrayPtr(std::string name, bool val){
-        assert(name.find("$p") != std::string::npos);
+        assert(name.find("$p") != std::string::npos || name.find("$") == std::string::npos);
         this->structArrayPtr[name] = val;
     }
 
 
     
     bool VarEquiv::isStructArrayPtr(std::string name){
-        assert(name.find("$p") != std::string::npos);
+        assert(name.find("$p") != std::string::npos || name.find("$") == std::string::npos);
         return this->structArrayPtr[name];
     }
 

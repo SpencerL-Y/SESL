@@ -934,8 +934,16 @@ namespace smack {
 
     const Expr* VarExpr::renameClone(std::string funcName, int usedNum) const{
         if(this->name().find("$M") != std::string::npos){
+            // if it is a global variable
             return this;
-        } else {
+        } else if(this->name().find("$") == std::string::npos){
+            // if it is a global static variable
+            return this;
+        } else if(!this->name().compare("$0.ref")){
+            // if it is a null variable
+            return this;
+        }
+        else {
             std::string renamedVar = this->var + "_" + funcName + std::to_string(usedNum);
             const Expr* clonedExpr = new VarExpr(renamedVar);
             return clonedExpr;

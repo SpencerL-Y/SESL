@@ -29,7 +29,7 @@ namespace smack {
         // TODO: add the checking here.
         std::cout << "Begin verifying" << std::endl;
         CFGUtil cfgUtil(program);
-        auto mainGraph = cfgUtil.getMainCFG();
+        CFGPtr mainGraph = cfgUtil.getMainCFG();
         {
             //processing global variables
             std::cout << "Verifying globals" << std::endl;
@@ -57,7 +57,10 @@ namespace smack {
         CFGExecutor cfgExec(mainGraph);
         cfgExec.generatePathByUpperBound();
 //        cfgExec.printPath();
-
+        std::cout << "======== STATIC POINTER PROBLEM =======" << std::endl;
+        for(const ConstDecl* cd : mainGraph->getConstDecls()){
+            cd->print(std::cout);
+        }
         for(ExecutionPath p : cfgExec.getExecPathVec()){
 
             std::cout << "=========== DO SYMBOLIC EXECUTION FOR ONE PATH" << std::endl;
@@ -95,6 +98,7 @@ namespace smack {
             ExecutionStatePtr  currExecState = initialExecState;
             StatementList finalStmts;
             BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, mainGraph, state);
+            currExecState = be->initializeExec(currExecState);
             for(StatePtr s : p.getExePath()){
                 be->setBlock(s);
                 std::pair<ExecutionStatePtr,StatementList> result = be->execute(currExecState);

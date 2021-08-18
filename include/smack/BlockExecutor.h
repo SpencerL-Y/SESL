@@ -61,6 +61,7 @@ namespace smack{
         const Expr* parseUnaryBooleanExpression(std::string funcName, const Expr* inner);
         const Expr* parseBinaryBooleanExpression(std::string funcName, const Expr* lhs, const Expr* rhs);
         const Expr* extractPtrArithVarName(const Expr* expression);
+        int extractPtrArithmeticStepSize(const Expr* expression);
 
 
         const Expr* parseCondition(const Expr* cond);
@@ -68,6 +69,8 @@ namespace smack{
     public:
         BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb); this->cfg->addVarType("$Null", "i64");}
 
+        // --------------------- Execution for initialization
+        SHExprPtr executeGlobal(SHExprPtr sh);
         // --------------------- Execution for instructions
 
         SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
@@ -106,6 +109,7 @@ namespace smack{
         // symbolic execution for current stmt and results in and symbolic heap.
         SHExprPtr executeStmt(SHExprPtr initialSh, const Stmt* stmt);
         std::pair<ExecutionStatePtr, StatementList> execute(ExecutionStatePtr previousExecState);
+        ExecutionStatePtr initializeExec(ExecutionStatePtr initialExecState);
 
         Block* getBlock(){ return currentBlock; }
         void setBlock(StatePtr cb){ currentBlock = cb->getStateBlock(); }

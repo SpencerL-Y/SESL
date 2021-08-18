@@ -494,7 +494,9 @@ namespace smack {
 
     class VarExpr : public Expr {
         std::string var;
-
+        // TODOsh: 
+        bool isByteLevel;
+        std::vector<const VarExpr*> byteVars;
     public:
         VarExpr(std::string v) : var(v) {}
 
@@ -786,9 +788,9 @@ namespace smack {
 
         Attr(std::string n, std::list<const Expr *> vs) : name(n), vals(vs) {}
 
-        void print(std::ostream &os) const;
+        std::list<const Expr*> getVals() const {return this->vals;}
 
-        
+        void print(std::ostream &os) const;        
 
         std::string getName() const { return name; }
 
@@ -1163,6 +1165,9 @@ namespace smack {
                 : Decl(CONSTANT, n, ax), type(t), unique(u) {}
 
         void print(std::ostream &os) const;
+
+        std::list<const Attr*> getAttrs() const {return this->attrs;}
+
         bool isGlobalVariable() {
             for (auto attr : this->attrs) {
                 auto name = attr->getName();

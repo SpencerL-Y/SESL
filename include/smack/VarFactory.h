@@ -20,6 +20,8 @@ namespace smack
         // this is used for remember the byte size of freshVars created during the execution, this information is also stored into the 
         std::unordered_map<const VarExpr*, int> freshVar2Byte;
         std::unordered_map<std::string, std::string> varNameRestoreMap;
+        // static variable set
+        // null variable
         const VarExpr* nullVar;
         int freshIndex;
         typedef std::shared_ptr<VarFactory> VarFactoryPtr;

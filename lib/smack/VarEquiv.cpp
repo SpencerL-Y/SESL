@@ -165,7 +165,7 @@ namespace smack
 
     
     bool VarEquiv::isStructArrayPtr(std::string name){
-        assert(name.find("$p") != std::string::npos);
+        assert(name.find("$p") != std::string::npos || name.find("$") == std::string::npos);
         return this->structArrayPtr[name];
     }
 

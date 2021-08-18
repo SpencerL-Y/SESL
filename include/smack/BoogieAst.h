@@ -494,7 +494,9 @@ namespace smack {
 
     class VarExpr : public Expr {
         std::string var;
-
+        // TODOsh: 
+        bool isByteLevel;
+        std::vector<const VarExpr*> byteVars;
     public:
         VarExpr(std::string v) : var(v) {}
 

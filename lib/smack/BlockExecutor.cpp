@@ -30,6 +30,7 @@ namespace smack{
             std::string staticVarOrigName = cd->getName();
             // The var should only be used once since it is global
             CFDEBUG(std::cout << "INFO: useVar " << staticVarOrigName << std::endl;);
+            this->cfg->addVarType(staticVarOrigName, "ref");
             const VarExpr* staticVar = this->varFactory->useVar(staticVarOrigName);
             std::string staticVarName = staticVar->name();
 
@@ -338,7 +339,10 @@ namespace smack{
                     );
                    
                     this->varEquiv->linkName(lhsVarName, rhsVarName);
-                    if(rhsOrigVarName.find("$p") != std::string::npos || lhsVarOrigName.find("$p") !=   std::string::npos){
+                    if(rhsOrigVarName.find("$p") != std::string::npos 
+                    || lhsVarOrigName.find("$p") !=   std::string::npos
+                    || rhsOrigVarName.find("$") == std::string::npos 
+                    || lhsVarOrigName.find("$") == std::string::npos){
                         this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
                         this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(rhsVarName));
                     }
@@ -383,7 +387,8 @@ namespace smack{
 
     // ----------- Util functions for string judgement -------------
     bool BlockExecutor::isPtrVar(std::string name){
-        if(name.find("$p") != std::string::npos){
+        if(name.find("$p") != std::string::npos ||
+           name.find("$") == std::string::npos){
             return true;
         } else {
             return false;
@@ -484,7 +489,8 @@ namespace smack{
                 const VarExpr* varOrig = (const VarExpr*) arithExpr;
                 std::string varOrigName = varOrig->name();
                 const VarExpr* varGet = this->varFactory->getVar(varOrigName);
-                if(varGet->name().find("$p") != std::string::npos){
+                
+                if(varGet->name().find("$p") != std::string::npos ||  varGet->name().find("$") == std::string::npos){
                     // link if it is a pointer variable
                     CFDEBUG(std::cout << "Link arithmetic operation: " <<  lhsName << " " << varGet->name() << std::endl;);
                     this->varEquiv->linkBlkName(lhsName, varGet->name());  
@@ -507,13 +513,15 @@ namespace smack{
             // 2. if it is an integer variable, we use the inferred value of the variable
             const VarExpr* varExpr = (const VarExpr*) expression;
             if(varExpr->name().find("$p") != std::string::npos || 
-               varExpr->name().find("$M") != std::string::npos){
+               varExpr->name().find("$fresh") != std::string::npos ||
+               varExpr->name().find("$M") != std::string::npos ||
+               varExpr->name().find("$") ==  std::string::npos){
                 return this->varEquiv->getOffset(varExpr->name());
             } else if (varExpr->name().find("$i") != std::string::npos){
                 assert(varExpr->translateToInt(this->varEquiv).first);
                 return varExpr->translateToInt(this->varEquiv).second;
             } else {
-                CFDEBUG(std::cout << "ERROR: UNSOLVED Arithmetic offset computation" << std::endl;);
+                CFDEBUG(std::cout << "ERROR: UNSOLVED Arithmetic offset computation " << expression << std::endl;);
                 return 0;
             }
         } else if(ExprType::BIN == expression->getType()){  
@@ -547,7 +555,8 @@ namespace smack{
         // e.g. ($p0 + 1) + ($i + 2) as input, the function return the name $p0
         if(expression->isVar()){
             const VarExpr* varExpr = (const VarExpr*) expression;
-            if(varExpr->name().find("$p") != std::string::npos){
+            if(varExpr->name().find("$p") != std::string::npos || 
+               varExpr->name().find("$") == std::string::npos){
                 return varExpr;
             } else {
                 return nullptr;
@@ -574,6 +583,17 @@ namespace smack{
         } else {
             return nullptr;
         }
+    }
+
+
+    int BlockExecutor::extractPtrArithmeticStepSize(const Expr* expression){
+        // used in store and load not initialized mem, where the mem is of struct or array type
+        const FunExpr* addRefFuncExpr = (const FunExpr*)expression;
+        assert(!addRefFuncExpr->name().compare("$add.ref"));
+        const FunExpr* mulRefFuncExpr = (const FunExpr*)(addRefFuncExpr->getArgs().back());
+        assert(!mulRefFuncExpr->name().compare("$mul.ref"));
+        const IntLit* stepSize = (const IntLit*)(mulRefFuncExpr->getArgs().back());
+        return stepSize->getVal();
     }
     
 
@@ -1065,13 +1085,59 @@ namespace smack{
                 i++;
             }
             CFDEBUG(std::cout << "STORE: arg1 " << arg1 << " arg2: " << arg2 << std::endl;);
-            const VarExpr* varOrigArg1 = (const VarExpr*) arg1;
-            std::string varOrigiArg1Name = varOrigArg1->name();
-            const VarExpr* varArg1 = this->varFactory->getVar(varOrigiArg1Name);
+            int offset = -1;
+            std::string mallocName;
+            int mallocBlkSize = -1;
+            const VarExpr* varArg1 = nullptr;
+            const VarExpr* varOrigArg1 = nullptr;
+            std::string varOrigiArg1Name;
+            if(arg1->isVar()){
+                CFDEBUG(std::cout << "INFO: arg1 is variable" << std::endl;);
+                varOrigArg1 = (const VarExpr*) arg1;
+                varOrigiArg1Name = varOrigArg1->name();
+                varArg1 = this->varFactory->getVar(varOrigiArg1Name);
 
-            int offset = this->varEquiv->getOffset(varArg1->name());
-            std::string mallocName = this->varEquiv->getBlkName(varArg1->name());
-            int mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+                offset = this->varEquiv->getOffset(varArg1->name());
+                mallocName = this->varEquiv->getBlkName(varArg1->name());
+                mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+            } else if(ExprType::FUNC == arg1->getType()){
+                CFDEBUG(std::cout << "INFO: arg1 is funcexpr" << std::endl;);
+                const FunExpr* arg1Func = (const FunExpr*) arg1;
+                
+                // The step size of struct and array is determined through the expression to find the location
+
+                // this is equivalent to add an assignment stmt before  the store stmt to make it a variable.
+                if(this->isPtrArithFuncName(arg1Func->name())){
+                    int extractedSize = this->extractPtrArithmeticStepSize(arg1);
+                    const VarExpr* freshVar = this->varFactory->getFreshVar(extractedSize);
+                    varArg1 = freshVar;
+                    varOrigArg1 = freshVar;
+                    varOrigiArg1Name = freshVar->name();
+                    // add new name 
+                    this->varEquiv->addNewName(freshVar->name());
+                    // add vartype
+                    this->cfg->addVarType(varArg1->name(), "ref" + std::to_string(8 * extractedSize));
+                    const Expr* simplifiedExpr = this->parsePtrArithmeticExpr(arg1Func, varArg1->name());
+                    offset = computeArithmeticOffsetValue(simplifiedExpr);
+                    // add offset and link
+                    this->varEquiv->addNewOffset(varArg1->name(), offset);
+                    const VarExpr* baseVarExp = (const VarExpr*)this->extractPtrArithVarName(simplifiedExpr);
+
+                    mallocName = this->varEquiv->getBlkName(baseVarExp->name());
+                    mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+                    // update the symbolic heap
+                    SHExprPtr oldSh = sh;
+                    const Expr* newPure = Expr::and_(
+                        Expr::eq(simplifiedExpr, varArg1),
+                        sh->getPure()
+                    );
+                    sh = std::make_shared<SymbolicHeapExpr>(newPure, oldSh->getSpatialExpr());
+                } else {
+                    CFDEBUG(std::cout << "ERROR: UNSOLVED store arg1 func name" << std::endl;);
+
+                }
+            }
+            
             CFDEBUG(std::cout << "STORE: offset " << offset << " Blk size: " << mallocBlkSize << std::endl;);
             // if the stored ptr is a nullptr, set inference error
             if(!mallocName.compare("$Null")){
@@ -1092,6 +1158,7 @@ namespace smack{
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
                 newSH->print(std::cout);
                 std::cout << std::endl;
+                CFDEBUG(std::cout << "INFERROR: out of range" << std::endl;);
                 return newSH;
             }
             
@@ -1397,12 +1464,54 @@ namespace smack{
     BlockExecutor::executeLoad
     (SHExprPtr sh, std::string lhsVarName, std::string lhsVarOrigName, const FunExpr* rhsFun){ 
         if(rhsFun->name().find("$load") != std::string::npos){
-            const VarExpr* ldOrigPtr = (const VarExpr*)rhsFun->getArgs().back();
-            std::string ldOrigPtrName = ldOrigPtr->name();
-            const VarExpr* ldPtr = this->varFactory->getVar(ldOrigPtrName);
+            const VarExpr* ldOrigPtr = nullptr;
+            std::string ldOrigPtrName;
+            const VarExpr* ldPtr = nullptr;
+            std::string ldPtrName;
 
-            std::string ldPtrName = ldPtr->name();
-            CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
+            const Expr* loadedPosition = rhsFun->getArgs().back();
+            if(loadedPosition->isVar()){
+                CFDEBUG(std::cout << "INFO: load varexpr " << loadedPosition << std::endl;);
+                ldOrigPtr = (const VarExpr*)loadedPosition;
+                ldOrigPtrName = ldOrigPtr->name();
+                ldPtr = this->varFactory->getVar(ldOrigPtrName);
+
+                ldPtrName = ldPtr->name();
+                CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
+            } else if(loadedPosition->getType() == ExprType::FUNC){
+                CFDEBUG(std::cout << "INFO: load funcexpr " << loadedPosition << std::endl;);
+                const FunExpr* loadedPositionFunc = (const FunExpr*) loadedPosition;
+
+                // this is equivalent to add an assignment stmt before  the store stmt to make it a variable.
+                if(this->isPtrArithFuncName(loadedPositionFunc->name())){
+                    // compute the stepSize information of the variable
+                    int extractedSize = this->extractPtrArithmeticStepSize(loadedPosition);
+                    const FunExpr* loadedPosFunc = (const FunExpr*)    loadedPosition;
+                    const VarExpr* freshVar =   this->varFactory->getFreshVar(extractedSize);
+                    ldOrigPtr = freshVar;
+                    ldOrigPtrName = ldOrigPtr->name();
+                    ldPtr = freshVar;
+                    ldPtrName = ldPtr->name();
+                    CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
+                    // add new name
+                    this->varEquiv->addNewName(ldPtr->name());
+                    // add vartype
+                    this->cfg->addVarType(ldPtrName, "ref" +    std::to_string(8 * extractedSize));
+                    // add offset
+                    const Expr* simplifiedExpr = this->parsePtrArithmeticExpr(loadedPositionFunc, ldPtr->name());
+                    int offset = computeArithmeticOffsetValue(simplifiedExpr);
+                    this->varEquiv->addNewOffset(ldPtr->name(), offset);
+                    // update the symbolic heap
+                    SHExprPtr oldSh = sh;
+                    const Expr* newPure = Expr::and_(
+                        Expr::eq(simplifiedExpr, ldPtr),
+                        sh->getPure()
+                    );
+                    sh = std::make_shared<SymbolicHeapExpr>(newPure, oldSh->getSpatialExpr());
+                }
+            } else {
+                CFDEBUG(std::cout << "ERROR: UNSOLVED loaded position type " << loadedPosition << std::endl;);
+            }
             int loadPosOffset = this->varEquiv->getOffset(ldPtrName);
             std::string mallocName = this->varEquiv->getBlkName(ldPtrName);
             int blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
@@ -1509,6 +1618,7 @@ namespace smack{
                 std::cout << "load size: " << freshVarByteSize << std::endl;
                 if(freshVarByteSize == 0){
                     // if 0, regard it as ptr size
+                    //if()
                     freshVarByteSize = PTR_BYTEWIDTH;
                 }
                 assert(freshVarByteSize > 0);

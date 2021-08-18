@@ -201,7 +201,7 @@ add_library(smackTranslator STATIC
 
 add_executable(llvm2bpl
   tools/llvm2bpl/llvm2bpl.cpp
-)
+        include/smack/memoryManager/memoryManager.h)
 
 # We need to include Boost header files at least for macOS
 find_package (Boost 1.55)

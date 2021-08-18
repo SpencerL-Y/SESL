@@ -129,14 +129,12 @@ void reach_error() { assert(0); }
 #include <stdlib.h>
 #include <string.h>
 
-int a[sizeof(int*)];
 
 int main(void)
 {
-   a[5] = 10;
-   void *p;
-   p = a[5];
-   memcpy(&p, a, sizeof p);
-   free(p);
+   int * a = (int *)malloc(3*sizeof(int));
+   char* m = a;
+   *a = 10;
+   *(m + 1) = 'a';
 }
 

@@ -66,6 +66,10 @@ namespace smack{
 
         const Expr* parseCondition(const Expr* cond);
 
+
+        // Utils for store execution
+        int extractStoreFuncSize(std::string funcName);
+
     public:
         BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb); this->cfg->addVarType("$Null", "i64");}
 

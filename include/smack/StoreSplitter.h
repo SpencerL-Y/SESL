@@ -16,6 +16,7 @@
         //TODO: this class is used for the ptr arithmetic for the correct blk splitting
             std::vector<int> splitAxis;
             int maxOffset;
+            std::map<int, int> offsetPosToSize;
             public:
 
             BlkSplitUtil(std::vector<int> axis) : splitAxis(axis) {}
@@ -25,6 +26,8 @@
             int addSplit(int offset);
             void setMaxOffset(int max);
             std::pair<bool, int> getOffsetPos(int offset);
+            std::pair<bool, int> getInitializedPos(int offset);
+            bool isInitialized(int pos);
         };
         typedef std::shared_ptr<BlkSplitUtil> BlkSplitterPtr;
 
@@ -40,8 +43,9 @@
             void setMaxOffset(std::string ptrName, int max);
             int addSplit(std::string allocName, int offset);
             bool hasOffset(std::string allocName, int offset);
+            bool isInitialized(std::string allocName, int pos);
             std::pair<bool, int> getOffsetPos(std::string allocName, int offset);
-
+            std::pair<bool, int> getInitializedPos(std::string allocName, int offset);
             void setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap);
             StoreSplitterPtr clone();
         };

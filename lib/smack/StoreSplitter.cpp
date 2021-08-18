@@ -46,7 +46,9 @@ namespace smack
 
 
     std::pair<bool, int> BlkSplitUtil::getOffsetPos(int offset){
+        // find the position of pt predicate that is exactly offset
         for(int index = 0; index < this->splitAxis.size(); index ++){
+            // splitAxis[0] == 0 means the initial position of a allocName has a pt predicate
             if(this->splitAxis[0] == 0){
                 if(this->splitAxis[index] == offset){
                     return std::pair<bool, int>(true, index + 1);
@@ -58,6 +60,35 @@ namespace smack
             }
         }
         return std::pair<bool, int>(false, 0);
+    }
+
+
+    std::pair<bool, int> BlkSplitUtil::getInitializedPos(int offset){
+        // infd the position of pt predicate that offset lies in
+        for(int index = 0; index < this->splitAxis.size(); index ++){
+            // splitAxis[0] == 0 means the initial position of a allocName has a pt predicate
+            if(this->splitAxis[0] == 0){
+                int ptPos = this->splitAxis[index];
+                if(offset >= ptPos && offset < ptPos + this->offsetPosToSize[ptPos]){
+                    return std::pair<bool, int>(true, index + 1);
+                }
+            } else {
+                int ptPos = this->splitAxis[index];
+                if(offset >= ptPos && offset < ptPos + this->offsetPosToSize[ptPos]){
+                    return std::pair<bool, int>(true, index);
+                }
+            }
+        }
+        return std::pair<bool, int>(false, 0);
+    }
+
+    bool BlkSplitUtil::isInitialized(int pos){
+        for(std::pair<int, int> i : this->offsetPosToSize){
+            if(pos >= i.first && pos < i.first + i.second){
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -102,11 +133,31 @@ namespace smack
         }
     }
 
+
+    bool StoreSplitter::isInitialized(std::string allocName, int pos){
+        if(this->splitMap.find(allocName) != this->splitMap.end()){
+            return this->splitMap[allocName]->isInitialized(pos);
+        } else {
+            CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
+            return false;
+        }
+    }
+
     std::pair<bool, int> StoreSplitter::getOffsetPos(std::string allocName, int offset){
         if(this->splitMap.find(allocName) != this->splitMap.end()){
             return this->splitMap[allocName]->getOffsetPos(offset);
         } else {
             CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
+            return std::pair<bool, int>(false, -1);
+        }
+    }
+
+
+    std::pair<bool, int> StoreSplitter::getInitializedPos(std::string allocName, int offset){
+        if(this->splitMap.find(allocName) != this->splitMap.end()){
+            return this->splitMap[allocName]->getInitializedPos(offset);
+        } else {
+            CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl;);    
             return std::pair<bool, int>(false, -1);
         }
     }

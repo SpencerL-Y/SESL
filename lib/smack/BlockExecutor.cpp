@@ -1098,8 +1098,8 @@ namespace smack{
         const VarExpr* varArg1 = nullptr;
         const VarExpr* varOrigArg1 = nullptr;
         std::string varOrigiArg1Name;
-        bool useStoreSize = false;
-        int storeSize = -1;
+        bool useStoreFuncSize = false;
+        int storeFuncSize = -1;
         // following code will give initialization of varArg1 accodring to the information of arg1
         if(arg1->isVar()){
             CFDEBUG(std::cout << "INFO: arg1 is variable" << std::endl;);
@@ -1112,10 +1112,10 @@ namespace smack{
             mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
             if(varOrigArg1->name().find("$") == std::string::npos){
                 // if the stored position is represented by a non-global variable, step size later will use the type info obtained from cfg
-                useStoreSize = true;
+                useStoreFuncSize = true;
                 std::string storeFuncName = rhsFun->name();
-                storeSize = this->extractStoreFuncSize(storeFuncName);
-                CFDEBUG(std::cout << "INFO: use func stepsize: " << storeSize << std::endl;);
+                storeFuncSize = this->extractStoreFuncSize(storeFuncName);
+                CFDEBUG(std::cout << "INFO: use func stepsize: " << storeFuncSize << std::endl;);
             }
         } else if(ExprType::FUNC == arg1->getType()){
             // The step size of struct and array is determined through the expression to find the location
@@ -1154,8 +1154,7 @@ namespace smack{
                 );
                 sh = std::make_shared<SymbolicHeapExpr>(newPure, oldSh->getSpatialExpr());
             } else {
-                CFDEBUG(std::cout << "ERROR: UNSOLVED store arg1 func name" << std::endl;);
-
+                CFDEBUG(std::cout << "ERROR: UNSOLVED store arg1 func name" << arg1Func->name() <<  std::endl;);
             }
         }
             
@@ -1182,23 +1181,30 @@ namespace smack{
             CFDEBUG(std::cout << "INFERROR: out of range" << std::endl;);
             return newSH;
         }
-        // A. the position is initialized before: two situations 
+        // A. the position is initialized before: three situations 
         // 1. the store position is exactly some allocated offset:
         // (1) this store is exactly the size of previous stepSize, then we update the value pointed to. 
-        // (2). this store only modify a part of previous store, then we convert the pointed to variable to bytelevel. 
-        // 2. the store position is not some allocated offset and it only modifies a part of previous store, then we convert the pointed to variable tobytelevel. 
+            // -- a. the pt predicate is bytified: also need to use new BytePt to variables to represent the change of value
+            // -- b. the pt predicate is not bytified: the simplest case
+        // (2) this store only modify a part of previous store, then we convert the pointed to variable to bytelevel. 
+            // -- a. the pt predicate is bytified: directly changing the bytified BytePt
+            // -- b. the pt predicate is not bytified: make it bytified
+        /*----- (3) is not considered currently -----*/
+        // (3) this store modify a continuous sequence of previous store. If the previous sequence is a sequence of char, then we combine these pt predicates into one.
+        // 2. the store position is not some allocated offset and it only modifies a part of previous store, then we convert the pointed to variable to bytelevel. 
         // B. the position is not initialized before: two situations
         // Other situations are not considered yet
+
         if(this->storeSplit->hasOffset(mallocName, offset) || this->storeSplit->isInitialized(mallocName, offset)){
             
             CFDEBUG(std::cout << "INFO: store offset exists" << std::endl;);
-            
             std::pair<bool, int> posInfo = this->storeSplit->getOffsetPos(mallocName, offset);
             if(posInfo.first){
                 // A.1 situation
                 assert(posInfo.first);
+                // the index of the pt predicate need to be modified 
                 int modifyIndex = posInfo.second;
-
+                // initialization for the new symbolic heap structure
                 const Expr* newPure = sh->getPure();
                 std::list<const SpatialLiteral*> newSpatial;
                 int currentIndex = 1;
@@ -1210,19 +1216,62 @@ namespace smack{
                     currentIndex == modifyIndex){
                         // current index equals modify index -- we find the pt predicate to be modified 
                         const PtLit* ptLiteral = (const PtLit*)i;
+                        // get the stepSize of current store:
+                        // 1. can be obtained directed from getVarDetailType: which is maintained through ptr arithmetic parsing and frontend parsing
+                        // 2. otherwise it can only be used through previous parsed storeFuncSize
                         std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigiArg1Name);
+                        // the lhs variable must be pointer variable representing the location
+                        assert(!stepSize.first.compare("ref"));
+                        // step size obtained from getVarDetailType
                         stepSize.second = stepSize.second/8;
                         if(stepSize.second == 0){
-                            // If the step size is 0, we regard it as the step size of the size of ptr
-                            stepSize.second = PTR_BYTEWIDTH;
+                            if(useStoreFuncSize){
+                                stepSize.second = storeFuncSize;
+                            } else {
+                                // This means we cannot obtain any useful information and can only use ptr size as the stepSize
+                                CFDEBUG(std::cout << "WARNING: PTR_BYTEWIDTH is used, please check if correct!" << std::endl;);
+                                stepSize.second = PTR_BYTEWIDTH;
+                            }
                         }
-                        assert(stepSize.second > 0);
-                        const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
-                        this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
-                        CFDEBUG(std::cout << "INFO: Fresh var registor: " << freshVar->name() << " " << "i" + std::to_string(stepSize.second *PTR_BYTEWIDTH) << std::endl;);
+                        int storedPtSize = stepSize.second;
+                        assert(storedPtSize > 0);
+                        if(storedPtSize == ptLiteral->getStepSize()){
+                            // Situation A.1.(1)
+                            // use a fresh variable to represent the stored information
+                            const VarExpr* freshVar = this->varFactory->getFreshVar(storedPtSize);
+
+
+
+
+                            if(!ptLiteral->isByteLevel()){
+                                // Situation A.1.(1).a
+                            } else {
+                                // Situation A.1.(1).b
+                            }
+
+                        } else if(storedPtSize < ptLiteral->getStepSize()){
+                            // situation A.1.(2)
+                            if(!ptLiteral->isByteLevel()){
+                                // a
+                            } else {
+                                // b
+                            }
+                        } else {
+                            // situation A.1.(3), currently not considered
+                            CFDEBUG(std::cout << "ERROR: situation A.1.(3), currently not considered" << std::endl;);
+                            assert(false);
+                        }
+
+
+                        // use a fresh variable to represent the stored information
+                        const VarExpr* freshVar = this->varFactory->getFreshVar(storedPtSize);
+                        //  TODOsh: this is incorrect, not sure whether it is "i" or "ref"
+                        
+                        CFDEBUG(std::cout << "INFO: Fresh var registor: " << freshVar->name() << " " << "i" + std::to_string(stepSize.second * 8) << std::endl;);
+                        
 
                         if(this->varEquiv->isStructArrayPtr(mallocName)){
-                            const SpatialLiteral* newPt = SpatialLiteral::gcPt(ptLiteral->getFrom(), freshVar, mallocName);
+                            const SpatialLiteral* newPt = SpatialLiteral::gcPt(ptLiteral->getFrom(), freshVar, mallocName, storedPtSize);
                             if(arg2->isVar()){
                                 const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
                                 std::string varOrigArg2Name = varOrigArg2->name();
@@ -1254,7 +1303,7 @@ namespace smack{
                             }
                             newSpatial.push_back(newPt);
                         } else {
-                            const SpatialLiteral* newPt = SpatialLiteral::pt(ptLiteral->getFrom(), freshVar, mallocName);
+                            const SpatialLiteral* newPt = SpatialLiteral::pt(ptLiteral->getFrom(), freshVar, mallocName, storedPtSize);
                             if(arg2->isVar()){
                                 const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
                                 std::string varOrigArg2Name = varOrigArg2->name();
@@ -1284,6 +1333,7 @@ namespace smack{
                             }
                             newSpatial.push_back(newPt);
                         }
+                        this->cfg->addVarType(freshVar->name(), "i" + std::to_string(storedPtSize * 8));
                         currentIndex += 1;
                     } 
                     else if(!i->getBlkName().compare(mallocName) &&
@@ -1355,6 +1405,7 @@ namespace smack{
                         assert(stepSize.second > 0);
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
+                        int storedPtSize = stepSize.second;
                         if(arg2->isVar()){
                             const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
                             std::string varOrigArg2Name = varOrigArg2->name();
@@ -1389,7 +1440,8 @@ namespace smack{
                             varArg1,
                             freshVar,
                             //arg2,
-                            breakBlk->getBlkName()
+                            breakBlk->getBlkName(),
+                            storedPtSize
                         );
 
                         CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
@@ -1424,7 +1476,7 @@ namespace smack{
                         }
                         const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
                         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
-
+                        int storedPtSize = stepSize.second;
                         if(arg2->isVar()){
                             const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
                             std::string varOrigArg2Name = varOrigArg2->name();
@@ -1457,7 +1509,8 @@ namespace smack{
                             varArg1,
                             freshVar,
                             //arg2,
-                            breakBlk->getBlkName()
+                            breakBlk->getBlkName(),
+                            storedPtSize
                         );
 
                         CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
@@ -1698,7 +1751,8 @@ namespace smack{
                             const SpatialLiteral* storedPt = SpatialLiteral::gcPt(
                                 arg1, 
                                 freshVar,
-                                breakBlk->getBlkName()
+                                breakBlk->getBlkName(),
+                                freshVarByteSize
                             );
                             long long size = (long long) freshVarByteSize;
                             bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) -   this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
@@ -1730,7 +1784,8 @@ namespace smack{
                             const SpatialLiteral* storedPt = SpatialLiteral::pt(
                                 arg1, 
                                 freshVar,
-                                breakBlk->getBlkName()
+                                breakBlk->getBlkName(),
+                                freshVarByteSize
                             );
                             long long size = (long long) freshVarByteSize;
                             bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) -   this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;

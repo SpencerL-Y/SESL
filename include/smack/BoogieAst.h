@@ -494,12 +494,12 @@ namespace smack {
 
     class VarExpr : public Expr {
         std::string var;
-        // TODOsh: 
+        // TODOsh: implement and modify to make it compatible with bytewise
         bool isByteLevel;
         std::vector<const VarExpr*> byteVars;
     public:
-        VarExpr(std::string v) : var(v) {}
-
+        VarExpr(std::string v) : var(v), isByteLevel(false) {}
+        VarExpr(std::string v, std::vector<const VarExpr*> bv) : var(v), isByteLevel(true), byteVars(bv) {}
         std::string name() const { return var; }
 
         z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
@@ -577,6 +577,8 @@ namespace smack {
         bool isValue() const { return false; }
     };
 
+    
+    class BytePt;
     class SpatialLiteral : public Expr {
     public:
         enum Kind {
@@ -592,11 +594,17 @@ namespace smack {
 
         static const SpatialLiteral *emp();
 
-        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName);
+        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize);
+
+        // TODOsh: implement and modify to make it compatible with bytewise
+        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts);
 
         static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, bool empty);
 
-        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName);
+        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize);
+
+        // TODOsh: implement and modify to make it compatible with bytewise
+        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts);
 
         static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, bool empty);
 
@@ -634,29 +642,68 @@ namespace smack {
     };
 
 
+ // TODOsh: implement and modify to make it compatible with bytewise
+    class BytePt : public SpatialLiteral {
+        const Expr* from;
+        const Expr* to;
+        public: 
+            BytePt(const Expr* f, const Expr* t) : from(f), to(t) {}
+            const Expr* getFrom() const { return from; }
+            const Expr* getTo() const { return to; }
+
+
+    };
+
     class PtLit : public SpatialLiteral {
         const Expr *from;
         const Expr *to;
+        int stepSize;
+        bool isBytewise;
+        std::vector<const BytePt*> bytifiedPts;
+        
 
     public:
-        PtLit(const Expr *f, const Expr *t, std::string blkName) : from(f), to(t) {
+        PtLit(const Expr *f, const Expr *t, std::string blkName, int ss) : from(f), to(t), stepSize(ss), 
+        isBytewise(false)  {
+            setId(SpatialLiteral::Kind::PT);
+            setBlkName(blkName);
+        }
+
+        PtLit(const Expr *f, const Expr* t, std::string blkName, int ss, std::vector<const BytePt*> bpts) :
+        from(f), to(t), stepSize(ss), isBytewise(true), bytifiedPts(bpts)
+        {
             setId(SpatialLiteral::Kind::PT);
             setBlkName(blkName);
         }
 
         void print(std::ostream &os) const;
 
+        bool isByteLevel() const { return this->isBytewise; }
+
+        int getStepSize() const { return this->stepSize; }
+
+        std::vector<const BytePt*> getBytifiedPts(){ return this->bytifiedPts; }
+
         const Expr *getFrom() const { return from; }
 
         const Expr *getTo() const { return to; }
 
+        // TODOsh: implement and modify to make it compatible with bytewise
+        // return the  ith pt predicate in the bytified version 
+        const Expr* getByte(int i) const;
+
+        // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
     };
 
+    
+
     class GCPtLit : public PtLit {
     public:
-        GCPtLit(const Expr *f, const Expr *t, std::string blkName) : PtLit(f, t, blkName) {};
+        GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss) : PtLit(f, t, blkName, ss) {};
+        GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::vector<const BytePt*> bgcpts) : PtLit(f,t,blkName, ss, bgcpts) {};
 
+        // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
     };
 

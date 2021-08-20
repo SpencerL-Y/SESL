@@ -1067,6 +1067,10 @@ namespace smack {
         return new PtLit(from, to, blkName, stepSize);
     }
 
+    const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts){
+        return new PtLit(from, to, blkName, stepSize, bpts);
+    }
+
     const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, std::string blkName, bool empty) {
         return new BlkLit(from, to, blkName, empty);
     }
@@ -1075,8 +1079,17 @@ namespace smack {
         return new SizePtLit(var, size, blkName);
     }
 
+    const SpatialLiteral *SpatialLiteral::bytePt(const Expr* from, const Expr* to) {
+        assert(from->isVar() && to->isVar());
+        return new BytePt(from, to);
+    }
+
     const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize) {
         return new GCPtLit(from, to, blkName, stepSize);
+    }
+
+    const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts){
+        return new GCPtLit(from, to, blkName, stepSize, bgcpts);
     }
 
     const SpatialLiteral *SpatialLiteral::gcBlk(const Expr *from, const Expr *to, std::string blkName, bool empty) {

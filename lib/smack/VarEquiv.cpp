@@ -146,7 +146,7 @@ namespace smack
         if(this->varToIntVal.find(name) != this->varToIntVal.end()){
             return std::pair<bool, int>(true, this->varToIntVal[name]);
         } else {
-            if(!name.find("$p")){
+            if(!name.find("$p") == std::string::npos && name.find("$") != std::string::npos){
                 DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl, color::green);
             } else {
                 DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl, color::green);

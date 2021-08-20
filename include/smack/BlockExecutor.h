@@ -61,7 +61,7 @@ namespace smack{
         const Expr* parseUnaryBooleanExpression(std::string funcName, const Expr* inner);
         const Expr* parseBinaryBooleanExpression(std::string funcName, const Expr* lhs, const Expr* rhs);
         const Expr* extractPtrArithVarName(const Expr* expression);
-        int extractPtrArithmeticStepSize(const Expr* expression);
+        int parsePtrArithmeticStepSize(const Expr* expression);
 
 
         const Expr* parseCondition(const Expr* cond);

@@ -610,6 +610,8 @@ namespace smack {
 
         static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName);
 
+        static const SpatialLiteral *bytePt(const Expr* from, const Expr* to);
+
         static const SpatialLiteral *errlit(bool f, ErrType r);
 
         SpatialLiteral::Kind getId() const { return id; }
@@ -682,7 +684,7 @@ namespace smack {
 
         int getStepSize() const { return this->stepSize; }
 
-        std::vector<const BytePt*> getBytifiedPts(){ return this->bytifiedPts; }
+        std::vector<const BytePt*> getBytifiedPts() const { return this->bytifiedPts; }
 
         const Expr *getFrom() const { return from; }
 

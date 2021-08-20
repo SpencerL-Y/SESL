@@ -1355,8 +1355,29 @@ namespace smack{
                                     for(const BytePt* bpt : oldBytifiedPts){
                                         // rearrange the symbolic heap
                                         const VarExpr* newBySizeVar = this->varFactory->getFreshVar(1);
-                                        const BytePt* cnbpt = 
+                                        // register the new byte variable
+                                        this->cfg->addVarType(newBySizeVar->name(), "i8");
+                                        const BytePt* cnbpt = SpatialLiteral::bytePt(bpt->getFrom(), newBySizeVar);
+                                        newBytifiedPts.push_back(cnbpt);
                                     }
+                                    // compute the low level value
+                                    const Expr* time = Expr::lit((long long) 256);
+                                    const Expr* computedSum = Expr::lit((long long)0);
+                                    for(int i = 0; i < newBytifiedPts.size(); i++){
+                                        const Expr* base = Expr::lit((long long)1);
+                                        for(int j = i; j < newBytifiedPts.size() - 1; j++){
+                                            base = Expr::multiply(base, time);
+                                        }
+                                        computedSum = Expr::add(computedSum, Expr::multiply(base, newBytifiedPts[i]));
+                                    }
+                                    newPure = Expr::and_(
+                                        newPure,
+                                        Expr::eq(
+                                            freshVar,
+                                            computedSum
+                                        );
+                                    );
+                                    // TODO: add later
                                 } else {
 
                                 }

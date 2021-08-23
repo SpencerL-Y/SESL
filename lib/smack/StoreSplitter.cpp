@@ -91,6 +91,19 @@ namespace smack
                 return ptPos + this->offsetPosToSize[ptPos] - offset;
             }
         }
+        CFDEBUG(std::cout << "ERROR: This should not happen, suffix length compute error." << std::endl;);
+        return -1;
+    }
+
+
+    int BlkSplitUtil::getInitializedPrefixLength(int offset){
+        for(int index = 0; index < this->splitAxis.size(); index ++){
+            int ptPos = this->splitAxis[index];
+            if(offset >= ptPos && offset < ptPos + this->offsetPosToSize[ptPos]){
+                return offset - ptPos;
+            }
+        }
+        CFDEBUG(std::cout << "ERROR: This should not happen, prefix length compute error." << std::endl;);
         return -1;
     }
 
@@ -186,6 +199,16 @@ namespace smack
             return -1;
         }
 
+    }
+
+    int StoreSplitter::getInitializedPrefixLength(std::string allocName, int offset){
+        std::pair<bool, int> inited = this->getInitializedPos(allocName, offset);
+        if(inited.first){
+            return this->splitMap[allocName]->getInitializedPrefixLength(offset);
+        } else {
+            CFDEBUG(std::cout << "ERROR: offset not initialized, check!!" << std::endl;);
+            return -1;
+        }
     }
 
     void StoreSplitter::setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap){

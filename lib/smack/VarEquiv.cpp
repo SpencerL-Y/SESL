@@ -91,6 +91,16 @@ namespace smack
     }
 
 
+    void VarEquiv::modifyBlkName(std::string name, std::string newBlkname){
+        if(pointsToBlkMap.find(name) != pointsToBlkMap.end()){
+            pointsToBlkMap[name] = newBlkname;
+        } else {
+            CFDEBUG(std::cout << "ERROR: modifyBlkName error: " << name << std::endl;);
+            return;
+        }
+    }
+
+
     bool VarEquiv::hasBlkName(std::string name){
         if(pointsToBlkMap.find(name) != pointsToBlkMap.end()){
             return true;
@@ -106,6 +116,16 @@ namespace smack
             DEBUG_WITH_COLOR(std::cout << "name,offset: " << name << ", " << offset << " already exists. " << std::endl, color::green);
         } else {
             this->pointsToBlkOffset[name] = offset;
+        }
+    }
+
+
+    void VarEquiv::modifyOffset(std::string name, int newOffset){
+        if(this->pointsToBlkOffset.find(name) != this->pointsToBlkOffset.end()){
+            this->pointsToBlkOffset[name] = newOffset;
+        } else {
+            CFDEBUG(std::cout << "ERROR: offset not exist, modify failed.." << std::endl;);
+            return;
         }
     }
 

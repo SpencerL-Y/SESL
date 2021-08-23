@@ -27,6 +27,7 @@
             void setMaxOffset(int max);
             std::pair<bool, int> getOffsetPos(int offset);
             std::pair<bool, int> getInitializedPos(int offset);
+            int getInitializedSuffixLength(int offset);
             bool isInitialized(int pos);
         };
         typedef std::shared_ptr<BlkSplitUtil> BlkSplitterPtr;
@@ -46,6 +47,7 @@
             bool isInitialized(std::string allocName, int pos);
             std::pair<bool, int> getOffsetPos(std::string allocName, int offset);
             std::pair<bool, int> getInitializedPos(std::string allocName, int offset);
+            int getInitializedSuffixLength(std::string allocName, int offset);
             void setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap);
             StoreSplitterPtr clone();
         };

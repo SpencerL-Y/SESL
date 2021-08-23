@@ -82,6 +82,18 @@ namespace smack
         return std::pair<bool, int>(false, 0);
     }
 
+
+    int BlkSplitUtil::getInitializedSuffixLength(int offset){
+        // find the suffix length can be used
+        for(int index = 0; index < this->splitAxis.size(); index ++){
+            int ptPos = this->splitAxis[index];
+            if(offset >= ptPos && offset < ptPos + this->offsetPosToSize[ptPos]){
+                return ptPos + this->offsetPosToSize[ptPos] - offset;
+            }
+        }
+        return -1;
+    }
+
     bool BlkSplitUtil::isInitialized(int pos){
         for(std::pair<int, int> i : this->offsetPosToSize){
             if(pos >= i.first && pos < i.first + i.second){
@@ -90,6 +102,8 @@ namespace smack
         }
         return false;
     }
+
+    
 
 
 
@@ -160,6 +174,18 @@ namespace smack
             CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl;);    
             return std::pair<bool, int>(false, -1);
         }
+    }
+    
+
+    int StoreSplitter::getInitializedSuffixLength(std::string allocName, int offset){
+        std::pair<bool, int> inited = this->getInitializedPos(allocName, offset);
+        if(inited.first){
+            return this->splitMap[allocName]->getInitializedSuffixLength(offset);
+        } else {
+            CFDEBUG(std::cout << "ERROR: offset not initialized, check!!" << std::endl;);
+            return -1;
+        }
+
     }
 
     void StoreSplitter::setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap){

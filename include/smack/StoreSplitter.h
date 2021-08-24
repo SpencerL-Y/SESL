@@ -24,6 +24,7 @@
 
             void print();
             int addSplit(int offset);
+            int addSplitLength(int offset, int length);
             void setMaxOffset(int max);
             std::pair<bool, int> getOffsetPos(int offset);
             std::pair<bool, int> getInitializedPos(int offset);
@@ -44,6 +45,7 @@
             void createAxis(std::string ptrName);
             void setMaxOffset(std::string ptrName, int max);
             int addSplit(std::string allocName, int offset);
+            int addSplitLength(std::string allocName, int offset, int length);
             bool hasOffset(std::string allocName, int offset);
             bool isInitialized(std::string allocName, int pos);
             std::pair<bool, int> getOffsetPos(std::string allocName, int offset);

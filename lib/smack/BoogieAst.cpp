@@ -1068,6 +1068,7 @@ namespace smack {
     }
 
     const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts){
+        assert(stepSize == bpts.size());
         return new PtLit(from, to, blkName, stepSize, bpts);
     }
 
@@ -1089,6 +1090,7 @@ namespace smack {
     }
 
     const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts){
+        assert(bgcpts.size() == stepSize);
         return new GCPtLit(from, to, blkName, stepSize, bgcpts);
     }
 

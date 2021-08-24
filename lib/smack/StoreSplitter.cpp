@@ -40,6 +40,16 @@ namespace smack
         }
     }
 
+
+    int BlkSplitUtil::addSplitLength(int offset, int length){
+        if(this->offsetPosToSize.find(offset) == this->offsetPosToSize.end()){
+            this->offsetPosToSize[offset] = length;
+        } else {   
+            CFDEBUG(std::cout << "ERROR: splitLength map exists!!" << std::endl;);
+            return -1;
+        }
+    }
+
     void BlkSplitUtil::setMaxOffset(int max){
         this->maxOffset = max;
     }
@@ -134,6 +144,15 @@ namespace smack
     int StoreSplitter::addSplit(std::string allocName, int offset){
         if(this->splitMap.find(allocName) != this->splitMap.end()){
             return this->splitMap[allocName]->addSplit(offset);
+        } else {
+            CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
+            return -1;
+        }
+    }
+
+    int StoreSplitter::addSplitLength(std::string allocName, int offset, int length){
+        if(this->splitMap.find(allocName) != this->splitMap.end()){
+            return this->splitMap[allocName]->addSplitLength(offset, length);
         } else {
             CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
             return -1;

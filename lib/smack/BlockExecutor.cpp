@@ -1130,7 +1130,7 @@ namespace smack{
                 // update the varEquiv, cfg varType and varFactory BEGIN {
                 // add new name 
                 this->varEquiv->addNewName(freshVar->name());
-                // add vartype
+                // add var type
                 this->cfg->addVarType(varArg1->name(), "ref" + std::to_string(8 * extractedSize));
                 const Expr* simplifiedExpr = this->parsePtrArithmeticExpr(arg1Func, varArg1->name());
                 offset = computeArithmeticOffsetValue(simplifiedExpr);
@@ -2024,8 +2024,6 @@ namespace smack{
                             CFDEBUG(std::cout << "ERROR: extreme situation, A.2 situation currently not considered.." << std::endl;);
                             return sh;
                         }
-
-
                         currentIndex += 1;
                     }
                     else if(i->getBlkName().compare(mallocName) &&
@@ -2044,19 +2042,20 @@ namespace smack{
             
         } else {
             CFDEBUG(std::cout << "INFO: new store offset" << std::endl;);
-            // if the position is not stored yet
+            // if the position is not stored yet, create a new pt predicate to store it
+            // set offset to allocated in the storeSplit
             int splitBlkIndex = this->storeSplit->addSplit(mallocName, offset);
             CFDEBUG(std::cout << "malloc name: " << mallocName << " splitIndex: " << splitBlkIndex <<  std::endl);
             int currentIndex = 1;
             const Expr* newPure = sh->getPure();
             std::list<const SpatialLiteral*> newSpatial;
             // Find the correct blk predicate to break
-            // TODOsh: the interleaving of store debug
             for(const SpatialLiteral* i : sh->getSpatialExpr()){
                 if(!i->getBlkName().compare(mallocName) && 
                     SpatialLiteral::Kind::BLK == i->getId() && 
                     currentIndex == splitBlkIndex){
                     const BlkLit* breakBlk = (const BlkLit*) i;
+                    // if the blk to break is empty, there is an error
                     if(breakBlk->isEmpty()){
                         const Expr* newPure = sh->getPure();
                         std::list<const SpatialLiteral*> newSpatialExpr;
@@ -2066,57 +2065,139 @@ namespace smack{
                         newSH->print(std::cout);
                         return newSH;
                     }
-                    bool leftEmpty = (this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
-                    const SpatialLiteral*  leftBlk = NULL;
+                    
+                    // specify the steoSize info
+                    std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigArg1->name());
+                    // arg1 must be a ptr variable
+                    assert(!stepSize.first.compare("ref"));
+                    stepSize.second = stepSize.second/8;
+                    if(stepSize.second == 0){
+                        if(useStoreFuncSize){
+                            stepSize.second = storeFuncSize;
+                        } else {
+                            // This means we cannot obtain any useful information and can only use ptr size as the stepSize
+                            CFDEBUG(std::cout << "WARNING: PTR_BYTEWIDTH is used, please check if correct!" << std::endl;);
+                            stepSize.second = PTR_BYTEWIDTH;
+                        }
+                    }
+                    int storedSize = stepSize.second;
+
+                    // add the split pos to length map to storeSplit
+                    this->storeSplit->addSplitLength(mallocName, offset, storedSize);
+                    // freshVar: variable pointed to
+                    const VarExpr* freshVar = this->varFactory->getFreshVar(storedSize);
+                    std::string freshVarTypeStr = "i";
+                    std::string arg2TypeStr = "i";
+                    // discuss the stored variable or arithmetic expression
+                    if(arg2->isVar()){
+                        const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
+                        std::string varOrigArg2Name = varOrigArg2->name();
+                        const VarExpr* varArg2 = this->varFactory->getVar(varOrigArg2Name);
+                        std::pair<std::string, int> varArg2Type = this->cfg->getVarDetailType(varOrigArg2Name);
+                        std::string varArg2TypeStr = varArg2Type.first;
+                        arg2TypeStr = varArg2TypeStr;
+                        // old name of stored variable
+                        std::string oldname = varArg2->name();
+
+                        // update the equivalent classes
+                        this->varEquiv->linkName(freshVar->name(), oldname);
+                        if(this->varEquiv->hasBlkName(oldname)){
+                            // the variable must be pointer variable under this situation
+                            assert(!varArg2TypeStr.compare("ref"));
+                            // link fresh variable if there is malloc linked to the stored variable
+                            this->varEquiv->linkBlkName(freshVar->name(), oldname);
+                        }
+                        if(this->varEquiv->getOffset(oldname) >= 0){
+                            // the variable must be pointer variable under this situation
+                            assert(!varArg2TypeStr.compare("ref"));
+                            this->varEquiv->addNewOffset(freshVar->name(), this->varEquiv->getOffset(oldname));
+                        }
+                        if(varArg2->translateToInt(this->varEquiv).first){
+                            // the variable must not be pointer variable under this situation
+                            assert(varArg2TypeStr.compare("ref"));
+                            this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
+                        }
+
+                        // add type info of fresh variable
+                        if(!varArg2TypeStr.compare("ref")){
+                            this->cfg->addVarType(freshVar->name(), arg2TypeStr + std::to_string(varArg2Type.second));
+                        } else {
+                            this->cfg->addVarType(freshVar->name(), arg2TypeStr + std::to_string(8 * storedSize));
+                        }
+
+                        // update newPure
+                        newPure = Expr::and_(
+                            newPure,
+                            Expr::eq(
+                                freshVar,
+                                varArg2
+                            )
+                        );
+                    } else {
+                        // the stored expression is an arithmetic expression
+                        // must be a ptr arithmetic
+                        CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
+                        const Expr* storedExpr = this->parsePtrArithmeticExpr(arg2);
+                        // find the ptr variable used to do the ptr arithmetic
+                        const VarExpr* extractedPtrVar = (const VarExpr*)(this->extractPtrArithVarName(storedExpr));
+                        assert(extractedPtrVar != nullptr);
+                        // find the offset value of the ptr arithmetic
+                        int ptrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
+                        // obtain type info
+                        std::string extractedPtrOrigVarName = this->varFactory->getOrigVarName(extractedPtrVar->name());
+                        std::pair<std::string, int> arg2ExtractedPtrVarType = this->cfg->getVarDetailType(extractedPtrOrigVarName);
+                        std::string arg2ExtractedPtrVarTypeStr = arg2ExtractedPtrVarType.first;
+                        arg2TypeStr = arg2ExtractedPtrVarTypeStr;
+                        assert(!arg2ExtractedPtrVarTypeStr.compare("ref"));
+                        int extractedPtrVarStepSize =  arg2ExtractedPtrVarType.second;
+                        bool useArithmeticStepSize = false;
+                        if(extractedPtrVarStepSize == 0) {
+                            // the base variable still has no stepSize info, compute and update
+                            useArithmeticStepSize = true;
+                        } 
+                        // oldname of stored ptr arithmetic base variable
+                        std::string oldname = extractedPtrVar->name();
+
+
+                        // update the equivalent classes
+                        this->varEquiv->addNewName(freshVar->name());
+                        if(this->varEquiv->hasBlkName(oldname)){
+                            // link the pointer variable with fresh variable
+                            this->varEquiv->linkBlkName(freshVar->name(), oldname);
+                        }
+                        if(this->varEquiv->getOffset(oldname) >= 0){
+                            // update the offset of fresh variable
+                            this->varEquiv->addNewOffset(freshVar->name(), ptrArithmeticOffset);  
+                        }
+                        if(storedExpr->translateToInt(this->varEquiv).first){
+                            // This should not happen since it is ptr arithmetic
+                            assert(false);
+                            this->varEquiv->addNewVal(freshVar->name(), storedExpr->translateToInt(this->varEquiv).second);
+                        }
+
+                        // add type info of fresh variable
+                        if(useArithmeticStepSize){
+                            int computedFreshStepSize = this->parsePtrArithmeticStepSize(arg2);
+                            this->cfg->addVarType(freshVar->name(), arg2TypeStr + std::to_string(computedFreshStepSize));
+                        } else {
+                            this->cfg->addVarType(freshVar->name(), arg2TypeStr + std::to_string(arg2ExtractedPtrVarType.second));
+                        }
+
+                        // update new pure
+                        newPure = Expr::and_(newPure, Expr::eq(freshVar, storedExpr));
+                    }
+                    // modify the spatial literals
+                    
+
                     if(this->varEquiv->isStructArrayPtr(mallocName)){
+                        // compute whether the left blk is empty after breaking the blk
+                        bool leftEmpty = (this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
                         const SpatialLiteral* leftBlk = SpatialLiteral::gcBlk(
                             breakBlk->getFrom(),
                             varArg1,
                             breakBlk->getBlkName(),
                             leftEmpty
                         );
-                        // TODOsh: add fresh variable here
-
-                        // CFG use the original var name to store the size information, so we use name of varOrigArg1
-                        std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigArg1->name());
-                        stepSize.second = stepSize.second/8;// convert to byte 
-                        if(stepSize.second == 0){
-                            // If the step size is 0, we regard it as the step size of the size of ptr
-                            stepSize.second = PTR_BYTEWIDTH;
-                        }
-                        assert(stepSize.second > 0);
-                        const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
-                        this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
-                        int storedSize = stepSize.second;
-                        if(arg2->isVar()){
-                            const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
-                            std::string varOrigArg2Name = varOrigArg2->name();
-                            const VarExpr* varArg2 = this->varFactory->getVar(varOrigArg2Name);
-
-                            std::string oldname = varArg2->name();
-                            this->varEquiv->linkName(freshVar->name(), oldname);
-                            if(this->varEquiv->hasBlkName(oldname)){
-                                // link fresh variable if there is malloc linked to the stored variable
-                                this->varEquiv->linkBlkName(freshVar->name(), oldname);
-                            }
-                            if(this->varEquiv->getOffset(oldname) >= 0){
-                                this->varEquiv->addNewOffset(freshVar->name(), this->varEquiv->getOffset(oldname));
-                            }
-                            if(varArg2->translateToInt(this->varEquiv).first){
-                                this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
-                            }
-                            newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
-                        } 
-                        else {
-                            //CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable or val !!" << std::endl;);
-                            const Expr* storedExpr = this->parseVarArithmeticExpr(arg2);
-                            // TODOsh: add link to freshVar if the expression is a ptr arithmetic expression linked to some malloced blk
-                            if(storedExpr->translateToInt(this->varEquiv).first){
-                                this->varEquiv->addNewVal(freshVar->name(), storedExpr->translateToInt(this->varEquiv).second);
-                            }
-                            newPure = Expr::and_(newPure, Expr::eq(freshVar, storedExpr));
-                            this->varEquiv->addNewName(freshVar->name());
-                        }
 
                         const SpatialLiteral* storedPt = SpatialLiteral::gcPt(
                             varArg1,
@@ -2126,8 +2207,8 @@ namespace smack{
                             storedSize
                         );
 
-                        CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
-                        long long size = stepSize.second;
+                        CFDEBUG(std::cout << "Store type: " << arg2TypeStr << " Store stepsize: " << storedSize << std::endl;);
+                        long long size = storedSize;
                         bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
                         const SpatialLiteral* rightBlk = SpatialLiteral::gcBlk(
                             Expr::add(varArg1, Expr::lit(size)),
@@ -2138,55 +2219,16 @@ namespace smack{
                         newSpatial.push_back(leftBlk);
                         newSpatial.push_back(storedPt);
                         newSpatial.push_back(rightBlk);
-
-                        currentIndex += 1;
                     } else {
+                        // compute whether the left blk is empty after breaking the blk
+                        bool leftEmpty = (this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
                         const SpatialLiteral* leftBlk = SpatialLiteral::blk(
                             breakBlk->getFrom(),
                             varArg1,
                             breakBlk->getBlkName(),
                             leftEmpty
                         );
-                        // TODOsh: add fresh variable here
-
-                        // CFG use the original var name to store the size information, so we use name of varOrigArg1
-                        std::pair<std::string, int> stepSize = this->cfg->getVarDetailType(varOrigArg1->name());
-                        stepSize.second = stepSize.second/8;
-                        if(stepSize.second == 0){
-                            // If the step size is 0, we regard it as the step size of the size of ptr
-                            stepSize.second = PTR_BYTEWIDTH;
-                        }
-                        const VarExpr* freshVar = this->varFactory->getFreshVar(stepSize.second);
-                        this->cfg->addVarType(freshVar->name(), "i" + std::to_string(stepSize.second * 8));
-                        int storedSize = stepSize.second;
-                        if(arg2->isVar()){
-                            const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
-                            std::string varOrigArg2Name = varOrigArg2->name();
-                            const VarExpr* varArg2 = this->varFactory->getVar(varOrigArg2Name);
-
-                            std::string oldname = varArg2->name();
-                            this->varEquiv->linkName(freshVar->name(), oldname);
-                            if(this->varEquiv->hasBlkName(oldname)){
-                                this->varEquiv->linkBlkName(freshVar->name(), oldname);
-                            }
-                            if(this->varEquiv->getOffset(oldname) >= 0){
-                                this->varEquiv->addNewOffset(freshVar->name(), this->varEquiv->getOffset(oldname));
-                            }
-                            if(varArg2->translateToInt(this->varEquiv).first){
-                                this->varEquiv->addNewVal(freshVar->name(), varArg2->translateToInt(this->varEquiv).second);
-                            }
-                            newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
-                        } 
-                        else {
-                            //CFDEBUG(std::cout << "ERROR: This should not happen, arg2 should be variable or val !!" << std::endl;);
-                            const Expr* storedExpr = this->parseVarArithmeticExpr(arg2);
-                            // TODOsh: add link to freshVar if the expression is a ptr arithmetic expression linked to some malloced blk
-                            if(storedExpr->translateToInt(this->varEquiv).first){
-                                this->varEquiv->addNewVal(freshVar->name(), storedExpr->translateToInt(this->varEquiv).second);
-                            }
-                            newPure = Expr::and_(newPure, Expr::eq(freshVar, storedExpr));
-                            this->varEquiv->addNewName(freshVar->name());
-                        }
+                        
                         const SpatialLiteral* storedPt = SpatialLiteral::pt(
                             varArg1,
                             freshVar,
@@ -2207,9 +2249,8 @@ namespace smack{
                         newSpatial.push_back(leftBlk);
                         newSpatial.push_back(storedPt);
                         newSpatial.push_back(rightBlk);
-
-                        currentIndex += 1;
                     }
+                    currentIndex += 1;
                 } else if(!i->getBlkName().compare(mallocName) && 
                        SpatialLiteral::Kind::BLK == i->getId() && 
                        currentIndex != splitBlkIndex){

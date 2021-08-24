@@ -653,6 +653,9 @@ namespace smack {
             const Expr* getFrom() const { return from; }
             const Expr* getTo() const { return to; }
 
+            void print(std::ostream &os) const;
+
+            virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
     };
 

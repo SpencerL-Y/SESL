@@ -610,7 +610,7 @@ namespace smack {
 
         static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName);
 
-        static const SpatialLiteral *bytePt(const Expr* from, const Expr* to);
+        static const BytePt *bytePt(const Expr* from, const Expr* to);
 
         static const SpatialLiteral *errlit(bool f, ErrType r);
 
@@ -695,7 +695,7 @@ namespace smack {
 
         // TODOsh: implement and modify to make it compatible with bytewise
         // return the  ith pt predicate in the bytified version 
-        const Expr* getByte(int i) const;
+        const Expr* getByte(int i) const {return this->bytifiedPts[i];}
 
         // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;

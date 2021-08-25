@@ -1274,7 +1274,7 @@ namespace smack{
                                 
                                 // add type info of fresh variable according to the var type
                                 if(!varArg2TypeStr.compare("ref")){
-                                    this->cfg->addVarType(freshVar->name(), arg2TypeStr + std::to_string(varArg2Type.second))
+                                    this->cfg->addVarType(freshVar->name(), arg2TypeStr + std::to_string(varArg2Type.second));
                                 } else {
                                     this->cfg->addVarType(freshVar->name(), arg2TypeStr + std::to_string(8 * storedSize));
                                 }
@@ -1286,7 +1286,7 @@ namespace smack{
                                 // the stored expression is an arithmetic expression
                                 // it must be an arithmetic expression
                                 CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
-                                const Expr* storedExpr = this->parsePtrArithmeticExpr(arg2);
+                                const Expr* storedExpr = this->parsePtrArithmeticExpr(arg2, freshVar->name());
                                 // find the ptr variable used to do the ptr arithmetic
                                 const VarExpr* extractedPtrVar = (const VarExpr*)(this->extractPtrArithVarName(storedExpr));
                                 assert(extractedPtrVar != nullptr);
@@ -1380,13 +1380,13 @@ namespace smack{
                                     Expr::eq(
                                         freshVar,
                                         computedSum
-                                    );
+                                    )
                                 );
                                 if(this->varEquiv->isStructArrayPtr(mallocName)){
-                                    const Expr* newPt = SpatialLiteral::gcPt(ptLiteral->getFrom(), freshVar, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
+                                    const SpatialLiteral* newPt = SpatialLiteral::gcPt(ptLiteral->getFrom(), freshVar, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
                                     newSpatial.push_back(newPt);
                                 } else {
-                                    const Expr* newPt = SpatialLiteral::pt(ptLiteral->getFrom(), freshVar, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
+                                    const SpatialLiteral* newPt = SpatialLiteral::pt(ptLiteral->getFrom(), freshVar, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
                                     newSpatial.push_back(newPt);
                                 }
                             }
@@ -1434,7 +1434,7 @@ namespace smack{
                                 
                                 // add type info of fresh variable according to the var type
                                 if(!varArg2TypeStr.compare("ref")){
-                                    this->cfg->addVarType(freshStoredVar->name(), arg2TypeStr + std::to_string(varArg2Type.second))
+                                    this->cfg->addVarType(freshStoredVar->name(), arg2TypeStr + std::to_string(varArg2Type.second));
                                 } else {
                                     this->cfg->addVarType(freshStoredVar->name(), arg2TypeStr + std::to_string(8 * storedSize));
                                 }
@@ -1444,7 +1444,7 @@ namespace smack{
                                 // the stored expression is an arithmetic expression
                                 // it must be an arithmetic expression
                                 CFDEBUG(std::cout << "ERROR: arg2 is a ptr arithmetic expression, there should not be such situation!!" << std::endl;);
-                                const Expr* storedExpr = this->parsePtrArithmeticExpr(arg2);
+                                const Expr* storedExpr = this->parsePtrArithmeticExpr(arg2, freshStoredVar->name());
                                 // find the ptr variable used to do the ptr arithmetic
                                 const VarExpr* extractedPtrVar = (const VarExpr*)(this->extractPtrArithVarName(storedExpr));
                                 assert(extractedPtrVar != nullptr);
@@ -1470,7 +1470,7 @@ namespace smack{
                                 this->varEquiv->addNewName(freshStoredVar->name());
                                 if(this->varEquiv->hasBlkName(oldname)){
                                     // link the pointer variable with fresh variable
-                                    this->varEquiv->linkBlfreshVarkName(freshStoredVar->name(), oldname);
+                                    this->varEquiv->linkBlkName(freshStoredVar->name(), oldname);
                                 }
                                 if(this->varEquiv->getOffset(oldname) >= 0){
                                     // update the offset of fresh variable
@@ -1500,11 +1500,11 @@ namespace smack{
                             // freshStoredVarTypeStr and freshPtVarrTypeStr are used to update the cfg varType table, the string will be assigned according  to later analysis
 
                             const VarExpr* oldPtVar = (const VarExpr* ) ptLiteral->getTo();
-                            // this is the old pt type
-                            const VarExpr* oldOrigPtVar = this->varFactory->getOrigVarName(oldPtVar->name()); 
-                            std::string oldPtVarTypeStr = this->cfg->getVarDetailType(oldOrigPtVar->name()).first;
+                            // this is the old orig pt varname
+                            std::string oldOrigPtVarName = this->varFactory->getOrigVarName(oldPtVar->name()); 
+                            std::string oldPtVarTypeStr = this->cfg->getVarDetailType(oldOrigPtVarName).first;
                             std::string freshPtVarTypeStr = oldPtVarTypeStr; // FIXED
-                            int freshPtVarTypeSize = this->cfg->getVarDetailType(oldOrigPtVar->name()).second; // FIXED
+                            int freshPtVarTypeSize = this->cfg->getVarDetailType(oldOrigPtVarName).second; // FIXED
                             if(!oldPtVarTypeStr.compare("ref")){
                                 // if old pt var is a pointer variable, we need to eliminate all the information since it is bytified.
                                 // add name
@@ -1545,7 +1545,7 @@ namespace smack{
                                     for(int j = i; j < oldBytifiedPts.size() - 1; j++){
                                         base = Expr::multiply(base, time);
                                     }
-                                    oldComputedSum = Expr::add(oldComputedSum, Expr::multiply(base, newBytifiedPts[i]));
+                                    oldComputedSum = Expr::add(oldComputedSum, Expr::multiply(base, oldBytifiedPts[i]));
                                 }
                                 // old value equality
                                 newPure = Expr::and_(
@@ -1613,10 +1613,10 @@ namespace smack{
                                 
                                 // create corresponding new pt predicate
                                 if(this->varEquiv->isStructArrayPtr(mallocName)){
-                                    const Expr* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
+                                    const SpatialLiteral* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
                                     newSpatial.push_back(newPt);
                                 } else {
-                                    const Expr* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
+                                    const SpatialLiteral* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
                                     newSpatial.push_back(newPt);
                                 }
                             } else {
@@ -1641,6 +1641,8 @@ namespace smack{
                                     }
                                 }
                                 // compute the new value from low level
+
+                                const Expr* time = Expr::lit((long long) 256);
                                 const Expr* newComputedSum = Expr::lit((long long)0);
                                 for(int i = 0; i < newBytifiedPts.size(); i++){
                                     const Expr* base = Expr::lit((long long)1);
@@ -1663,10 +1665,10 @@ namespace smack{
                                 
                                 // create corresponding new pt predicate
                                 if(this->varEquiv->isStructArrayPtr(mallocName)){
-                                    const Expr* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
+                                    const SpatialLiteral* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
                                     newSpatial.push_back(newPt);
                                 } else {
-                                    const Expr* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
+                                    const SpatialLiteral* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
                                     newSpatial.push_back(newPt);
                                 }
                             }
@@ -1770,7 +1772,7 @@ namespace smack{
                                 if(!varArg2TypeStr.compare("ref")){
                                     this->cfg->addVarType(freshStoredVar->name(), arg2TypeStr + std::to_string(varArg2Type.second));
                                 } else {
-                                    this->cfg->addVarType(freshStoredVar->name(), arg2TypeStr + std::string(8 * storedSize));
+                                    this->cfg->addVarType(freshStoredVar->name(), arg2TypeStr + std::to_string(8 * storedSize));
                                 }
 
                                 // update newPure
@@ -1779,7 +1781,7 @@ namespace smack{
                                 // the stored expression is an arithmetic expression
                                 // it must be an arithmetic expression
                                 CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
-                                const Expr* storedExpr = this->parsePtrArithmeticExpr(arg2);
+                                const Expr* storedExpr = this->parsePtrArithmeticExpr(arg2, freshStoredVar->name());
                                 // find the ptr variable used to do the ptr arithmetic
                                 const VarExpr* extractedPtrVar = (const VarExpr*)(this->extractPtrArithVarName(storedExpr));
                                 assert(extractedPtrVar != nullptr);
@@ -1802,7 +1804,7 @@ namespace smack{
 
 
                                 // update the equivalent classes
-                                this->varEquiv->addNewName(freshStoredVars->name());
+                                this->varEquiv->addNewName(freshStoredVar->name());
                                 if(this->varEquiv->hasBlkName(oldname)){
                                     // link the pointer variable with fresh variable
                                     this->varEquiv->linkBlkName(freshStoredVar->name(), oldname);
@@ -1834,11 +1836,11 @@ namespace smack{
                             // freshStoredVarTypeStr and freshPtVarrTypeStr are used to update the cfg varType table, the string will be assigned according  to later analysis
 
                             const VarExpr* oldPtVar = (const VarExpr* ) ptLiteral->getTo();
-                            // this is the old pt type
-                            const VarExpr* oldOrigPtVar = this->varFactory->getOrigVarName(oldPtVar->name()); 
-                            std::string oldPtVarTypeStr = this->cfg->getVarDetailType(oldOrigPtVar->name()).first;
+                            // this is the old orig pt type
+                            std::string oldOrigPtVarName = this->varFactory->getOrigVarName(oldPtVar->name()); 
+                            std::string oldPtVarTypeStr = this->cfg->getVarDetailType(oldOrigPtVarName).first;
                             std::string freshPtVarTypeStr = oldPtVarTypeStr; // FIXED
-                            int freshPtVarTypeSize = this->cfg->getVarDetailType(oldOrigPtVar->name()).second; // FIXED
+                            int freshPtVarTypeSize = this->cfg->getVarDetailType(oldOrigPtVarName).second; // FIXED
                             if(!oldPtVarTypeStr.compare("ref")){
                                 // if old pt var is a pointer variable, we need to eliminate all the information since it is bytified.
                                 // add name
@@ -1880,7 +1882,7 @@ namespace smack{
                                     for(int j = i; j < oldBytifiedPts.size() - 1; j++){
                                         base = Expr::multiply(base, time);
                                     }
-                                    oldComputedSum = Expr::add(oldComputedSum, Expr::multiply(base, newBytifiedPts[i]));
+                                    oldComputedSum = Expr::add(oldComputedSum, Expr::multiply(base, oldBytifiedPts[i]));
                                 }
                                 // old value equality
                                 newPure = Expr::and_(
@@ -1946,10 +1948,10 @@ namespace smack{
                                 const Expr* to = freshPtVar;
                                 // create corresponding new pt predicate
                                 if(this->varEquiv->isStructArrayPtr(mallocName)){
-                                    const Expr* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
+                                    const SpatialLiteral* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
                                     newSpatial.push_back(newPt);
                                 } else {
-                                    const Expr* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
+                                    const SpatialLiteral* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
                                     newSpatial.push_back(newPt);
                                 }
                             } else {
@@ -1974,6 +1976,8 @@ namespace smack{
                                     }
                                 }
                                 // compute the new value from low level
+
+                                const Expr* time = Expr::lit((long long) 256);
                                 const Expr* newComputedSum = Expr::lit((long long)0);
                                 for(int i = 0; i < newBytifiedPts.size(); i++){
                                     const Expr* base = Expr::lit((long long)1);
@@ -2013,10 +2017,10 @@ namespace smack{
                                 
                                 // create corresponding new pt predicate
                                 if(this->varEquiv->isStructArrayPtr(mallocName)){
-                                    const Expr* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
+                                    const SpatialLiteral* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
                                     newSpatial.push_back(newPt);
                                 } else {
-                                    const Expr* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
+                                    const SpatialLiteral* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
                                     newSpatial.push_back(newPt);
                                 }
                             }
@@ -2137,7 +2141,7 @@ namespace smack{
                         // the stored expression is an arithmetic expression
                         // must be a ptr arithmetic
                         CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
-                        const Expr* storedExpr = this->parsePtrArithmeticExpr(arg2);
+                        const Expr* storedExpr = this->parsePtrArithmeticExpr(arg2, freshVar->name());
                         // find the ptr variable used to do the ptr arithmetic
                         const VarExpr* extractedPtrVar = (const VarExpr*)(this->extractPtrArithVarName(storedExpr));
                         assert(extractedPtrVar != nullptr);
@@ -2267,10 +2271,11 @@ namespace smack{
         }
     }
 
-        SHExprPtr
+    SHExprPtr
     BlockExecutor::executeLoad
     (SHExprPtr sh, std::string lhsVarName, std::string lhsVarOrigName, const FunExpr* rhsFun){ 
         if(rhsFun->name().find("$load") != std::string::npos){
+            // use ldPtr to store the position of load instruction
             const VarExpr* ldOrigPtr = nullptr;
             std::string ldOrigPtrName;
             const VarExpr* ldPtr = nullptr;
@@ -2278,6 +2283,7 @@ namespace smack{
 
             const Expr* loadedPosition = rhsFun->getArgs().back();
             if(loadedPosition->isVar()){
+                // if the loaded position is a variable
                 CFDEBUG(std::cout << "INFO: load varexpr " << loadedPosition << std::endl;);
                 ldOrigPtr = (const VarExpr*)loadedPosition;
                 ldOrigPtrName = ldOrigPtr->name();
@@ -2286,6 +2292,7 @@ namespace smack{
                 ldPtrName = ldPtr->name();
                 CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
             } else if(loadedPosition->getType() == ExprType::FUNC){
+                // if the loaded position is a arithmetic expression
                 CFDEBUG(std::cout << "INFO: load funcexpr " << loadedPosition << std::endl;);
                 const FunExpr* loadedPositionFunc = (const FunExpr*) loadedPosition;
 
@@ -2293,8 +2300,8 @@ namespace smack{
                 if(this->isPtrArithFuncName(loadedPositionFunc->name())){
                     // compute the stepSize information of the variable
                     int extractedSize = this->parsePtrArithmeticStepSize(loadedPosition);
-                    const FunExpr* loadedPosFunc = (const FunExpr*)    loadedPosition;
-                    const VarExpr* freshVar =   this->varFactory->getFreshVar(extractedSize);
+                    const FunExpr* loadedPosFunc = (const FunExpr*)  loadedPosition;
+                    const VarExpr* freshVar = this->varFactory->getFreshVar(extractedSize);
                     ldOrigPtr = freshVar;
                     ldOrigPtrName = ldOrigPtr->name();
                     ldPtr = freshVar;

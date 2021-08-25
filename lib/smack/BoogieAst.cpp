@@ -1067,7 +1067,7 @@ namespace smack {
         return new PtLit(from, to, blkName, stepSize);
     }
 
-    const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts){
+    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts){
         assert(stepSize == bpts.size());
         return new PtLit(from, to, blkName, stepSize, bpts);
     }
@@ -1080,7 +1080,7 @@ namespace smack {
         return new SizePtLit(var, size, blkName);
     }
 
-    const SpatialLiteral *SpatialLiteral::bytePt(const Expr* from, const Expr* to) {
+    const BytePt *SpatialLiteral::bytePt(const Expr* from, const Expr* to) {
         assert(from->isVar() && to->isVar());
         return new BytePt(from, to);
     }
@@ -1089,7 +1089,7 @@ namespace smack {
         return new GCPtLit(from, to, blkName, stepSize);
     }
 
-    const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts){
+    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts){
         assert(bgcpts.size() == stepSize);
         return new GCPtLit(from, to, blkName, stepSize, bgcpts);
     }
@@ -1171,7 +1171,7 @@ namespace smack {
                 res = slah_api::sep(
                     res,
                     this->getByte(i)->translateToZ3(z3Ctx, cfg, varFac)
-                )
+                );
             }
             return res;
         }

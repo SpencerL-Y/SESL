@@ -44,6 +44,7 @@ namespace smack
     int BlkSplitUtil::addSplitLength(int offset, int length){
         if(this->offsetPosToSize.find(offset) == this->offsetPosToSize.end()){
             this->offsetPosToSize[offset] = length;
+            return 0;
         } else {   
             CFDEBUG(std::cout << "ERROR: splitLength map exists!!" << std::endl;);
             return -1;

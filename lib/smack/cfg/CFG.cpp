@@ -255,7 +255,11 @@ namespace smack {
     }
 
     void CFG::addVarType(std::string varName, std::string type) {
-        varType[varName] = type;
+        if(varType.find(varName) == varType.end()){
+            varType[varName] = type;
+        } else {
+            CFDEBUG(std::cout << "WARNING: varName exists: " << varName << std::endl;);
+        }
     }
 
     std::string CFG::getEntryBlockName() {

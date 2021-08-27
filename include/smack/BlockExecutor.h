@@ -27,6 +27,11 @@
 
 namespace smack{
     using llvm::errs;
+    enum VarType {
+        PTR,
+        DATA
+    };
+
     class BlockExecutor {
 
         // An abstract state for execution includes:
@@ -114,6 +119,22 @@ namespace smack{
         SHExprPtr executeStmt(SHExprPtr initialSh, const Stmt* stmt);
         std::pair<ExecutionStatePtr, StatementList> execute(ExecutionStatePtr previousExecState);
         ExecutionStatePtr initializeExec(ExecutionStatePtr initialExecState);
+
+
+
+        // ------------------ Execution Utilities
+        VarType getVarType(std::string varName);
+        int getBitwidthOfDataVar(std::string varName);
+        int getStepSizeOfPtrVar(std::string varName);
+        std::pair<const VarExpr*, std::string> getUsedVarAndName(std::string origVarName);
+        std::pair<const Expr*, bool> getUsedArithExprAndVar(const VarExpr* lhsVar, const Expr* originExpr);
+        void setDataVarBitwidth(std::string varName, int bitWidth);
+        void setPtrVarStepSize(std::string varName, int stepSize);
+        void updateVarType(const VarExpr* lhsVar, const Expr* rhs, int storedSize);
+        void updateExecStateEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar);
+        void updateExecStateEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal);
+        void updateExecStateEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr, const Expr* storedExpr, bool isPtr);
+
 
         Block* getBlock(){ return currentBlock; }
         void setBlock(StatePtr cb){ currentBlock = cb->getStateBlock(); }

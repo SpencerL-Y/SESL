@@ -136,5 +136,6 @@ int main(void)
    char* m = a;
    *a = 10;
    *(m + 1) = 'a';
+   free(a);
 }
 

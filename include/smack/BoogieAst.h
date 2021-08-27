@@ -695,7 +695,7 @@ namespace smack {
 
         // TODOsh: implement and modify to make it compatible with bytewise
         // return the  ith pt predicate in the bytified version 
-        const Expr* getByte(int i) const {return this->bytifiedPts[i];}
+        const Expr* getByte(int i) const {return this->bytifiedPts[i]->getTo();}
 
         // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;

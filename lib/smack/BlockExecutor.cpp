@@ -179,7 +179,7 @@ namespace smack{
                             } else {
                                 // For other ptr arithmetic like struct and array
                                 int offsetVal = this->computeArithmeticOffsetValue(rhsExpr);
-                                const Expr* extractedExpr = this->extractPtrArithVarName(rhsExpr);
+                                const Expr* extractedExpr = this->extractPtrArithmeticVar(rhsExpr);
                                 assert(extractedExpr->isVar());
                                 const VarExpr* ptrVar = (const VarExpr*)extractedExpr;
                                 std::string ptrVarName = ptrVar->name();
@@ -420,7 +420,7 @@ namespace smack{
         }
     }
 
-    const Expr* BlockExecutor::computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right){
+    const Expr* BlockExecutor::parseBinaryArithmeticExpression(std::string name, const Expr* left, const Expr* right){
         if(name.find("$add") != std::string::npos){
             const Expr* addition = Expr::add(left, right);
             return addition;
@@ -448,7 +448,7 @@ namespace smack{
                 const Expr* resultExpr = NULL;
                 const Expr* arg1 = funcExpr->getArgs().front();
                 const Expr* arg2 = funcExpr->getArgs().back();
-                resultExpr = this->computeBinaryArithmeticExpr(
+                resultExpr = this->parseBinaryArithmeticExpression(
                     funcExpr->name(), 
                     this->parseVarArithmeticExpr(arg1), 
                     this->parseVarArithmeticExpr(arg2));
@@ -476,7 +476,7 @@ namespace smack{
                 const Expr* resultExpr = NULL;
                 const Expr* arg1 = funcExpr->getArgs().front();
                 const Expr* arg2 = funcExpr->getArgs().back();
-                resultExpr = this->computeBinaryArithmeticExpr(
+                resultExpr = this->parseBinaryArithmeticExpression(
                     funcExpr->name(),
                     parsePtrArithmeticExpr(arg1, lhsName),
                     parsePtrArithmeticExpr(arg2, lhsName)
@@ -550,7 +550,7 @@ namespace smack{
         }
     }
 
-    const Expr* BlockExecutor::extractPtrArithVarName(const Expr* expression){
+    const Expr* BlockExecutor::extractPtrArithmeticVar(const Expr* expression){
         // input expression is already renamed form
         // Find the ptr arithmetic var variable
         // e.g. ($p0 + 1) + ($i + 2) as input, the function return the name $p0
@@ -567,8 +567,8 @@ namespace smack{
             const BinExpr* binExpr = (const BinExpr*) expression;
             const Expr* lhsExpr = binExpr->getLhs();
             const Expr* rhsExpr = binExpr->getRhs();
-            const Expr* lhsRes = this->extractPtrArithVarName(lhsExpr);
-            const Expr* rhsRes = this->extractPtrArithVarName(rhsExpr);
+            const Expr* lhsRes = this->extractPtrArithmeticVar(lhsExpr);
+            const Expr* rhsRes = this->extractPtrArithmeticVar(rhsExpr);
             if(lhsRes == nullptr && rhsRes == nullptr){
                 return nullptr;
             } else if(!(lhsRes == nullptr) && (rhsRes == nullptr)){
@@ -2014,8 +2014,8 @@ namespace smack{
                             storedSize
                         );
 
-                        CFDEBUG(std::cout << "Store type: " << stepSize.first << " Store stepsize: " << stepSize.second << std::endl;);
-                        long long size = stepSize.second;
+                        CFDEBUG(std::cout << "Store type: " << arg2TypeStr << " Store stepsize: " << storedSize << std::endl;);
+                        long long size = storedSize;
                         bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo ()) == 0) ? true : false;
                         const SpatialLiteral* rightBlk = SpatialLiteral::blk(
                             Expr::add(varArg1, Expr::lit(size)),
@@ -2622,7 +2622,7 @@ namespace smack{
     int BlockExecutor::getStepSizeOfPtrVar(std::string varName){
         // varName is used varname
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
-        assert(VarType::PTR == this->getVarType(varOrigName));
+        assert(VarType::PTR == this->getVarType(varName));
         std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(varOrigName);
         int result = sizeInfo.second/8;
         return result;
@@ -2661,7 +2661,7 @@ namespace smack{
             // rhsExpr is used var arithmetic
             const Expr* storedExpr = rhs;
             // extractedPtrVar is a used var
-            const VarExpr* extractedRhsVar = (const VarExpr*) (this->extractPtrArithVarName(storedExpr));
+            const VarExpr* extractedRhsVar = (const VarExpr*) (this->extractPtrArithmeticVar(storedExpr));
             if(nullptr == extractedRhsVar){
                 assert(storedSize > 0);
                 this->setDataVarBitwidth(lhsVar->name(), 8 * storedSize);
@@ -2729,7 +2729,7 @@ namespace smack{
             }
         } else if(isPtr){
             // extractedPtrVar is a used var
-            const VarExpr* extractedRhsVar = (const VarExpr*) (this->extractPtrArithVarName(storedExpr));
+            const VarExpr* extractedRhsVar = (const VarExpr*) (this->extractPtrArithmeticVar(storedExpr));
             assert(extractedRhsVar != nullptr);
             assert(VarType::PTR == this->getVarType(extractedRhsVar->name()));
             int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
@@ -2755,28 +2755,123 @@ namespace smack{
     }
 
 
-      std::pair<const PtLit*, const Expr*> BlockExecutor::updateCreateBytifiedPtPredicateAndEqualHighLevelVars(const PtLit* oldPt, const Expr* oldPure){
+    std::pair<const PtLit*, const Expr*> 
+    BlockExecutor::updateCreateBytifiedPtPredicateAndEqualHighLevelVar
+    (const PtLit* oldPt, const Expr* oldPure){
         assert(!oldPt->isByteLevel());
         const Expr* resultPure = oldPure;
         std::vector<const BytePt*> bytifiedPts;
         for(int i = 0; i < oldPt->getStepSize(); i++){
-            const Expr* bptFromExpr = Expr::add(ptLiteral->getFrom(), Expr::lit((long long)i)); 
-            const VarExpr* bptFrom = this->createAndRegisterFreshPtrVar(1);
+            const Expr* bptFromExpr = Expr::add(oldPt->getFrom(), Expr::lit((long long)i)); 
+            const VarExpr* fromVar = (const VarExpr*)(oldPt->getFrom());
+            int offset = this->varEquiv->getOffset(fromVar->name());
+            const VarExpr* bptFrom = this->createAndRegisterFreshPtrVar(1, oldPt->getBlkName(), offset + i);
             const VarExpr* bptTo = this->createAndRegisterFreshDataVar(1);
-            newPure = Expr::and_(
-                newPure,
+            resultPure = Expr::and_(
+                resultPure,
                 Expr::eq(bptFrom, bptFromExpr)
             );
             const BytePt* bpt = SpatialLiteral::bytePt(bptFrom, bptTo);
-            oldBytifiedPts.push_back(bpt);
+            bytifiedPts.push_back(bpt);
         }
-
-
+        const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(bytifiedPts, oldPt->getTo());
+        resultPure = Expr::and_(
+            resultPure,
+            equalConstraint
+        );
+        std::string mallocName = oldPt->getBlkName();
+        
+        const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName
+                                         (mallocName, oldPt->getFrom(), oldPt->getTo(), oldPt->getStepSize(), bytifiedPts));
+        return {resultPt, resultPure};
     }
 
-    void BlockExecutor::updateBytifiedPtPredicateAndEqualHighLevelVars(const PtLit* oldBPt){
-
+    std::pair<const PtLit*, const Expr*> 
+    BlockExecutor::updateCreateBytifiedPtPredicateAndModifyHighLevelVar
+    (const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure){
+        std::pair<const PtLit*, const Expr*> tempPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, oldPure);
+        const Expr* resultPure = tempPtPurePair.second;
+        std::vector<const BytePt*> oldBytifiedPts = tempPtPurePair.first->getBytifiedPts();
+        assert(oldBytifiedPts.size() == tempPtPurePair.first->getStepSize());
+        std::vector<const BytePt*> newBytifiedPts;
+        for(const BytePt* bpt : oldBytifiedPts){
+            // rearrange the symbolic heap
+            const VarExpr* newBySizeVar = this->createAndRegisterFreshDataVar(1);
+            const BytePt* cnbpt = SpatialLiteral::bytePt(bpt->getFrom(), newBySizeVar);
+            newBytifiedPts.push_back(cnbpt);
+        }
+        
+        const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, storedVar);
+        resultPure = Expr::and_(
+            resultPure,
+            equalConstraint
+        );
+        const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts));
+        return {resultPt, resultPure};
     }
+
+
+    std::pair<const PtLit*, const Expr*> 
+    BlockExecutor::updateCreateBytifiedPtPredicateAndModifyPartial
+    (const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, const Expr* oldPure){
+        std::pair<const PtLit*, const Expr*> tempPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, oldPure);
+        const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(oldPt->getStepSize());
+        const Expr* resultPure = tempPtPurePair.second;
+        std::vector<const BytePt*> oldBytifiedPts = tempPtPurePair.first->getBytifiedPts();
+        assert(offset + length <= oldPt->getStepSize());
+        std::vector<const BytePt*> newBytifiedPts;
+
+        for(const BytePt* bpt : oldBytifiedPts){
+            newBytifiedPts.push_back(bpt);
+        }
+        
+        std::vector<const BytePt*> computeBytifiedPts;
+        for(int i = 0; i < length; i++){
+            const VarExpr* newBySizeVar = this->createAndRegisterFreshDataVar(1);
+            const BytePt* obpt = oldBytifiedPts[offset + i];
+            const BytePt* cnbpt = SpatialLiteral::bytePt(obpt->getFrom(), newBySizeVar);
+            newBytifiedPts[offset + i] = cnbpt;
+            computeBytifiedPts.push_back(cnbpt);
+        }
+        const Expr* modifyEqualConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(computeBytifiedPts, modifyVar);
+        resultPure = Expr::and_(
+            resultPure,
+            modifyEqualConstraint
+        );
+
+        const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, freshPtVar);
+        resultPure = Expr::and_(
+            resultPure,
+            equalConstraint
+        );
+        const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts));
+        return {resultPt, resultPure};
+    }
+
+    const Expr* 
+    BlockExecutor::genConstraintEqualityBytifiedPtsAndHighLevelExpr
+    (std::vector<const BytePt*> bytifiedPts, const Expr* highLevelExpr){
+        const Expr* computedSum = this->computeValueOfBytifiedPtsSequence(bytifiedPts);
+        const Expr* result = Expr::eq(computedSum, highLevelExpr);
+        return result;
+    }
+
+
+    const Expr* 
+    BlockExecutor::computeValueOfBytifiedPtsSequence
+    (std::vector<const BytePt*> bytifiedPts){
+        const Expr* time = Expr::lit((long long) 256);
+        const Expr* computedSum = Expr::lit((long long)0);
+        for(int i = 0; i < bytifiedPts.size(); i++){
+            const Expr* base = Expr::lit((long long)1);
+            for(int j = i; j < bytifiedPts.size() - 1; j++){
+                base = Expr::multiply(base, time);
+            }
+            computedSum = Expr::add(computedSum, Expr::multiply(base, bytifiedPts[i]->getTo()));
+        }
+        return computedSum;
+    }
+    
 
     std::pair<const VarExpr*, std::string> BlockExecutor::getUsedVarAndName(std::string origVarName){
         // obtain the used var if it is used..
@@ -2786,7 +2881,9 @@ namespace smack{
     }
 
 
-    std::pair<const Expr*, bool> BlockExecutor::getUsedArithExprAndVar(const VarExpr* lhsVar, const Expr* originExpr){
+    std::pair<const Expr*, bool> 
+    BlockExecutor::getUsedArithExprAndVar
+    (const VarExpr* lhsVar, const Expr* originExpr){
         // lhsVar is a used var used to temp store the expression
         // the second return whether it is a ptr arithmetic
         assert(ExprType::FUNC == originExpr->getType());
@@ -2803,15 +2900,18 @@ namespace smack{
     }
 
     
-    const VarExpr* BlockExecutor::createAndRegisterFreshDataVar(int size){
+    const VarExpr* 
+    BlockExecutor::createAndRegisterFreshDataVar
+    (int size){
         const VarExpr* freshVar = this->varFactory->getFreshVar(size);
         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(8 * size));
         this->varEquiv->addNewName(freshVar->name());
-
     }
 
 
-    const VarExpr* BlockExecutor::createAndRegisterFreshPtrVar(int stepSize, std::string mallocName, int offset){
+    const VarExpr* 
+    BlockExecutor::createAndRegisterFreshPtrVar
+    (int stepSize, std::string mallocName, int offset){
         const VarExpr* freshVar = this->varFactory->getFreshVar(PTR_BYTEWIDTH);
         this->cfg->addVarType(freshVar->name(), "ref" + std::to_string(8 * stepSize));
         this->varEquiv->addNewName(freshVar->name());
@@ -2819,6 +2919,36 @@ namespace smack{
         this->varEquiv->addNewOffset(freshVar->name(), offset);
     }
 
+
+
+    const SpatialLiteral* 
+    BlockExecutor::createPtAccordingToMallocName
+    (std::string mallocName, const Expr* from, const Expr* to, int stepSize){
+        if(this->varEquiv->isStructArrayPtr(mallocName)){
+            return SpatialLiteral::gcPt(from, to, mallocName, stepSize);
+        } else {
+            return SpatialLiteral::pt(from, to, mallocName, stepSize);
+        }
+    }
+
+    const SpatialLiteral* 
+    BlockExecutor::createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize,std::vector<const BytePt*> bytifiedPts){
+        if(this->varEquiv->isStructArrayPtr(mallocName)){
+            return SpatialLiteral::gcPt(from, to, mallocName, stepSize, bytifiedPts);
+        } else {
+            return SpatialLiteral::pt(from, to, mallocName, stepSize, bytifiedPts);
+        }
+    }
+
+    const SpatialLiteral* 
+    BlockExecutor::createBlkAccordingToMallocName
+    (std::string mallocName, const Expr* from, const Expr* to, int stepSize){
+        if(this->varEquiv->isStructArrayPtr(mallocName)){
+
+        } else {
+            
+        }
+    }
 
 
 }

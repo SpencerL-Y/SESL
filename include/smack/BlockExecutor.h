@@ -48,7 +48,7 @@ namespace smack{
         // ------------------ Variable Utilities
         // << HIGH LEVEL METHODS >>
         const VarExpr* createAndRegisterFreshDataVar(int size);
-        const VarExpr* createAndRegisterFreshPtrVar(int stepSize);
+        const VarExpr* createAndRegisterFreshPtrVar(int stepSize, std::string mallocName, int offset);
         bool isPtrVar(std::string name);
         VarType getVarType(std::string varName);
         int getBitwidthOfDataVar(std::string varName);
@@ -59,7 +59,10 @@ namespace smack{
 
         // ----------------- Byte Variable Utilities
         // << HIGH LEVEL METHODS >>
-        
+        // << LOW LEVEL METHODS>>
+        const Expr* genConstraintEqualityBytifiedPtsAndHighLevelExpr(std::vector<const BytePt*> bytifiedPts, const Expr* highLevelExpr);
+        const Expr* computeValueOfBytifiedPtsSequence(std::vector<const BytePt*> bytifiedPts);
+
 
         // ----------------- FuncExpr Utilities
         //  <<< LOW LEVEL METHODS >>> 
@@ -83,11 +86,17 @@ namespace smack{
         const Expr* parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName);
         const Expr* parseVarArithmeticExpr(const Expr* arithExpr);
         const Expr* parseCondition(const Expr* cond);
-        const Expr* extractPtrArithVarName(const Expr* expression);
+        const Expr* extractPtrArithmeticVar(const Expr* expression);
+        // << PARSING LEVEL METHODS >>
         // compute expression according to the operator types
         const Expr* parseUnaryBooleanExpression(std::string funcName, const Expr* inner);
         const Expr* parseBinaryBooleanExpression(std::string funcName, const Expr* lhs, const Expr* rhs);
-        const Expr* computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right);
+        const Expr* parseBinaryArithmeticExpression(std::string name, const Expr* left, const Expr* right);
+        // ------------------ Symbolic Heap Utilities
+        const SpatialLiteral* createPtAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize);
+        const SpatialLiteral* createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts);
+        const SpatialLiteral* createBlkAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize);
+
 
         // ------------------ Execution Utilities
         // commomly used utilities
@@ -96,7 +105,12 @@ namespace smack{
         void updateExecStateEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar);
         void updateExecStateEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal);
         void updateExecStateEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr, const Expr* storedExpr, bool isPtr);
-        std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndEqualHighLevelVars(const PtLit* oldPt);
+        std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndEqualHighLevelVar(const PtLit* oldPt, const Expr* oldPure);
+        std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure);
+        std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndModifyPartial(const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, const Expr* oldPure);
+        std::pair<const PtLit*, const Expr*> updateModifyBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure);
+        std::pair<const PtLit*, const Expr*> updateModifyBytifiedPtPredicateAndModifyPartial(const PtLit* oldPt, const Expr* oldPure);
+
         void updateBytifiedPtPredicateAndEqualHighLevelVars(const PtLit* oldBPt);
 
     public:

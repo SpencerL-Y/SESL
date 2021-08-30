@@ -45,10 +45,24 @@ namespace smack{
         StoreSplitterPtr storeSplit;
         CFGPtr cfg;
 
-        // var string judgement
+        // ------------------ Variable Utilities
+        // << HIGH LEVEL METHODS >>
+        const VarExpr* createAndRegisterFreshDataVar(int size);
+        const VarExpr* createAndRegisterFreshPtrVar(int stepSize);
         bool isPtrVar(std::string name);
+        VarType getVarType(std::string varName);
+        int getBitwidthOfDataVar(std::string varName);
+        int getStepSizeOfPtrVar(std::string varName);
+        void setDataVarBitwidth(std::string varName, int bitWidth);
+        void setPtrVarStepSize(std::string varName, int stepSize);
+        std::pair<const VarExpr*, std::string> getUsedVarAndName(std::string origVarName);
 
-        // funcexpr name judgement functions
+        // ----------------- Byte Variable Utilities
+        // << HIGH LEVEL METHODS >>
+        
+
+        // ----------------- FuncExpr Utilities
+        //  <<< LOW LEVEL METHODS >>> 
         bool isUnaryAssignFuncName(std::string name);
         bool isUnaryPtrCastFuncName(std::string name);
         bool isUnaryBooleanFuncName(std::string name);
@@ -57,23 +71,33 @@ namespace smack{
         bool isStoreLoadFuncName(std::string name);
         bool isPtrArithFuncName(std::string name);
 
-        const Expr* parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName);
-        const Expr* parseVarArithmeticExpr(const Expr* arithExpr);
-        // compute expression according to the operator types
-        const Expr* computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right);
-        
-        int computeArithmeticOffsetValue(const Expr* expression);
-        const Expr* parseUnaryBooleanExpression(std::string funcName, const Expr* inner);
-        const Expr* parseBinaryBooleanExpression(std::string funcName, const Expr* lhs, const Expr* rhs);
-        const Expr* extractPtrArithVarName(const Expr* expression);
+        // ---------------- Arithmetic Utilities
+        // <<<HIGH LEVEL METHOD >>>
+        // lhsVar is for linking of ptr arithmetic 
+        std::pair<const Expr*, bool> getUsedArithExprAndVar(const VarExpr* lhsVar, const Expr* originExpr);
         int parsePtrArithmeticStepSize(const Expr* expression);
-
-
-        const Expr* parseCondition(const Expr* cond);
-
-
+        int computeArithmeticOffsetValue(const Expr* expression);
         // Utils for store execution
         int extractStoreFuncSize(std::string funcName);
+        //  <<< LOW LEVEL METHODS >>> 
+        const Expr* parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName);
+        const Expr* parseVarArithmeticExpr(const Expr* arithExpr);
+        const Expr* parseCondition(const Expr* cond);
+        const Expr* extractPtrArithVarName(const Expr* expression);
+        // compute expression according to the operator types
+        const Expr* parseUnaryBooleanExpression(std::string funcName, const Expr* inner);
+        const Expr* parseBinaryBooleanExpression(std::string funcName, const Expr* lhs, const Expr* rhs);
+        const Expr* computeBinaryArithmeticExpr(std::string name, const Expr* left, const Expr* right);
+
+        // ------------------ Execution Utilities
+        // commomly used utilities
+        // << HIGH LEVEL METHODS>>
+        void updateVarType(const VarExpr* lhsVar, const Expr* rhs, int storedSize);
+        void updateExecStateEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar);
+        void updateExecStateEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal);
+        void updateExecStateEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr, const Expr* storedExpr, bool isPtr);
+        std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndEqualHighLevelVars(const PtLit* oldPt);
+        void updateBytifiedPtPredicateAndEqualHighLevelVars(const PtLit* oldBPt);
 
     public:
         BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb); this->cfg->addVarType("$Null", "i64");}
@@ -122,18 +146,7 @@ namespace smack{
 
 
 
-        // ------------------ Execution Utilities
-        VarType getVarType(std::string varName);
-        int getBitwidthOfDataVar(std::string varName);
-        int getStepSizeOfPtrVar(std::string varName);
-        std::pair<const VarExpr*, std::string> getUsedVarAndName(std::string origVarName);
-        std::pair<const Expr*, bool> getUsedArithExprAndVar(const VarExpr* lhsVar, const Expr* originExpr);
-        void setDataVarBitwidth(std::string varName, int bitWidth);
-        void setPtrVarStepSize(std::string varName, int stepSize);
-        void updateVarType(const VarExpr* lhsVar, const Expr* rhs, int storedSize);
-        void updateExecStateEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar);
-        void updateExecStateEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal);
-        void updateExecStateEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr, const Expr* storedExpr, bool isPtr);
+        
 
 
         Block* getBlock(){ return currentBlock; }

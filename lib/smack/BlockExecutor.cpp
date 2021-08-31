@@ -1235,7 +1235,7 @@ namespace smack{
                         */
                         if(storedSize == ptLiteral->getStepSize()){
                             // Situation A.1.(1)
-                            // use a fresh variable to represent the stored information
+                            // use a fresh variable to represent the storedVar 
                             const VarExpr* freshVar = this->varFactory->getFreshVar(storedSize);
                             // discuss the stored expression:
                             if(arg2->isVar()){
@@ -1278,55 +1278,16 @@ namespace smack{
 
                             if(!ptLiteral->isByteLevel()){
                                 // Situation A.1.(1).a
-                                if(this->varEquiv->isStructArrayPtr(mallocName)){
-                                    // if the malloc name is created by $alloc
-                                    // create new Pt predicate
-                                    const SpatialLiteral* newPt = SpatialLiteral::gcPt(ptLiteral->getFrom(), freshVar, mallocName, ptLiteral->getStepSize());
-                                    newSpatial.push_back(newPt);
-                                } else {
-                                    const SpatialLiteral* newPt = SpatialLiteral::pt(ptLiteral->getFrom(), freshVar, mallocName, ptLiteral->getStepSize());
-                                    newSpatial.push_back(newPt);
-                                }
+                                const SpatialLiteral* newPt = this->createPtAccordingToMallocName(mallocName, ptLiteral->getFrom(), freshVar, ptLiteral->getStepSize());
+                                newSpatial.push_back(newPt);
+                                
                             } else {
                                 // Situation A.1.(1).b
                                 // need to modify the low level pts besides the modification of high level
-                                std::vector<const BytePt*> oldBytifiedPts = ptLiteral->getBytifiedPts();
-                                assert(oldBytifiedPts.size() == ptLiteral->getStepSize());
-                                std::vector<const BytePt*> newBytifiedPts;
-                                for(const BytePt* bpt : oldBytifiedPts){
-                                    // rearrange the symbolic heap
-                                    const VarExpr* newBySizeVar = this->varFactory->getFreshVar(1);
-                                    // register the new byte variable
-                                    this->cfg->addVarType(newBySizeVar->name(), "i8");
-                                    // add new byte variable name
-                                    this->varEquiv->addNewName(newBySizeVar->name());
-                                    const BytePt* cnbpt = SpatialLiteral::bytePt(bpt->getFrom(), newBySizeVar);
-                                    newBytifiedPts.push_back(cnbpt);
-                                }
-                                // compute the new value from low level 
-                                const Expr* time = Expr::lit((long long) 256);
-                                const Expr* computedSum = Expr::lit((long long)0);
-                                for(int i = 0; i < newBytifiedPts.size(); i++){
-                                    const Expr* base = Expr::lit((long long)1);
-                                    for(int j = i; j < newBytifiedPts.size() - 1; j++){
-                                        base = Expr::multiply(base, time);
-                                    }
-                                    computedSum = Expr::add(computedSum, Expr::multiply(base, newBytifiedPts[i]->getTo()));
-                                }
-                                newPure = Expr::and_(
-                                    newPure,
-                                    Expr::eq(
-                                        freshVar,
-                                        computedSum
-                                    )
-                                );
-                                if(this->varEquiv->isStructArrayPtr(mallocName)){
-                                    const SpatialLiteral* newPt = SpatialLiteral::gcPt(ptLiteral->getFrom(), freshVar, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
-                                    newSpatial.push_back(newPt);
-                                } else {
-                                    const SpatialLiteral* newPt = SpatialLiteral::pt(ptLiteral->getFrom(), freshVar, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
-                                    newSpatial.push_back(newPt);
-                                }
+                                std::pair<const PtLit*, const Expr*> newPtPurePair =  this->updateModifyBytifiedPtPredicateAndModifyHighLevelVar(ptLiteral, freshVar, newPure);
+                                const SpatialLiteral* newPt = newPtPurePair.first;
+                                newPure = newPtPurePair.second;
+                                newSpatial.push_back(newPt);
                             }
 
                         } else if(storedSize < ptLiteral->getStepSize()){
@@ -1371,199 +1332,20 @@ namespace smack{
                                 newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, storedExpr));
                             }
 
-                            // ---------- Discussion of the change of pt variable
-                            // freshPtVar is the pt to after modification, oldPtVar is the pt to before the modification
-                            const VarExpr* freshPtVar = this->varFactory->getFreshVar(ptLiteral->getStepSize());
-                            // freshStoredVarTypeStr and freshPtVarrTypeStr are used to update the cfg varType table, the string will be assigned according  to later analysis
-
-                            const VarExpr* oldPtVar = (const VarExpr* ) ptLiteral->getTo();
-                            if(this->getVarType(oldPtVar->name()) == VarType::PTR){
-                                this->updateExecStateEqualVarAndRhsVar(freshPtVar, this->varFactory->getNullVar());
-                            } else{
-                                this->varEquiv->addNewName(freshPtVar->name());
-                            }
-
-                            this->updateVarType(freshPtVar, oldPtVar, (this->getBitwidthOfDataVar(oldPtVar->name()))/8);
-                            // // this is the old orig pt varname
-                            // std::string oldOrigPtVarName = this->varFactory->getOrigVarName(oldPtVar->name()); 
-                            // std::string oldPtVarTypeStr = this->cfg->getVarDetailType(oldOrigPtVarName).first;
-                            // std::string freshPtVarTypeStr = oldPtVarTypeStr; // FIXED
-                            // int freshPtVarTypeSize = this->cfg->getVarDetailType(oldOrigPtVarName).second; // FIXED
-                            // if(!(oldPtVarTypeStr.find("ref") == std::string::npos)){
-                            //     // $NULLVAR
-                            //     // if old pt var is a pointer variable, we need to eliminate all the information since it is bytified.
-                            //     // add name
-                            //     this->varEquiv->addNewName(freshPtVar->name());
-                            //     // modifications to make execution loading the ptr variable invalid
-                            //     // modify the blkname
-                            //     this->varEquiv->modifyBlkName(freshPtVar->name(), "$Null");
-                            //     // modify the offset 
-                            //     this->varEquiv->modifyOffset(freshPtVar->name(), 0);
-                            //     // register the freshPtVar
-                            //     this->cfg->addVarType(freshPtVar->name(), freshPtVarTypeStr + std::to_string(freshPtVarTypeSize));
-                            // } else {
-                            //     // if old pt var is not a pointer variable, we only need to add name and register the type
-                            //     this->varEquiv->addNewName(freshPtVar->name());
-                            //     this->cfg->addVarType(freshPtVar->name(), freshPtVarTypeStr);
-                            // }
-
+                            
                             if(!ptLiteral->isByteLevel()){
                                 // b: the original pt predicate is not bytified, bytify the pt predicate
                                 // bytify the original pt
-                                std::vector<const BytePt*> oldBytifiedPts;
-                                for(int i = 0; i < ptLiteral->getStepSize(); i++){
-                                    const Expr* bptFromExpr = Expr::add(ptLiteral->getFrom(), Expr::lit((long long)i)); 
-                                    const VarExpr* bptFrom = this->varFactory->getFreshVar(PTR_BYTEWIDTH);
-                                    const VarExpr* bptTo = this->varFactory->getFreshVar(1);
-                                    // register the new variable 
-                                    this->cfg->addVarType(bptFrom->name(), "ref" + std::to_string(8));
-                                    this->cfg->addVarType(bptTo->name(), "i8");
-                                    // add name 
-                                    this->varEquiv->addNewName(bptFrom->name());
-                                    this->varEquiv->addNewName(bptTo->name());
-                                    // update newPure
-                                    newPure = Expr::and_(
-                                        newPure,
-                                        Expr::eq(bptFrom, bptFromExpr)
-                                    );
-
-                                    const BytePt* bpt = SpatialLiteral::bytePt(bptFrom, bptTo);
-                                    oldBytifiedPts.push_back(bpt);
-                                }
-                                // compute the old value from low level, to make sure the suffix remain the same
-                                const Expr* time = Expr::lit((long long) 256);
-                                const Expr* oldComputedSum = Expr::lit((long long)0);
-                                for(int i = 0; i < oldBytifiedPts.size(); i++){
-                                    const Expr* base = Expr::lit((long long)1);
-                                    for(int j = i; j < oldBytifiedPts.size() - 1; j++){
-                                        base = Expr::multiply(base, time);
-                                    }
-                                    oldComputedSum = Expr::add(oldComputedSum, Expr::multiply(base, oldBytifiedPts[i]->getTo()));
-                                }
-                                // old value equality
-                                newPure = Expr::and_(
-                                    newPure,
-                                    Expr::eq(
-                                        oldComputedSum,
-                                        ptLiteral->getTo()
-                                    )
-                                );
-                                // bytified vector after the store
-                                std::vector<const BytePt*> newBytifiedPts;
-                                for(int i = 0; i < ptLiteral->getStepSize(); i++){
-                                    if(i < storedSize){
-                                        // if the position is overwritten by the store 
-                                        const BytePt* oldBpt = oldBytifiedPts[i];
-                                        const VarExpr* nbptTo = this->varFactory->getFreshVar(1);
-                                        // register the new variable
-                                        this->cfg->addVarType(nbptTo->name(), "i8");
-                                        // add new name
-                                        this->varEquiv->addNewName(nbptTo->name());
-
-                                        const BytePt* nbpt = SpatialLiteral::bytePt(oldBpt->getFrom(), nbptTo);
-                                        newBytifiedPts.push_back(nbpt);
-                                    } else {
-                                        newBytifiedPts.push_back(oldBytifiedPts[i]);
-                                    }
-                                }
-                                // compute the new value from low level
-                                const Expr* newComputedSum = Expr::lit((long long)0);
-                                for(int i = 0; i < newBytifiedPts.size(); i++){
-                                    const Expr* base = Expr::lit((long long)1);
-                                    for(int j = i; j < newBytifiedPts.size() - 1; j++){
-                                        base = Expr::multiply(base, time);
-                                    }
-                                    newComputedSum = Expr::add(newComputedSum, Expr::multiply(base, newBytifiedPts[i]->getTo()));
-                                }
-                                // old value equality
-                                newPure = Expr::and_(
-                                    newPure,
-                                    Expr::eq(
-                                        newComputedSum,
-                                        freshPtVar
-                                    )
-                                );
-                                // compute the modified value from low level
-                                const Expr* modifiedComputedSum = Expr::lit((long long) 0);
-                                for(int i = 0; i < newBytifiedPts.size() && i < storedSize; i++){
-                                    const Expr* base = Expr::lit((long long)1);
-                                    for(int j = i; j < newBytifiedPts.size() - 1; j++){
-                                        base = Expr::multiply(base, time);
-                                    }
-                                    modifiedComputedSum = Expr::add(modifiedComputedSum, Expr::multiply(base, newBytifiedPts[i]->getTo()));
-                                }
-                                // modified value equality
-                                newPure = Expr::and_(
-                                    newPure,
-                                    Expr::eq(
-                                        modifiedComputedSum,
-                                        freshStoredVar
-                                    )
-                                );
-                                // modify the highlevel pt
-                                const Expr* from = ptLiteral->getFrom();
-                                const Expr* to = freshPtVar;
-                                
-                                // create corresponding new pt predicate
-                                if(this->varEquiv->isStructArrayPtr(mallocName)){
-                                    const SpatialLiteral* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
-                                    newSpatial.push_back(newPt);
-                                } else {
-                                    const SpatialLiteral* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
-                                    newSpatial.push_back(newPt);
-                                }
+                                std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, 0, storedSize, newPure);
+                                const SpatialLiteral* newPt = newPtPurePair.first;
+                                newPure = newPtPurePair.second;
+                                newSpatial.push_back(newPt);
                             } else {
                                 // a: the originnal pt predicate is bytified, directly change the corresponding part
-                                std::vector<const BytePt*> oldBytifiedPts = ptLiteral->getBytifiedPts();
-                                // bytified vector after the store
-                                std::vector<const BytePt*> newBytifiedPts;
-                                for(int i = 0; i < ptLiteral->getStepSize(); i++){
-                                    if(i < storedSize){
-                                        // if the position is overwritten by the store 
-                                        const BytePt* oldBpt = oldBytifiedPts[i];
-                                        const VarExpr* nbptTo = this->varFactory->getFreshVar(1);
-                                        // register the new variable
-                                        this->cfg->addVarType(nbptTo->name(), "i8");
-                                        // add new name
-                                        this->varEquiv->addNewName(nbptTo->name());
-
-                                        const BytePt* nbpt = SpatialLiteral::bytePt(oldBpt->getFrom(), nbptTo);
-                                        newBytifiedPts.push_back(nbpt);
-                                    } else {
-                                        newBytifiedPts.push_back(oldBytifiedPts[i]);
-                                    }
-                                }
-                                // compute the new value from low level
-
-                                const Expr* time = Expr::lit((long long) 256);
-                                const Expr* newComputedSum = Expr::lit((long long)0);
-                                for(int i = 0; i < newBytifiedPts.size(); i++){
-                                    const Expr* base = Expr::lit((long long)1);
-                                    for(int j = i; j < newBytifiedPts.size() - 1; j++){
-                                        base = Expr::multiply(base, time);
-                                    }
-                                    newComputedSum = Expr::add(newComputedSum, Expr::multiply(base, newBytifiedPts[i]->getTo()));
-                                }
-                                // old value equality
-                                newPure = Expr::and_(
-                                    newPure,
-                                    Expr::eq(
-                                        newComputedSum,
-                                        freshPtVar
-                                    )
-                                );
-                                // modify the highlevel pt
-                                const Expr* from = ptLiteral->getFrom();
-                                const Expr* to = freshPtVar;
-                                
-                                // create corresponding new pt predicate
-                                if(this->varEquiv->isStructArrayPtr(mallocName)){
-                                    const SpatialLiteral* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
-                                    newSpatial.push_back(newPt);
-                                } else {
-                                    const SpatialLiteral* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
-                                    newSpatial.push_back(newPt);
-                                }
+                                std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateModifyBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, 0, storedSize, newPure);
+                                const SpatialLiteral* newPt = newPtPurePair.first;
+                                newPure = newPtPurePair.second;
+                                newSpatial.push_back(newPt);
                             }
                         } else {
                             // situation A.1.(3), currently not considered
@@ -1652,219 +1434,23 @@ namespace smack{
                                 // update new pure
                                 newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, storedExpr));
                             }
-                            // ---------- Discussion of the change of pt variable
-                            // freshPtVar is the pt to after modification, oldPtVar is the pt to before the modification
-                            const VarExpr* freshPtVar = this->varFactory->getFreshVar(ptLiteral->getStepSize());
-                            // freshStoredVarTypeStr and freshPtVarrTypeStr are used to update the cfg varType table, the string will be assigned according  to later analysis
 
-                            const VarExpr* oldPtVar = (const VarExpr* ) ptLiteral->getTo();
-                            // TODOsh: check the correctness of this
-                            // flush the link information of freshPtVar
-                            if(this->getVarType(oldPtVar->name()) == VarType::PTR){
-                                // Nullification since it is partial modification
-                                this->updateExecStateEqualVarAndRhsVar(freshPtVar, this->varFactory->getNullVar());
-                            } else{
-                                this->varEquiv->addNewName(freshPtVar->name());
-                            }
-
-                            this->updateVarType(freshPtVar, oldPtVar, storedSize);
-                            // this is the old orig pt type
-                            // std::string oldOrigPtVarName = this->varFactory->getOrigVarName(oldPtVar->name()); 
-                            // std::string oldPtVarTypeStr = this->cfg->getVarDetailType(oldOrigPtVarName).first;
-                            // std::string freshPtVarTypeStr = oldPtVarTypeStr; // FIXED
-                            // int freshPtVarTypeSize = this->cfg->getVarDetailType(oldOrigPtVarName).second; // FIXED
-                            // if(!(oldPtVarTypeStr.find("ref") == std::string::npos)){
-                            //     // if old pt var is a pointer variable, we need to eliminate all the information since it is bytified.
-                            //     // add name
-                            //     this->varEquiv->addNewName(freshPtVar->name());
-                            //     // modifications to make execution loading the ptr variable invalid
-                            //     // modify the blkname
-                            //     this->varEquiv->modifyBlkName(freshPtVar->name(), "$Null");
-                            //     // modify the offset 
-                            //     this->varEquiv->modifyOffset(freshPtVar->name(), 0);
-                            //     // register the freshPtVar
-                            //     this->cfg->addVarType(freshPtVar->name(), freshPtVarTypeStr + std::to_string(freshPtVarTypeSize));
-                            // } else {
-                            //     // if old pt var is not a pointer variable, we only need to add name and register the type
-                            //     this->varEquiv->addNewName(freshPtVar->name());
-                            //     this->cfg->addVarType(freshPtVar->name(), freshPtVarTypeStr);
-                            // }
 
                             // update the predicate 
                             if(!ptLiteral->isByteLevel()){
                                 // Situation -- b: the pt predicate is not bytified
                                 // bytify the original pt
-                                std::vector<const BytePt*> oldBytifiedPts;
-                                for(int i = 0; i < ptLiteral->getStepSize(); i++){
-                                    const Expr* bptFromExpr = Expr::add(ptLiteral->getFrom(), Expr::lit((long long)i)); 
-                                    const VarExpr* bptFrom = this->varFactory->getFreshVar(PTR_BYTEWIDTH);
-                                    const VarExpr* bptTo = this->varFactory->getFreshVar(1);
-                                    // register the new variable 
-                                    this->cfg->addVarType(bptFrom->name(), "ref" + std::to_string(8));
-                                    this->cfg->addVarType(bptTo->name(), "i8");
-                                    // add name 
-                                    this->varEquiv->addNewName(bptFrom->name());
-                                    this->varEquiv->addNewName(bptTo->name());
-                                    // update newPure
-                                    newPure = Expr::and_(
-                                        newPure,
-                                        Expr::eq(bptFrom, bptFromExpr)
-                                    );
+                                std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, offset, storedSize, newPure);
+                                const SpatialLiteral* newPt = newPtPurePair.first;
+                                newPure = newPtPurePair.second;
+                                newSpatial.push_back(newPt);
 
-                                    const BytePt* bpt = SpatialLiteral::bytePt(bptFrom, bptTo);
-                                    oldBytifiedPts.push_back(bpt);
-                                }
-                                // compute the old value from low level, to make sure the suffix remain the same
-                                const Expr* time = Expr::lit((long long) 256);
-                                const Expr* oldComputedSum = Expr::lit((long long)0);
-                                for(int i = 0; i < oldBytifiedPts.size(); i++){
-                                    const Expr* base = Expr::lit((long long)1);
-                                    for(int j = i; j < oldBytifiedPts.size() - 1; j++){
-                                        base = Expr::multiply(base, time);
-                                    }
-                                    oldComputedSum = Expr::add(oldComputedSum, Expr::multiply(base, oldBytifiedPts[i]->getTo()));
-                                }
-                                // old value equality
-                                newPure = Expr::and_(
-                                    newPure,
-                                    Expr::eq(
-                                        oldComputedSum,
-                                        ptLiteral->getTo()
-                                    )
-                                );
-                                // bytified vector after the store
-                                std::vector<const BytePt*> newBytifiedPts;
-                                for(int i = 0; i < ptLiteral->getStepSize(); i++){
-                                    if( i <= prefixLength && i < prefixLength + storedSize){
-                                        // for the modified area, use new BytePts to replace
-                                        const BytePt* oldBpt = oldBytifiedPts[i];
-                                        const VarExpr* nbptTo = this->varFactory->getFreshVar(1);
-                                        // register the new variable
-                                        this->cfg->addVarType(nbptTo->name(), "i8");
-                                        // add new name
-                                        this->varEquiv->addNewName(nbptTo->name());
-
-                                        const BytePt* nbpt = SpatialLiteral::bytePt(oldBpt->getFrom(), nbptTo);
-                                        newBytifiedPts.push_back(nbpt);
-                                    } else {
-                                        newBytifiedPts.push_back(oldBytifiedPts[i]);
-                                    }
-                                }
-                                // compute the new value from low level
-                                const Expr* newComputedSum = Expr::lit((long long)0);
-                                for(int i = 0; i < newBytifiedPts.size(); i++){
-                                    const Expr* base = Expr::lit((long long)1);
-                                    for(int j = i; j < newBytifiedPts.size() - 1; j++){
-                                        base = Expr::multiply(base, time);
-                                    }
-                                    newComputedSum = Expr::add(newComputedSum, Expr::multiply(base, newBytifiedPts[i]->getTo()));
-                                }
-                                // old value equality
-                                newPure = Expr::and_(
-                                    newPure,
-                                    Expr::eq(
-                                        newComputedSum,
-                                        freshPtVar
-                                    )
-                                );
-                                // compute the modified value from low level
-                                const Expr* modifiedComputedSum = Expr::lit((long long) 0);
-                                for(int i = prefixLength; i < prefixLength + storedSize; i ++){
-                                    const Expr* base = Expr::lit((long long)1);
-                                    for(int j = i; j < prefixLength + storedSize - 1; j++){
-                                        base = Expr::multiply(base, time);
-                                    }
-                                    modifiedComputedSum = Expr::add(modifiedComputedSum, Expr::multiply(base, newBytifiedPts[i]->getTo()));
-                                }
-                                // modified value equality
-                                newPure = Expr::and_(
-                                    newPure,
-                                    Expr::eq(
-                                        modifiedComputedSum,
-                                        freshStoredVar
-                                    )
-                                );
-                                // modify the highlevel pt
-                                const Expr* from = ptLiteral->getFrom();
-                                const Expr* to = freshPtVar;
-                                // create corresponding new pt predicate
-                                CFDEBUG(std::cout << "INFO: ptLiteral size = " << ptLiteral->getStepSize() << " newBy = " << newBytifiedPts.size() << " storedSize = " << storedSize << std::endl;);
-                                if(this->varEquiv->isStructArrayPtr(mallocName)){
-                                    const SpatialLiteral* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
-                                    newSpatial.push_back(newPt);
-                                } else {
-                                    const SpatialLiteral* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
-                                    newSpatial.push_back(newPt);
-                                }
                             } else {
                                 // Situation -- a: the pt predicate is bytified 
-                                std::vector<const BytePt*> oldBytifiedPts = ptLiteral->getBytifiedPts();
-                                // bytified vector after the store
-                                std::vector<const BytePt*> newBytifiedPts;
-                                for(int i = 0; i < ptLiteral->getStepSize(); i++){
-                                    if(i < storedSize){
-                                        // if the position is overwritten by the store 
-                                        const BytePt* oldBpt = oldBytifiedPts[i];
-                                        const VarExpr* nbptTo = this->varFactory->getFreshVar(1);
-                                        // register the new variable
-                                        this->cfg->addVarType(nbptTo->name(), "i8");
-                                        // add new name
-                                        this->varEquiv->addNewName(nbptTo->name());
-
-                                        const BytePt* nbpt = SpatialLiteral::bytePt(oldBpt->getFrom(), nbptTo);
-                                        newBytifiedPts.push_back(nbpt);
-                                    } else {
-                                        newBytifiedPts.push_back(oldBytifiedPts[i]);
-                                    }
-                                }
-                                // compute the new value from low level
-
-                                const Expr* time = Expr::lit((long long) 256);
-                                const Expr* newComputedSum = Expr::lit((long long)0);
-                                for(int i = 0; i < newBytifiedPts.size(); i++){
-                                    const Expr* base = Expr::lit((long long)1);
-                                    for(int j = i; j < newBytifiedPts.size() - 1; j++){
-                                        base = Expr::multiply(base, time);
-                                    }
-                                    newComputedSum = Expr::add(newComputedSum, Expr::multiply(base, newBytifiedPts[i]->getTo()));
-                                }
-                                // old value equality
-                                newPure = Expr::and_(
-                                    newPure,
-                                    Expr::eq(
-                                        newComputedSum,
-                                        freshPtVar
-                                    )
-                                );
-                                // compute the modified value from low level
-                                const Expr* modifiedComputedSum = Expr::lit((long long) 0);
-                                for(int i = 0; i < newBytifiedPts.size() && i < storedSize; i++){
-                                    const Expr* base = Expr::lit((long long)1);
-                                    for(int j = i; j < newBytifiedPts.size() - 1; j++){
-                                        base = Expr::multiply(base, time);
-                                    }
-                                    modifiedComputedSum = Expr::add(modifiedComputedSum, Expr::multiply(base, newBytifiedPts[i]->getTo()));
-                                }
-                                // modified value equality
-                                newPure = Expr::and_(
-                                    newPure,
-                                    Expr::eq(
-                                        modifiedComputedSum,
-                                        freshStoredVar
-                                    )
-                                );
-                                // modify the highlevel pt
-                                const Expr* from = ptLiteral->getFrom();
-                                const Expr* to = freshPtVar;
-                                
-                                // create corresponding new pt predicate
-                                if(this->varEquiv->isStructArrayPtr(mallocName)){
-                                    const SpatialLiteral* newPt = SpatialLiteral::gcPt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
-                                    newSpatial.push_back(newPt);
-                                } else {
-                                    const SpatialLiteral* newPt = SpatialLiteral::pt(from, to, mallocName, ptLiteral->getStepSize(), newBytifiedPts);
-                                    newSpatial.push_back(newPt);
-                                }
+                                std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateModifyBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, offset, storedSize, newPure);
+                                const SpatialLiteral* newPt = newPtPurePair.first;
+                                newPure = newPtPurePair.second;
+                                newSpatial.push_back(newPt);
                             }
                         } else {
                             CFDEBUG(std::cout << "ERROR: extreme situation, A.2 situation currently not considered.." << std::endl;);
@@ -1965,68 +1551,30 @@ namespace smack{
                     }
                     // modify the spatial literals
                     
+                    // compute whether the left blk is empty after breaking the blk
+                    bool leftEmpty = (this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
+                    const SpatialLiteral* leftBlk = SpatialLiteral::gcBlk(
+                        breakBlk->getFrom(),
+                        varArg1,
+                        breakBlk->getBlkName(),
+                        leftEmpty
+                    );
 
-                    if(this->varEquiv->isStructArrayPtr(mallocName)){
-                        // compute whether the left blk is empty after breaking the blk
-                        bool leftEmpty = (this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
-                        const SpatialLiteral* leftBlk = SpatialLiteral::gcBlk(
-                            breakBlk->getFrom(),
-                            varArg1,
-                            breakBlk->getBlkName(),
-                            leftEmpty
-                        );
+                    const SpatialLiteral* storedPt = this->createPtAccordingToMallocName(mallocName, varArg1, freshVar, storedSize);
 
-                        const SpatialLiteral* storedPt = SpatialLiteral::gcPt(
-                            varArg1,
-                            freshVar,
-                            //arg2,
-                            breakBlk->getBlkName(),
-                            storedSize
-                        );
-
-                        CFDEBUG(std::cout << "Store type: " << arg2TypeStr << " Store stepsize: " << storedSize << std::endl;);
-                        long long size = storedSize;
-                        bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
-                        const SpatialLiteral* rightBlk = SpatialLiteral::gcBlk(
-                            Expr::add(varArg1, Expr::lit(size)),
-                            breakBlk->getTo(),
-                            breakBlk->getBlkName(),
-                            rightEmpty
-                        );
-                        newSpatial.push_back(leftBlk);
-                        newSpatial.push_back(storedPt);
-                        newSpatial.push_back(rightBlk);
-                    } else {
-                        // compute whether the left blk is empty after breaking the blk
-                        bool leftEmpty = (this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
-                        const SpatialLiteral* leftBlk = SpatialLiteral::blk(
-                            breakBlk->getFrom(),
-                            varArg1,
-                            breakBlk->getBlkName(),
-                            leftEmpty
-                        );
-                        
-                        const SpatialLiteral* storedPt = SpatialLiteral::pt(
-                            varArg1,
-                            freshVar,
-                            //arg2,
-                            breakBlk->getBlkName(),
-                            storedSize
-                        );
-
-                        CFDEBUG(std::cout << "Store type: " << arg2TypeStr << " Store stepsize: " << storedSize << std::endl;);
-                        long long size = storedSize;
-                        bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo ()) == 0) ? true : false;
-                        const SpatialLiteral* rightBlk = SpatialLiteral::blk(
-                            Expr::add(varArg1, Expr::lit(size)),
-                            breakBlk->getTo(),
-                            breakBlk->getBlkName(),
-                            rightEmpty
-                        );
-                        newSpatial.push_back(leftBlk);
-                        newSpatial.push_back(storedPt);
-                        newSpatial.push_back(rightBlk);
-                    }
+                    CFDEBUG(std::cout << "Store type: " << arg2TypeStr << " Store stepsize: " << storedSize << std::endl;);
+                    long long size = storedSize;
+                    bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
+                    const SpatialLiteral* rightBlk = SpatialLiteral::gcBlk(
+                        Expr::add(varArg1, Expr::lit(size)),
+                        breakBlk->getTo(),
+                        breakBlk->getBlkName(),
+                        rightEmpty
+                    );
+                    newSpatial.push_back(leftBlk);
+                    newSpatial.push_back(storedPt);
+                    newSpatial.push_back(rightBlk);
+                    
                     currentIndex += 1;
                 } else if(!i->getBlkName().compare(mallocName) && 
                        SpatialLiteral::Kind::BLK == i->getId() && 
@@ -2847,6 +2395,72 @@ namespace smack{
         const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts));
         return {resultPt, resultPure};
     }
+
+    std::pair<const PtLit*, const Expr*> 
+    BlockExecutor::updateModifyBytifiedPtPredicateAndModifyHighLevelVar
+    (const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure){
+        assert(oldPt->isByteLevel());
+        const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(oldPt->getStepSize());
+        const Expr* resultPure = oldPure;
+        std::vector<const BytePt*> oldBytifiedPts = oldPt->getBytifiedPts();
+        assert(oldBytifiedPts.size() == oldPt->getStepSize());
+        std::vector<const BytePt*> newBytifiedPts;
+        for(const BytePt* bpt :  oldBytifiedPts){
+            const VarExpr* newBySizeVar = this->createAndRegisterFreshDataVar(1);
+            const BytePt* nbpt = SpatialLiteral::bytePt(bpt->getFrom(), freshPtVar);
+            newBytifiedPts.push_back(nbpt);
+        }
+        const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, storedVar);
+        resultPure = Expr::and_(
+            resultPure,
+            equalConstraint
+        );
+        const PtLit* resultPt = (const PtLit*)(this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts));
+        return {resultPt, resultPure};
+    }
+
+
+    std::pair<const PtLit*, const Expr*> BlockExecutor::updateModifyBytifiedPtPredicateAndModifyPartial(const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, const Expr* oldPure){
+        const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(oldPt->getStepSize());
+        const Expr* resultPure = oldPure;
+        
+        std::vector<const BytePt*> oldBytifiedPts = oldPt->getBytifiedPts();
+        std::vector<const BytePt*> newBytifiedPts;
+        std::vector<const BytePt*> computeBytifiedPts;
+
+        for(const BytePt* obpt : oldBytifiedPts){
+            newBytifiedPts.push_back(obpt);
+        }
+
+        for(int i = 0; i < length; i++){
+            const Expr* oldFrom = oldBytifiedPts[offset + i]->getFrom();
+            const VarExpr* newTo = this->createAndRegisterFreshDataVar(1);
+            const BytePt* nbpt = SpatialLiteral::bytePt(oldFrom, newTo);
+
+            newBytifiedPts[offset + i] = nbpt;
+            computeBytifiedPts.push_back(nbpt);
+        }
+
+        const Expr* modifyEqualConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(computeBytifiedPts, modifyVar);
+
+        const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, freshPtVar);
+
+        resultPure = Expr::and_(
+            resultPure,
+            modifyEqualConstraint
+        );
+
+        resultPure = Expr::and_(
+            resultPure,
+            modifyEqualConstraint
+        );
+        const PtLit* resultPt = this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts);
+        return {resultPt, resultPure};
+    }
+
+
+
+
 
     const Expr* 
     BlockExecutor::genConstraintEqualityBytifiedPtsAndHighLevelExpr

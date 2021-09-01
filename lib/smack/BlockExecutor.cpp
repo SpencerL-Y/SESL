@@ -2313,6 +2313,7 @@ namespace smack{
             const Expr* bptFromExpr = Expr::add(oldPt->getFrom(), Expr::lit((long long)i)); 
             const VarExpr* fromVar = (const VarExpr*)(oldPt->getFrom());
             int offset = this->varEquiv->getOffset(fromVar->name());
+            CFDEBUG(std::cout << "old pt blkname: " << oldPt->getBlkName() << " offset: " << offset << std::endl;)
             const VarExpr* bptFrom = this->createAndRegisterFreshPtrVar(1, oldPt->getBlkName(), offset + i);
             const VarExpr* bptTo = this->createAndRegisterFreshDataVar(1);
             resultPure = Expr::and_(
@@ -2454,7 +2455,7 @@ namespace smack{
             resultPure,
             modifyEqualConstraint
         );
-        const PtLit* resultPt = this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts);
+        const PtLit* resultPt = (const PtLit* ) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts));
         return {resultPt, resultPure};
     }
 
@@ -2517,20 +2518,24 @@ namespace smack{
     const VarExpr* 
     BlockExecutor::createAndRegisterFreshDataVar
     (int size){
+        CFDEBUG(std::cout << "INFO: create fresh data var " << size << std::endl;);
         const VarExpr* freshVar = this->varFactory->getFreshVar(size);
         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(8 * size));
         this->varEquiv->addNewName(freshVar->name());
+        return freshVar;
     }
 
 
     const VarExpr* 
     BlockExecutor::createAndRegisterFreshPtrVar
     (int stepSize, std::string mallocName, int offset){
+        CFDEBUG(std::cout << "INFO: create fresh ptr var " << stepSize << " " <<  mallocName << " " << offset << std::endl;);
         const VarExpr* freshVar = this->varFactory->getFreshVar(PTR_BYTEWIDTH);
         this->cfg->addVarType(freshVar->name(), "ref" + std::to_string(8 * stepSize));
         this->varEquiv->addNewName(freshVar->name());
         this->varEquiv->linkBlkName(freshVar->name(), mallocName);
         this->varEquiv->addNewOffset(freshVar->name(), offset);
+        return freshVar;
     }
 
 

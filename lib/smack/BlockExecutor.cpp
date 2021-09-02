@@ -1668,15 +1668,66 @@ namespace smack{
                     loadedOffset
                 );
                 if(posResult.first){    
-                    int ptLength = 
+                    if(this->storeSplit->getInitializedLength(mallocName, loadedOffset) >= loadedSize ){
+                        int ptLength = this->storeSplit->getInitializedPos(mallocName, loadedOffset);
+                        int loadIndex = 2*posResult.second + 1;
+                        // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
+                        bool startCounting = false;
+                        // increase index by 1 when counting is started 
+                        int countIndex = 1;
+                        for(const SpatialLiteral* spl : sh->getSpatialExpr()){
+                            if(SpatialLiteral::Kind::SPT == spl->getId()){
+                                const SizePtLit* sizePt = (const SizePtLit*) spl;
+                                if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
+                                    startCounting = true;
+                                }
+                            }
+                            if(countIndex == loadIndex){
+                                assert(SpatialLiteral::Kind::PT == spl->getId());
+                                // find the correct index and load the content out
+                                const PtLit* pt = (const PtLit*) spl;
+                                // toExpr should be a variable
+                                const Expr* toExprOrig = pt->getTo();
 
+                                CFDEBUG(std::cout << "INFO: loaded expr: " << toExprOrig << std::endl;);
+                                if(toExprOrig->isVar()){
+                                    //toExprOrig should always be a fresh variable
+                                    const VarExpr* toExprVar = (const VarExpr*)toExprOrig;
+
+                                    std::string loadedVarName = toExprVar->name();
+                                    const Expr* newPure = Expr::and_(
+                                         sh->getPure(),
+                                         Expr::eq(
+                                            this->varFactory->getVar(lhsVarOrigName), 
+                                            toExprVar     
+                                        )
+                                    );
+                                    this->varEquiv->linkName(lhsVarName, loadedVarName);
+                                    if(this->varEquiv->hasBlkName(loadedVarName)){
+                                        this->varEquiv->linkBlkName(lhsVarName, loadedVarName);
+                                    }
+                                    if(this->varEquiv->getOffset(loadedVarName) >= 0){
+                                        this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(loadedVarName));
+                                    }
+                                    this->varEquiv->linkIntVar(lhsVarName, loadedVarName);
+                                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                                    newSH->print(std::cout);
+                                    std::cout << std::endl;
+                                    return newSH;
+                                } else {
+                                    CFDEBUG(std::cout << "ERROR: load error, this should be a PT predicate." << std::endl;);
+                                    spl->print(std::cout);std::cout << std::endl;
+                                    return sh;
+                                }
+                            }
+                            if(startCounting){
+                                countIndex ++;
+                            }
+                        }
+                    }
+                    
                 } else if(this->storeSplit->isInitialized){
-
-                } else {
-                    CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);
-                }
-                CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
-                int loadIndex = 2*posResult.second + 1;
+                    int loadIndex = 2*posResult.second + 1;
                 // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
                 bool startCounting = false;
                 // increase index by 1 when counting is started 
@@ -1733,6 +1784,11 @@ namespace smack{
                         countIndex ++;
                     }
                 }
+                } else {
+                    CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);
+                }
+                CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
+                
             } else if(!posResult.first && 0 == posResult.second) {
                 //  Use fresh variable for the nondeterministic value
                 //  and modify the value of the original one 

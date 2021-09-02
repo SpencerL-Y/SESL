@@ -94,6 +94,10 @@ namespace smack
     }
 
 
+    int BlkSplitUtil::getInitializedLength(int offset){
+        return this->offsetPosToSize[offset];
+    }
+
     int BlkSplitUtil::getInitializedSuffixLength(int offset){
         // find the suffix length can be used
         for(int index = 0; index < this->splitAxis.size(); index ++){
@@ -207,6 +211,15 @@ namespace smack
             CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl;);    
             return std::pair<bool, int>(false, -1);
         }
+    }
+
+    int StoreSplitter::getInitializedLength(std::string allocName, int offset){
+        bool hasOffset = this->splitMap[allocName]->getInitializedPos(offset).first;
+        if(!hasOffset){
+            CFDEBUG(std::cout << "INFO: offset not exists, pleas check.." << std::endl;);
+            return -1;
+        }
+        return this->splitMap[allocName]->getInitializedLength(offset);
     }
     
 

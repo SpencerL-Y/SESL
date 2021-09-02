@@ -28,6 +28,7 @@
             void setMaxOffset(int max);
             std::pair<bool, int> getOffsetPos(int offset);
             std::pair<bool, int> getInitializedPos(int offset);
+            int getInitializedLength(int offset);
             int getInitializedSuffixLength(int offset);
             int getInitializedPrefixLength(int offset);
             bool isInitialized(int pos);
@@ -50,6 +51,7 @@
             bool isInitialized(std::string allocName, int pos);
             std::pair<bool, int> getOffsetPos(std::string allocName, int offset);
             std::pair<bool, int> getInitializedPos(std::string allocName, int offset);
+            int getInitializedLength(std::string allocName, int offset);
             int getInitializedSuffixLength(std::string allocName, int offset);
             int getInitializedPrefixLength(std::string allocName, int offset);
             void setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap);

@@ -132,10 +132,12 @@ void reach_error() { assert(0); }
 
 int main(void)
 {
-   int * a = (int *)malloc(3*sizeof(int));
-   char* m = a;
-   *a = 10;
-   *(m + 1) = 'a';
+   
+	int *a = (int *)malloc(sizeof(int*));
+	*a = (int *)malloc(sizeof(int));
+	char* b = (char*) a;
+	int* c = *b;
+   int d = *c;
    free(a);
 }
 

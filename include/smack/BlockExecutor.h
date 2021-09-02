@@ -80,8 +80,6 @@ namespace smack{
         std::pair<const Expr*, bool> getUsedArithExprAndVar(const VarExpr* lhsVar, const Expr* originExpr);
         int parsePtrArithmeticStepSize(const Expr* expression);
         int computeArithmeticOffsetValue(const Expr* expression);
-        // Utils for store execution
-        int extractStoreFuncSize(std::string funcName);
         //  <<< LOW LEVEL METHODS >>> 
         const Expr* parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName);
         const Expr* parseVarArithmeticExpr(const Expr* arithExpr);
@@ -92,6 +90,9 @@ namespace smack{
         const Expr* parseUnaryBooleanExpression(std::string funcName, const Expr* inner);
         const Expr* parseBinaryBooleanExpression(std::string funcName, const Expr* lhs, const Expr* rhs);
         const Expr* parseBinaryArithmeticExpression(std::string name, const Expr* left, const Expr* right);
+        // Utils for store execution
+        int parseStoreFuncSize(std::string funcName);
+        int parseLoadFuncSize(std::string funcName);
         // ------------------ Symbolic Heap Utilities
         const SpatialLiteral* createPtAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize);
         const SpatialLiteral* createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts);
@@ -101,17 +102,24 @@ namespace smack{
         // ------------------ Execution Utilities
         // commomly used utilities
         // << HIGH LEVEL METHODS>>
-        void updateVarType(const VarExpr* lhsVar, const Expr* rhs, int storedSize);
-        void updateExecStateEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar);
-        void updateExecStateEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal);
-        void updateExecStateEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr, const Expr* storedExpr, bool isPtr);
+        
+        std::pair<const VarExpr*, const Expr*> updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, const Expr* oldPure);
+        
+
         std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndEqualHighLevelVar(const PtLit* oldPt, const Expr* oldPure);
         std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure);
         std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndModifyPartial(const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, const Expr* oldPure);
         std::pair<const PtLit*, const Expr*> updateModifyBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure);
         std::pair<const PtLit*, const Expr*> updateModifyBytifiedPtPredicateAndModifyPartial(const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, const Expr* oldPure);
 
+
+        // << LOW LEVEL METHODS>>
         void updateBytifiedPtPredicateAndEqualHighLevelVars(const PtLit* oldBPt);
+        
+        void updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs, int storedSize);
+        void updateBingdingsEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar);
+        void updateBindingsEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal);
+        void updateBindingsEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr, const Expr* storedExpr, bool isPtr);   
 
     public:
         BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb); this->cfg->addVarType("$Null", "i64");}

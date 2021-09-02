@@ -1113,41 +1113,30 @@ namespace smack{
                 // if the stored position is represented by a non-global variable, step size later will use the type info obtained from cfg
                 useStoreFuncSize = true;
                 std::string storeFuncName = rhsFun->name();
-                storeFuncSize = this->extractStoreFuncSize(storeFuncName);
+                storeFuncSize = this->parseStoreFuncSize(storeFuncName);
                 CFDEBUG(std::cout << "INFO: use func stepsize: " << storeFuncSize << std::endl;);
             }
         } else if(ExprType::FUNC == arg1->getType()){
             // The step size of struct and array is determined through the expression to find the location
             CFDEBUG(std::cout << "INFO: arg1 is funcexpr" << std::endl;);
-            const FunExpr* arg1Func = (const FunExpr*) arg1;
-            // this is equivalent to add an assignment stmt before  the store stmt to make it a variable.
+            const Expr* newPure = sh->getPure();
+            std::pair<const VarExpr*, const Expr*> newVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(arg1, newPure);
 
-            int extractedSize = this->parsePtrArithmeticStepSize(arg1);
-            const VarExpr* freshVar = this->varFactory->getFreshVar(extractedSize);
-            std::pair<const Expr*, bool> parsedUsedExpr = this->getUsedArithExprAndVar(freshVar, arg1);
-            assert(parsedUsedExpr.second);
-            
+            const VarExpr* freshVar = newVarPurePair.first;
+            newPure = newVarPurePair.second;
             varArg1 = freshVar;
             varOrigArg1 = freshVar;
             varOrigiArg1Name = freshVar->name();
             varArg1Name = freshVar->name();
-            // create a fresh variable $fresh |--> data
-            this->updateExecStateEqualVarAndRhsArithExpr(freshVar, arg1, parsedUsedExpr.first, parsedUsedExpr.second);
-            // add vartype info of freshVar
-            this->updateVarType(freshVar, parsedUsedExpr.first, -1);
-            CFDEBUG(std::cout << "INFO: extracted size: " << extractedSize << std::endl;)
-
-            const Expr* simplifiedExpr = parsedUsedExpr.first;
-            offset = computeArithmeticOffsetValue(simplifiedExpr);
+            offset = this->varEquiv->getOffset(varArg1->name());
             mallocName = this->varEquiv->getBlkName(varArg1->name());
             mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
-                // update the symbolic heap
+            // update the symbolic heap
             SHExprPtr oldSh = sh;
-            const Expr* newPure = Expr::and_(
-                Expr::eq(simplifiedExpr, varArg1),
-                sh->getPure()
-            );
             sh = std::make_shared<SymbolicHeapExpr>(newPure, oldSh->getSpatialExpr());
+        } else {
+            CFDEBUG(std::cout << "ERROR: stored arg1 not allowed situation" << std::endl;);
+            return sh;
         }
 
         // compute the storedSize of the target pt predicate
@@ -1246,16 +1235,16 @@ namespace smack{
                                 const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
                                 std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
                                 // update the equivalent classes
-                                this->updateExecStateEqualVarAndRhsVar(freshVar, varArg2);
+                                this->updateBingdingsEqualVarAndRhsVar(freshVar, varArg2);
                                 // add type info of fresh variable according to the var type
-                                this->updateVarType(freshVar, varArg2, storedSize);
+                                this->updateVarType(freshVar, varArg2, varArg2, storedSize);
                                 // update newPure
                                 newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
                             } else if(arg2->isValue()){
                                 // update the equivalent classes
-                                this->updateExecStateEqualVarAndRhsValue(freshVar, arg2);
+                                this->updateBindingsEqualVarAndRhsValue(freshVar, arg2);
                                 //add type info to cfg
-                                this->updateVarType(freshVar, arg2, storedSize);
+                                this->updateVarType(freshVar, arg2, arg2, storedSize);
                                 newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
                             }  
                             else {    
@@ -1268,9 +1257,9 @@ namespace smack{
                                 assert(storedExpr != nullptr);
                                 bool isPtr = usedPair.second;
                                 // update the variable
-                                this->updateExecStateEqualVarAndRhsArithExpr(freshVar, arg2, storedExpr, isPtr);
+                                this->updateBindingsEqualVarAndRhsArithExpr(freshVar, arg2, storedExpr, isPtr);
                                 // add type info
-                                this->updateVarType(freshVar, storedExpr, storedSize);
+                                this->updateVarType(freshVar, arg2, storedExpr, storedSize);
 
                                 // update new pure
                                 newPure = Expr::and_(newPure, Expr::eq(freshVar, storedExpr));
@@ -1303,16 +1292,16 @@ namespace smack{
                                 const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
                                 std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
                                 // update the equivalent classes
-                                this->updateExecStateEqualVarAndRhsVar(freshStoredVar, varArg2);
+                                this->updateBingdingsEqualVarAndRhsVar(freshStoredVar, varArg2);
                                 // add type info of fresh variable according to the var type
-                                this->updateVarType(freshStoredVar, varArg2, storedSize);
+                                this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
                                 // update newPure
                                 newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, varArg2));
                             } else if(arg2->isValue()){
                                 // update the equivalent classes
-                                this->updateExecStateEqualVarAndRhsValue(freshStoredVar, arg2);
+                                this->updateBindingsEqualVarAndRhsValue(freshStoredVar, arg2);
                                 //add type info to cfg
-                                this->updateVarType(freshStoredVar, arg2, storedSize);
+                                this->updateVarType(freshStoredVar, arg2, arg2, storedSize);
                                 newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, arg2));
                             }  
                             else {    
@@ -1325,9 +1314,9 @@ namespace smack{
                                 assert(storedExpr != nullptr);
                                 bool isPtr = usedPair.second;
                                 // update the variable
-                                this->updateExecStateEqualVarAndRhsArithExpr(freshStoredVar, arg2, storedExpr, isPtr);
+                                this->updateBindingsEqualVarAndRhsArithExpr(freshStoredVar, arg2, storedExpr, isPtr);
                                 // add type info
-                                this->updateVarType(freshStoredVar, storedExpr, storedSize);
+                                this->updateVarType(freshStoredVar, arg2, storedExpr, storedSize);
                                 // update new pure
                                 newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, storedExpr));
                             }
@@ -1405,16 +1394,16 @@ namespace smack{
                                 const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
                                 std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
                                 // update the equivalent classes
-                                this->updateExecStateEqualVarAndRhsVar(freshStoredVar, varArg2);
+                                this->updateBingdingsEqualVarAndRhsVar(freshStoredVar, varArg2);
                                 // add type info of fresh variable according to the var type
-                                this->updateVarType(freshStoredVar, varArg2, storedSize);
+                                this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
                                 // update newPure
                                 newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, varArg2));
                             } else if(arg2->isValue()){
                                 // update the equivalent classes
-                                this->updateExecStateEqualVarAndRhsValue(freshStoredVar, arg2);
+                                this->updateBindingsEqualVarAndRhsValue(freshStoredVar, arg2);
                                 //add type info to cfg
-                                this->updateVarType(freshStoredVar, arg2, storedSize);
+                                this->updateVarType(freshStoredVar, arg2, arg2, storedSize);
                                 newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, arg2));
                             }  
                             else {    
@@ -1427,9 +1416,9 @@ namespace smack{
                                 assert(storedExpr != nullptr);
                                 bool isPtr = usedPair.second;
                                 // update the variable
-                                this->updateExecStateEqualVarAndRhsArithExpr(freshStoredVar, arg2, storedExpr, isPtr);
+                                this->updateBindingsEqualVarAndRhsArithExpr(freshStoredVar, arg2, storedExpr, isPtr);
                                 // add type info
-                                this->updateVarType(freshStoredVar, storedExpr, storedSize);
+                                this->updateVarType(freshStoredVar, arg2, storedExpr, storedSize);
 
                                 // update new pure
                                 newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, storedExpr));
@@ -1461,7 +1450,6 @@ namespace smack{
                     else if(i->getBlkName().compare(mallocName) &&
                         SpatialLiteral::Kind::PT == i->getId() && 
                         currentIndex != modifyIndex){
-
                         currentIndex += 1;
                     } else {
                         newSpatial.push_back(i);
@@ -1520,16 +1508,16 @@ namespace smack{
                         const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
                         std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
                         // update the equivalent classes
-                        this->updateExecStateEqualVarAndRhsVar(freshVar, varArg2);
+                        this->updateBingdingsEqualVarAndRhsVar(freshVar, varArg2);
                         // add type info of fresh variable according to the var type
-                        this->updateVarType(freshVar, varArg2, storedSize);
+                        this->updateVarType(freshVar, varArg2, varArg2, storedSize);
                         // update newPure
                         newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
                     } else if(arg2->isValue()){
                         // update the equivalent classes
-                        this->updateExecStateEqualVarAndRhsValue(freshVar, arg2);
+                        this->updateBindingsEqualVarAndRhsValue(freshVar, arg2);
                         //add type info to cfg
-                        this->updateVarType(freshVar, arg2, storedSize);
+                        this->updateVarType(freshVar, arg2, arg2, storedSize);
                         newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
                     }  
                     else {    
@@ -1542,9 +1530,9 @@ namespace smack{
                         assert(storedExpr != nullptr);
                         bool isPtr = usedPair.second;
                         // update the variable
-                        this->updateExecStateEqualVarAndRhsArithExpr(freshVar, arg2, storedExpr, isPtr);
+                        this->updateBindingsEqualVarAndRhsArithExpr(freshVar, arg2, storedExpr, isPtr);
                         // add type info
-                        this->updateVarType(freshVar, storedExpr, storedSize);
+                        this->updateVarType(freshVar, arg2, storedExpr, storedSize);
 
                         // update new pure
                         newPure = Expr::and_(newPure, Expr::eq(freshVar, storedExpr));
@@ -1601,16 +1589,22 @@ namespace smack{
             std::string ldOrigPtrName;
             const VarExpr* ldPtr = nullptr;
             std::string ldPtrName;
-
             const Expr* loadedPosition = rhsFun->getArgs().back();
+            std::string mallocName;
+            int blkSize = -1;
+            int loadedOffset = -1;
+            int loadedSize = -1;
+
             if(loadedPosition->isVar()){
                 // if the loaded position is a variable
                 CFDEBUG(std::cout << "INFO: load varexpr " << loadedPosition << std::endl;);
                 ldOrigPtr = (const VarExpr*)loadedPosition;
                 ldOrigPtrName = ldOrigPtr->name();
-                ldPtr = this->varFactory->getVar(ldOrigPtrName);
-
-                ldPtrName = ldPtr->name();
+                ldPtr = this->getUsedVarAndName(ldOrigPtrName).first;
+                ldPtrName = this->getUsedVarAndName(ldOrigPtrName).second;
+                mallocName = this->varEquiv->getBlkName(ldPtrName);
+                blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+                loadedOffset = this->varEquiv->getOffset(ldPtrName);
                 CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
             } else if(loadedPosition->getType() == ExprType::FUNC){
                 // if the loaded position is a arithmetic expression
@@ -1620,41 +1614,30 @@ namespace smack{
                 // this is equivalent to add an assignment stmt before  the store stmt to make it a variable.
                 if(this->isPtrArithFuncName(loadedPositionFunc->name())){
                     // compute the stepSize information of the variable
-                    int extractedSize = this->parsePtrArithmeticStepSize(loadedPosition);
-                    const FunExpr* loadedPosFunc = (const FunExpr*)  loadedPosition;
-                    const VarExpr* freshVar = this->varFactory->getFreshVar(extractedSize);
-                    ldOrigPtr = freshVar;
-                    ldOrigPtrName = ldOrigPtr->name();
-                    ldPtr = freshVar;
-                    ldPtrName = ldPtr->name();
+                    CFDEBUG(std::cout << "INFO: loadedPosition is funcexpr" << std::endl;);
+                    const Expr* newPure = sh->getPure();
+                    std::pair<const VarExpr*, const Expr*> newLoadedVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(loadedPositionFunc, newPure);
+                    const VarExpr* freshLoadedVar = newLoadedVarPurePair.first;
+                    newPure = newLoadedVarPurePair.second;
+
+                    ldOrigPtr = freshLoadedVar;
+                    ldPtr = freshLoadedVar;
+                    ldOrigPtrName = freshLoadedVar->name();
+                    ldPtrName = freshLoadedVar->name();
+                    mallocName = this->varEquiv->getBlkName(ldPtrName);
+                    blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+                    loadedOffset = this->varEquiv->getOffset(ldPtrName);
                     CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
-                    // add new name
-                    this->varEquiv->addNewName(ldPtr->name());
-                    // add vartype
-                    this->cfg->addVarType(ldPtrName, "ref" +    std::to_string(8 * extractedSize));
-                    // add offset
-                    const Expr* simplifiedExpr = this->parsePtrArithmeticExpr(loadedPositionFunc, ldPtr->name());
-                    int offset = computeArithmeticOffsetValue(simplifiedExpr);
-                    this->varEquiv->addNewOffset(ldPtr->name(), offset);
+                    
                     // update the symbolic heap
                     SHExprPtr oldSh = sh;
-                    const Expr* newPure = Expr::and_(
-                        Expr::eq(simplifiedExpr, ldPtr),
-                        sh->getPure()
-                    );
                     sh = std::make_shared<SymbolicHeapExpr>(newPure, oldSh->getSpatialExpr());
                 }
             } else {
                 CFDEBUG(std::cout << "ERROR: UNSOLVED loaded position type " << loadedPosition << std::endl;);
             }
-            int loadPosOffset = this->varEquiv->getOffset(ldPtrName);
-            std::string mallocName = this->varEquiv->getBlkName(ldPtrName);
-            int blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
-            
-            if(!mallocName.compare("$Null")){
-                // if the loaded ptr is a null ptr
-                // If the ptr offset is overflow
-                std::list<const SpatialLiteral*> newSpatial;
+            loadedSize = this->parseLoadFuncSize(rhsFun->name());
+            if(!mallocName.compare("$Null")){ByteSize newSpatial;
                 // the symbolic heap is set to error
                 newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::NULL_REF));
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
@@ -1664,7 +1647,7 @@ namespace smack{
                 return newSH;
             }
 
-            if(loadPosOffset >= blkSize){
+            if(loadedOffset >= blkSize || loadedOffset + loadedSize > blkSize){
                 // If the ptr offset is overflow
                 std::list<const SpatialLiteral*> newSpatial;
                 // the symbolic heap is set to error
@@ -1675,16 +1658,24 @@ namespace smack{
                 return newSH;
             }
 
-            std::pair<bool, int> posResult = this->storeSplit->getOffsetPos(
-                mallocName,
-                loadPosOffset
-            );
-            CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
-            if(posResult.first){
+            
+            if(this->storeSplit->hasOffset(loadedOffset) || this->storeSplit->isInitialized(loadedOffset)){
                 // spt * blk * pt * blk * pt
                 //              1          2
                 //              2*1+1      2*2+1
-                
+                std::pair<bool, int> posResult = this->storeSplit->getOffsetPos(
+                    mallocName,
+                    loadedOffset
+                );
+                if(posResult.first){    
+                    int ptLength = 
+
+                } else if(this->storeSplit->isInitialized){
+
+                } else {
+                    CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);
+                }
+                CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
                 int loadIndex = 2*posResult.second + 1;
                 // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
                 bool startCounting = false;
@@ -1769,7 +1760,7 @@ namespace smack{
                 // This piece of code is related to executeStore
                 const Expr* arg1 = ldPtr;
                 const Expr* arg2 = freshVar;
-                int splitBlkIndex = this->storeSplit->addSplit(mallocName, loadPosOffset);
+                int splitBlkIndex = this->storeSplit->addSplit(mallocName, loadedOffset);
                 std::list<const SpatialLiteral*> newSpatial;
                 int currentIndex = 1;
                 for(const SpatialLiteral* i : sh->getSpatialExpr()){
@@ -1883,13 +1874,23 @@ namespace smack{
 
     // ---------------------- Utils for store execution
     int
-    BlockExecutor::extractStoreFuncSize(std::string funcName){
+    BlockExecutor::parseStoreFuncSize(std::string funcName){
         assert(funcName.find("$store.i") != std::string::npos);
         std::string prefix = "$store.i";
         std::string sizeStr = funcName.substr(prefix.size(), funcName.size() - prefix.size());
-        int storeByteSize = std::atoi(sizeStr.c_str());
-        assert(storeByteSize/8 > 0);
-        return storeByteSize/8;
+        int storeBitwidth = std::atoi(sizeStr.c_str());
+        assert(storeBitwidth/8 > 0);
+        return storeBitwidth/8;
+    }
+
+
+    int parseLoadFuncSize(std::string funcName){
+        assert(funcName.find("$load.i") != std::string::npos);
+        std::string prefix = "$store.i";
+        std::string sizeStr = funcName.substr(prefix.size(), funcName.size() - prefix.size());
+        int loadBitwidth = std::atoi(sizeStr.c_str());
+        assert(loadBitwidth/8 > 0);
+        return loadBitwidth/8;
     }
 
     
@@ -2189,14 +2190,14 @@ namespace smack{
     }
 
 
-    void BlockExecutor::updateVarType(const VarExpr* lhsVar, const Expr* rhs, int storedSize){
+    void BlockExecutor::updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs, int storedSize){
         // lhs and rhs are both used var
         if(rhs->isVar()){
             const VarExpr* rhsVar = (const VarExpr*) rhs;
             std::string lhsUsedVarName = lhsVar->name();
             std::string rhsUsedVarName = rhsVar->name();
             if(VarType::PTR == this->getVarType(rhsUsedVarName)){
-                this->setPtrVarStepSize(lhsUsedVarName, this->getStepSizeOfPtrVar(rhsUsedVarName) * 8);
+                this->setPtrVarStepSize(lhsUsedVarName, this->getStepSizeOfPtrVar(rhsUsedVarName));
             } else {
                 assert(storedSize > 0);
                 this->setDataVarBitwidth(lhsUsedVarName, 8 * storedSize);
@@ -2206,8 +2207,10 @@ namespace smack{
             assert(storedSize > 0);
             this->setDataVarBitwidth(lhsUsedVarName, 8 * storedSize);
         } else {
+            // rhs is original arithmetic expression
+            assert(ExprType::FUNC == rhs->getType());
             // rhsExpr is used var arithmetic
-            const Expr* storedExpr = rhs;
+            const Expr* storedExpr = usedRhs;
             // extractedPtrVar is a used var
             const VarExpr* extractedRhsVar = (const VarExpr*) (this->extractPtrArithmeticVar(storedExpr));
             if(nullptr == extractedRhsVar){
@@ -2217,13 +2220,13 @@ namespace smack{
             if(VarType::PTR == this->getVarType(extractedRhsVar->name())){
                 assert(extractedRhsVar != nullptr);
                 assert(VarType::PTR == this->getVarType(extractedRhsVar->name()));
-                int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
+                int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(rhs);
                 int extractedRhsStepSize = this->getStepSizeOfPtrVar(extractedRhsVar->name());
                 if(extractedRhsStepSize == 0){
                     int computedRhsStepSize = this->parsePtrArithmeticStepSize(rhs);
-                    this->setPtrVarStepSize(lhsVar->name(), computedRhsStepSize * 8);
+                    this->setPtrVarStepSize(lhsVar->name(), computedRhsStepSize);
                 } else {
-                    this->setPtrVarStepSize(lhsVar->name(), extractedRhsStepSize * 8);
+                    this->setPtrVarStepSize(lhsVar->name(), extractedRhsStepSize);
                 }
             } else {
                 // rhsExpr is used var data arithmetic
@@ -2232,7 +2235,7 @@ namespace smack{
         }
     }
 
-    void BlockExecutor::updateExecStateEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar){
+    void BlockExecutor::updateBingdingsEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar){
         assert(rhsVar->isVar());
         // lhs and rhs are both used vars
         const VarExpr* rhsUsedVar = (const VarExpr*) rhsVar;
@@ -2258,7 +2261,7 @@ namespace smack{
         }
     }
 
-    void BlockExecutor::updateExecStateEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal){
+    void BlockExecutor::updateBindingsEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal){
         assert(rhsVal->isValue());
         // lhs var is used var
         this->varEquiv->addNewName(lhsVar->name());
@@ -2268,7 +2271,7 @@ namespace smack{
 
     }
 
-    void BlockExecutor::updateExecStateEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr,  const Expr* storedExpr, bool isPtr){
+    void BlockExecutor::updateBindingsEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr,  const Expr* storedExpr, bool isPtr){
         // var and expressions are used, rhsExpr is old expression,  storedExpr is new expression
         if(!isPtr){
             this->varEquiv->addNewName(lhsVar->name());
@@ -2281,12 +2284,7 @@ namespace smack{
             assert(extractedRhsVar != nullptr);
             assert(VarType::PTR == this->getVarType(extractedRhsVar->name()));
             int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
-            int extractedRhsStepSize = this->getStepSizeOfPtrVar(extractedRhsVar->name());
             int extractedRhsPtrArithStepSize = this->parsePtrArithmeticStepSize(rhsExpr);
-            bool useArithmeticStepSize = false;
-            if(extractedRhsStepSize == 0){
-                useArithmeticStepSize = true;
-            }
 
             this->varEquiv->addNewName(lhsVar->name());
             if(this->varEquiv->hasBlkName(extractedRhsVar->name())){
@@ -2495,6 +2493,24 @@ namespace smack{
         return {usedVar, usedVarName};
     }
 
+    std::pair<const VarExpr*, const Expr*> BlockExecutor::updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, const Expr* oldPure){
+        assert(ExprType::FUNC == arg->getType());
+        const Expr* resultPure = oldPure;
+        const FunExpr* arithFuncExpr = (const FunExpr*) arg;
+        int extractedStepSize = this->parsePtrArithmeticStepSize(arg);
+        const VarExpr* freshVar = this->varFactory->getFreshVar(PTR_BYTEWIDTH);
+        std::pair<const Expr*, bool> parsedUsedExpr = this->getUsedArithExprAndVar(freshVar, arg);
+        assert(parsedUsedExpr.second);
+
+        this->updateBindingsEqualVarAndRhsArithExpr(freshVar, arg, parsedUsedExpr.first, parsedUsedExpr.second);
+        this->updateVarType(freshVar, arg, parsedUsedExpr.first, -1);
+        CFDEBUG(std::cout << "INFO: extracted size: " << extractedStepSize << std::endl;)
+        resultPure = Expr::and_(    
+            resultPure,
+            Expr::eq(freshVar, parsedUsedExpr.first)
+        );  
+        return {freshVar, resultPure};
+    }
 
     std::pair<const Expr*, bool> 
     BlockExecutor::getUsedArithExprAndVar

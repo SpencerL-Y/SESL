@@ -717,16 +717,21 @@ namespace smack {
         const Expr *from;
         const Expr *to;
         bool isEmptyBlk;
+        int blkByteSize;
     public:
-        BlkLit(const Expr *f, const Expr *t, std::string blkName, bool empty) : from(f), to(t) {
+        BlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize) : from(f), to(t), blkByteSize(byteSize) {
             setId(SpatialLiteral::Kind::BLK);
             setBlkName(blkName);
-            isEmptyBlk = empty;
+            if(byteSize == 0){
+                isEmptyBlk = true;
+            }
         }
 
         void print(std::ostream &os) const;
 
         bool isEmpty() const { return isEmptyBlk; }
+
+        int getBlkByteSize() const {return blkByteSize;}
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 

@@ -107,7 +107,7 @@ namespace smack{
             }
             // TODOsh: refactor to make it more compatible with varFactory
             if(lhsVarName.find("$M") != std::string::npos){
-                this->cfg->addVarType(lhsVarOrigName, "M" + std::to_string(8 * PTR_BYTEWIDTH));
+                this->cfg->addVarType(lhsVarOrigName, "ref" + std::to_string(8 * PTR_BYTEWIDTH));
             }
 
             if(ExprType::FUNC == rhs->getType()){
@@ -151,7 +151,7 @@ namespace smack{
                     assert(parsedResult.second);
                     const Expr* rhsExpr = parsedResult.first;
 
-                    this->updateBindingsEqualVarAndRhsArithExpr(lhsVar, rhsExpr, rhsExpr, true);
+                    this->updateBindingsEqualVarAndRhsArithExpr(lhsVar, rhsFun, rhsExpr, true);
 
                     // if(ExprType::BIN == rhsExpr->getType()){
                     //     const BinExpr* arithExpr = (const BinExpr*) rhsExpr;
@@ -540,7 +540,13 @@ namespace smack{
                 int lhsVal = this->computeArithmeticOffsetValue(lhsExpr);
                 int rhsVal = this->computeArithmeticOffsetValue(rhsExpr);
                 return lhsVal * rhsVal;
-            } 
+            } else if(BinExpr::Binary::Minus == binExpr->getOp()){
+                const Expr* lhsExpr =  binExpr->getLhs();
+                const Expr* rhsExpr = binExpr->getRhs();
+                int lhsVal = this->computeArithmeticOffsetValue(lhsExpr);
+                int rhsVal = this->computeArithmeticOffsetValue(rhsExpr);
+                return lhsVal - rhsVal;
+            }
             else {
                 CFDEBUG(std::cout << "ERROR: this should not happen " << expression << std::endl;);
                 return -1;
@@ -1144,7 +1150,7 @@ namespace smack{
         // compute the storedSize of the target pt predicate
         int storedSize = -1;
         // the lhs variable must be pointer variable representing the location
-        assert(VarType::PTR == this->getVarType(varArg1Name));
+        assert(VarType::PTR == this->getVarType(varArg1Name) || VarType::NIL == this->getVarType(varArg1Name));
         // step size obtained from getVarDetailType
         storedSize = this->getStepSizeOfPtrVar(varArg1Name);
         if(storedSize == 0){
@@ -1642,7 +1648,9 @@ namespace smack{
         } else {
             CFDEBUG(std::cout << "ERROR: UNSOLVED loaded position type " << loadedPosition << std::endl;);
         }
+        int stepSize = this->getStepSizeOfPtrVar(ldPtrName);
         loadedSize = this->parseLoadFuncSize(rhsFun->name());
+        
         if(!mallocName.compare("$Null")){
             // the symbolic heap is set to error
             std::list<const SpatialLiteral*> newSpatial;
@@ -1653,8 +1661,7 @@ namespace smack{
             CFDEBUG(std::cout << "INFERROR: load null ptr" << std::endl;);
             return newSH;
         }
-
-        if(loadedOffset >= blkSize || loadedOffset + loadedSize > blkSize){
+        if(loadedOffset >= blkSize || loadedOffset + loadedSize > blkSize || loadedOffset < 0){
             // If the ptr offset is overflow
             std::list<const SpatialLiteral*> newSpatial;
             // the symbolic heap is set to error
@@ -1664,7 +1671,7 @@ namespace smack{
             std::cout << std::endl;
             return newSH;
         }
-
+        CFDEBUG(std::cout << "INFO: loadedOffset: " << loadedOffset << " blkSize " << blkSize << " loadedSize " << loadedSize << std::endl;);
         // A.1.(1): the loaded is an exact load
         // A.1.(2): the loaded position has an offset, but the loadedSize  <  the stepSize of pt predicate
         // A.3.(2).1: the loaded position has an offset, but the loadedSize >  the steoSize of pt predicate
@@ -1834,10 +1841,10 @@ namespace smack{
             const Expr* newPure = sh->getPure();
             std::list<const SpatialLiteral*> newSpatial;
             int stepSize = this->getStepSizeOfPtrVar(lhsVarName);
-            loadedSize = stepSize;
-            if(loadedSize == 0){
-                loadedSize = (this->parseLoadFuncSize(rhsFun->name()) == 0) ? PTR_BYTEWIDTH : this->parseLoadFuncSize(rhsFun->name());
-                
+            if(stepSize == 0){
+                loadedSize = this->parseLoadFuncSize(rhsFun->name());
+            } else {
+                loadedSize = stepSize;
             }
             std::cout << "load size: " << loadedSize << std::endl;
             assert(loadedSize > 0);
@@ -1912,13 +1919,25 @@ namespace smack{
 
 
     int BlockExecutor::parseLoadFuncSize(std::string funcName){
-        assert(funcName.find("$load.i") != std::string::npos);
-        std::string prefix = "$load.i";
-        std::string sizeStr = funcName.substr(prefix.size(), funcName.size() - prefix.size());
-        CFDEBUG(std::cout << "INFO: load func suffix: " << sizeStr << std::endl;);
-        int loadBitwidth = std::atoi(sizeStr.c_str());
-        assert(loadBitwidth/8 > 0);
-        return loadBitwidth/8;
+        assert(funcName.find("$load.ref") != std::string::npos || 
+               funcName.find("$load.i") != std::string::npos);
+        if(funcName.find("$load.ref") != std::string::npos){
+            std::string prefix = "$load.ref";
+            CFDEBUG(std::cout << "INFO: load func suffix: " << PTR_BYTEWIDTH<< std::endl;);
+            return PTR_BYTEWIDTH;
+             
+        } else if(funcName.find("$load.i") != std::string::npos){
+
+            std::string prefix = "$load.i";
+            std::string sizeStr = funcName.substr(prefix.size(), funcName.size() - prefix.size());
+            int loadBitwidth = std::atoi(sizeStr.c_str());
+            assert(loadBitwidth/8 > 0);
+            return loadBitwidth/8;
+        } else {
+            HALT
+            return -1;
+        }
+        
     }
 
     
@@ -2178,6 +2197,9 @@ namespace smack{
     // ---------------- Execution Utilities
     VarType BlockExecutor::getVarType(std::string varName){
         // varName is used varname
+        if(!varName.compare("$Null")){
+            return VarType::NIL;
+        }
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
         std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(varOrigName);
         if(sizeInfo.first.find("ref") != std::string::npos){
@@ -2245,7 +2267,7 @@ namespace smack{
                 assert(storedSize > 0);
                 this->setDataVarBitwidth(lhsVar->name(), 8 * storedSize);
             }
-            if(VarType::PTR == this->getVarType(extractedRhsVar->name())){
+            else if(VarType::PTR == this->getVarType(extractedRhsVar->name())){
                 assert(extractedRhsVar != nullptr);
                 assert(VarType::PTR == this->getVarType(extractedRhsVar->name()));
                 int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(rhs);
@@ -2271,18 +2293,19 @@ namespace smack{
         std::string lhsUsedVarName = lhsVar->name();
         std::string rhsUsedVarName = rhsUsedVar->name();
 
+        CFDEBUG(std::cout << "INFO: Equal bindings " << lhsUsedVarName << " " << rhsUsedVarName << std::endl;);
+
         // update the equivalent classes
         this->varEquiv->linkName(lhsUsedVarName, rhsUsedVarName);
         if( this->varEquiv->hasBlkName(rhsUsedVarName)){
-            assert(VarType::PTR == this->getVarType(rhsUsedVarName));
+            assert(VarType::PTR == this->getVarType(rhsUsedVarName) || VarType::NIL == this->getVarType(rhsUsedVarName));
             this->varEquiv->linkBlkName(lhsUsedVarName, rhsUsedVarName);
         }
         if(this->varEquiv->getOffset(rhsUsedVarName) >= 0){
-            assert(VarType::PTR == this->getVarType(rhsUsedVarName));
+            assert(VarType::PTR == this->getVarType(rhsUsedVarName) || VarType::NIL == this->getVarType(rhsUsedVarName));
             this->varEquiv->addNewOffset(lhsUsedVarName, this->varEquiv->getOffset(rhsUsedVarName));
         }
         if(rhsUsedVar->translateToInt(this->varEquiv).first){
-            assert(VarType::DATA == this->getVarType(rhsUsedVarName));
             this->varEquiv->addNewVal(lhsUsedVarName, rhsUsedVar->translateToInt(this->varEquiv).second);
         }
     }
@@ -2308,7 +2331,9 @@ namespace smack{
             // extractedPtrVar is a used var
             const VarExpr* extractedRhsVar = (const VarExpr*) (this->extractPtrArithmeticVar(storedExpr));
             assert(extractedRhsVar != nullptr);
-            assert(VarType::PTR == this->getVarType(extractedRhsVar->name()));
+            assert(VarType::PTR == this->getVarType(extractedRhsVar->name()) ||
+                   VarType::NIL == this->getVarType(extractedRhsVar->name())
+            );
             int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
             int extractedRhsPtrArithStepSize = this->parsePtrArithmeticStepSize(rhsExpr);
 
@@ -2575,12 +2600,12 @@ namespace smack{
         // the second return whether it is a ptr arithmetic
         assert(ExprType::FUNC == originExpr->getType());
         const FunExpr* rhsFunExpr = (const FunExpr*) originExpr;
-        if(this->isBinaryArithFuncName(rhsFunExpr->name())){
-            const Expr* storedExpr = this->parseVarArithmeticExpr(rhsFunExpr);
-            return {storedExpr, false};
-        } else if(this->isPtrArithFuncName(rhsFunExpr->name())){
+        if(this->isPtrArithFuncName(rhsFunExpr->name())){
             const Expr* storedExpr = this->parsePtrArithmeticExpr(rhsFunExpr, lhsVar->name());
             return {storedExpr, true};
+        } else if(this->isBinaryArithFuncName(rhsFunExpr->name())){
+            const Expr* storedExpr = this->parseVarArithmeticExpr(rhsFunExpr);
+            return {storedExpr, false};
         } else {
             return {nullptr, false};
         }
@@ -2650,7 +2675,8 @@ namespace smack{
         const Expr* oldBlkTo = oldBlkLit->getTo();
         int oldBlkToOffset = this->computeArithmeticOffsetValue(oldBlkTo);
         assert(from->isVar());
-        assert(this->getVarType(from->name()) == VarType::PTR);
+        assert(this->getVarType(from->name()) == VarType::PTR ||
+               this->getVarType(from->name()) == VarType::NIL);
         int ptFromOffset = this->varEquiv->getOffset(from->name());
         assert(ptFromOffset >= oldBlkFromOffset && ptFromOffset < oldBlkToOffset);
         this->storeSplit->addSplit(mallocName, ptFromOffset);

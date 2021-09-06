@@ -29,7 +29,8 @@ namespace smack{
     using llvm::errs;
     enum VarType {
         PTR,
-        DATA
+        DATA,
+        NIL
     };
 
     class BlockExecutor {

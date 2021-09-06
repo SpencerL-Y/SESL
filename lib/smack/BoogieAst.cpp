@@ -1127,7 +1127,15 @@ namespace smack {
     }
 
     void PtLit::print(std::ostream &os) const {
-        os << from << " >--> " << to;
+        if(!this->isByteLevel()){
+            os << from << " >--> " << to;
+        } else {
+            os << from << " >--> " << to << " {";
+            for(const BytePt* bpt : this->getBytifiedPts()){
+                bpt->print(os);
+            }
+            os << "} ";
+        }
     }
 
     z3::expr PtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {

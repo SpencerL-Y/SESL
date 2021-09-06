@@ -77,7 +77,7 @@ namespace smack
            pointsToBlkMap.find(blkname) != pointsToBlkMap.end()){
             pointsToBlkMap[newname] = pointsToBlkMap[blkname];
         } else {
-            CFDEBUG(std::cout << "ERROR: VarEquiv new blk name exists " <<  newname << " " << blkname << " "  << (pointsToBlkMap.find(newname) == pointsToBlkMap.end()) << " " << (pointsToBlkMap.find(blkname) != pointsToBlkMap.end()) << std::endl);
+            CFDEBUG(std::cout << "WARNING: VarEquiv new blk name exists " <<  newname << " " << blkname << " "  << (pointsToBlkMap.find(newname) == pointsToBlkMap.end()) << " " << (pointsToBlkMap.find(blkname) != pointsToBlkMap.end()) << std::endl);
         }
     }
 

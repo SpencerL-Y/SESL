@@ -1131,7 +1131,7 @@ namespace smack {
     }
 
     z3::expr PtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
-        if(this->isByteLevel()){
+        if(!this->isByteLevel()){
             // if the pt predicate is not bytified, old logic as usual
             assert(this->getFrom()->isVar() && this->getTo()->isVar());
             const VarExpr *fromVar = (const VarExpr *) this->getFrom();

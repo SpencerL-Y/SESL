@@ -56,6 +56,7 @@ namespace smack{
         void setDataVarBitwidth(std::string varName, int bitWidth);
         void setPtrVarStepSize(std::string varName, int stepSize);
         std::pair<const VarExpr*, std::string> getUsedVarAndName(std::string origVarName);
+        std::pair<const VarExpr*, std::string> useVarAndName(std::string origVarName);
 
         // ----------------- Byte Variable Utilities
         // << HIGH LEVEL METHODS >>
@@ -118,7 +119,7 @@ namespace smack{
         std::pair<const VarExpr*, const Expr*> updateLoadBytifiedPtPredicatePartial(const PtLit* oldPt, int offset, int length, const Expr* oldPure);
         
         void updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs, int storedSize);
-        void updateBingdingsEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar);
+        void updateBindingsEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar);
         void updateBindingsEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal);
         void updateBindingsEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr, const Expr* storedExpr, bool isPtr);   
 

@@ -134,10 +134,9 @@ int main(void)
 {
    
 	int *a = (int *)malloc(sizeof(int*));
-	*a = (int *)malloc(sizeof(int));
+	*a = 10;
 	char* b = (char*) a;
-	int* c = *b;
-   int d = *c;
-   free(a);
+	int c = *b;
+    //free(b);
 }
 

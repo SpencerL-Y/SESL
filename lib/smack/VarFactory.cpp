@@ -22,8 +22,10 @@ namespace smack
         if(name.find("$0.ref") != std::string::npos){
             return this->nullVar;
         }
+        if(name.find("$fresh") != std::string::npos){
+            return this->freshVarInstances[name];
+        }
         // static complex var
-        
         std::string bb_repeat_str = "_bb";
         if(this->varsMap.find(name) == this->varsMap.end()){
             CFDEBUG(std::cout << "WARNING: This is not correct use, please check, getVar after useVar" << std::endl;);
@@ -50,6 +52,7 @@ namespace smack
         const VarExpr* fresh = new VarExpr("$fresh" + std::to_string(freshIndex));
         this->varNameRestoreMap[fresh->name()] = fresh->name();
         this->freshVar2Byte[fresh] = byteSize;
+        this->freshVarInstances[fresh->name()] = fresh;
         this->freshIndex++;
         return fresh;
     } 

@@ -78,7 +78,7 @@ namespace smack{
     }
     // ---------------------- Execution for Assign stmts ---------------
     SHExprPtr BlockExecutor::executeAssign(SHExprPtr sh, const Stmt* assignStmt){
-        if(Stmt::ASSIGN == assignStmt->getKind()){
+        assert(Stmt::ASSIGN == assignStmt->getKind());
             const AssignStmt* stmt = (const AssignStmt*) assignStmt;
             //TODOsh : here the assignment is restricted to the single assignment, may cause problem for boogie assignment.
             const Expr* lhs = stmt->getLhs().front();
@@ -98,10 +98,12 @@ namespace smack{
                 lhsOrigVar = (const VarExpr* ) lhs;
                 lhsVarOrigName = lhsOrigVar->name();
                 // create a new lhs variable in varFactory
-                lhsVar = this->varFactory->useVar(lhsVarOrigName);
-                lhsVarName = lhsVar->name();
+                std::pair<const VarExpr*, std::string> usedVarNamePair = this->useVarAndName(lhsVarOrigName);
+                lhsVar = usedVarNamePair.first;
+                lhsVarName = usedVarNamePair.second;
             } else {
                 CFDEBUG(std::cout << "ERROR: This should not happen.");
+                assert(false);
             }
             // TODOsh: refactor to make it more compatible with varFactory
             if(lhsVarName.find("$M") != std::string::npos){
@@ -126,15 +128,7 @@ namespace smack{
                         const VarExpr* rhsVar = this->varFactory->getVar(rhsOrigVarName);
                         std::string rhsVarName = rhsVar->name();
 
-
-                        this->varEquiv->linkName(lhsVarName, rhsVarName);
-                        this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
-                        if(this->varEquiv->getOffset(rhsVarName) >= 0){
-                            this->varEquiv->addNewOffset(
-                                lhsVarName, 
-                                this->varEquiv->getOffset(rhsVarName)
-                            );
-                        }
+                        this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
                         
                         const Expr* varEquality = Expr::eq(
                             lhsVar,
@@ -153,45 +147,49 @@ namespace smack{
                     }
                 } else if(this->isPtrArithFuncName(rhsFun->name())){
                     CFDEBUG(std::cout << "ASSIGN: rhs ptr arithmetic" << std::endl;);
-                    const Expr* rhsExpr = this->parsePtrArithmeticExpr(rhsFun, lhsVarName);
+                    std::pair<const Expr*, bool> parsedResult = this->getUsedArithExprAndVar(lhsVar, rhsFun);
+                    assert(parsedResult.second);
+                    const Expr* rhsExpr = parsedResult.first;
 
-                    if(ExprType::BIN == rhsExpr->getType()){
-                        const BinExpr* arithExpr = (const BinExpr*) rhsExpr;
-                        if(BinExpr::Binary::Plus == arithExpr->getOp()){
-                            const Expr* arithLhs = arithExpr->getLhs();
-                            const Expr* arithRhs = arithExpr->getRhs();
-                            if(arithLhs->isVar()){
-                                // This is for normal ptr arithmetic
-                                // normal ptr arithmetic is of the form
-                                // $p1 = $p0 + arithRhs
-                                const VarExpr* ptrVar = (const VarExpr*) arithLhs;
-                                int lhsOffset = this->varEquiv->getOffset(ptrVar->name());
-                                int rhsOffset = 0;
-                                assert(lhsOffset >= 0);
-                                auto rhsComputeResult = arithRhs->translateToInt(this->varEquiv);
-                                if(rhsComputeResult.first){
-                                    rhsOffset = rhsComputeResult.second;
-                                    this->varEquiv->addNewOffset(lhsVarName, (lhsOffset + rhsOffset));
-                                } else {
-                                    CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET 1!!!" << std::endl; rhsExpr->print(std::cout););
-                                }
-                            } else {
-                                // For other ptr arithmetic like struct and array
-                                int offsetVal = this->computeArithmeticOffsetValue(rhsExpr);
-                                const Expr* extractedExpr = this->extractPtrArithmeticVar(rhsExpr);
-                                assert(extractedExpr->isVar());
-                                const VarExpr* ptrVar = (const VarExpr*)extractedExpr;
-                                std::string ptrVarName = ptrVar->name();
-                                this->varEquiv->addNewOffset(lhsVarName, offsetVal);
-                            }
-                        }
-                    } else {
-                        CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET !!!" << std::endl; rhsExpr->print(std::cout));
-                    }
+                    this->updateBindingsEqualVarAndRhsArithExpr(lhsVar, rhsExpr, rhsExpr, true);
 
-                    this->varEquiv->addNewName(lhsVarName);
+                    // if(ExprType::BIN == rhsExpr->getType()){
+                    //     const BinExpr* arithExpr = (const BinExpr*) rhsExpr;
+                    //     if(BinExpr::Binary::Plus == arithExpr->getOp()){
+                    //         const Expr* arithLhs = arithExpr->getLhs();
+                    //         const Expr* arithRhs = arithExpr->getRhs();
+                    //         if(arithLhs->isVar()){
+                    //             // This is for normal ptr arithmetic
+                    //             // normal ptr arithmetic is of the form
+                    //             // $p1 = $p0 + arithRhs
+                    //             const VarExpr* ptrVar = (const VarExpr*) arithLhs;
+                    //             int lhsOffset = this->varEquiv->getOffset(ptrVar->name());
+                    //             int rhsOffset = 0;
+                    //             assert(lhsOffset >= 0);
+                    //             auto rhsComputeResult = arithRhs->translateToInt(this->varEquiv);
+                    //             if(rhsComputeResult.first){
+                    //                 rhsOffset = rhsComputeResult.second;
+                    //                 this->varEquiv->addNewOffset(lhsVarName, (lhsOffset + rhsOffset));
+                    //             } else {
+                    //                 CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET 1!!!" << std::endl; rhsExpr->print(std::cout););
+                    //             }
+                    //         } else {
+                    //             // For other ptr arithmetic like struct and array
+                    //             int offsetVal = this->computeArithmeticOffsetValue(rhsExpr);
+                    //             const Expr* extractedExpr = this->extractPtrArithmeticVar(rhsExpr);
+                    //             assert(extractedExpr->isVar());
+                    //             const VarExpr* ptrVar = (const VarExpr*)extractedExpr;
+                    //             std::string ptrVarName = ptrVar->name();
+                    //             this->varEquiv->addNewOffset(lhsVarName, offsetVal);
+                    //         }
+                    //     }
+                    // } else {
+                    //     CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET !!!" << std::endl; rhsExpr->print(std::cout));
+                    // }
+
+                    // this->varEquiv->addNewName(lhsVarName);
                     const Expr* varEquality = Expr::eq(
-                        this->varFactory->getVar(lhsVarOrigName),
+                        lhsVar,
                         rhsExpr
                     );
                     SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
@@ -206,12 +204,13 @@ namespace smack{
                     CFDEBUG(std::cout << "Arg1 Type: " << arg1->getType() << std::endl);
                     
                     if(arg1->isValue()){
-                        this->varEquiv->addNewName(lhsVarName);
-                        if(ExprType::INT ==  arg1->getType()){
-                            const IntLit* intValExpr =(const IntLit*)arg1;
-                            this->varEquiv->addNewVal(lhsVarName, intValExpr->getVal());
-                        }
-                        const Expr* valEquality = Expr::eq(this->varFactory->getVar(lhsVarOrigName), arg1);
+                        this->updateBindingsEqualVarAndRhsValue(lhsVar, arg1);
+                        // this->varEquiv->addNewName(lhsVarName);
+                        // if(ExprType::INT ==  arg1->getType()){
+                        //     const IntLit* intValExpr =(const IntLit*)arg1;
+                        //     this->varEquiv->addNewVal(lhsVarName, intValExpr->getVal());
+                        // }
+                        const Expr* valEquality = Expr::eq(lhsVar, arg1);
                         SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, valEquality);
                         newSH->print(std::cout);
                         CFDEBUG(std::cout << std::endl);
@@ -221,15 +220,16 @@ namespace smack{
                         const VarExpr* rhsOrigVar = (const VarExpr*) arg1;
                         std::string rhsOrigVarName = rhsOrigVar->name();
                         // var get after dealing with the repeating
-                        const VarExpr* rhsVar = this->varFactory->getVar(rhsOrigVarName);
-                        std::string rhsVarName = rhsVar->name();
+                        const VarExpr* rhsVar = this->getUsedVarAndName(rhsOrigVarName).first;
+                        std::string rhsVarName = this->getUsedVarAndName(rhsOrigVarName).second;
+                        this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
 
-                        varEquiv->linkName(lhsVarName, rhsVarName);
-                        // if the int value can be computed, update the link 
-                        if(this->varEquiv->getIntVal(rhsVar->name()).first){
-                            const IntLit* intValExpr = (const IntLit*) arg1;
-                            this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
-                        }
+                        // varEquiv->linkName(lhsVarName, rhsVarName);
+                        // // if the int value can be computed, update the link 
+                        // if(this->varEquiv->getIntVal(rhsVar->name()).first){
+                        //     const IntLit* intValExpr = (const IntLit*) arg1;
+                        //     this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
+                        // }
                         const Expr* varEquality = Expr::eq(
                             this->varFactory->getVar(lhsVarOrigName),
                             this->varFactory->getVar(rhsOrigVarName)
@@ -249,7 +249,7 @@ namespace smack{
                 } else if(this->isBinaryArithFuncName(rhsFun->name())){
                     CFDEBUG(std::cout << "ASSIGN: rhs binary arithmetic" << std::endl;);
                     this->varEquiv->addNewName(lhsVarName);
-                    
+
                     const Expr* rhsExpr = this->parseVarArithmeticExpr(rhsFun);
                     CFDEBUG(std::cout << "RIGHT HAND SIDE ARITHMETIC FORMULA: " << rhsFun << std::endl;rhsExpr->print(std::cout);std::cout << std::endl;);
                     
@@ -329,25 +329,30 @@ namespace smack{
                     CFDEBUG(std::cout << "INFO: RHS is Var" << std::endl;);
                     const VarExpr* rhsOrigVar = (const VarExpr*) rhs;
                     std::string rhsOrigVarName = rhsOrigVar->name();
-                    const VarExpr* rhsVar = this->varFactory->getVar(rhsOrigVarName);
-                    std::string rhsVarName = rhsVar->name();
-                    auto computeIntResult = rhsVar->translateToInt(this->varEquiv);
-                    if(computeIntResult.first){
-                        this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
-                    } else {
-                        CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
-                    }
-                    const Expr* eq = Expr::eq(
-                        this->varFactory->getVar(lhsVarOrigName),
-                        this->varFactory->getVar(rhsOrigVarName)
-                    );
+                    const VarExpr* rhsVar = this->getUsedVarAndName(rhsOrigVarName).first;
+                    std::string rhsVarName = this->getUsedVarAndName(rhsOrigVarName).second;
+
+                    this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
+                    // auto computeIntResult = rhsVar->translateToInt(this->varEquiv);
+                    // if(computeIntResult.first){
+                    //     this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
+                    // } else {
+                    //     CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
+                    // }
+                    // const Expr* eq = Expr::eq(
+                    //     this->varFactory->getVar(lhsVarOrigName),
+                    //     this->varFactory->getVar(rhsOrigVarName)
+                    // );
                    
-                    this->varEquiv->linkName(lhsVarName, rhsVarName);
-                    if(this->isPtrVar(rhsOrigVarName) || this->isPtrVar(lhsVarOrigName)){
-                        this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
-                        this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(rhsVarName));
-                    }
-                    
+                    // this->varEquiv->linkName(lhsVarName, rhsVarName);
+                    // if(this->isPtrVar(rhsOrigVarName) || this->isPtrVar(lhsVarOrigName)){
+                    //     this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
+                    //     this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(rhsVarName));
+                    // }
+                    const Expr* eq = Expr::eq(
+                        lhsVar,
+                        rhsVar
+                    );
                     const Expr* newPure = Expr::and_(
                         sh->getPure(),
                         eq
@@ -379,10 +384,7 @@ namespace smack{
                     return newSH;
                 }
             }
-        } else {
-            CFDEBUG(std::cout << "ERROR: stmt type error" << std::endl);
-            return sh;
-        }
+        
         return sh;
     }
 
@@ -1235,7 +1237,7 @@ namespace smack{
                                 const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
                                 std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
                                 // update the equivalent classes
-                                this->updateBingdingsEqualVarAndRhsVar(freshVar, varArg2);
+                                this->updateBindingsEqualVarAndRhsVar(freshVar, varArg2);
                                 // add type info of fresh variable according to the var type
                                 this->updateVarType(freshVar, varArg2, varArg2, storedSize);
                                 // update newPure
@@ -1292,7 +1294,7 @@ namespace smack{
                                 const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
                                 std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
                                 // update the equivalent classes
-                                this->updateBingdingsEqualVarAndRhsVar(freshStoredVar, varArg2);
+                                this->updateBindingsEqualVarAndRhsVar(freshStoredVar, varArg2);
                                 // add type info of fresh variable according to the var type
                                 this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
                                 // update newPure
@@ -1394,7 +1396,7 @@ namespace smack{
                                 const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
                                 std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
                                 // update the equivalent classes
-                                this->updateBingdingsEqualVarAndRhsVar(freshStoredVar, varArg2);
+                                this->updateBindingsEqualVarAndRhsVar(freshStoredVar, varArg2);
                                 // add type info of fresh variable according to the var type
                                 this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
                                 // update newPure
@@ -1508,7 +1510,7 @@ namespace smack{
                         const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
                         std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
                         // update the equivalent classes
-                        this->updateBingdingsEqualVarAndRhsVar(freshVar, varArg2);
+                        this->updateBindingsEqualVarAndRhsVar(freshVar, varArg2);
                         // add type info of fresh variable according to the var type
                         this->updateVarType(freshVar, varArg2, varArg2, storedSize);
                         // update newPure
@@ -1708,7 +1710,7 @@ namespace smack{
                             CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
                             if(loadedSize == this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
                                 // Situation A.1.(1)
-                                this->updateBingdingsEqualVarAndRhsVar(lhsVar, toExprVar);
+                                this->updateBindingsEqualVarAndRhsVar(lhsVar, toExprVar);
                                 newPure = Expr::and_(newPure, Expr::eq(lhsVar, toExprVar));
                                    
                                 const Expr* newPure = Expr::and_(
@@ -1723,16 +1725,17 @@ namespace smack{
                                 // Situation A.1.(2)
                                 if(pt->isByteLevel()){
                                     std::pair<const VarExpr*, const Expr*> newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
-                                    this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedVarPurePair.first);
+                                    this->updateBindingsEqualVarAndRhsVar(lhsVar, newLoadedVarPurePair.first);
                                     newPure = newLoadedVarPurePair.second;
                                     newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedVarPurePair.first));
                                     newSpatial.push_back(spl);  
                                 } else {
                                     std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
-                                    newSpatial.push_back(newPtPurePair.first);
+                                    const PtLit* newPt = newPtPurePair.first;
+                                    newSpatial.push_back(newPt);
                                     newPure = newPtPurePair.second;
-                                    std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair = this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
-                                    this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
+                                    std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair = this->updateLoadBytifiedPtPredicatePartial(newPt, 0, loadedSize, newPure);
+                                    this->updateBindingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
                                     newPure = newLoadedvarPurePair.second;
                                     newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedvarPurePair.first));
                                 }
@@ -1784,7 +1787,7 @@ namespace smack{
                                 CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
                                 if(pt->isByteLevel()){
                                     std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                    this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
+                                    this->updateBindingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
                                     newPure = newLoadedvarPurePair.second;
                                     newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedvarPurePair.first));
                                     newSpatial.push_back(spl);
@@ -1793,7 +1796,7 @@ namespace smack{
                                     newSpatial.push_back(newPtPurePair.first);
                                     newPure = newPtPurePair.second;
                                     std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                    this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
+                                    this->updateBindingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
                                     newPure = newLoadedvarPurePair.second;
                                     newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedvarPurePair.first));
                                 }
@@ -1910,8 +1913,9 @@ namespace smack{
 
     int BlockExecutor::parseLoadFuncSize(std::string funcName){
         assert(funcName.find("$load.i") != std::string::npos);
-        std::string prefix = "$store.i";
+        std::string prefix = "$load.i";
         std::string sizeStr = funcName.substr(prefix.size(), funcName.size() - prefix.size());
+        CFDEBUG(std::cout << "INFO: load func suffix: " << sizeStr << std::endl;);
         int loadBitwidth = std::atoi(sizeStr.c_str());
         assert(loadBitwidth/8 > 0);
         return loadBitwidth/8;
@@ -2186,7 +2190,7 @@ namespace smack{
     int BlockExecutor::getBitwidthOfDataVar(std::string varName){
         // varName is used varname
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
-        assert(VarType::DATA == this->getVarType(varOrigName));
+        assert(VarType::DATA == this->getVarType(varName));
         std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(varOrigName);
         assert(sizeInfo.second > 0);
         return sizeInfo.second;
@@ -2259,24 +2263,22 @@ namespace smack{
         }
     }
 
-    void BlockExecutor::updateBingdingsEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar){
+    void BlockExecutor::updateBindingsEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar){
         assert(rhsVar->isVar());
         // lhs and rhs are both used vars
         const VarExpr* rhsUsedVar = (const VarExpr*) rhsVar;
 
         std::string lhsUsedVarName = lhsVar->name();
         std::string rhsUsedVarName = rhsUsedVar->name();
-        std::string lhsOrigVarName = this->varFactory->getOrigVarName(lhsUsedVarName);
-        std::string rhsOrigVarName = this->varFactory->getOrigVarName(rhsUsedVarName);
 
         // update the equivalent classes
         this->varEquiv->linkName(lhsUsedVarName, rhsUsedVarName);
         if( this->varEquiv->hasBlkName(rhsUsedVarName)){
-            assert(VarType::PTR == this->getVarType(rhsOrigVarName));
+            assert(VarType::PTR == this->getVarType(rhsUsedVarName));
             this->varEquiv->linkBlkName(lhsUsedVarName, rhsUsedVarName);
         }
         if(this->varEquiv->getOffset(rhsUsedVarName) >= 0){
-            assert(VarType::PTR == this->getVarType(rhsOrigVarName));
+            assert(VarType::PTR == this->getVarType(rhsUsedVarName));
             this->varEquiv->addNewOffset(lhsUsedVarName, this->varEquiv->getOffset(rhsUsedVarName));
         }
         if(rhsUsedVar->translateToInt(this->varEquiv).first){
@@ -2538,6 +2540,13 @@ namespace smack{
         const VarExpr* usedVar = this->varFactory->getVar(origVarName);
         std::string usedVarName = usedVar->name();
         return {usedVar, usedVarName};
+    }
+
+
+    std::pair<const VarExpr*, std::string> BlockExecutor::useVarAndName(std::string origVarName){
+        const VarExpr* newUsedVar = this->varFactory->useVar(origVarName);
+        std::string newUsedVarName = newUsedVar->name();
+        return {newUsedVar, newUsedVarName};
     }
 
     std::pair<const VarExpr*, const Expr*> BlockExecutor::updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, const Expr* oldPure){

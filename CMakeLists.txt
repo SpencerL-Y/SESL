@@ -216,6 +216,7 @@ include(AddLLVM)
 include(HandleLLVMOptions)
 # Add Z3 to do the symbolic execution on separation logic
 find_package(Z3 REQUIRED CONFIG)
+message(STATUS "Z3DIR: ${CMAKE_PREFIX_PATH}")
 message(STATUS "Z3_FOUND: ${Z3_FOUND}" )
 message(STATUS "Found Z3: ${Z3_VERSION_STRING}")
 include_directories (${Z3_CXX_INCLUDE_DIRS})

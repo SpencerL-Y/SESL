@@ -96,7 +96,9 @@ namespace smack{
         // ------------------ Symbolic Heap Utilities
         const SpatialLiteral* createPtAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize);
         const SpatialLiteral* createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts);
-        const SpatialLiteral* createBlkAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize);
+        const SpatialLiteral* createBlkAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int byteSize);
+        std::list<const SpatialLiteral*> splitBlkByCreatingPt(std::string mallocName, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
+        std::list<const SpatialLiteral*> bytifySpatialList(std::vector<const SpatialLiteral*> oldSpatialVec, const Expr* oldPure);
 
 
         // ------------------ Execution Utilities

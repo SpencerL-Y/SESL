@@ -55,7 +55,7 @@ namespace smack{
                 blkSize,
                 staticVarName
             );
-            bool empty = (allocSize > 0) ? false : true;
+            // bool empty = (allocSize > 0) ? false : true;
 
             const SpatialLiteral* sAllocBlk = SpatialLiteral::gcBlk(
                 staticVar,
@@ -64,7 +64,7 @@ namespace smack{
                     blkSize
                 ),
                 staticVarName,
-                empty
+                allocSize
             );
 
             newSpatialExpr.push_back(sSizePt);
@@ -935,8 +935,8 @@ namespace smack{
                     this->varFactory->getVar(paramOrigVarName),
                     retVarName
                 ); 
-                bool empty = (paramVar->translateToInt(this->varEquiv).second > 0) ? false : true;
-
+                // bool empty = (paramVar->translateToInt(this->varEquiv).second > 0) ? false : true;
+                int blkSize = paramVar->translateToInt(this->varEquiv).second;
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
                     this->varFactory->getVar(retOrigVarName),
                     Expr::add(
@@ -944,7 +944,7 @@ namespace smack{
                         this->varFactory->getVar(paramOrigVarName)
                     ),
                     retVarName,
-                    empty
+                    blkSize
                 );
 
                 newSpatialExpr.push_back(sizePt);
@@ -973,8 +973,9 @@ namespace smack{
                     sizeExpr,
                     retVarName
                 );
-                bool empty = (sizeExpr->translateToInt(this->varEquiv).second == 0) ? true : false;
+                // bool empty = (sizeExpr->translateToInt(this->varEquiv).second == 0) ? true : false;
                 
+                int blkSize = param->translateToInt(this->varEquiv).second;
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
                     this->varFactory->getVar(retOrigVarName),
                     Expr::add(
@@ -982,7 +983,7 @@ namespace smack{
                         sizeExpr
                     ),
                     retVarName,
-                    empty
+                    blkSize
                 );
                 newSpatialExpr.push_back(sizePt);
                 newSpatialExpr.push_back(allocBlk);
@@ -1539,24 +1540,26 @@ namespace smack{
                     // modify the spatial literals
                     
                     // compute whether the left blk is empty after breaking the blk
-                    bool leftEmpty = (this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
+                    // bool leftEmpty = (this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
+                    int leftBlkSize = this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom());
                     const SpatialLiteral* leftBlk = SpatialLiteral::gcBlk(
                         breakBlk->getFrom(),
                         varArg1,
                         breakBlk->getBlkName(),
-                        leftEmpty
+                        leftBlkSize
                     );
 
                     const SpatialLiteral* storedPt = this->createPtAccordingToMallocName(mallocName, varArg1, freshVar, storedSize);
 
                     CFDEBUG(std::cout << "Store type: " << arg2TypeStr << " Store stepsize: " << storedSize << std::endl;);
                     long long size = storedSize;
-                    bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
+                    // bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
+                    int rightBlkSize = this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo());
                     const SpatialLiteral* rightBlk = SpatialLiteral::gcBlk(
                         Expr::add(varArg1, Expr::lit(size)),
                         breakBlk->getTo(),
                         breakBlk->getBlkName(),
-                        rightEmpty
+                        rightBlkSize
                     );
                     newSpatial.push_back(leftBlk);
                     newSpatial.push_back(storedPt);
@@ -1582,406 +1585,315 @@ namespace smack{
     SHExprPtr
     BlockExecutor::executeLoad
     (SHExprPtr sh, std::string lhsVarName, std::string lhsVarOrigName, const FunExpr* rhsFun){ 
-        if(rhsFun->name().find("$load") != std::string::npos){
-            // use ldPtr to store the position of load instruction
-            const VarExpr* ldOrigPtr = nullptr;
-            std::string ldOrigPtrName;
-            const VarExpr* ldPtr = nullptr;
-            std::string ldPtrName;
-            const VarExpr* lhsVar = this->getUsedVarAndName(lhsVarOrigName).first;
-            std::string  lhsVarName = this->getUsedVarAndName(lhsVarOrigName).second;
-            const Expr* loadedPosition = rhsFun->getArgs().back();
-            std::string mallocName;
-            int blkSize = -1;
-            int loadedOffset = -1;
-            int loadedSize = -1;
+        assert(rhsFun->name().find("$load") != std::string::npos);
+        // use ldPtr to store the position of load instruction
+        const VarExpr* ldOrigPtr = nullptr;
+        std::string ldOrigPtrName;
+        const VarExpr* ldPtr = nullptr;
+        std::string ldPtrName;
+        const VarExpr* lhsVar = this->getUsedVarAndName(lhsVarOrigName).first;
+        //std::string  lhsVarName = this->getUsedVarAndName(lhsVarOrigName).second;
+        const Expr* loadedPosition = rhsFun->getArgs().back();
+        std::string mallocName;
+        int blkSize = -1;
+        int loadedOffset = -1;
+        int loadedSize = -1;
 
-            if(loadedPosition->isVar()){
-                // if the loaded position is a variable
-                CFDEBUG(std::cout << "INFO: load varexpr " << loadedPosition << std::endl;);
-                ldOrigPtr = (const VarExpr*)loadedPosition;
-                ldOrigPtrName = ldOrigPtr->name();
-                ldPtr = this->getUsedVarAndName(ldOrigPtrName).first;
-                ldPtrName = this->getUsedVarAndName(ldOrigPtrName).second;
+        if(loadedPosition->isVar()){
+            // if the loaded position is a variable
+            CFDEBUG(std::cout << "INFO: load varexpr " << loadedPosition << std::endl;);
+            ldOrigPtr = (const VarExpr*)loadedPosition;
+            ldOrigPtrName = ldOrigPtr->name();
+            ldPtr = this->getUsedVarAndName(ldOrigPtrName).first;
+            ldPtrName = this->getUsedVarAndName(ldOrigPtrName).second;
+            mallocName = this->varEquiv->getBlkName(ldPtrName);
+            blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+            loadedOffset = this->varEquiv->getOffset(ldPtrName);
+            CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
+        } else if(loadedPosition->getType() == ExprType::FUNC){
+            // if the loaded position is a arithmetic expression
+            CFDEBUG(std::cout << "INFO: load funcexpr " << loadedPosition << std::endl;);
+            const FunExpr* loadedPositionFunc = (const FunExpr*) loadedPosition;
+
+            // this is equivalent to add an assignment stmt before  the store stmt to make it a variable.
+            if(this->isPtrArithFuncName(loadedPositionFunc->name())){
+                // compute the stepSize information of the variable
+                CFDEBUG(std::cout << "INFO: loadedPosition is funcexpr" << std::endl;);
+                const Expr* newPure = sh->getPure();
+                std::pair<const VarExpr*, const Expr*> newLoadedVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(loadedPositionFunc, newPure);
+                const VarExpr* freshLoadedVar = newLoadedVarPurePair.first;
+                newPure = newLoadedVarPurePair.second;
+
+                ldOrigPtr = freshLoadedVar;
+                ldPtr = freshLoadedVar;
+                ldOrigPtrName = freshLoadedVar->name();
+                ldPtrName = freshLoadedVar->name();
                 mallocName = this->varEquiv->getBlkName(ldPtrName);
                 blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
                 loadedOffset = this->varEquiv->getOffset(ldPtrName);
                 CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
-            } else if(loadedPosition->getType() == ExprType::FUNC){
-                // if the loaded position is a arithmetic expression
-                CFDEBUG(std::cout << "INFO: load funcexpr " << loadedPosition << std::endl;);
-                const FunExpr* loadedPositionFunc = (const FunExpr*) loadedPosition;
-
-                // this is equivalent to add an assignment stmt before  the store stmt to make it a variable.
-                if(this->isPtrArithFuncName(loadedPositionFunc->name())){
-                    // compute the stepSize information of the variable
-                    CFDEBUG(std::cout << "INFO: loadedPosition is funcexpr" << std::endl;);
-                    const Expr* newPure = sh->getPure();
-                    std::pair<const VarExpr*, const Expr*> newLoadedVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(loadedPositionFunc, newPure);
-                    const VarExpr* freshLoadedVar = newLoadedVarPurePair.first;
-                    newPure = newLoadedVarPurePair.second;
-
-                    ldOrigPtr = freshLoadedVar;
-                    ldPtr = freshLoadedVar;
-                    ldOrigPtrName = freshLoadedVar->name();
-                    ldPtrName = freshLoadedVar->name();
-                    mallocName = this->varEquiv->getBlkName(ldPtrName);
-                    blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
-                    loadedOffset = this->varEquiv->getOffset(ldPtrName);
-                    CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
-                    
-                    // update the symbolic heap
-                    SHExprPtr oldSh = sh;
-                    sh = std::make_shared<SymbolicHeapExpr>(newPure, oldSh->getSpatialExpr());
-                }
-            } else {
-                CFDEBUG(std::cout << "ERROR: UNSOLVED loaded position type " << loadedPosition << std::endl;);
-            }
-            loadedSize = this->parseLoadFuncSize(rhsFun->name());
-            if(!mallocName.compare("$Null")){ByteSize newSpatial;
-                // the symbolic heap is set to error
-                newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::NULL_REF));
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
-                newSH->print(std::cout);
-                std::cout << std::endl;
-                CFDEBUG(std::cout << "INFERROR: load null ptr" << std::endl;);
-                return newSH;
-            }
-
-            if(loadedOffset >= blkSize || loadedOffset + loadedSize > blkSize){
-                // If the ptr offset is overflow
-                std::list<const SpatialLiteral*> newSpatial;
-                // the symbolic heap is set to error
-                newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE));
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
-                newSH->print(std::cout);
-                std::cout << std::endl;
-                return newSH;
-            }
-
-            // A.1.(1): the loaded is an exact load
-            // A.1.(2): the loaded position has an offset, but the loadedSize  <  the stepSize of pt predicate
-            // A.1.(3): the loaded position has an offset, but the loadedSize >  the steoSize of pt predicate
-            // A.2.(1): the loaded position is initialized, but not an offset. The loadedSize + loadedPos <= ptOffset + stepSize
-            // A.2.(2): the loaded position is initialized, but not an offset. THe loadedSize + loadedPos > ptOffset + stepSize
-            if(this->storeSplit->hasOffset(loadedOffset) || this->storeSplit->isInitialized(loadedOffset)){
-                // spt * blk * pt * blk * pt
-                //              1          2
-                //              2*1+1      2*2+1
-                const Expr* newPure = sh->getPure();
-                std::list<const SpatialLiteral*> newSpatial;
-
-                std::pair<bool, int> posResult = this->storeSplit->getOffsetPos(
-                    mallocName,
-                    loadedOffset
-                );
-                if(posResult.first){    
-                    // Situation A.1
-                    if(this->storeSplit->getInitializedLength(mallocName, loadedOffset) >= loadedSize ){
-                        int ptLength = this->storeSplit->getInitializedPos(mallocName, loadedOffset);
-                        int loadIndex = 2*posResult.second + 1;
-                        // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
-                        bool startCounting = false;
-                        // increase index by 1 when counting is started 
-                        int countIndex = 1;
-                        for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-                            if(SpatialLiteral::Kind::SPT == spl->getId()){
-                                const SizePtLit* sizePt = (const SizePtLit*) spl;
-                                if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
-                                    startCounting = true;
-                                }
-                            }
-                            if(countIndex == loadIndex){
-                                assert(SpatialLiteral::Kind::PT == spl->getId());
-                                // find the correct index and load the content out
-                                const PtLit* pt = (const PtLit*) spl;
-                                // toExpr should be a variable
-                                const Expr* toExprOrig = pt->getTo();
-                                const VarExpr* toExprOrigVar = (const VarExpr*)toExprOrig;
-                                const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name());
-                                CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
-                                if(loadedSize == this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
-                                    // Situation A.1.(1)
-                                    this->updateBingdingsEqualVarAndRhsVar(lhsVar, toExprVar);
-                                    newPure = Expr::and_(
-                                        newPure, 
-                                        Expr::eq(   
-                                       
-                                    const Expr* newPure = Expr::and_(
-                                         sh->getPure(),
-                                         Expr::eq(
-                                            lhsVar, 
-                                            toExprVar
-                                        )
-                                    );
-                                    this->varEquiv->linkName(lhsVarName, loadedVarName);
-                                    if(this->varEquiv->hasBlkName(loadedVarName)){
-                                        this->varEquiv->linkBlkName(lhsVarName, loadedVarName);
-                                    }
-                                    if(this->varEquiv->getOffset(loadedVarName) >= 0){
-                                        this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset (loadedVarName));
-                                    }
-                                    this->varEquiv->linkIntVar(lhsVarName, loadedVarName);     lhsvar,
-                                            toExprVar
-                                        )
-                                    );
-                                    const Expr* newPure = Expr::and_(
-                                         sh->getPure(),
-                                         Expr::eq(
-                                            lhsVar, 
-                                            toExprVar
-                                        )
-                                    );
-                                    this->varEquiv->linkName(lhsVarName, loadedVarName);
-                                    if(this->varEquiv->hasBlkName(loadedVarName)){
-                                        this->varEquiv->linkBlkName(lhsVarName, loadedVarName);
-                                    }
-                                    if(this->varEquiv->getOffset(loadedVarName) >= 0){
-                                        this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset (loadedVarName));
-                                    }
-                                    this->varEquiv->linkIntVar(lhsVarName, loadedVarName);ck(spl);
-                                } else if(loadedSize < this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
-                                    // Situation A.1.(2)
-                                    if(pt->isByteLevel()){
-                                        std::pair<const VarExpr*, const Expr*> newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
-                                        this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedVarPurePair.first);
-                                        newPure = newLoadedVarPurePair.second;
-                                        newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedVarPurePair.first));
-                                        newSpatial.push_back(spl);  
-                                    } else {
-                                        std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
-                                        newSpatial.push_back(newPtPurePair.first);
-                                        newPure = newPtPurePair.second;
-                                        std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair = this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
-                                        this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
-                                        newPure = newLoadedvarPurePair.second;
-                                        newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedVarPurePair.first));
-                                    }
-                                } else {
-                                    CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
-                                    newSpatial.push_back(spl);
-                                }
-                                
-                            } else {
-                                newSpatial.push_back(spl);
-                            }
-
-                            if(startCounting){
-                                countIndex ++;
-                            }
-                        }
-                        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
-                        newSH->print(std::cout);
-                        std::cout << std::endl;
-                        return newSH;
-                    } else {
-                        // Situation A.1.(3)
-                        CFDEBUG(std::cout << "ERROR: currently not support, to be added later" << std::endl;)
-                        assert(false);
-                    } 
-                } else if(this->storeSplit->isInitialized){
-                    // Situation A.2
-                    if (loadedSize <= this->storeSplit->getInitializedSuffixLength(mallocName, loadedOffset)){
-                        int prefixLength = this->storeSplit->getInitializedPrefixLength(mallocName, loadedOffset);
-                        // Situation A.2.(1)
-                        int loadIndex = 2*posResult.second + 1;
-                        // start counting the spatial literal when we enter the blk & pts that created by the correct   malloc function
-                        bool startCounting = false;
-                        // increase index by 1 when counting is started 
-                        int countIndex = 1;
-                        for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-                            if(SpatialLiteral::Kind::SPT == spl->getId()){
-                                const SizePtLit* sizePt = (const SizePtLit*) spl;
-                                if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
-                                    startCounting = true;
-                                }
-                            }
-                            if(countIndex == loadIndex){
-                                // find the correct index and load the content out
-                                if(SpatialLiteral::Kind::PT == spl->getId()){
-                                    const PtLit* pt = (const PtLit*) spl
-                                    assert(pt->getTo()->isVar());
-                                    const VarExpr* toExprOrigVar = (const VarExpr*)pt->getTo();
-                                    const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name());
-                                    CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
-                                    if(pt->isByteLevel()){
-                                        std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                        this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
-                                        newPure = newLoadedvarPurePair.second;
-                                        newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedVarPurePair.first));
-                                        newSpatial.push_back(spl);
-                                    } else {
-                                        std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
-                                        newSpatial.push_back(newPtPurePair.first);
-                                        newPure = newPtPurePair.second;
-                                        std::pair<const VarExpr*, const PtLit*> newLoadedvarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                        this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
-                                        newPure = newLoadedvarPurePair.second;
-                                        newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedVarPurePair.first));
-                                    }
-                                } else {
-                                    CFDEBUG(std::cout << "ERROR: load error, this should be a PT predicate." <<  std::endl;);
-                                    spl->print(std::cout);std::cout << std::endl;
-                                    return sh;
-                                }
-                            } else {
-                                newSpatial.push_back(spl);
-                            }
-                            if(startCounting){
-                                countIndex ++;
-                            }
-                        }
-                        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
-                        newSH->print(std::cout);
-                        std::cout << std::endl;
-                        return newSH;
-                    } else {
-                        // Situation A.2.(2)
-
-                    }
-                    
-                } else {
-                    CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);
-                }
-                CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
                 
-            } else if(!posResult.first && 0 == posResult.second) {
-                //  Use fresh variable for the nondeterministic value
-                //  and modify the value of the original one 
-                CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory... "  << std::endl;);
+                // update the symbolic heap
+                SHExprPtr oldSh = sh;
+                sh = std::make_shared<SymbolicHeapExpr>(newPure, oldSh->getSpatialExpr());
+            }
+        } else {
+            CFDEBUG(std::cout << "ERROR: UNSOLVED loaded position type " << loadedPosition << std::endl;);
+        }
+        loadedSize = this->parseLoadFuncSize(rhsFun->name());
+        if(!mallocName.compare("$Null")){
+            // the symbolic heap is set to error
+            std::list<const SpatialLiteral*> newSpatial;
+            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::NULL_REF));
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
+            newSH->print(std::cout);
+            std::cout << std::endl;
+            CFDEBUG(std::cout << "INFERROR: load null ptr" << std::endl;);
+            return newSH;
+        }
 
-                auto stepSize = this->cfg->getVarDetailType(lhsVarOrigName);
-                stepSize.second = stepSize.second/8;
-                int freshVarByteSize = stepSize.second;
-                std::cout << "load size: " << freshVarByteSize << std::endl;
-                if(freshVarByteSize == 0){
-                    // if 0, regard it as ptr size
-                    //if()
-                    freshVarByteSize = PTR_BYTEWIDTH;
+        if(loadedOffset >= blkSize || loadedOffset + loadedSize > blkSize){
+            // If the ptr offset is overflow
+            std::list<const SpatialLiteral*> newSpatial;
+            // the symbolic heap is set to error
+            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE));
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
+            newSH->print(std::cout);
+            std::cout << std::endl;
+            return newSH;
+        }
+
+        // A.1.(1): the loaded is an exact load
+        // A.1.(2): the loaded position has an offset, but the loadedSize  <  the stepSize of pt predicate
+        // A.3.(2).1: the loaded position has an offset, but the loadedSize >  the steoSize of pt predicate
+        // A.2.(1): the loaded position is initialized, but not an offset. The loadedSize + loadedPos <= ptOffset + stepSize
+        // A.3.(2).2: the loaded position is initialized, but not an offset. THe loadedSize + loadedPos > ptOffset + stepSize
+        // A.3.(1): the loaded position is not initialized, [offset, offset + length) lies in some blk.
+        // A.3.(2).3: the loaded position is not initalized, [offset, offset + length) covers some pt predicate
+        if(this->storeSplit->hasOffset(mallocName, loadedOffset) || this->storeSplit->isInitialized(mallocName, loadedOffset)){
+            // spt * blk * pt * blk * pt
+            //              1          2
+            //              2*1+1      2*2+1
+            const Expr* newPure = sh->getPure();
+            std::list<const SpatialLiteral*> newSpatial;
+
+            std::pair<bool, int> posResult = this->storeSplit->getOffsetPos(
+                mallocName,
+                loadedOffset
+            );
+            if(posResult.first){    
+                // Situation A.1
+                if(this->storeSplit->getInitializedLength(mallocName, loadedOffset) >= loadedSize ){
+                    int ptLength = this->storeSplit->getInitializedPos(mallocName, loadedOffset).second;
+                    int loadIndex = 2*posResult.second + 1;
+                    // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
+                    bool startCounting = false;
+                    // increase index by 1 when counting is started 
+                    int countIndex = 1;
+                    for(const SpatialLiteral* spl : sh->getSpatialExpr()){
+                        if(SpatialLiteral::Kind::SPT == spl->getId()){
+                            const SizePtLit* sizePt = (const SizePtLit*) spl;
+                            if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
+                                startCounting = true;
+                            }
+                        }
+                        if(countIndex == loadIndex){
+                            assert(SpatialLiteral::Kind::PT == spl->getId());
+                            // find the correct index and load the content out
+                            const PtLit* pt = (const PtLit*) spl;
+                            // toExpr should be a variable
+                            const Expr* toExprOrig = pt->getTo();
+                            const VarExpr* toExprOrigVar = (const VarExpr*)toExprOrig;
+                            const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
+                            CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
+                            if(loadedSize == this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
+                                // Situation A.1.(1)
+                                this->updateBingdingsEqualVarAndRhsVar(lhsVar, toExprVar);
+                                newPure = Expr::and_(newPure, Expr::eq(lhsVar, toExprVar));
+                                   
+                                const Expr* newPure = Expr::and_(
+                                     sh->getPure(),
+                                     Expr::eq(
+                                        lhsVar, 
+                                        toExprVar
+                                    )
+                                );
+                                newSpatial.push_back(spl);
+                            } else if(loadedSize < this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
+                                // Situation A.1.(2)
+                                if(pt->isByteLevel()){
+                                    std::pair<const VarExpr*, const Expr*> newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
+                                    this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedVarPurePair.first);
+                                    newPure = newLoadedVarPurePair.second;
+                                    newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedVarPurePair.first));
+                                    newSpatial.push_back(spl);  
+                                } else {
+                                    std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
+                                    newSpatial.push_back(newPtPurePair.first);
+                                    newPure = newPtPurePair.second;
+                                    std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair = this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
+                                    this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
+                                    newPure = newLoadedvarPurePair.second;
+                                    newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedvarPurePair.first));
+                                }
+                            } else {
+                                CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
+                                newSpatial.push_back(spl);
+                            }
+                        } else {
+                            newSpatial.push_back(spl);
+                        }
+
+                        if(startCounting){
+                            countIndex ++;
+                        }
+                    }
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                    newSH->print(std::cout);
+                    std::cout << std::endl;
+                    return newSH;
+                } else {
+                    // Situation A.3.(2).1
+                    CFDEBUG(std::cout << "ERROR: currently not support, to be added later" << std::endl;)
+                    assert(false);
+                } 
+            } else if(this->storeSplit->isInitialized(mallocName, loadedOffset)){
+                // Situation A.2
+                if (loadedSize <= this->storeSplit->getInitializedSuffixLength(mallocName, loadedOffset)){
+                    // Situation A.2.(1)
+                    // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
+                    int prefixLength = this->storeSplit->getInitializedPrefixLength(mallocName, loadedOffset);
+                    int loadIndex = 2*posResult.second + 1;
+                    bool startCounting = false;
+                    // increase index by 1 when counting is started 
+                    int countIndex = 1;
+                    for(const SpatialLiteral* spl : sh->getSpatialExpr()){
+                        if(SpatialLiteral::Kind::SPT == spl->getId()){
+                            const SizePtLit* sizePt = (const SizePtLit*) spl;
+                            if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
+                                startCounting = true;
+                            }
+                        }
+                        if(countIndex == loadIndex){
+                            // find the correct index and load the content out
+                            if(SpatialLiteral::Kind::PT == spl->getId()){
+                                const PtLit* pt = (const PtLit*) spl;
+                                assert(pt->getTo()->isVar());
+                                const VarExpr* toExprOrigVar = (const VarExpr*)pt->getTo();
+                                const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
+                                CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
+                                if(pt->isByteLevel()){
+                                    std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
+                                    this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
+                                    newPure = newLoadedvarPurePair.second;
+                                    newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedvarPurePair.first));
+                                    newSpatial.push_back(spl);
+                                } else {
+                                    std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
+                                    newSpatial.push_back(newPtPurePair.first);
+                                    newPure = newPtPurePair.second;
+                                    std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
+                                    this->updateBingdingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
+                                    newPure = newLoadedvarPurePair.second;
+                                    newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedvarPurePair.first));
+                                }
+                            } else {
+                                CFDEBUG(std::cout << "ERROR: load error, this should be a PT predicate." <<  std::endl;);
+                                spl->print(std::cout);std::cout << std::endl;
+                                return sh;
+                            }
+                        } else {
+                            newSpatial.push_back(spl);
+                        }
+                        if(startCounting){
+                            countIndex ++;
+                        }
+                    }
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                    newSH->print(std::cout);
+                    std::cout << std::endl;
+                    return newSH;
+                } else {
+                    // Situation A.3.(2).2
+
                 }
-                assert(freshVarByteSize > 0);
+                
+            } else {
+                CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);
+            }
+            CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
+            
+        } else if(!this->storeSplit->isInitialized(mallocName, loadedOffset)) {
+            //  Use fresh variable for the nondeterministic value
+            //  and modify the value of the original one 
+            CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory... "  << std::endl;);
+            // compute the loaded byteSize
+            const Expr* newPure = sh->getPure();
+            std::list<const SpatialLiteral*> newSpatial;
+            int stepSize = this->getStepSizeOfPtrVar(lhsVarName);
+            loadedSize = stepSize;
+            if(loadedSize == 0){
+                loadedSize = (this->parseLoadFuncSize(rhsFun->name()) == 0) ? PTR_BYTEWIDTH : this->parseLoadFuncSize(rhsFun->name());
+                
+            }
+            std::cout << "load size: " << loadedSize << std::endl;
+            assert(loadedSize > 0);
 
-                const VarExpr* freshVar = this->varFactory->getFreshVar(freshVarByteSize);
-                this->varEquiv->addNewName(freshVar->name());
-                this->cfg->addVarType(freshVar->name(), "i" + std::to_string(freshVarByteSize * 8));
-                const Expr* newPure =  Expr::and_(
-                    sh->getPure(),
-                    Expr::eq(this->varFactory->getVar(lhsVarOrigName), freshVar)
-                );
-                // after loading we have a fresh variable for the points to so we also need to modify the spatial literals
-                // This piece of code is related to executeStore
-                const Expr* arg1 = ldPtr;
-                const Expr* arg2 = freshVar;
+            if(this->storeSplit->computeCoveredNumOfPts(mallocName, loadedOffset, loadedSize) == 0){
+                // Situation A.3.(1)
+                // regard the unintialized region as data variable
+                const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(loadedSize);
+                newPure = Expr::and_(newPure, Expr::eq(freshPtVar, lhsVar));
                 int splitBlkIndex = this->storeSplit->addSplit(mallocName, loadedOffset);
-                std::list<const SpatialLiteral*> newSpatial;
+                                    this->storeSplit->addSplitLength(mallocName, loadedOffset, loadedSize);
                 int currentIndex = 1;
                 for(const SpatialLiteral* i : sh->getSpatialExpr()){
                     if(!i->getBlkName().compare(mallocName) &&
-                       currentIndex == splitBlkIndex &&
-                       SpatialLiteral::Kind::BLK == i->getId()){
+                              currentIndex == splitBlkIndex &&
+                        SpatialLiteral::Kind::BLK == i->getId()
+                    ){
+                        // the blk to break is found
                         const BlkLit* breakBlk = (const BlkLit*) i;
                         if(breakBlk->isEmpty()){
-                            const Expr* newPure = sh->getPure();
-                            std::list<const SpatialLiteral*> newSpatialExpr;
                             const SpatialLiteral* errLit =  SpatialLiteral::errlit(true, ErrType::LOAD_EMP);
-                            newSpatialExpr.push_back(errLit);
-                            SHExprPtr newSH =   std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                            newSpatial.push_back(errLit);
+                            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
                             newSH->print(std::cout);
                             return newSH;
                         }
-                        
-                        if(this->varEquiv->isStructArrayPtr(mallocName)){
-                            bool leftEmpty = (this->computeArithmeticOffsetValue(arg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
-                        
-                        
 
-                            const SpatialLiteral* leftBlk = SpatialLiteral::gcBlk(
-                                breakBlk->getFrom(),
-                                arg1,
-                                breakBlk->getBlkName(),
-                                leftEmpty
-                            );
-
-                            const SpatialLiteral* storedPt = SpatialLiteral::gcPt(
-                                arg1, 
-                                freshVar,
-                                breakBlk->getBlkName(),
-                                freshVarByteSize
-                            );
-                            long long size = (long long) freshVarByteSize;
-                            bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) -   this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
-
-                            const SpatialLiteral* rightBlk = SpatialLiteral::blk(
-                                Expr::add(arg1, Expr::lit(size)),
-                                breakBlk->getTo(),
-                                breakBlk->getBlkName(),
-                                rightEmpty
-                            );
-
-                            newSpatial.push_back(leftBlk);
-                            newSpatial.push_back(storedPt);
-                            newSpatial.push_back(rightBlk);
-
-                            currentIndex += 1;
-                        } else {
-                            bool leftEmpty = (this->computeArithmeticOffsetValue(arg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
-                        
-                        
-
-                            const SpatialLiteral* leftBlk = SpatialLiteral::blk(
-                                breakBlk->getFrom(),
-                                arg1,
-                                breakBlk->getBlkName(),
-                                leftEmpty
-                            );
-                            
-                            const SpatialLiteral* storedPt = SpatialLiteral::pt(
-                                arg1, 
-                                freshVar,
-                                breakBlk->getBlkName(),
-                                freshVarByteSize
-                            );
-                            long long size = (long long) freshVarByteSize;
-                            bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(arg1, Expr::lit(size))) -   this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
-    
-                            const SpatialLiteral* rightBlk = SpatialLiteral::blk(
-                                Expr::add(arg1, Expr::lit(size)),
-                                breakBlk->getTo(),
-                                breakBlk->getBlkName(),
-                                rightEmpty
-                            );
-    
-                            newSpatial.push_back(leftBlk);
-                            newSpatial.push_back(storedPt);
-                            newSpatial.push_back(rightBlk);
-    
-                            currentIndex += 1;
+                        std::list<const SpatialLiteral*> splittedResult = this->splitBlkByCreatingPt    (mallocName, ldPtr, freshPtVar, loadedSize, breakBlk);
+                        for(const SpatialLiteral* splsp : splittedResult){
+                            newSpatial.push_back(splsp);
                         }
+                        currentIndex += 1;
                     } else if(!i->getBlkName().compare(mallocName) && 
-                            SpatialLiteral::Kind::BLK == i->getId() && 
-                            currentIndex != splitBlkIndex){
+                           SpatialLiteral::Kind::BLK == i->getId() && 
+                                     currentIndex != splitBlkIndex
+                    ){
                         newSpatial.push_back(i);
                         currentIndex += 1;
-                    } else {
+                    } 
+                    else {
                         newSpatial.push_back(i);
                     }
-
                 }
-
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-                newSH->print(std::cout);
-                std::cout << std::endl;
-                return newSH;
-            } else if(!posResult.first && -1 == posResult.second){  
-                CFDEBUG(std::cout << "ERROR: Alloc name store split not get !!" << std::endl;);
+            } else if(this->storeSplit->computeCoveredNumOfPts(mallocName, loadedOffset, loadedSize) > 0){
+                // Situation A.3.(2).2
             } else {
-                CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
-                return sh;
+                CFDEBUG(std::cout << "ERROR: load compute covered num of pts error" << std::endl;);
             }
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+            newSH->print(std::cout);
+            std::cout << std::endl;
+            return newSH;
+        } else if(!this->storeSplit->hasName(mallocName)){  
+            CFDEBUG(std::cout << "ERROR: Alloc name store split not get !!" << std::endl;);
+            return sh;
         } else {
-            CFDEBUG(std::cout << "ERROR: this should not happen !!" << std::endl;);
+            CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
+            return sh;
         }
-        return sh;
     }
 
     // ---------------------- Utils for store execution
@@ -1996,7 +1908,7 @@ namespace smack{
     }
 
 
-    int parseLoadFuncSize(std::string funcName){
+    int BlockExecutor::parseLoadFuncSize(std::string funcName){
         assert(funcName.find("$load.i") != std::string::npos);
         std::string prefix = "$store.i";
         std::string sizeStr = funcName.substr(prefix.size(), funcName.size() - prefix.size());
@@ -2046,8 +1958,8 @@ namespace smack{
                         lengthExpr,
                         retVarName
                     ); 
-                    bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
-
+                    // bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
+                    int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
                     const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
                         this->varFactory->getVar(retOrigVarName),
                         Expr::add(
@@ -2055,7 +1967,7 @@ namespace smack{
                             lengthExpr
                         ),
                         retVarName,
-                        empty
+                        allocSize
                     );
 
                     newSpatialExpr.push_back(sizePt);
@@ -2087,7 +1999,7 @@ namespace smack{
                         retVarName
                     ); 
                     bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
-
+                    int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
                     const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
                         this->varFactory->getVar(retOrigVarName),
                         Expr::add(
@@ -2095,7 +2007,7 @@ namespace smack{
                             lengthExpr
                         ),
                         retVarName,
-                        empty
+                        allocSize
                     );
 
                     newSpatialExpr.push_back(sizePt);
@@ -2126,7 +2038,7 @@ namespace smack{
                         retVarName
                     ); 
                     bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
-
+                    int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
                     const SpatialLiteral* allocBlk = SpatialLiteral::blk(
                         this->varFactory->getVar(retOrigVarName),
                         Expr::add(
@@ -2134,7 +2046,7 @@ namespace smack{
                             lengthExpr
                         ),
                         retVarName,
-                        empty
+                        allocSize
                     );
 
                     newSpatialExpr.push_back(sizePt);
@@ -2712,12 +2624,37 @@ namespace smack{
 
     const SpatialLiteral* 
     BlockExecutor::createBlkAccordingToMallocName
-    (std::string mallocName, const Expr* from, const Expr* to, int stepSize){
+    (std::string mallocName, const Expr* from, const Expr* to, int byteSize){
         if(this->varEquiv->isStructArrayPtr(mallocName)){
-            
+            return SpatialLiteral::gcBlk(from, to, mallocName, byteSize);
         } else {
-            
+            return SpatialLiteral::blk(from, to, mallocName, byteSize);
         }
+    }
+
+
+    std::list<const SpatialLiteral*> BlockExecutor::splitBlkByCreatingPt(std::string mallocName, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk){
+        assert(oldBlk->getId() == SpatialLiteral::Kind::BLK);
+        const BlkLit* oldBlkLit = (const BlkLit*) oldBlk;
+        const Expr* oldBlkFrom = oldBlkLit->getFrom();
+        int oldBlkFromOffset = this->computeArithmeticOffsetValue(oldBlkFrom);
+        const Expr* oldBlkTo = oldBlkLit->getTo();
+        int oldBlkToOffset = this->computeArithmeticOffsetValue(oldBlkTo);
+        assert(from->isVar());
+        assert(this->getVarType(from->name()) == VarType::PTR);
+        int ptFromOffset = this->varEquiv->getOffset(from->name());
+        assert(ptFromOffset >= oldBlkFromOffset && ptFromOffset < oldBlkToOffset);
+        this->storeSplit->addSplit(mallocName, ptFromOffset);
+        this->storeSplit->addSplitLength(mallocName, ptFromOffset, stepSize);
+
+        std::list<const SpatialLiteral*> resultList;
+        const SpatialLiteral* leftBlk = this->createBlkAccordingToMallocName(mallocName, oldBlkFrom, from, ptFromOffset - oldBlkFromOffset);
+        const SpatialLiteral* createdPt = this->createPtAccordingToMallocName(mallocName, from, to, stepSize);
+        const SpatialLiteral* rightBlk = this->createBlkAccordingToMallocName(mallocName, Expr::add(from, Expr::lit((long long) stepSize)), oldBlkTo, oldBlkToOffset - ptFromOffset - stepSize);
+        resultList.push_back(leftBlk);
+        resultList.push_back(createdPt);
+        resultList.push_back(rightBlk);
+        return resultList;
     }
 
 

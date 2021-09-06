@@ -185,6 +185,14 @@ namespace smack
     }
 
 
+    bool StoreSplitter::hasName(std::string allocName){
+        if(this->splitMap.find(allocName) != this->splitMap.end()){
+            return true;
+        }
+        return true;
+    }
+
+
     bool StoreSplitter::isInitialized(std::string allocName, int pos){
         if(this->splitMap.find(allocName) != this->splitMap.end()){
             return this->splitMap[allocName]->isInitialized(pos);
@@ -242,6 +250,27 @@ namespace smack
             CFDEBUG(std::cout << "ERROR: offset not initialized, check!!" << std::endl;);
             return -1;
         }
+    }
+
+
+    int StoreSplitter::computeCoveredNumOfPts(std::string allocName, int offset, int length){
+        // compute the number of pt predicates covered by the region [offset, offset + length)
+        if(this->splitMap.find(allocName) != this->splitMap.end()){
+            int coveredNum = 0;
+            if(this->isInitialized(allocName, offset)){
+                coveredNum += 1;
+            }
+            for(int i : this->splitMap[allocName]->getSplitAxis()){
+                if( i >= offset && i < offset + length){
+                    coveredNum += 1;
+                }
+            }
+            return coveredNum;
+        } else {
+            CFDEBUG(std::cout << "ERROR: alloc name not exists " << allocName << std::endl;);
+            return -1;
+        }
+
     }
 
     void StoreSplitter::setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap){

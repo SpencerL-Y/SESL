@@ -599,14 +599,14 @@ namespace smack {
         // TODOsh: implement and modify to make it compatible with bytewise
         static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts);
 
-        static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, bool empty);
+        static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, int byteSize);
 
         static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize);
 
         // TODOsh: implement and modify to make it compatible with bytewise
         static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts);
 
-        static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, bool empty);
+        static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize);
 
         static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName);
 
@@ -724,6 +724,8 @@ namespace smack {
             setBlkName(blkName);
             if(byteSize == 0){
                 isEmptyBlk = true;
+            } else {
+                isEmptyBlk = false;
             }
         }
 
@@ -742,7 +744,7 @@ namespace smack {
 
     class GCBlkLit : public BlkLit {
     public:
-        GCBlkLit(const Expr *f, const Expr *t, std::string blkName, bool empty) : BlkLit(f, t, blkName, empty) {};
+        GCBlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize) : BlkLit(f, t, blkName, byteSize) {};
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
     };

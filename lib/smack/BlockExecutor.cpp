@@ -1232,6 +1232,7 @@ namespace smack{
                         */
                         if(storedSize == ptLiteral->getStepSize()){
                             // Situation A.1.(1)
+                            CFDEBUG(std::cout << "INFO: store situation A.1.(1)" << std::endl;);
                             // use a fresh variable to represent the storedVar 
                             const VarExpr* freshVar = this->varFactory->getFreshVar(storedSize);
                             // discuss the stored expression:
@@ -1289,6 +1290,7 @@ namespace smack{
 
                         } else if(storedSize < ptLiteral->getStepSize()){
                             // situation A.1.(2)
+                            CFDEBUG(std::cout << "INFO: store situation A.1.(2)" << std::endl;);
                             // ------------ Discussion of stored variable or arithmetic:
                             // It only modifies an initial part of the previous store, use freshStoredVar for a temp register
                             const VarExpr* freshStoredVar = this->varFactory->getFreshVar(storedSize);
@@ -1345,6 +1347,7 @@ namespace smack{
                                 newSpatial.push_back(newPt);
                             }
                         } else {
+                            CFDEBUG(std::cout << "INFO: store situation A.1.(3)" << std::endl;);
                             // situation A.1.(3), currently not considered
                             CFDEBUG(std::cout << "ERROR: situation A.1.(3), currently not considered" << std::endl;);
                             assert(false);
@@ -1387,6 +1390,7 @@ namespace smack{
                         const PtLit* ptLiteral = (const PtLit*)i;
                         if(storedSize <= suffixLength){
                             // Situation A.2.(1)
+                            CFDEBUG(std::cout << "INFO: store situation A.2.(1)" << std::endl;);
                             // ------------ Discussion of  the stored variable or arithmetic:
                             // It only modifies a part of the previous store, use freshStoredVar as
                             // a temp variable to store value
@@ -2279,7 +2283,7 @@ namespace smack{
             else if(VarType::PTR == this->getVarType(extractedRhsVar->name())){
                 assert(extractedRhsVar != nullptr);
                 assert(VarType::PTR == this->getVarType(extractedRhsVar->name()));
-                int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(rhs);
+                int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
                 int extractedRhsStepSize = this->getStepSizeOfPtrVar(extractedRhsVar->name());
                 if(extractedRhsStepSize == 0){
                     int computedRhsStepSize = this->parsePtrArithmeticStepSize(rhs);
@@ -2344,8 +2348,8 @@ namespace smack{
                    VarType::NIL == this->getVarType(extractedRhsVar->name())
             );
             int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
-            int extractedRhsPtrArithStepSize = this->parsePtrArithmeticStepSize(rhsExpr);
 
+            int extractedRhsPtrArithStepSize = this->parsePtrArithmeticStepSize(rhsExpr);
             this->varEquiv->addNewName(lhsVar->name());
             if(this->varEquiv->hasBlkName(extractedRhsVar->name())){
                 this->varEquiv->linkBlkName(lhsVar->name(), extractedRhsVar->name());

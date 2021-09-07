@@ -1158,8 +1158,8 @@ namespace smack{
                 storedSize = storeFuncSize;
             } else {
                 // This means we cannot obtain any useful information and can only use ptr size as the stepSize
-                CFDEBUG(std::cout << "WARNING: PTR_BYTEWIDTH is used, please check if correct!" << std::endl;);
-                storedSize = PTR_BYTEWIDTH;
+                CFDEBUG(std::cout << "WARNING: parseStoreFuncSize is used, please check if correct!" << std::endl;);
+                storedSize = parseStoreFuncSize(rhsFun->name());
             }
         }
         assert(storedSize != 0);
@@ -1909,12 +1909,21 @@ namespace smack{
     // ---------------------- Utils for store execution
     int
     BlockExecutor::parseStoreFuncSize(std::string funcName){
-        assert(funcName.find("$store.i") != std::string::npos);
-        std::string prefix = "$store.i";
-        std::string sizeStr = funcName.substr(prefix.size(), funcName.size() - prefix.size());
-        int storeBitwidth = std::atoi(sizeStr.c_str());
-        assert(storeBitwidth/8 > 0);
-        return storeBitwidth/8;
+        assert(funcName.find("$store.i") != std::string::npos || 
+               funcName.find("store.ref") != std::string::npos);
+        if(funcName.find("$store.i") != std::string::npos){
+            std::string prefix = "$store.i";
+            std::string sizeStr = funcName.substr(prefix.size(), funcName.size() - prefix.size());
+            int storeBitwidth = std::atoi(sizeStr.c_str());
+            assert(storeBitwidth/8 > 0);
+            return storeBitwidth/8;
+        } else if(funcName.find("$store.ref") != std::string::npos){
+            return PTR_BYTEWIDTH;
+        } else {
+            HALT
+            return -1;
+        }
+        
     }
 
 

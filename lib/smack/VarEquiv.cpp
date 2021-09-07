@@ -77,7 +77,7 @@ namespace smack
            pointsToBlkMap.find(blkname) != pointsToBlkMap.end()){
             pointsToBlkMap[newname] = pointsToBlkMap[blkname];
         } else {
-            CFDEBUG(std::cout << "ERROR: VarEquiv new blk name exists " <<  newname << " " << blkname << " "  << (pointsToBlkMap.find(newname) == pointsToBlkMap.end()) << " " << (pointsToBlkMap.find(blkname) != pointsToBlkMap.end()) << std::endl);
+            CFDEBUG(std::cout << "WARNING: VarEquiv new blk name exists " <<  newname << " " << blkname << " "  << (pointsToBlkMap.find(newname) == pointsToBlkMap.end()) << " " << (pointsToBlkMap.find(blkname) != pointsToBlkMap.end()) << std::endl);
         }
     }
 
@@ -87,6 +87,16 @@ namespace smack
         } else {
             CFDEBUG(std::cout << "ERROR: getBlkName error: " << name << std::endl;);
             return nullptr;
+        }
+    }
+
+
+    void VarEquiv::modifyBlkName(std::string name, std::string newBlkname){
+        if(pointsToBlkMap.find(name) != pointsToBlkMap.end()){
+            pointsToBlkMap[name] = newBlkname;
+        } else {
+            CFDEBUG(std::cout << "ERROR: modifyBlkName error: " << name << std::endl;);
+            return;
         }
     }
 
@@ -106,6 +116,16 @@ namespace smack
             DEBUG_WITH_COLOR(std::cout << "name,offset: " << name << ", " << offset << " already exists. " << std::endl, color::green);
         } else {
             this->pointsToBlkOffset[name] = offset;
+        }
+    }
+
+
+    void VarEquiv::modifyOffset(std::string name, int newOffset){
+        if(this->pointsToBlkOffset.find(name) != this->pointsToBlkOffset.end()){
+            this->pointsToBlkOffset[name] = newOffset;
+        } else {
+            CFDEBUG(std::cout << "ERROR: offset not exist, modify failed.." << std::endl;);
+            return;
         }
     }
 
@@ -146,7 +166,7 @@ namespace smack
         if(this->varToIntVal.find(name) != this->varToIntVal.end()){
             return std::pair<bool, int>(true, this->varToIntVal[name]);
         } else {
-            if(!name.find("$p")){
+            if(!name.find("$p") == std::string::npos && name.find("$") != std::string::npos){
                 DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl, color::green);
             } else {
                 DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl, color::green);

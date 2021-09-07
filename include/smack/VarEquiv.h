@@ -53,10 +53,12 @@ namespace smack
         void addNewBlkName(std::string name);
         void linkBlkName(std::string newname, std::string blkname);
         std::string getBlkName(std::string name);
+        void modifyBlkName(std::string name, std::string newBlkname);
         bool hasBlkName(std::string name);
 
         // pointsToBlkOffset operations
         void addNewOffset(std::string name, int offset);
+        void modifyOffset(std::string name, int newOffset);
         int getOffset(std::string name);
 
         // varToIntVal operations

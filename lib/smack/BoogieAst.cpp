@@ -1063,24 +1063,39 @@ namespace smack {
         return new EmpLit("");
     }
 
-    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName) {
-        return new PtLit(from, to, blkName);
+    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize) {
+        return new PtLit(from, to, blkName, stepSize);
     }
 
-    const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, std::string blkName, bool empty) {
-        return new BlkLit(from, to, blkName, empty);
+    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts){
+        assert(stepSize == bpts.size());
+        return new PtLit(from, to, blkName, stepSize, bpts);
+    }
+
+    const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, std::string blkName, int byteSize) {
+        return new BlkLit(from, to, blkName, byteSize);
     }
 
     const SpatialLiteral *SpatialLiteral::spt(const Expr *var, const Expr *size, std::string blkName) {
         return new SizePtLit(var, size, blkName);
     }
 
-    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName) {
-        return new GCPtLit(from, to, blkName);
+    const BytePt *SpatialLiteral::bytePt(const Expr* from, const Expr* to) {
+        assert(from->isVar() && to->isVar());
+        return new BytePt(from, to);
     }
 
-    const SpatialLiteral *SpatialLiteral::gcBlk(const Expr *from, const Expr *to, std::string blkName, bool empty) {
-        return new GCBlkLit(from, to, blkName, empty);
+    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize) {
+        return new GCPtLit(from, to, blkName, stepSize);
+    }
+
+    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts){
+        assert(bgcpts.size() == stepSize);
+        return new GCPtLit(from, to, blkName, stepSize, bgcpts);
+    }
+
+    const SpatialLiteral *SpatialLiteral::gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize) {
+        return new GCBlkLit(from, to, blkName, byteSize);
     }
 
     const SpatialLiteral *SpatialLiteral::errlit(bool f, ErrType reason) {
@@ -1097,41 +1112,78 @@ namespace smack {
         return res;
     }
 
+    void BytePt::print(std::ostream &os) const {
+        os << "[" << this->from << " :--> " << this->to << "]";
+    }
+
+    z3::expr BytePt::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+        const VarExpr *fromVar = (const VarExpr *) this->getFrom();
+        const VarExpr *toVar = (const VarExpr *) this->getTo();
+        z3::expr res = slah_api::newPto(
+            z3Ctx.int_const(fromVar->name().c_str()),
+            z3Ctx.int_const(toVar->name().c_str())
+        );
+        return res;
+    }
+
     void PtLit::print(std::ostream &os) const {
-        os << from << " >--> " << to;
+        if(!this->isByteLevel()){
+            os << from << " >--> " << to;
+        } else {
+            os << from << " >--> " << to << " {";
+            for(const BytePt* bpt : this->getBytifiedPts()){
+                bpt->print(os);
+            }
+            os << "} ";
+        }
     }
 
     z3::expr PtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
-        assert(this->getFrom()->isVar() && this->getTo()->isVar());
-        const VarExpr *fromVar = (const VarExpr *) this->getFrom();
-        const VarExpr *toVar = (const VarExpr *) this->getTo();
-        std::string fromOrigVarName = varFac->getOrigVarName(fromVar->name());
-        int stepWidth = cfg->getVarDetailType(fromOrigVarName).second / 8;
-        // e.g. a pointer $p with type int* points to a variable $fresh
-        // $p --> $fresh
-        // will be translated into
-        /*  ($fresh_0, $fresh_1, $fresh_2, $fresh_3) = i
-            | ($p_0, $p_1, $p_2, $p_3) --> $fresh_0 #
-              ($p_0, $p_1, $p_2, $p_3) + 1 --> $fresh_1 #
-              ($p_0, $p_1, $p_2, $p_3) + 2 --> $fresh_2 #
-              ($p_0, $p_1, $p_2, $p_3) + 3 --> $fresh_3
-       */
-        z3::expr res = slah_api::newEmp(z3Ctx);
-        for (int i = 0; i < stepWidth; i++) {
-            res = slah_api::sep(
+        if(!this->isByteLevel()){
+            // if the pt predicate is not bytified, old logic as usual
+            assert(this->getFrom()->isVar() && this->getTo()->isVar());
+            const VarExpr *fromVar = (const VarExpr *) this->getFrom();
+            const VarExpr *toVar = (const VarExpr *) this->getTo();
+            std::string fromOrigVarName = varFac->getOrigVarName(fromVar->name());
+            // TODOsh: change to stepSize later
+            int stepWidth = cfg->getVarDetailType(fromOrigVarName).second / 8;
+            // e.g. a pointer $p with type int* points to a variable $fresh
+            // $p --> $fresh
+            // will be translated into
+            /*  ($fresh_0, $fresh_1, $fresh_2, $fresh_3) = i
+                | ($p_0, $p_1, $p_2, $p_3) --> $fresh_0 #
+                  ($p_0, $p_1, $p_2, $p_3) + 1 --> $fresh_1 #
+                  ($p_0, $p_1, $p_2, $p_3) + 2 --> $fresh_2 #
+                  ($p_0, $p_1, $p_2, $p_3) + 3 --> $fresh_3
+           */
+            z3::expr res = slah_api::newEmp(z3Ctx);
+            for (int i = 0; i < stepWidth; i++) {
+                res = slah_api::sep(
+                        res,
+                        slah_api::newPto(
+                                z3Ctx.int_const((fromVar->name() + "_" + std::to_string(i)).c_str()),
+                                z3Ctx.int_const((toVar->name() + "_" + std::to_string(i)).c_str())
+                        )
+                );
+            }
+            // z3::expr res = slah_api::newPto(
+            //   from->translateToZ3(z3Ctx, cfg, varFac),
+            //   to->translateToZ3(z3Ctx, cfg, varFac)
+            // );
+            CDEBUG(std::cout << "in ptlit!" << res.to_string() << std::endl;);
+            return res;
+        } else {
+            // use new logic
+            z3::expr res = slah_api::newEmp(z3Ctx);
+            for(int i = 0; i < this->stepSize; i++){
+                res = slah_api::sep(
                     res,
-                    slah_api::newPto(
-                            z3Ctx.int_const((fromVar->name() + "_" + std::to_string(i)).c_str()),
-                            z3Ctx.int_const((toVar->name() + "_" + std::to_string(i)).c_str())
-                    )
-            );
+                    this->getByte(i)->translateToZ3(z3Ctx, cfg, varFac)
+                );
+            }
+            return res;
         }
-        // z3::expr res = slah_api::newPto(
-        //   from->translateToZ3(z3Ctx, cfg, varFac),
-        //   to->translateToZ3(z3Ctx, cfg, varFac)
-        // );
-        CDEBUG(std::cout << "in ptlit!" << res.to_string() << std::endl;);
-        return res;
+        
     }
 
     z3::expr GCPtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {

@@ -23,6 +23,7 @@ namespace smack
         // static variable set
         // null variable
         const VarExpr* nullVar;
+        std::unordered_map<std::string, const VarExpr*> freshVarInstances;
         int freshIndex;
         typedef std::shared_ptr<VarFactory> VarFactoryPtr;
     public:

@@ -57,3 +57,9 @@ static const std::unordered_map<std::string, bool> DISPLAY_TABLE{
         if (hasColor)   std::cout<<"\033[0m"; \
     }\
 } while(false);
+
+#define HALT assert(false);
+
+#define TESTPRINT CFDEBUG(std::cout << "HEREH";);
+
+#define TPRINT(x)   CFDEBUG(std::cout << "HEREH " << x;);

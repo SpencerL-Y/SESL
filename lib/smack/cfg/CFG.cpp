@@ -182,12 +182,14 @@ namespace smack {
     std::pair<std::string, int> CFG::getVarDetailType(std::string varName) {
         auto type = getVarType(varName);
         if (type[0] == 'i' || type[0] == 'M') {
+            // The variable is a data variable, ans represents the data size
             int ans = 0;
             for (int i = 1; i < type.length(); ++i) {
                 ans = ans * 10 + type[i] - '0';
             }
             return {type, ans};
         } else if (type[0] == 'r') {
+            // The variable is a pointer variable, ans represents the stepWidth
             int ans = 0;
             for (int i = 3; i < type.length(); ++i) {
                 ans = ans * 10 + type[i] - '0';
@@ -253,7 +255,12 @@ namespace smack {
     }
 
     void CFG::addVarType(std::string varName, std::string type) {
-        varType[varName] = type;
+        CFDEBUG(std::cout << "INFO: add var type: " << varName << type << std::endl;)
+        if(this->varType.find(varName) == this->varType.end()){
+            this->varType[varName] = type;
+        } else {
+            CFDEBUG(std::cout << "WARNING: varName exists: " << varName << std::endl;);
+        }
     }
 
     std::string CFG::getEntryBlockName() {

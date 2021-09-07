@@ -1676,13 +1676,13 @@ namespace smack{
             return newSH;
         }
         CFDEBUG(std::cout << "INFO: loadedOffset: " << loadedOffset << " blkSize " << blkSize << " loadedSize " << loadedSize << std::endl;);
-        // A.1.(1): the loaded is an exact load
-        // A.1.(2): the loaded position has an offset, but the loadedSize  <  the stepSize of pt predicate
-        // A.3.(2).1: the loaded position has an offset, but the loadedSize >  the steoSize of pt predicate
-        // A.2.(1): the loaded position is initialized, but not an offset. The loadedSize + loadedPos <= ptOffset + stepSize
-        // A.3.(2).2: the loaded position is initialized, but not an offset. THe loadedSize + loadedPos > ptOffset + stepSize
-        // A.3.(1): the loaded position is not initialized, [offset, offset + length) lies in some blk.
-        // A.3.(2).3: the loaded position is not initalized, [offset, offset + length) covers some pt predicate
+        // B.1.(1): the loaded is an exact load
+        // B.1.(2): the loaded position has an offset, but the loadedSize  <  the stepSize of pt predicate
+        // B.3.(2).1: the loaded position has an offset, but the loadedSize >  the steoSize of pt predicate
+        // B.2.(1): the loaded position is initialized, but not an offset. The loadedSize + loadedPos <= ptOffset + stepSize
+        // B.3.(2).2: the loaded position is initialized, but not an offset. THe loadedSize + loadedPos > ptOffset + stepSize
+        // B.3.(1): the loaded position is not initialized, [offset, offset + length) lies in some blk.
+        // B.3.(2).3: the loaded position is not initalized, [offset, offset + length) covers some pt predicate
         if(this->storeSplit->hasOffset(mallocName, loadedOffset) || this->storeSplit->isInitialized(mallocName, loadedOffset)){
             // spt * blk * pt * blk * pt
             //              1          2
@@ -1695,7 +1695,7 @@ namespace smack{
                 loadedOffset
             );
             if(posResult.first){    
-                // Situation A.1
+                // Situation B.1
                 if(this->storeSplit->getInitializedLength(mallocName, loadedOffset) >= loadedSize ){
                     int ptLength = this->storeSplit->getInitializedPos(mallocName, loadedOffset).second;
                     int loadIndex = 2*posResult.second + 1;
@@ -1720,7 +1720,7 @@ namespace smack{
                             const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
                             CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
                             if(loadedSize == this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
-                                // Situation A.1.(1)
+                                // Situation B.1.(1)
                                 this->updateBindingsEqualVarAndRhsVar(lhsVar, toExprVar);
                                 newPure = Expr::and_(newPure, Expr::eq(lhsVar, toExprVar));
                                    
@@ -1733,7 +1733,7 @@ namespace smack{
                                 );
                                 newSpatial.push_back(spl);
                             } else if(loadedSize < this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
-                                // Situation A.1.(2)
+                                // Situation B.1.(2)
                                 if(pt->isByteLevel()){
                                     std::pair<const VarExpr*, const Expr*> newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
                                     this->updateBindingsEqualVarAndRhsVar(lhsVar, newLoadedVarPurePair.first);
@@ -1767,14 +1767,14 @@ namespace smack{
                     std::cout << std::endl;
                     return newSH;
                 } else {
-                    // Situation A.3.(2).1
+                    // Situation B.3.(2).1
                     CFDEBUG(std::cout << "ERROR: currently not support, to be added later" << std::endl;)
                     assert(false);
                 } 
             } else if(this->storeSplit->isInitialized(mallocName, loadedOffset)){
-                // Situation A.2
+                // Situation B.2
                 if (loadedSize <= this->storeSplit->getInitializedSuffixLength(mallocName, loadedOffset)){
-                    // Situation A.2.(1)
+                    // Situation B.2.(1)
                     // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
                     int prefixLength = this->storeSplit->getInitializedPrefixLength(mallocName, loadedOffset);
                     int loadIndex = 2*posResult.second + 1;
@@ -1828,7 +1828,7 @@ namespace smack{
                     std::cout << std::endl;
                     return newSH;
                 } else {
-                    // Situation A.3.(2).2
+                    // Situation B.3.(2).2
 
                 }
                 
@@ -1854,7 +1854,7 @@ namespace smack{
             assert(loadedSize > 0);
 
             if(this->storeSplit->computeCoveredNumOfPts(mallocName, loadedOffset, loadedSize) == 0){
-                // Situation A.3.(1)
+                // Situation B.3.(1)
                 // regard the unintialized region as data variable
                 const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(loadedSize);
                 newPure = Expr::and_(newPure, Expr::eq(freshPtVar, lhsVar));
@@ -1893,7 +1893,7 @@ namespace smack{
                     }
                 }
             } else if(this->storeSplit->computeCoveredNumOfPts(mallocName, loadedOffset, loadedSize) > 0){
-                // Situation A.3.(2).2
+                // Situation B.3.(2).2
             } else {
                 CFDEBUG(std::cout << "ERROR: load compute covered num of pts error" << std::endl;);
             }

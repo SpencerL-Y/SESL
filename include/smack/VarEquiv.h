@@ -30,6 +30,9 @@ namespace smack
     // varToIntVal: cache the calculated value of integer variables (used in store and load)
         std::map<std::string, int> varToIntVal;
     // structArrayPtr: remember the ptr created by alloc, which is used when struct and array are used
+
+    // dataToPtrMap: cache the possibly equivalence between data variables and ptr variable for memcpy and memset
+        std::map<std::string, std::string> dataToPtrMap;
         std::map<std::string, bool> structArrayPtr;
     // freedBlkName: a set used to store the blkNames freed, used to find double free
         std::set<std::string> freedBlkName;
@@ -41,6 +44,7 @@ namespace smack
             this->addNewVal("$Null", 0);
             this->addNewBlkName("$Null");
             this->addNewOffset("$Null", 0);
+            
         };
         ~VarEquiv() {};
         // varAllocEqualMap operations
@@ -65,6 +69,11 @@ namespace smack
         void addNewVal(std::string name, int val);
         void linkIntVar(std::string newname, std::string oldname);
         std::pair<bool, int> getIntVal(std::string name);
+
+        // dataToPtrMap operations
+
+        void linkDataVarAndPtrVar(std::string dataName, std::string ptrName);
+        std::string getDataNameLinkPtrVar(std::string dataName);
 
         // alloc ptr operations
         void setStructArrayPtr(std::string name, bool val);

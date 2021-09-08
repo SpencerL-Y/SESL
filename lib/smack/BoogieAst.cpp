@@ -1064,15 +1064,25 @@ namespace smack {
     }
 
     const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize) {
-        return new PtLit(from, to, blkName, stepSize);
+        assert(stepSize > 0);
+        if(stepSize != 1){
+            return new PtLit(from, to, blkName, stepSize);
+        } else {
+            const BytePt* bpt = new BytePt(from, to);
+            std::vector<const BytePt*> bytifiedVec;
+            bytifiedVec.push_back(bpt);
+            return new PtLit(from, to, blkName, stepSize, bytifiedVec);
+        }
     }
 
     const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts){
+        assert(stepSize > 0);
         assert(stepSize == bpts.size());
         return new PtLit(from, to, blkName, stepSize, bpts);
     }
 
     const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, std::string blkName, int byteSize) {
+        assert(byteSize >= 0);
         return new BlkLit(from, to, blkName, byteSize);
     }
 
@@ -1086,15 +1096,18 @@ namespace smack {
     }
 
     const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize) {
+        assert(stepSize > 0);
         return new GCPtLit(from, to, blkName, stepSize);
     }
 
     const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts){
+        assert(stepSize > 0);
         assert(bgcpts.size() == stepSize);
         return new GCPtLit(from, to, blkName, stepSize, bgcpts);
     }
 
     const SpatialLiteral *SpatialLiteral::gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize) {
+        assert(byteSize >= 0);
         return new GCBlkLit(from, to, blkName, byteSize);
     }
 

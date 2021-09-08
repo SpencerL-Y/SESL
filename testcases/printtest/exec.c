@@ -8,7 +8,7 @@ void reach_error() { assert(0); }
 #include <stdlib.h>
 #include <string.h>
 
-char a[sizeof(int*)];
+char a[2 * sizeof(int*)];
 void foo(void)
 {
    int *p = (int *)malloc(10);
@@ -19,7 +19,7 @@ int main(void)
 {
    foo();
    void *p;
-   memcpy(&p, a, sizeof p);
+   memcpy(&p, a + 1, sizeof p);
    free(p);
 }
 

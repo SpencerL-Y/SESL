@@ -800,7 +800,9 @@ namespace smack{
                 return this->executeAlloc(sh, call);
             } else if(call->getProc().find("__VERIFIER") != std::string::npos){
                 return this->executeVeriCall(sh, call);
-            } 
+            } else if(call->getProc().find("$memcpy") != std::string::npos){
+                return this->executeMemcpy(sh, call);
+            }
             else {
                 this->executeUnintepreted(sh, call);
                 CFDEBUG(std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl);
@@ -872,6 +874,59 @@ namespace smack{
             CFDEBUG(std::cout << "UNSOLVED VERIFIER FUNC: " << stmt->getProc() << std::endl;);
             return sh;
         }
+    }
+
+
+    SHExprPtr BlockExecutor::executeMemcpy(SHExprPtr sh, const CallStmt* stmt){
+        // Points: 
+        // 1. the source to be copied need to be bytified
+        // 2. the destination is assumed to be set to zeros
+        // Error situations: 
+        // 1. Overlapping of source and destination
+        // 2. destination has non-bytified or non-zero pts
+        // extract the loaded src and dst to ptr vars
+
+        int copySize = -1;
+        const VarExpr* srcVar = nullptr;
+        const VarExpr* srcOrigVar = nullptr;
+        std::string srcVarName;
+        std::string srcOrigVarName;
+        std::string srcMallocName;
+
+        const VarExpr* dstVar = nullptr;
+        const VarExpr* dstOrigVar = nullptr;
+        std::string dstVarName;
+        std::string dstOrigVarName;
+        std::string dstMallocName;
+
+        assert(stmt->getProc().find("memcpy") != std::string::npos);
+        std::list<const Expr*> params =  stmt->getParams();
+        std::vector<const Expr*> paramsVec;
+        for(const Expr* p : params){
+            paramsVec.push_back(p);
+        }
+        const Expr* sourceLocation = paramsVec[3];
+        const Expr* dstLocation = paramsVec[2];
+        const Expr* copySizeExpr = paramsVec[4];
+        
+        // discussion of sourceLocation
+        if(sourceLocation->isVar()){
+            srcOrigVar = (const VarExpr*) sourceLocation;
+            srcOrigVarName = srcOrigVar->name();
+            srcVar = this->getUsedVarAndName(srcOrigVarName).first;
+            srcVarName = this->getUsedVarAndName(srcOrigVarName).second;
+            srcMallocName = this->varEquiv->getBlkName(srcVarName);
+
+
+
+        } else if(sourceLocation->getType() == ExprType::FUNC){
+            // sourceLocation is a ptr arithmetic
+        } else {
+            CFDEBUG(std::cout << "ERROR: unspecified situation of ptr" << std::endl;);
+            assert(false);
+            return sh;
+        }
+        
     }
 
     SHExprPtr 
@@ -1566,7 +1621,8 @@ namespace smack{
                     CFDEBUG(std::cout << "Store type: " << arg2TypeStr << " Store stepsize: " << storedSize << std::endl;);
                     long long size = storedSize;
                     // bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
-                    int rightBlkSize = this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo());
+                    int rightBlkSize = this->computeArithmeticOffsetValue(breakBlk->getTo())- this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size)));
+                    CFDEBUG(std::cout << "INFO: rightBlkSize " << rightBlkSize << std::endl;);
                     const SpatialLiteral* rightBlk = SpatialLiteral::gcBlk(
                         Expr::add(varArg1, Expr::lit(size)),
                         breakBlk->getTo(),
@@ -2703,6 +2759,49 @@ namespace smack{
         resultList.push_back(createdPt);
         resultList.push_back(rightBlk);
         return resultList;
+    }
+
+
+    std::pair<std::list<const SpatialLiteral*>, const Expr*> BlockExecutor::bytifyBlkPredicate(const SpatialLiteral* oldBlk, const Expr* oldPure){
+        assert(oldBlk->getId() == SpatialLiteral::Kind::BLK);
+        std::list<const SpatialLiteral*> resultPredicateList;
+        std::list<const SpatialLiteral*> splittedTriplet;
+        const Expr* resultPure = oldPure;
+        std::string mallocName = oldBlk->getBlkName();
+        const BlkLit* tempRhsBlk = (const BlkLit*) oldBlk;
+        while(tempRhsBlk->getBlkByteSize() != 0){
+            const Expr* tempFrom = tempRhsBlk->getFrom();
+            int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom);
+            const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, mallocName, fromVarOffset);
+            resultPure = Expr::and_(resultPure, Expr::eq(tempFrom, fromVar));
+            const VarExpr* toVar = this->createAndRegisterFreshDataVar(1);
+            splittedTriplet = this->splitBlkByCreatingPt(mallocName, fromVar, toVar, 1, tempRhsBlk);
+            assert(3 == splittedTriplet.size());
+            resultPredicateList.push_back(splittedTriplet.front()); splittedTriplet.pop_front();
+            resultPredicateList.push_back(splittedTriplet.front()); splittedTriplet.pop_front();
+            tempRhsBlk = (const BlkLit*) splittedTriplet.front(); splittedTriplet.pop_front();
+        }
+        resultPredicateList.push_back(tempRhsBlk);
+        return {resultPredicateList, resultPure};
+    }
+
+
+    bool BlockExecutor::isMemcopyOverlapping(const VarExpr* srcVar, const VarExpr* dstVar, int copySize){
+        // srcVar and dstVar are used vars
+        assert(copySize >= 0);
+        assert(VarType::PTR == this->getVarType(srcVar->name()) ||
+               VarType::PTR == this->getVarType(dstVar->name()));
+        std::string srcVarMallocName = this->varEquiv->getBlkName(srcVar->name());
+        std::string dstvarMallocName = this->varEquiv->getBlkName(dstVar->name());
+        assert(!srcVarMallocName.compare(dstvarMallocName));
+        int srcVarOffset = this->computeArithmeticOffsetValue(srcVar);
+        int dstVarOffset = this->computeArithmeticOffsetValue(dstVar);
+        if(dstVarOffset + copySize > srcVarOffset && srcVarOffset >= dstVarOffset ||
+           srcVarOffset + copySize > dstVarOffset && dstVarOffset >= srcVarOffset){
+            return true;
+        } else {
+            return false;
+        }
     }
 
 

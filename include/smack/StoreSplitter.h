@@ -25,6 +25,8 @@
             void print();
             int addSplit(int offset);
             int addSplitLength(int offset, int length);
+            int getSplit(int offset);
+            int getSplittableLength(int offset);
             void setMaxOffset(int max);
             std::pair<bool, int> getOffsetPos(int offset);
             std::pair<bool, int> getInitializedPos(int offset);
@@ -48,6 +50,8 @@
             void setMaxOffset(std::string ptrName, int max);
             int addSplit(std::string allocName, int offset);
             int addSplitLength(std::string allocName, int offset, int length);
+            int getSplit(std::string allocName, int offset);
+            int getSplittableLength(std::string allocName, int offset);
             bool hasOffset(std::string allocName, int offset);
             bool hasName(std::string allocName);
             bool isInitialized(std::string allocName, int pos);

@@ -885,6 +885,8 @@ namespace smack{
         // 1. Overlapping of source and destination
         // 2. destination has non-bytified or non-zero pts
         // extract the loaded src and dst to ptr vars
+        const Expr* newPure = sh->getPure();
+        std::list<const SpatialLiteral*> newSpatial;
 
         int copySize = -1;
         const VarExpr* srcVar = nullptr;
@@ -892,12 +894,16 @@ namespace smack{
         std::string srcVarName;
         std::string srcOrigVarName;
         std::string srcMallocName;
+        int srcBlkSize = -1;
+        int srcOffset = -1;
 
         const VarExpr* dstVar = nullptr;
         const VarExpr* dstOrigVar = nullptr;
         std::string dstVarName;
         std::string dstOrigVarName;
         std::string dstMallocName;
+        int dstBlkSize = -1;
+        int dstOffset = -1;
 
         assert(stmt->getProc().find("memcpy") != std::string::npos);
         std::list<const Expr*> params =  stmt->getParams();
@@ -909,6 +915,7 @@ namespace smack{
         const Expr* dstLocation = paramsVec[2];
         const Expr* copySizeExpr = paramsVec[4];
         
+        copySize = copySizeExpr->translateToInt(this->varEquiv);
         // discussion of sourceLocation
         if(sourceLocation->isVar()){
             srcOrigVar = (const VarExpr*) sourceLocation;
@@ -916,17 +923,95 @@ namespace smack{
             srcVar = this->getUsedVarAndName(srcOrigVarName).first;
             srcVarName = this->getUsedVarAndName(srcOrigVarName).second;
             srcMallocName = this->varEquiv->getBlkName(srcVarName);
-
-
-
+            srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv);
+            srcOffset = this->varEquiv->getOffset(srcVarName);copySize);
         } else if(sourceLocation->getType() == ExprType::FUNC){
+            const FunExpr* ptrArithFunc = (const FunExpr*) sourceLocation;
+            assert(this->isPtrArithFuncName(ptrArithFunc->name()));
             // sourceLocation is a ptr arithmetic
+            std::pair<const VarExpr*, const Expr*> newSrcVarPurePair = updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPure);
+            const VarExpr* freshSrcVar = newSrcVarPurePair.first;
+            newPure = newSrcVarPurePair.second;
+
+            srcOrigVar = freshSrcVar;
+            srcVar = freshSrcVar;
+            srcOrigVarName = srcOrigVar->name();
+            srcVarName = srcVar->name();
+            srcMallocName = this->varEquiv->getBlkName(srcOrigVarName);
+            srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv);
+            srcOffset = this->varEquiv->getOffset(srcVarName);
+
         } else {
-            CFDEBUG(std::cout << "ERROR: unspecified situation of ptr" << std::endl;);
+            CFDEBUG(std::cout << "ERROR: unspecified situation of src ptr" << std::endl;);
             assert(false);
             return sh;
         }
+        CFDEBUG(std::cout << "INFO: Memcpy source: " << srcMallocName << " " << srcOffset << " " << copySize << std::endl;);
         
+        // discussion of dstLocation
+        if(dstLocation->isVar()){
+            
+        } else if(dstLocation->getType() == ExprType::FUNC){
+            
+            const FunExpr* ptrArithFunc = (const FunExpr*) dstLocation;
+            assert(this->isPtrArithFuncName(ptrArithFunc->name()));
+            std::pair<const VarExpr*, const Expr*> newDstVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPure);
+            const VarExpr* freshDstVar = newDstVarPurePair.first;
+            newPure = newDstVarPurePair.second;
+
+            dstOrigVar = freshDstVar;
+            dstVar = freshDstVar;
+            dstOrigVarName = freshDstVar->name();
+            dstVarName = freshDstVar->name();
+            dstMallocName = this->varEquiv->getBlkName(dstOrigVarName);
+            dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv);
+            dstOffset = this->varEquiv->getOffset(dstVarName);
+             
+        } else {
+            CFDEBUG(std::cout << "ERROR: unspecified situation of dst ptr" << std::endl;);
+            assert(false);
+            return sh;
+        }
+        CFDEBUG(std::cout << "INFO: Memcpy dst: " << dstMallocName << " " << dstOffset << " " << copySize << std::endl;)
+        
+        // if the copy is overlapping, report the error
+
+        if(this->isMemcopyOverlapping(srcVar, dstVar, copySize)){
+            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE));
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+            newSH->print(std::cout);
+            std::cout << std::endl;
+            CFDEBUG(std::cout << "INFERROR: memcopy overlapping.." << std::endl;);
+            return newSH;
+        }
+        if(srcOffset + copySize > srcBlkSize || dstOffset + copySize > dstBlkSize){
+            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE));
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+            newSH->print(std::cout);
+            std:;cout << std::endl;
+
+            CFDEBUG(std::cout << "INFERROR: memcopy out of range.." << std::endl;);
+            return newSH;
+        }
+        // whether head and tail of an copied area located in some pt 
+        bool isHeadInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset);
+        bool isTailInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize - 1);
+        int headInitializedPosInfo = this->storeSplit->getInitializedPos(srcMallocName, srcOffset);
+        int headNotInitializedPosInfo = this->storeSplit->
+        int tailInitializedPosInfo = 
+        int tailNotInitializedPosInfo = 
+        // number of pt covered by the copied area
+        int srcCoveredPtNum = this->storeSplit->computeCoveredNumOfPts(srcMallocName, srcOffset, copySize);
+        bool currentIsPt = isHeadInitialized;
+        bool beginCounting = false;
+
+        for(const SpatialLiteral* spl : sh->getSpatialExpr()){
+            if(!spl->getBlkName().compare(srcMallocName)){
+                beginCounting = true;
+            }
+        }
+
+
     }
 
     SHExprPtr 
@@ -1537,6 +1622,7 @@ namespace smack{
             // if the position is not stored yet, create a new pt predicate to store it
             // set offset to allocated in the storeSplit
             int splitBlkIndex = this->storeSplit->addSplit(mallocName, offset);
+            assert(splitBlkIndex > 0);
             CFDEBUG(std::cout << "malloc name: " << mallocName << " splitIndex: " << splitBlkIndex <<  std::endl);
             int currentIndex = 1;
             const Expr* newPure = sh->getPure();

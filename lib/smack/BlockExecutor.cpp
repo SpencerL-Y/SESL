@@ -888,6 +888,11 @@ namespace smack{
         const Expr* newPure = sh->getPure();
         std::list<const SpatialLiteral*> newSpatial;
 
+        std::list<const SpatialLiteral*> srcBytifiedSpatial;
+        std::list<const SpatialLiteral*> dstBytifiedSpatial;
+        std::list<const SpatialLiteral*> copiedSpatialPts;
+        std::list<const SpatialLiteral*> adaptedCopiedSpatialPts;
+
         int copySize = -1;
         const VarExpr* srcVar = nullptr;
         const VarExpr* srcOrigVar = nullptr;
@@ -1000,85 +1005,270 @@ namespace smack{
             return newSH;
         }
 
-        bool isHeadPtSplitted = this->storeSplit->getOffsetPos(srcMallocName, srcOffset);
-        bool isTailPtSplitted = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize);
-        if(isHeadPtSplitted || isTailPtSplitted){
-            CFDEBUG(std::cout  << "ERROR: pt splitted situation currently not considered" << std::endl;);
+        bool isSrcHeadPtSplitted = !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset).first);
+        bool isSrcTailPtSplitted = !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset + copySize).first);
+        if(isSrcHeadPtSplitted || isSrcTailPtSplitted){
+            CFDEBUG(std::cout  << "ERROR: src  pt splitted situation currently not considered" << std::endl;);
+            assert(false);
+            return nullptr;
+        }
+
+        // replace the section in the dst region
+        bool isDstHeadPtSplitted = !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset).first);
+        bool isDstTailPtSplitted = !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset + copySize).first);
+        if(isDstHeadPtSplitted || isDstTailPtSplitted){
+            CFDEBUG(std::cout  << "ERROR: dst pt splitted situation currently not considered" << std::endl;);
             assert(false);
             return nullptr;
         }
 
         // whether head and tail of an copied area located in some pt 
         // TODOsh: make sure the tail offset computation is correct
-        bool isHeadInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset);
-        bool isTailInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize - 1);
-        int headPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset);
-        int headBlkIndex = this->storeSplit->getSplit(srcMallocName, srcOffset);
-        int tailPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset + copySize - 1);
-        int tailBlkIndex = this->storeSplit->getSplit(srcMallocName, srcOffset + copySize - 1);
+        bool isSrcHeadInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset);
+        bool isSrcTailInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize);
+        int srcHeadPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset);
+        int srcHeadBlkIndex = this->storeSplit->getSplit(srcMallocName, srcOffset);
+        int srcTailPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset + copySize);
+        int srcTailBlkIndex = this->storeSplit->getSplit(srcMallocName, srcOffset + copySize);
         // number of pt covered by the copied area
         int srcCoveredPtNum = this->storeSplit->computeCoveredNumOfPts(srcMallocName, srcOffset, copySize);
     
 
-        bool beginCounting = false;
-        bool beginBytifying = false;
-        int currentPtIndex = 1;
-        int currentBlkIndex = 1;
+        bool srcBeginCounting = false;
+        bool srcBeginBytifying = false;
+        int srcCurrentPtIndex = 1;
+        int srcCurrentBlkIndex = 1;
         // the first pass to bytify all the predicates
         for(const SpatialLiteral* spl : sh->getSpatialExpr()){
             // iterate over old symbolic heap and modify
             if(SpatialLiteral::Kind::SPT == spl->getId()){
                 if(!spl->getBlkName().compare(srcMallocName)){
-                    beginCounting = true;
+                    srcBeginCounting = true;
                 } else {
-                    beginCounting = false;
+                    srcBeginCounting = false;
                 }
             }
-            if(isHeadInitialized && currentPtIndex >= headPtIndex || 
-               !isHeadInitialized && currentBlkIndex >= headBlkIndex){
-                beginBytifying = true;
+            if(isSrcHeadInitialized && srcCurrentPtIndex >= srcHeadPtIndex || 
+               !isSrcHeadInitialized && srcCurrentBlkIndex >= srcHeadBlkIndex){
+                srcBeginBytifying = true;
             }
-            if(isTailInitialized && currentPtIndex > tailPtIndex || 
-              !isTailInitialized && currentBlkIndex > tailBlkIndex){
-                beginBytifying = false;
+            if(isSrcTailInitialized && srcCurrentPtIndex >= srcTailPtIndex || 
+              !isSrcTailInitialized && srcCurrentBlkIndex >= srcTailBlkIndex){
+                srcBeginBytifying = false;
             }
-            if(beginCounting) {
+            if(srcBeginCounting) {
                 if(SpatialLiteral::Kind::BLK == spl->getId()){
-                    if(beginBytifying){
+                    if(srcBeginBytifying){
                         std::pair<std::list<const SpatialLiteral>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
                         for(const SpatialLiteral* i : resultBytifiedPurePair.first){
-                            newSpatial.push_back(i);
+                            srcBytifiedSpatial.push_back(i);
                         }
                         newPure = resultBytifiedPurePair.second;
                     } else {
-                        newSpatial.push_back(spl);
+                        srcBytifiedSpatial.push_back(spl);
                     }
-                    currentBlkIndex += 1;
+                    srcCurrentBlkIndex += 1;
                 } else if(SpatialLiteral::Kind::PT == spl->getId()){
-                    if(beginBytifying){
+                    if(srcBeginBytifying){
                         // const PtLit* oldPt = (const PtLit*) spl;
                         // std::pair<const PtLit*, const Expr*> resultPtPurePair =  this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, newPure);
-                        // newSpatial.push_back(resultPtPurePair.first);
+                        // srcBytifiedSpatial.push_back(resultPtPurePair.first);
                         // newPure = resultPtPurePair.second;
-                        newSpatial.push_back(spl);
+                        srcBytifiedSpatial.push_back(spl);
                     } else {
-                        newSpatial.push_back(spl);
+                        srcBytifiedSpatial.push_back(spl);
                     }
-                    currentPtIndex += 1;
+                    srcCurrentPtIndex += 1;
                 } else {    
-                    newSpatial.push_back(spl);
+                    srcBytifiedSpatial.push_back(spl);
                 }
             } else {
-                newSpatial.push_back(spl);
+                srcBytifiedSpatial.push_back(spl);
             }
         }
         
-        std::list<const SpatialLiteral*> copiedSpatialSection;
-        for(const SpatialLiteral* nspl : newSpatial){
-            
+
+        // after bytifying, the head and tail must be pt predicates
+        int newSrcHeadPtIndex = this->storeSplit->getOffsetPos(srcMallocName, srcOffset);
+        int newSrcTailPtIndex = this->storeSplit->getOffsetPos(srcMallocName, srcOffset + copySize);
+        assert(newSrcHeadPtIndex <= newSrcTailPtIndex);
+        int newCurrentSrcPtIndex = 1;
+        bool newSrcBeginCounting = false;
+        for(const SpatialLiteral* nspl : srcBytifiedSpatial){
+            if(nspl->getId() == SpatialLiteral::Kind::SPT){
+                if(!nspl->getBlkName().compare(srcMallocName)){
+                    newSrcBeginCounting = true;
+                } else {
+                    newSrcBeginCounting = false;
+                }
+            }
+
+            if(newSrcBeginCounting){
+                if(nspl->getId() == SpatialLiteral::Kind::BLK){
+                    if(newCurrentSrcPtIndex >= newSrcHeadPtIndex && 
+                       newCurrentSrcPtIndex < newSrcTailPtIndex) {
+                        const BlkLit* tempBlk = (const BlkLit*) nspl;
+                        CFDEBUG(std::cout << "INFO: check memcopy blk zero size.." << std::endl;);
+                        assert(tempBlk->getBlkByteSize() == 0);
+                    }
+                } else if(nspl->getId() == SpatialLiteral::Kind::PT){
+                    if(newCurrentSrcPtIndex >= newSrcHeadPtIndex && 
+                       newCurrentSrcPtIndex < newSrcTailPtIndex) {
+                        copiedSpatialPts.push_back(nspl);
+                    }
+                    newCurrentSrcPtIndex += 1;
+                } else {
+                    // do nothing
+                }
+
+            } else {
+                //do nothing
+            }
+        }
+
+
+        
+        // whether head and tail of an copied area located in some pt 
+        // TODOsh: make sure the tail offset computation is correct
+        bool isDstHeadInitialized = this->storeSplit->isInitialized(dstMallocName, dstOffset);
+        bool isDstTailInitialized = this->storeSplit->isInitialized(dstMallocName, dstOffset + copySize);
+        int dstHeadPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset);
+        int dstHeadBlkIndex = this->storeSplit->getSplit(dstMallocName, dstOffset);
+        int dstTailPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset + copySize);
+        int dstTailBlkIndex = this->storeSplit->getSplit(dstMallocName, dstOffset + copySize);
+        // number of pt covered by the copied area
+        int dstCoveredPtNum = this->storeSplit->computeCoveredNumOfPts(dstMallocName, dstOffset, copySize);
+    
+
+        bool dstBeginCounting = false;
+        bool dstBeginBytifying = false;
+        int dstCurrentPtIndex = 1;
+        int dstCurrentBlkIndex = 1;
+        // the first pass to bytify all the predicates
+        for(const SpatialLiteral* spl : srcBytifiedSpatial){
+            // iterate over old symbolic heap and modify
+            if(SpatialLiteral::Kind::SPT == spl->getId()){
+                if(!spl->getBlkName().compare(dstMallocName)){
+                    dstBeginCounting = true;
+                } else {
+                    dstBeginCounting = false;
+                }
+            }
+            if(isDstHeadInitialized && dstCurrentPtIndex >= dstHeadPtIndex || 
+               !isDstHeadInitialized && dstCurrentBlkIndex >= dstHeadBlkIndex){
+                dstBeginBytifying = true;
+            }
+            if(isDstTailInitialized && dstCurrentPtIndex >= dstTailPtIndex || 
+              !isDstTailInitialized && dstCurrentBlkIndex >= dstTailBlkIndex){
+                dstBeginBytifying = false;
+            }
+            if(dstBeginCounting) {
+                if(SpatialLiteral::Kind::BLK == spl->getId()){
+                    if(dstBeginBytifying){
+                        std::pair<std::list<const SpatialLiteral>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
+                        for(const SpatialLiteral* i : resultBytifiedPurePair.first){
+                            dstBytifiedSpatial.push_back(i);
+                        }
+                        newPure = resultBytifiedPurePair.second;
+                    } else {
+                        dstBytifiedSpatial.push_back(spl);
+                    }
+                    dstCurrentBlkIndex += 1;
+                } else if(SpatialLiteral::Kind::PT == spl->getId()){
+                    if(dstBeginBytifying){
+                        // const PtLit* oldPt = (const PtLit*) spl;
+                        // std::pair<const PtLit*, const Expr*> resultPtPurePair =  this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, newPure);
+                        // dstBytifiedSpatial.push_back(resultPtPurePair.first);
+                        // newPure = resultPtPurePair.second;
+                        dstBytifiedSpatial.push_back(spl);
+                    } else {
+                        dstBytifiedSpatial.push_back(spl);
+                    }
+                    dstCurrentPtIndex += 1;
+                } else {    
+                    dstBytifiedSpatial.push_back(spl);
+                }
+            } else {
+                dstBytifiedSpatial.push_back(spl);
+            }
         }
 
         
+        // rename all the ptr variable, add zero blk literals to the copiedVector
+        // to copy, first erase the target storeSplit, symbolicHeap 
+        // and compute the offset and modify the storeSplit
+        int newDstHeadPtIndex = this->storeSplit->getOffsetPos(dstMallocName, dstOffset);
+        int newDstTailPtIndex = this->storeSplit->getOffsetPos(dstMallocName, dstOffset + copySize);
+        std::list<const SpatialLiteral*> leftLiterals;
+        std::list<const SpatialLiteral*> rightLiterals;
+        bool isLeft = true;
+        bool isRight = false;
+        assert(newDstHeadPtIndex <= newDstTailPtIndex);
+        int newCurrentDstPtIndex = 1;
+        bool newDstBeginCounting = false;
+         for(const SpatialLiteral* spl : dstBytifiedSpatial){
+            // iterate over old symbolic heap and modify
+            if(SpatialLiteral::Kind::SPT == spl->getId()){
+                if(!spl->getBlkName().compare(dstMallocName)){
+                    newDstBeginCounting = true;
+                }
+            }
+            if(newDstBeginCounting){
+                if(newCurrentDstPtIndex ==  newDstHeadPtIndex){
+                    isLeft = false;
+                }
+                if(newCurrentDstPtIndex ==  newDstTailPtIndex){
+                    isRight = true;
+                }
+                assert(!(isLeft && isRight));
+
+                if(SpatialLiteral::Kind::PT == spl->getType()){
+                    newCurrentDstPtIndex += 1;
+                }
+            } 
+            if(isLeft){
+                leftLiterals.push_back(spl);
+            }
+            if(isRight){
+                rightLiterals.push_back(spl);
+            }
+        }
+
+
+
+        this->storeSplit->wipeInterval(dstMallocName, dstOffset, dstOffset + copySize);
+        for(const SpatialLiteral* left : leftLiterals){
+            newSpatial.push_back(left);
+        }
+        int cumulatedOffset = dstOffset;
+        for(const SpatialLiteral* spl : copiedSpatialPts){
+            assert(spl->getId() == SpatialLiteral::Kind::PT);
+            const PtLit* copiedPt = (const PtLit*) spl;
+            
+            int ptStepSize = copiedPt->getStepSize();
+            const VarExpr* toVar = copiedPt->getTo();
+            const VarExpr* oldFromVar = (const VarExpr*) copiedPt->getFrom();
+            int fromStepSize = this->getStepSizeOfPtrVar(oldFromVar->name());
+            const VarExpr* freshFromVar = this->createAndRegisterFreshPtrVar(fromStepSize, dstMallocName, cumulatedOffset);
+            
+
+            const PtLit* newSetPt = this->createPtAccordingToMallocName(dstMallocName, freshFromVar, toVar, ptStepSize);
+            const PtLit* emptyBlk = this->createBlkAccordingToMallocName(dstMallocName, freshFromVar, freshFromVar, 0);
+            this->storeSplit->addSplit(dstMallocName, cumulatedOffset);
+            this->storeSplit->addSplitLength(dstMallocName, cumulatedOffset, ptStepSize);
+            newSpatial.push_back(newSetPt, emptyBlk);
+            cumulatedOffset += ptStepSize;
+        }
+
+        for(const SpatialLiteral* right : rightLiterals){
+            newSpatial.push_back(right);
+        }
+
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+        newSH->print(std::cout);
+        std::cout << std::endl;
+
+        return newSH;
     }
 
     SHExprPtr 

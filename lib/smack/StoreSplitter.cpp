@@ -181,6 +181,31 @@ namespace smack
         return false;
     }
 
+
+    void BlkSplitUtil::wipeInterval(int fromOffset, int toOffset){
+        assert(fromOffset >= 0 && fromOffset < this->maxOffset && 
+               toOffset   >= 0 && toOffset   < this->maxOffset);
+        if(this->isInitialized(fromOffset) && this->getInitializedPrefixLength(fromOffset) != 0 ||
+           this->isInitialized(toOffset)   && this->getInitializedPrefixLength(toOffset)   != 0){
+               CFDEBUG(std::cout << "ERROR: blk is splitted when wiping, please check" << std::endl;);
+               assert(false);
+        }
+        for(int i = 0; i < this->splitAxis.size(); i++){
+            int val = this->splitAxis[i];
+            if(val >= fromOffset && val < toOffset){
+                this->splitAxis.erase(this->splitAxis.begin() + i);
+            } 
+
+            std::map<int, int>::iterator it;
+            for(it = this->offsetPosToSize.begin(); it != this->offsetPosToSize.end(); it ++){
+                if(it->first == val){
+                    this->offsetPosToSize.erase(it);
+                    break;
+                }
+            }
+        }
+    }
+
     
 
 
@@ -340,6 +365,17 @@ namespace smack
             return -1;
         }
 
+    }
+
+
+    void StoreSplitter::wipeInterval(std::string allocName, int fromOffset, int toOffset){
+        // this method can only be used when the corresponding area of symbolic heap is modified
+        if(this->splitMap.find(allocName) != this->splitMap.end()){
+            this->splitMap[allocName]->wipeInterval(fromOffset, toOffset);
+        } else {
+            CFDEBUG(std::cout << "ERROR: alloc name not exists " << allocName << std::endl;);
+            assert(false);
+        }
     }
 
     void StoreSplitter::setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap){

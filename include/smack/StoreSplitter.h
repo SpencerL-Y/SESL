@@ -6,6 +6,7 @@
 #include <map>
 #include <iostream>
 #include <memory>
+#include <assert.h>
 #include "utils/CenterDebug.h"
 
     namespace smack
@@ -35,6 +36,8 @@
             int getInitializedPrefixLength(int offset);
             std::vector<int> getSplitAxis() {return this->splitAxis;};
             bool isInitialized(int pos);
+
+            void wipeInterval(int fromOffset, int toOffset);
         };
         typedef std::shared_ptr<BlkSplitUtil> BlkSplitterPtr;
 
@@ -62,7 +65,8 @@
             int getInitializedPrefixLength(std::string allocName, int offset);
 
             int computeCoveredNumOfPts(std::string allocName, int offset, int length);
-
+            // wipe the split points in interval [fromOffset, toOffset)
+            void wipeInterval(std::string allocName, int fromOffset, int toOffset);
 
             void setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap);
             StoreSplitterPtr clone();

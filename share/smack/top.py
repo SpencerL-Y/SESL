@@ -478,6 +478,13 @@ def arguments():
     )
 
     translate_group.add_argument(
+        '--add-line-info',
+        action="store_true",
+        default=False,
+        help='''check memory leak use separation logic'''
+    )
+
+    translate_group.add_argument(
         '--no-byte-access-inference',
         action="store_true",
         default=False,
@@ -761,6 +768,8 @@ def llvm_to_bpl(args):
         cmd += ['-modular']
     if args.sh_mem_leak:
         cmd += ['-sh-mem-leak']
+    if args.add_line_info:
+        cmd += ['-add-line-info']
     try_command(cmd, console=True)
     annotate_bpl(args)
     memsafety_subproperty_selection(args)

@@ -75,7 +75,6 @@ namespace smack{
         bool isBinaryArithFuncName(std::string name);
         bool isStoreLoadFuncName(std::string name);
         bool isPtrArithFuncName(std::string name);
-
         // ---------------- Arithmetic Utilities
         // <<<HIGH LEVEL METHOD >>>
         // lhsVar is for linking of ptr arithmetic 
@@ -100,8 +99,9 @@ namespace smack{
         const SpatialLiteral* createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts);
         const SpatialLiteral* createBlkAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int byteSize);
         std::list<const SpatialLiteral*> splitBlkByCreatingPt(std::string mallocName, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
-        std::list<const SpatialLiteral*> bytifySpatialList(std::vector<const SpatialLiteral*> oldSpatialVec, const Expr* oldPure);
-
+        std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyBlkPredicate(const SpatialLiteral* oldBlk, const Expr* oldPure);
+        // ----------------- Bytelevel Utilities
+        bool isMemcopyOverlapping(const VarExpr* srcVar, const VarExpr* dstVar, int copySize);
 
         // ------------------ Execution Utilities
         // commomly used utilities
@@ -145,6 +145,8 @@ namespace smack{
 
         SHExprPtr executeVeriCall(SHExprPtr sh, const CallStmt* stmt);
 
+        SHExprPtr executeMemcpy(SHExprPtr sh, const CallStmt* stmt);
+
         SHExprPtr executeUnintepreted(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
@@ -158,7 +160,6 @@ namespace smack{
         //----------------------- Execution for library functions
 
 
-        SHExprPtr executeMemcpy(SHExprPtr sh, const FunExpr* rhsFun);
 
         SHExprPtr executeMemset(SHExprPtr sh, const FunExpr* rhsFun);
 

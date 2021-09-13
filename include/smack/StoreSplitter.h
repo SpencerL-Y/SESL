@@ -6,6 +6,7 @@
 #include <map>
 #include <iostream>
 #include <memory>
+#include <assert.h>
 #include "utils/CenterDebug.h"
 
     namespace smack
@@ -25,6 +26,8 @@
             void print();
             int addSplit(int offset);
             int addSplitLength(int offset, int length);
+            int getSplit(int offset);
+            int getSplittableLength(int offset);
             void setMaxOffset(int max);
             std::pair<bool, int> getOffsetPos(int offset);
             std::pair<bool, int> getInitializedPos(int offset);
@@ -33,6 +36,8 @@
             int getInitializedPrefixLength(int offset);
             std::vector<int> getSplitAxis() {return this->splitAxis;};
             bool isInitialized(int pos);
+
+            void wipeInterval(int fromOffset, int toOffset);
         };
         typedef std::shared_ptr<BlkSplitUtil> BlkSplitterPtr;
 
@@ -48,6 +53,8 @@
             void setMaxOffset(std::string ptrName, int max);
             int addSplit(std::string allocName, int offset);
             int addSplitLength(std::string allocName, int offset, int length);
+            int getSplit(std::string allocName, int offset);
+            int getSplittableLength(std::string allocName, int offset);
             bool hasOffset(std::string allocName, int offset);
             bool hasName(std::string allocName);
             bool isInitialized(std::string allocName, int pos);
@@ -58,7 +65,8 @@
             int getInitializedPrefixLength(std::string allocName, int offset);
 
             int computeCoveredNumOfPts(std::string allocName, int offset, int length);
-
+            // wipe the split points in interval [fromOffset, toOffset)
+            void wipeInterval(std::string allocName, int fromOffset, int toOffset);
 
             void setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap);
             StoreSplitterPtr clone();

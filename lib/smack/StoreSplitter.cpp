@@ -13,6 +13,10 @@ namespace smack
     }
 
     int BlkSplitUtil::addSplit(int offset){
+        if(this->isInitialized(offset)){
+            CFDEBUG(std::cout << "ERROR: split position is a pt, unable to split.." << std::endl;);
+            return -1;
+        }
         if(0 == offset && 0 == this->splitAxis[0]){
             CFDEBUG(std::cout << "ERROR: add split error, this should not happen" << std::endl;);
             return -1;
@@ -51,6 +55,52 @@ namespace smack
         }
     }
 
+
+    int BlkSplitUtil::getSplit(int offset){
+        if(this->isInitialized(offset)){
+            CFDEBUG(std::cout << "ERROR: split position is a pt, unable to get split.." << std::endl;);
+            return -1;
+        }
+        if(0 == offset && 0 == this->splitAxis[0]){
+            CFDEBUG(std::cout << "ERROR: get split error, offset 0 is initialized" << std::endl;);
+            return -1;
+        } else if(0 == offset && -1 == this->splitAxis[0]){
+            // offset pos 0 has still not been stored, return 1 
+            return 1;
+        } else {
+            // other situations
+            auto iter = this->splitAxis.begin();
+            for(int i = 0; iter != this->splitAxis.end(); i++, ++iter){
+                if(this->splitAxis[i] > offset){
+                    return i + 1;
+                }
+            }
+            int originalIndex = this->splitAxis.size();
+            // if the first element is not -1, which means it has been stored.
+            // the index should be increased by 1
+            if(0 == this->splitAxis[0]){
+                originalIndex += 1;
+            }
+            return originalIndex;
+        }
+    }
+
+    int BlkSplitUtil::getSplittableLength(int offset){
+        int getSplitInfo = this->getSplit(offset);
+        if(getSplitInfo > 0){
+            for(int ptPos : this->splitAxis){
+                if(ptPos > offset){
+                    return ptPos - offset;
+                }
+            }
+            return this->maxOffset - offset;
+        } else {
+            CFDEBUG(std::cout << "ERROR: get split position occupied.." << std::endl;);
+            return 0;
+        }
+
+    }
+
     void BlkSplitUtil::setMaxOffset(int max){
         this->maxOffset = max;
     }
@@ -70,7 +120,7 @@ namespace smack
                 }
             }
         }
-        return std::pair<bool, int>(false, 0);
+        return std::pair<bool, int>(false, -1);
     }
 
 
@@ -131,6 +181,32 @@ namespace smack
         return false;
     }
 
+
+    void BlkSplitUtil::wipeInterval(int fromOffset, int toOffset){
+               CFDEBUG(std::cout << "INFO: maxOffset: " << this->maxOffset << std::endl;);
+        assert(fromOffset >= 0 && fromOffset < this->maxOffset && 
+               toOffset   >= 0 && toOffset   <= this->maxOffset);
+        if(this->isInitialized(fromOffset) && this->getInitializedPrefixLength(fromOffset) != 0 ||
+           this->isInitialized(toOffset)   && this->getInitializedPrefixLength(toOffset)   != 0){
+               CFDEBUG(std::cout << "ERROR: blk is splitted when wiping, please check" << std::endl;);
+               assert(false);
+        }
+        for(int i = 0; i < this->splitAxis.size(); i++){
+            int val = this->splitAxis[i];
+            if(val >= fromOffset && val < toOffset){
+                this->splitAxis.erase(this->splitAxis.begin() + i);
+            } 
+
+            std::map<int, int>::iterator it;
+            for(it = this->offsetPosToSize.begin(); it != this->offsetPosToSize.end(); it++){
+                if(it->first == val){
+                    this->offsetPosToSize.erase(it);
+                    break;
+                }
+            }
+        }
+    }
+
     
 
 
@@ -158,6 +234,25 @@ namespace smack
     int StoreSplitter::addSplitLength(std::string allocName, int offset, int length){
         if(this->splitMap.find(allocName) != this->splitMap.end()){
             return this->splitMap[allocName]->addSplitLength(offset, length);
+        } else {
+            CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
+            return -1;
+        }
+    }
+
+
+    int StoreSplitter::getSplit(std::string allocName, int offset){
+        if(this->splitMap.find(allocName) != this->splitMap.end()){
+            return this->splitMap[allocName]->getSplit(offset);
+        } else {
+            CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
+            return -1;
+        }
+    }
+
+    int StoreSplitter::getSplittableLength(std::string allocName, int offset){
+        if(this->splitMap.find(allocName) != this->splitMap.end()){
+            return this->splitMap[allocName]->getSplittableLength(offset);
         } else {
             CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
             return -1;
@@ -271,6 +366,18 @@ namespace smack
             return -1;
         }
 
+    }
+
+
+    void StoreSplitter::wipeInterval(std::string allocName, int fromOffset, int toOffset){
+        // this method can only be used when the corresponding area of symbolic heap is modified
+        if(this->splitMap.find(allocName) != this->splitMap.end()){
+            CFDEBUG(std::cout << "INFO: Wipe interval [" << fromOffset << ", " << toOffset << ")" << std::endl;);
+            this->splitMap[allocName]->wipeInterval(fromOffset, toOffset);
+        } else {
+            CFDEBUG(std::cout << "ERROR: alloc name not exists " << allocName << std::endl;);
+            assert(false);
+        }
     }
 
     void StoreSplitter::setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap){

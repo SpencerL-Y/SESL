@@ -29,8 +29,9 @@ namespace smack
         std::string bb_repeat_str = "_bb";
         if(this->varsMap.find(name) == this->varsMap.end()){
             CFDEBUG(std::cout << "WARNING: This is not correct use, please check, getVar after useVar" << std::endl;);
-            const VarExpr* newVar = new VarExpr(name + bb_repeat_str + "0");
-            this->varsMap[name] = 1;
+            // TODOsh: check whether to commented
+            // const VarExpr* newVar = new VarExpr(name + bb_repeat_str + "0");
+            // this->varsMap[name] = 1;
             return nullptr;
         } else {
             const VarExpr* varExpr = new VarExpr(name + bb_repeat_str + std::to_string(this->varsMap[name]));

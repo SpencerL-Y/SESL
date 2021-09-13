@@ -8,7 +8,7 @@ void reach_error() { assert(0); }
 #include <stdlib.h>
 #include <string.h>
 
-char a[sizeof(int*)];
+char a[2 * sizeof(int*)];
 void foo(void)
 {
    int *p = (int *)malloc(10);

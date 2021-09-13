@@ -953,7 +953,7 @@ namespace smack{
             return sh;
         }
         CFDEBUG(std::cout << "INFO: Memcpy source information -------------- " << std::endl;);
-        CFDEBUG(std::cout << "INFO: Memcpy source: " << srcMallocName << " " << srcOffset << " " << copySize << std::endl;);
+        CFDEBUG(std::cout << "INFO: Memcpy source: " << srcMallocName << " " << srcOffset << " " << copySize - 1<< std::endl;);
         
         
         // discussion of dstLocation
@@ -1019,7 +1019,7 @@ namespace smack{
         }
         CFDEBUG(std::cout << "src head position: " << srcOffset << std::endl);
         CFDEBUG(std::cout << "src tail position: " << srcOffset + copySize - 1 << std::endl);
-        bool isSrcHeadPtSplitted = !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset).first);
+        bool isSrcHeadPtSplitted = this->storeSplit->isInitialized(srcMallocName, srcOffset) && !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset).first);
         // the tail is initialized but not the head of some pt predicate
         bool isSrcTailPtSplitted = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize) && 
         !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset + copySize).first);
@@ -1030,7 +1030,7 @@ namespace smack{
         }
 
         // replace the section in the dst region
-        bool isDstHeadPtSplitted = !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset).first);
+        bool isDstHeadPtSplitted = this->storeSplit->isInitialized(dstMallocName, dstOffset) && !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset).first);
         bool isDstTailPtSplitted = this->storeSplit->isInitialized(dstMallocName, dstOffset + copySize) && !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset + copySize).first);
 
         CFDEBUG(std::cout << "src head pt splitted: " << isSrcHeadPtSplitted << std::endl);
@@ -1323,12 +1323,13 @@ namespace smack{
             int ptStepSize = copiedPt->getStepSize();
             const VarExpr* toVar = (const VarExpr*) copiedPt->getTo();
             const VarExpr* oldFromVar = (const VarExpr*) copiedPt->getFrom();
-            int fromStepSize = this->getStepSizeOfPtrVar(oldFromVar->name());
+            int fromStepSize = ptStepSize;
             const VarExpr* freshFromVar = this->createAndRegisterFreshPtrVar(fromStepSize, dstMallocName, cumulatedOffset);
             
 
             const SpatialLiteral* newSetPt = this->createPtAccordingToMallocName(dstMallocName, freshFromVar, toVar, ptStepSize);
-            const SpatialLiteral* emptyBlk = this->createBlkAccordingToMallocName(dstMallocName, freshFromVar, freshFromVar, 0);
+            const Expr* empBlkExpr = Expr::add(freshFromVar, Expr::lit((long long) ptStepSize));
+            const SpatialLiteral* emptyBlk = this->createBlkAccordingToMallocName(dstMallocName, empBlkExpr, empBlkExpr, 0);
             this->storeSplit->addSplit(dstMallocName, cumulatedOffset);
             this->storeSplit->addSplitLength(dstMallocName, cumulatedOffset, ptStepSize);
             newSpatial.push_back(newSetPt);

@@ -183,8 +183,9 @@ namespace smack
 
 
     void BlkSplitUtil::wipeInterval(int fromOffset, int toOffset){
+               CFDEBUG(std::cout << "INFO: maxOffset: " << this->maxOffset << std::endl;);
         assert(fromOffset >= 0 && fromOffset < this->maxOffset && 
-               toOffset   >= 0 && toOffset   < this->maxOffset);
+               toOffset   >= 0 && toOffset   <= this->maxOffset);
         if(this->isInitialized(fromOffset) && this->getInitializedPrefixLength(fromOffset) != 0 ||
            this->isInitialized(toOffset)   && this->getInitializedPrefixLength(toOffset)   != 0){
                CFDEBUG(std::cout << "ERROR: blk is splitted when wiping, please check" << std::endl;);
@@ -371,6 +372,7 @@ namespace smack
     void StoreSplitter::wipeInterval(std::string allocName, int fromOffset, int toOffset){
         // this method can only be used when the corresponding area of symbolic heap is modified
         if(this->splitMap.find(allocName) != this->splitMap.end()){
+            CFDEBUG(std::cout << "INFO: Wipe interval [" << fromOffset << ", " << toOffset << ")" << std::endl;);
             this->splitMap[allocName]->wipeInterval(fromOffset, toOffset);
         } else {
             CFDEBUG(std::cout << "ERROR: alloc name not exists " << allocName << std::endl;);

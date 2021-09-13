@@ -120,7 +120,7 @@ namespace smack
                 }
             }
         }
-        return std::pair<bool, int>(false, 0);
+        return std::pair<bool, int>(false, -1);
     }
 
 
@@ -197,7 +197,7 @@ namespace smack
             } 
 
             std::map<int, int>::iterator it;
-            for(it = this->offsetPosToSize.begin(); it != this->offsetPosToSize.end(); it ++){
+            for(it = this->offsetPosToSize.begin(); it != this->offsetPosToSize.end(); it++){
                 if(it->first == val){
                     this->offsetPosToSize.erase(it);
                     break;

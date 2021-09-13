@@ -920,7 +920,8 @@ namespace smack{
         const Expr* dstLocation = paramsVec[2];
         const Expr* copySizeExpr = paramsVec[4];
         
-        copySize = copySizeExpr->translateToInt(this->varEquiv);
+        copySize = copySizeExpr->translateToInt(this->varEquiv).second;
+        
         // discussion of sourceLocation
         if(sourceLocation->isVar()){
             srcOrigVar = (const VarExpr*) sourceLocation;
@@ -928,7 +929,7 @@ namespace smack{
             srcVar = this->getUsedVarAndName(srcOrigVarName).first;
             srcVarName = this->getUsedVarAndName(srcOrigVarName).second;
             srcMallocName = this->varEquiv->getBlkName(srcVarName);
-            srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv);
+            srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv).second;
             srcOffset = this->varEquiv->getOffset(srcVarName);;
         } else if(sourceLocation->getType() == ExprType::FUNC){
             const FunExpr* ptrArithFunc = (const FunExpr*) sourceLocation;
@@ -943,7 +944,7 @@ namespace smack{
             srcOrigVarName = srcOrigVar->name();
             srcVarName = srcVar->name();
             srcMallocName = this->varEquiv->getBlkName(srcOrigVarName);
-            srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv);
+            srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv).second;
             srcOffset = this->varEquiv->getOffset(srcVarName);
 
         } else {
@@ -951,16 +952,18 @@ namespace smack{
             assert(false);
             return sh;
         }
+        CFDEBUG(std::cout << "INFO: Memcpy source information -------------- " << std::endl;);
         CFDEBUG(std::cout << "INFO: Memcpy source: " << srcMallocName << " " << srcOffset << " " << copySize << std::endl;);
+        
         
         // discussion of dstLocation
         if(dstLocation->isVar()){
-            dstOrigVar = dstLocation;
+            dstOrigVar = (const VarExpr*) dstLocation;
             dstOrigVarName = dstOrigVar->name();
             dstVar = this->getUsedVarAndName(dstOrigVarName).first;
             dstVarName = this->getUsedVarAndName(dstOrigVarName).second;
             dstMallocName = this->varEquiv->getBlkName(dstVarName);
-            dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv);
+            dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv).second;
             dstOffset = this->varEquiv->getOffset(dstVarName);
         } else if(dstLocation->getType() == ExprType::FUNC){
             
@@ -975,7 +978,7 @@ namespace smack{
             dstOrigVarName = freshDstVar->name();
             dstVarName = freshDstVar->name();
             dstMallocName = this->varEquiv->getBlkName(dstOrigVarName);
-            dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv);
+            dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv).second;
             dstOffset = this->varEquiv->getOffset(dstVarName);
              
         } else {
@@ -983,7 +986,8 @@ namespace smack{
             assert(false);
             return sh;
         }
-        CFDEBUG(std::cout << "INFO: Memcpy dst: " << dstMallocName << " " << dstOffset << " " << copySize << std::endl;)
+        CFDEBUG(std::cout << "INFO: Memcpy dst information --------------" << std::endl;);
+        CFDEBUG(std::cout << "INFO: Memcpy dst: " << dstMallocName << " " << dstOffset << " " << copySize - 1 << std::endl;)
         
         // if the copy is overlapping, report the error
 
@@ -1004,35 +1008,56 @@ namespace smack{
             CFDEBUG(std::cout << "INFERROR: memcopy out of range.." << std::endl;);
             return newSH;
         }
+        if(copySize < 0){
+            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE));
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+            newSH->print(std::cout);
+            std::cout << std::endl;
 
+            CFDEBUG(std::cout << "INFERROR: memcopy size error.." << std::endl;);
+            return newSH;
+        }
+        CFDEBUG(std::cout << "src head position: " << srcOffset << std::endl);
+        CFDEBUG(std::cout << "src tail position: " << srcOffset + copySize - 1 << std::endl);
         bool isSrcHeadPtSplitted = !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset).first);
-        bool isSrcTailPtSplitted = !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset + copySize).first);
+        // the tail is initialized but not the head of some pt predicate
+        bool isSrcTailPtSplitted = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize) && 
+        !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset + copySize).first);
         if(isSrcHeadPtSplitted || isSrcTailPtSplitted){
-            CFDEBUG(std::cout  << "ERROR: src  pt splitted situation currently not considered" << std::endl;);
+            CFDEBUG(std::cout  << "ERROR: src  pt splitted situation currently not considered: head tail: " << isSrcHeadPtSplitted << " " << isSrcTailPtSplitted << std::endl;);
             assert(false);
             return nullptr;
         }
 
         // replace the section in the dst region
         bool isDstHeadPtSplitted = !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset).first);
-        bool isDstTailPtSplitted = !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset + copySize).first);
+        bool isDstTailPtSplitted = this->storeSplit->isInitialized(dstMallocName, dstOffset + copySize) && !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset + copySize).first);
+
+        CFDEBUG(std::cout << "src head pt splitted: " << isSrcHeadPtSplitted << std::endl);
+        CFDEBUG(std::cout << "src tail pt splitted: " << isSrcTailPtSplitted << std::endl);
+        CFDEBUG(std::cout << "dst head pt splitted: " << isDstHeadPtSplitted << std::endl);
+        CFDEBUG(std::cout << "dst tail pt splitted: " << isDstTailPtSplitted << std::endl);
+        
         if(isDstHeadPtSplitted || isDstTailPtSplitted){
-            CFDEBUG(std::cout  << "ERROR: dst pt splitted situation currently not considered" << std::endl;);
+            CFDEBUG(std::cout << "ERROR: dst pt splitted situation currently not considered" << std::endl;);
             assert(false);
             return nullptr;
         }
 
+        CFDEBUG(std::cout << "INFO:--------------- BEGIN COPY --------------- " << std::endl;);
         // whether head and tail of an copied area located in some pt 
         // TODOsh: make sure the tail offset computation is correct
         bool isSrcHeadInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset);
-        bool isSrcTailInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize);
-        int srcHeadPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset);
-        int srcHeadBlkIndex = this->storeSplit->getSplit(srcMallocName, srcOffset);
-        int srcTailPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset + copySize);
-        int srcTailBlkIndex = this->storeSplit->getSplit(srcMallocName, srcOffset + copySize);
-        // number of pt covered by the copied area
-        int srcCoveredPtNum = this->storeSplit->computeCoveredNumOfPts(srcMallocName, srcOffset, copySize);
-    
+        bool isSrcTailInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize - 1);
+        int srcHeadPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset).second;
+        int srcHeadBlkIndex = isSrcHeadInitialized? -1 : this->storeSplit->getSplit(srcMallocName, srcOffset);
+        int srcTailPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset + copySize - 1).second;
+        int srcTailBlkIndex = isSrcTailInitialized ? -1 : this->storeSplit->getSplit(srcMallocName, srcOffset + copySize - 1);
+        
+        CFDEBUG(std::cout << "src head initialized: " << isSrcHeadInitialized << std::endl);
+        CFDEBUG(std::cout << "src tail initialized: " << isSrcTailInitialized << std::endl);
+        CFDEBUG(std::cout << "src head pt index and blk index: " << srcHeadPtIndex << " " << srcHeadBlkIndex << std::endl);
+        CFDEBUG(std::cout << "src tail pt index and blk index : " << srcTailPtIndex << " " << srcTailBlkIndex << std::endl);
 
         bool srcBeginCounting = false;
         bool srcBeginBytifying = false;
@@ -1052,14 +1077,14 @@ namespace smack{
                !isSrcHeadInitialized && srcCurrentBlkIndex >= srcHeadBlkIndex){
                 srcBeginBytifying = true;
             }
-            if(isSrcTailInitialized && srcCurrentPtIndex >= srcTailPtIndex || 
-              !isSrcTailInitialized && srcCurrentBlkIndex >= srcTailBlkIndex){
+            if(isSrcTailInitialized && srcCurrentPtIndex > srcTailPtIndex || 
+              !isSrcTailInitialized && srcCurrentBlkIndex > srcTailBlkIndex){
                 srcBeginBytifying = false;
             }
             if(srcBeginCounting) {
                 if(SpatialLiteral::Kind::BLK == spl->getId()){
                     if(srcBeginBytifying){
-                        std::pair<std::list<const SpatialLiteral>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
+                        std::pair<std::list<const SpatialLiteral*>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
                         for(const SpatialLiteral* i : resultBytifiedPurePair.first){
                             srcBytifiedSpatial.push_back(i);
                         }
@@ -1089,8 +1114,9 @@ namespace smack{
         
 
         // after bytifying, the head and tail must be pt predicates
-        int newSrcHeadPtIndex = this->storeSplit->getOffsetPos(srcMallocName, srcOffset);
-        int newSrcTailPtIndex = this->storeSplit->getOffsetPos(srcMallocName, srcOffset + copySize);
+        int newSrcHeadPtIndex = this->storeSplit->getOffsetPos(srcMallocName, srcOffset).second;
+        int newSrcTailPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset + copySize - 1).second;
+        CFDEBUG(std::cout << "new srcheadPtIndex and srcTailPtIndex: " << newSrcHeadPtIndex << " " << newSrcTailPtIndex << std::endl;);
         assert(newSrcHeadPtIndex <= newSrcTailPtIndex);
         int newCurrentSrcPtIndex = 1;
         bool newSrcBeginCounting = false;
@@ -1106,14 +1132,14 @@ namespace smack{
             if(newSrcBeginCounting){
                 if(nspl->getId() == SpatialLiteral::Kind::BLK){
                     if(newCurrentSrcPtIndex >= newSrcHeadPtIndex && 
-                       newCurrentSrcPtIndex < newSrcTailPtIndex) {
+                       newCurrentSrcPtIndex <= newSrcTailPtIndex) {
                         const BlkLit* tempBlk = (const BlkLit*) nspl;
                         CFDEBUG(std::cout << "INFO: check memcopy blk zero size.." << std::endl;);
                         assert(tempBlk->getBlkByteSize() == 0);
                     }
                 } else if(nspl->getId() == SpatialLiteral::Kind::PT){
                     if(newCurrentSrcPtIndex >= newSrcHeadPtIndex && 
-                       newCurrentSrcPtIndex < newSrcTailPtIndex) {
+                       newCurrentSrcPtIndex <= newSrcTailPtIndex) {
                         copiedSpatialPts.push_back(nspl);
                     }
                     newCurrentSrcPtIndex += 1;
@@ -1126,19 +1152,36 @@ namespace smack{
             }
         }
 
+        CFDEBUG(std::cout << "INFO: src bytified ---" << std::endl;);
+        for(const SpatialLiteral* sbsl : srcBytifiedSpatial){
+            sbsl->print(std::cout);
+            std::cout << " # ";
+            std::cout << std::endl;
+        }
+        CFDEBUG(std::cout << "INFO: copied ---" << std::endl;);
+        for(const SpatialLiteral* cpsl : copiedSpatialPts){
+            cpsl->print(std::cout);
+            std::cout << " # ";
+            std::cout << std::endl;
+        }
 
-        
+
+        CFDEBUG(std::cout << "INFO:--------------- END COPY --------------- " << std::endl;);
+
+        CFDEBUG(std::cout << "INFO:--------------- BEGIN PASTE --------------- " << std::endl;);
         // whether head and tail of an copied area located in some pt 
         // TODOsh: make sure the tail offset computation is correct
         bool isDstHeadInitialized = this->storeSplit->isInitialized(dstMallocName, dstOffset);
-        bool isDstTailInitialized = this->storeSplit->isInitialized(dstMallocName, dstOffset + copySize);
-        int dstHeadPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset);
-        int dstHeadBlkIndex = this->storeSplit->getSplit(dstMallocName, dstOffset);
-        int dstTailPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset + copySize);
-        int dstTailBlkIndex = this->storeSplit->getSplit(dstMallocName, dstOffset + copySize);
-        // number of pt covered by the copied area
-        int dstCoveredPtNum = this->storeSplit->computeCoveredNumOfPts(dstMallocName, dstOffset, copySize);
-    
+        bool isDstTailInitialized = this->storeSplit->isInitialized(dstMallocName, dstOffset + copySize - 1);
+        int dstHeadPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset).second;
+        int dstHeadBlkIndex = isDstHeadInitialized ? -1 : this->storeSplit->getSplit(dstMallocName, dstOffset);
+        int dstTailPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset + copySize - 1).second;
+        int dstTailBlkIndex = isDstTailInitialized ? -1 : this->storeSplit->getSplit(dstMallocName, dstOffset + copySize - 1);
+
+        CFDEBUG(std::cout << "dst head initialized: " << isDstHeadInitialized << std::endl);
+        CFDEBUG(std::cout << "dst tail initialized: " << isDstTailInitialized << std::endl);
+        CFDEBUG(std::cout << "dst head pt index and blk index: " << dstHeadPtIndex << " " << dstHeadBlkIndex << std::endl);
+        CFDEBUG(std::cout << "dst tail pt index and blk index : " << dstTailPtIndex << " " << dstTailBlkIndex << std::endl);
 
         bool dstBeginCounting = false;
         bool dstBeginBytifying = false;
@@ -1158,14 +1201,14 @@ namespace smack{
                !isDstHeadInitialized && dstCurrentBlkIndex >= dstHeadBlkIndex){
                 dstBeginBytifying = true;
             }
-            if(isDstTailInitialized && dstCurrentPtIndex >= dstTailPtIndex || 
-              !isDstTailInitialized && dstCurrentBlkIndex >= dstTailBlkIndex){
+            if(isDstTailInitialized && dstCurrentPtIndex > dstTailPtIndex || 
+              !isDstTailInitialized && dstCurrentBlkIndex > dstTailBlkIndex){
                 dstBeginBytifying = false;
             }
             if(dstBeginCounting) {
                 if(SpatialLiteral::Kind::BLK == spl->getId()){
                     if(dstBeginBytifying){
-                        std::pair<std::list<const SpatialLiteral>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
+                        std::pair<std::list<const SpatialLiteral*>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
                         for(const SpatialLiteral* i : resultBytifiedPurePair.first){
                             dstBytifiedSpatial.push_back(i);
                         }
@@ -1192,38 +1235,50 @@ namespace smack{
                 dstBytifiedSpatial.push_back(spl);
             }
         }
-
+        CFDEBUG(std::cout << "INFO: dst bytified ---" << std::endl;);
+        for(const SpatialLiteral* dbsl : dstBytifiedSpatial){
+            dbsl->print(std::cout);
+            std::cout << " # ";
+            std::cout << std::endl;
+        }
         
         // rename all the ptr variable, add zero blk literals to the copiedVector
         // to copy, first erase the target storeSplit, symbolicHeap 
         // and compute the offset and modify the storeSplit
-        int newDstHeadPtIndex = this->storeSplit->getOffsetPos(dstMallocName, dstOffset);
-        int newDstTailPtIndex = this->storeSplit->getOffsetPos(dstMallocName, dstOffset + copySize);
+        int newDstHeadPtIndex = this->storeSplit->getOffsetPos(dstMallocName, dstOffset).second;
+        int newDstTailPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset + copySize - 1).second;
+        CFDEBUG(std::cout << "new srcheadPtIndex and srcTailPtIndex: " << newDstHeadPtIndex << " " << newDstTailPtIndex << std::endl;);
         std::list<const SpatialLiteral*> leftLiterals;
         std::list<const SpatialLiteral*> rightLiterals;
         bool isLeft = true;
         bool isRight = false;
+        bool nextRight = false;
         assert(newDstHeadPtIndex <= newDstTailPtIndex);
-        int newCurrentDstPtIndex = 1;
+        int newCurrentDstPtIndex = 0;
         bool newDstBeginCounting = false;
          for(const SpatialLiteral* spl : dstBytifiedSpatial){
+            CFDEBUG(std::cout << "INFO: newCurrentDstPtIndex: " << newCurrentDstPtIndex << std::endl;);
             // iterate over old symbolic heap and modify
             if(SpatialLiteral::Kind::SPT == spl->getId()){
                 if(!spl->getBlkName().compare(dstMallocName)){
                     newDstBeginCounting = true;
                 }
             }
+            
             if(newDstBeginCounting){
+                
+                
+                assert(!(isLeft && isRight));
+
+                if(SpatialLiteral::Kind::PT == spl->getId()){
+                    newCurrentDstPtIndex += 1;
+                }
+
                 if(newCurrentDstPtIndex ==  newDstHeadPtIndex){
                     isLeft = false;
                 }
-                if(newCurrentDstPtIndex ==  newDstTailPtIndex){
+                if(newCurrentDstPtIndex >  newDstTailPtIndex){
                     isRight = true;
-                }
-                assert(!(isLeft && isRight));
-
-                if(SpatialLiteral::Kind::PT == spl->getType()){
-                    newCurrentDstPtIndex += 1;
                 }
             } 
             if(isLeft){
@@ -1232,10 +1287,30 @@ namespace smack{
             if(isRight){
                 rightLiterals.push_back(spl);
             }
+            
+        }
+
+        CFDEBUG(std::cout << "INFO: LEFT---" << std::endl;);
+        for(const SpatialLiteral* lsl : leftLiterals){
+            lsl->print(std::cout);
+            std::cout << " # ";
+            std::cout << std::endl;
+        }
+        CFDEBUG(std::cout << "INFO: COPIED---" << std::endl;);
+        for(const SpatialLiteral* csl : copiedSpatialPts){
+            csl->print(std::cout);
+            std::cout << " # ";
+            std::cout << std::endl;
+        }
+        CFDEBUG(std::cout << "INFO: RIGHT---" << std::endl;);
+        for(const SpatialLiteral* rsl : rightLiterals){
+            rsl->print(std::cout);
+            std::cout << " # ";
+            std::cout << std::endl;
         }
 
 
-
+        // wipe the storeSplit interval [dstOffset, dstOffset + copySize)
         this->storeSplit->wipeInterval(dstMallocName, dstOffset, dstOffset + copySize);
         for(const SpatialLiteral* left : leftLiterals){
             newSpatial.push_back(left);
@@ -1246,23 +1321,25 @@ namespace smack{
             const PtLit* copiedPt = (const PtLit*) spl;
             
             int ptStepSize = copiedPt->getStepSize();
-            const VarExpr* toVar = copiedPt->getTo();
+            const VarExpr* toVar = (const VarExpr*) copiedPt->getTo();
             const VarExpr* oldFromVar = (const VarExpr*) copiedPt->getFrom();
             int fromStepSize = this->getStepSizeOfPtrVar(oldFromVar->name());
             const VarExpr* freshFromVar = this->createAndRegisterFreshPtrVar(fromStepSize, dstMallocName, cumulatedOffset);
             
 
-            const PtLit* newSetPt = this->createPtAccordingToMallocName(dstMallocName, freshFromVar, toVar, ptStepSize);
-            const PtLit* emptyBlk = this->createBlkAccordingToMallocName(dstMallocName, freshFromVar, freshFromVar, 0);
+            const SpatialLiteral* newSetPt = this->createPtAccordingToMallocName(dstMallocName, freshFromVar, toVar, ptStepSize);
+            const SpatialLiteral* emptyBlk = this->createBlkAccordingToMallocName(dstMallocName, freshFromVar, freshFromVar, 0);
             this->storeSplit->addSplit(dstMallocName, cumulatedOffset);
             this->storeSplit->addSplitLength(dstMallocName, cumulatedOffset, ptStepSize);
-            newSpatial.push_back(newSetPt, emptyBlk);
+            newSpatial.push_back(newSetPt);
+            newSpatial.push_back(emptyBlk);
             cumulatedOffset += ptStepSize;
         }
-
         for(const SpatialLiteral* right : rightLiterals){
             newSpatial.push_back(right);
         }
+        CFDEBUG(std::cout << "INFO:--------------- END PASTE --------------- " << std::endl;);
+
 
         SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
         newSH->print(std::cout);
@@ -3136,7 +3213,9 @@ namespace smack{
                VarType::PTR == this->getVarType(dstVar->name()));
         std::string srcVarMallocName = this->varEquiv->getBlkName(srcVar->name());
         std::string dstvarMallocName = this->varEquiv->getBlkName(dstVar->name());
-        assert(!srcVarMallocName.compare(dstvarMallocName));
+        if(srcVarMallocName.compare(dstvarMallocName)){
+            return false;
+        }
         int srcVarOffset = this->computeArithmeticOffsetValue(srcVar);
         int dstVarOffset = this->computeArithmeticOffsetValue(dstVar);
         if(dstVarOffset + copySize > srcVarOffset && srcVarOffset >= dstVarOffset ||

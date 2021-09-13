@@ -1353,7 +1353,7 @@ namespace smack {
                 return st->getSize();
             }
         }
-        CFDEBUG(std::cout << "ERROR: Block Name not found" << std::endl;);
+        CFDEBUG(std::cout << "ERROR: Block Name not found: " <<  blkName << std::endl;);
         return nullptr;
     }
 

@@ -19,7 +19,7 @@ int main(void)
 {
    foo();
    void *p;
-   memcpy(&p, a + 1, sizeof p);
+   memcpy(&p, a, sizeof p);
    free(p);
 }
 

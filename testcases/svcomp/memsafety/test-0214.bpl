@@ -538,7 +538,7 @@ procedure  $memset.i8(M: [ref] i8, dst: ref, val: i8, len: ref, isvolatile: bool
   assume (forall x: ref :: $sle.ref.bool($add.ref(dst,len),x) ==> M.ret[x] == M[x]);
 }
 
-const $u0: i32;
+const {:global_variable} $u0: i32;
 procedure  boogie_si_record_i32(x: i32);
 procedure  boogie_si_record_ref(x: ref);
 procedure  $initialize()

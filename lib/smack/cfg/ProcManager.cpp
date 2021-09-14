@@ -7,7 +7,7 @@
 #include <utility>
 
 namespace smack {
-    int ProcManager::inlineDepthBound = 20;
+    int ProcManager::inlineDepthBound = 10;
     unordered_map<string, pair<ProcDecl *, int>> ProcManager::originProcedures = {};
 
     ProcManager::ProcManager(ProcDecl *old) : oldProc(old), newProc(nullptr), nameCounter(0) {

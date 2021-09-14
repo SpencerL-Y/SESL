@@ -133,6 +133,8 @@ namespace smack{
 
         SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
 
+        SHExprPtr executeAssignSingle(SHExprPtr sh, const Expr* lhs, const Expr* rhs);
+
         SHExprPtr executeAssume(SHExprPtr sh, const Stmt* stmt);
 
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);

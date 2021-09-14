@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <set>
 #include <memory>
 #include "z3++.h"
 #include "utils/TranslatorUtil.h"

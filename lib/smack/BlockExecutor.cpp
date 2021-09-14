@@ -2863,7 +2863,8 @@ namespace smack{
                 this->varEquiv->addNewOffset(lhsVar->name(), rhsPtrArithmeticOffset);
             }
             if(storedExpr->translateToInt(this->varEquiv).first){
-                assert(false);
+                // TODOsh: EMERGENT..
+                //assert(false);
                 this->varEquiv->addNewVal(lhsVar->name(), storedExpr->translateToInt(this->varEquiv).second);
             }
         }

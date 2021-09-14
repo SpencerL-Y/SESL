@@ -95,6 +95,10 @@ const llvm::cl::opt<bool> SmackOptions::SymbolicHeapMemoryLeak(
         "sh-mem-leak",
         llvm::cl::desc("Use separation logic to detect memory leak."));
 
+const llvm::cl::opt<bool> SmackOptions::AddLineInfo(
+        "add-line-info",
+        llvm::cl::desc("used to find corresponding source code from boogie."));
+
 bool SmackOptions::isEntryPoint(std::string name) {
   for (auto EP : EntryPoints)
     if (name == EP)

@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <set>
 #include <memory>
 #include "z3++.h"
 #include "utils/TranslatorUtil.h"
@@ -1236,6 +1237,8 @@ namespace smack {
             }
             return false;
         }
+
+        std::string getType() const { return this->type;}
         static bool classof(const Decl *D) { return D->getKind() == CONSTANT; }
     };
 

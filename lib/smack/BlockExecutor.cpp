@@ -19,6 +19,8 @@ namespace smack{
             
             bool sizeAttrFound = false;
             const Expr* allocSizeExpr = nullptr;
+            std::string typeStr = cd->getType();
+
             for(const Attr* a : cd->getAttrs()){
                 if(!a->getName().compare("pointer_to_size")){
                     sizeAttrFound = true;
@@ -26,50 +28,65 @@ namespace smack{
                 }
             }
             if(!sizeAttrFound){
-                CFDEBUG(std::cout << "ERROR: global attribute " << cd->getName() << " does not have attribute  pointer_to_size");
-                return nullptr;
-            }
-            // treat the global ptr the same way as $alloc
-            std::string staticVarOrigName = cd->getName();
-            // The var should only be used once since it is global
-            CFDEBUG(std::cout << "INFO: useVar " << staticVarOrigName << std::endl;);
-            this->cfg->addVarType(staticVarOrigName, "ref");
-            const VarExpr* staticVar = this->varFactory->useVar(staticVarOrigName);
-            std::string staticVarName = staticVar->name();
+                
+                std::string globalVarOrigName = cd->getName();
+                CFDEBUG(std::cout << "INFO: register global variable: " << globalVarOrigName << " : " << typeStr <<  std::endl;);
+                this->cfg->addVarType(globalVarOrigName, typeStr);
+                std::pair<const VarExpr*, std::string> usedVarNamePair = this->useVarAndName(globalVarOrigName);
+                const VarExpr* globalVar = usedVarNamePair.first;
+                std::string globalVarName = usedVarNamePair.second;
+                if(this->getVarType(globalVarName) == VarType::DATA){
+                    this->registerDataVar(globalVar);
+                } else {
+                    CFDEBUG(std::cout << "ERROR: executeGlobal this situation should not happen since mallocName unknown" << std::endl;);
+                    return nullptr;
+                }
+            } else {
+                // treat the global ptr the same way as $alloc
+                std::string staticVarOrigName = cd->getName();
+                
+                CFDEBUG(std::cout << "INFO: register region variable: " << staticVarOrigName << " : " << typeStr << std::endl;);
+                // The var should only be used once since it is global
+                CFDEBUG(std::cout << "INFO: useVar " << staticVarOrigName << std::endl;);
+                this->cfg->addVarType(staticVarOrigName, typeStr);
+                std::pair<const VarExpr*, std::string> usedVarNamePair = this->useVarAndName(staticVarOrigName);
+                const VarExpr* staticVar = usedVarNamePair.first;
+                std::string staticVarName = usedVarNamePair.second; 
 
-            assert(ExprType::INT == allocSizeExpr->getType());
-            int allocSize = ((IntLit*) allocSizeExpr)->getVal()/8;
-            
-            assert(allocSize > 0);
-            const Expr* blkSize = new IntLit((long long)allocSize);
-            this->varEquiv->addNewName(staticVarName);
-            this->varEquiv->addNewBlkName(staticVarName);
-            this->varEquiv->addNewOffset(staticVarName, 0);
-            this->varEquiv->setStructArrayPtr(staticVarName, true);
-            this->storeSplit->createAxis(staticVarName);
-            this->storeSplit->setMaxOffset(staticVarName, allocSize);
+                assert(ExprType::INT == allocSizeExpr->getType());
+                int allocSize = ((IntLit*) allocSizeExpr)->getVal()/8;
 
-            
-            const SpatialLiteral* sSizePt = SpatialLiteral::spt(
-                staticVar,
-                blkSize,
-                staticVarName
-            );
-            // bool empty = (allocSize > 0) ? false : true;
+                assert(allocSize > 0);
+                const Expr* blkSize = new IntLit((long long)allocSize);
+                this->varEquiv->addNewName(staticVarName);
+                this->varEquiv->addNewBlkName(staticVarName);
+                this->varEquiv->addNewOffset(staticVarName, 0);
+                this->varEquiv->setStructArrayPtr(staticVarName, true);
+                this->storeSplit->createAxis(staticVarName);
+                this->storeSplit->setMaxOffset(staticVarName, allocSize);
 
-            const SpatialLiteral* sAllocBlk = SpatialLiteral::gcBlk(
-                staticVar,
-                Expr::add(
+
+                const SpatialLiteral* sSizePt = SpatialLiteral::spt(
                     staticVar,
-                    blkSize
-                ),
-                staticVarName,
-                allocSize
-            );
+                    blkSize,
+                    staticVarName
+                );
+                // bool empty = (allocSize > 0) ? false : true;
 
-            newSpatialExpr.push_back(sSizePt);
-            newSpatialExpr.push_back(sAllocBlk);
-            CFDEBUG(std::cout << "INFO: var " << staticVarOrigName << " registered" << std::endl;);
+                const SpatialLiteral* sAllocBlk = SpatialLiteral::gcBlk(
+                    staticVar,
+                    Expr::add(
+                        staticVar,
+                        blkSize
+                    ),
+                    staticVarName,
+                    allocSize
+                );
+
+                newSpatialExpr.push_back(sSizePt);
+                newSpatialExpr.push_back(sAllocBlk);
+                CFDEBUG(std::cout << "INFO: var " << staticVarOrigName << " registered" << std::endl;);
+            }
         }
         SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
         newSH->print(std::cout);
@@ -3142,6 +3159,14 @@ namespace smack{
     }
 
 
+    void
+    BlockExecutor::registerDataVar
+    (const VarExpr* usedDataVar){
+        assert(this->getVarType(usedDataVar->name()) == VarType::DATA);
+        this->varEquiv->addNewName(usedDataVar->name());
+    }
+
+
     const VarExpr* 
     BlockExecutor::createAndRegisterFreshPtrVar
     (int stepSize, std::string mallocName, int offset){
@@ -3152,6 +3177,24 @@ namespace smack{
         this->varEquiv->linkBlkName(freshVar->name(), mallocName);
         this->varEquiv->addNewOffset(freshVar->name(), offset);
         return freshVar;
+    }
+
+
+    const VarExpr* 
+    BlockExecutor::registerPtrVar
+    (const VarExpr* usedPtrVar, std::string mallocName, int offset){
+        assert(this->getVarType(usedPtrVar->name()) == VarType::PTR || 
+               this->getVarType(usedPtrVar->name()) == VarType::NIL);
+        if(this->getVarType(usedPtrVar->name()) == VarType::NIL){
+            this->varEquiv->addNewName(usedPtrVar->name());
+            this->varEquiv->linkBlkName(usedPtrVar->name(), this->varFactory->getNullVar()->name());
+            this->varEquiv->addNewOffset(usedPtrVar->name(), this->varEquiv->getOffset(this->varFactory->getNullVar()->name()));
+        } else {
+            this->varEquiv->addNewName(usedPtrVar->name());
+            this->varEquiv->linkBlkName(usedPtrVar->name(), mallocName);
+            this->varEquiv->addNewOffset(usedPtrVar->name(), offset);
+
+        }
     }
 
 

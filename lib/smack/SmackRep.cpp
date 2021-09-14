@@ -821,7 +821,9 @@ namespace smack {
 
         } else if (isa<UndefValue>(v)) {
             std::string name = naming->get(*v);
-            auxDecls[name] = Decl::constant(name, type(v));
+            std::list<const Attr *> ax;
+            ax.push_back(Attr::attr("global_variable"));
+            auxDecls[name] = Decl::constant(name, type(v), ax, false);
             return Expr::id(name);
 
         } else if (naming->get(*v) != "") {

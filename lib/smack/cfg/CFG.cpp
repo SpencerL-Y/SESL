@@ -327,6 +327,7 @@ namespace smack {
     }
 
     void CFG::printConstDeclsInfo() {
+        cout << "=============================Printing Const Decls=============================";
         for (auto &decl : constDecls) {
             cout << "Decls: "; decl->print(cout);cout <<endl;
             cout << "\tvariable: " << decl->getName() << endl;

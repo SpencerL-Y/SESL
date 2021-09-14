@@ -30,20 +30,6 @@ namespace smack {
         std::cout << "Begin verifying" << std::endl;
         CFGUtil cfgUtil(program);
         CFGPtr mainGraph = cfgUtil.getMainCFG();
-        {
-            //processing global variables
-            std::cout << "Verifying globals" << std::endl;
-            auto& decls = program->getDeclarations();
-            vector<ConstDecl*> constDecls;
-            for (auto decl : decls) {
-                if (decl->getKind() == Decl::CONSTANT) {
-                    auto constDecl = (ConstDecl*) decl;
-                    if (constDecl->isGlobalVariable())
-                        constDecls.push_back(constDecl);
-                }
-            }
-            mainGraph->setConstDecls(constDecls);
-        }
         StatePtr state = mainGraph->getEntryState();
         // std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
         // Block* block = state->getStateBlock();
@@ -126,7 +112,7 @@ namespace smack {
 
         
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
-        
+
         return false;
     }
 

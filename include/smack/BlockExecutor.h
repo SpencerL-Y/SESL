@@ -125,13 +125,15 @@ namespace smack{
         void updateBindingsEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr, const Expr* storedExpr, bool isPtr);   
 
     public:
-        BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb); this->cfg->addVarType("$Null", "i64");}
+        BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb); this->cfg->addVarType("$Null", "ref64");}
 
         // --------------------- Execution for initialization
         SHExprPtr executeGlobal(SHExprPtr sh);
         // --------------------- Execution for instructions
 
         SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
+
+        SHExprPtr executeAssignSingle(SHExprPtr sh, const Expr* lhs, const Expr* rhs);
 
         SHExprPtr executeAssume(SHExprPtr sh, const Stmt* stmt);
 

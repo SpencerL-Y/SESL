@@ -76,315 +76,337 @@ namespace smack{
         std::cout << std::endl;
         return newSH;
     }
-    // ---------------------- Execution for Assign stmts ---------------
+    // ---------------------- Execution for Multiple Assign stmts -------------
+
     SHExprPtr BlockExecutor::executeAssign(SHExprPtr sh, const Stmt* assignStmt){
+
         assert(Stmt::ASSIGN == assignStmt->getKind());
-            const AssignStmt* stmt = (const AssignStmt*) assignStmt;
-            //TODOsh : here the assignment is restricted to the single assignment, may cause problem for boogie assignment.
-            const Expr* lhs = stmt->getLhs().front();
-            const Expr* rhs = stmt->getRhs().front();
-            // the original var in the source
-            const VarExpr* lhsOrigVar = NULL;
-            // var created by varFactory
-            const VarExpr* lhsVar = NULL;
-            const FunExpr* rhsFun = NULL;
-            // original varname in the source
-            std::string lhsVarOrigName;
-            // varname created by varFactory
-            std::string lhsVarName;
-            // Assign a variable
-            if(lhs->isVar()){
-                // lhs is a single var
-                lhsOrigVar = (const VarExpr* ) lhs;
-                lhsVarOrigName = lhsOrigVar->name();
-                // create a new lhs variable in varFactory
-                std::pair<const VarExpr*, std::string> usedVarNamePair = this->useVarAndName(lhsVarOrigName);
-                lhsVar = usedVarNamePair.first;
-                lhsVarName = usedVarNamePair.second;
-            } else {
-                CFDEBUG(std::cout << "ERROR: This should not happen.");
-                assert(false);
-            }
-            // TODOsh: refactor to make it more compatible with varFactory
-            if(lhsVarName.find("$M") != std::string::npos){
-                this->cfg->addVarType(lhsVarOrigName, "ref" + std::to_string(8 * PTR_BYTEWIDTH));
-            }
+        const AssignStmt* stmt = (const AssignStmt*) assignStmt;
+        //TODOsh : here the assignment is restricted to the single assignment, may cause problem for boogie assignment.
+        std::list<const Expr*> lhsList = stmt->getLhs();
+        std::list<const Expr*> rhsList = stmt->getRhs();
+        
+        SHExprPtr currSH = sh;
+        const Expr* currLhs = nullptr;
+        const Expr* currRhs = nullptr;
+        assert(lhsList.size() == rhsList.size() && lhsList.size() > 0);
+        while(lhsList.size() > 0 && rhsList.size() > 0){
+            currLhs = lhsList.front();
+            currRhs = rhsList.front();
 
-            if(ExprType::FUNC == rhs->getType()){
-                // rhs is a function expression, deal with the execution depending on the function met.
-                CFDEBUG(std::cout << "ASSIGN: rhs ExprType::FUNC" << std::endl;);
-                rhsFun = (const FunExpr* ) rhs;
-                //1. Deal with pointer first
-                if(this->isUnaryPtrCastFuncName(rhsFun->name())){
-                    CFDEBUG(std::cout << "ASSIGN: rhs Unary ptr cast" << std::endl;);
-                    const Expr* arg1 = rhsFun->getArgs().front();
-                    CFDEBUG(std::cout << "Arg1 Type: " << arg1->getType() << std::endl);
-                    
-                    if(arg1->isVar()){
+            currSH = this->executeAssignSingle(currSH, currLhs, currRhs);
+            lhsList.pop_front();
+            rhsList.pop_front();
+        }
+
+        SHExprPtr newSH = currSH;
+        return newSH;
+    }
+    
+    // ---------------------- Execution for Single Assign stmts ---------------
+    SHExprPtr BlockExecutor::executeAssignSingle(SHExprPtr sh, const Expr* lhs, const Expr* rhs){
+        // the original var in the source
+        const VarExpr* lhsOrigVar = NULL;
+        // var created by varFactory
+        const VarExpr* lhsVar = NULL;
+        const FunExpr* rhsFun = NULL;
+        // original varname in the source
+        std::string lhsVarOrigName;
+        // varname created by varFactory
+        std::string lhsVarName;
+        // Assign a variable
+        if(lhs->isVar()){
+            // lhs is a single var
+            lhsOrigVar = (const VarExpr* ) lhs;
+            lhsVarOrigName = lhsOrigVar->name();
+            // create a new lhs variable in varFactory
+            std::pair<const VarExpr*, std::string> usedVarNamePair = this->useVarAndName(lhsVarOrigName);
+            lhsVar = usedVarNamePair.first;
+            lhsVarName = usedVarNamePair.second;
+        } else {
+            CFDEBUG(std::cout << "ERROR: This should not happen.");
+            assert(false);
+        }
+        // TODOsh: refactor to make it more compatible with varFactory
+        if(lhsVarName.find("$M") != std::string::npos){
+            this->cfg->addVarType(lhsVarOrigName, "ref" + std::to_string(8 * PTR_BYTEWIDTH));
+        }
+
+        if(ExprType::FUNC == rhs->getType()){
+            // rhs is a function expression, deal with the execution depending on the function met.
+            CFDEBUG(std::cout << "ASSIGN: rhs ExprType::FUNC" << std::endl;);
+            rhsFun = (const FunExpr* ) rhs;
+            //1. Deal with pointer first
+            if(this->isUnaryPtrCastFuncName(rhsFun->name())){
+                CFDEBUG(std::cout << "ASSIGN: rhs Unary ptr cast" << std::endl;);
+                const Expr* arg1 = rhsFun->getArgs().front();
+                CFDEBUG(std::cout << "Arg1 Type: " << arg1->getType() << std::endl);
+                
+                if(arg1->isVar()){
 
 
-                        const VarExpr* rhsOrigVar = (const VarExpr*) arg1;
-                        std::string rhsOrigVarName = rhsOrigVar->name();
-                        const VarExpr* rhsVar = this->varFactory->getVar(rhsOrigVarName);
-                        std::string rhsVarName = rhsVar->name();
-
-                        this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
-                        
-                        const Expr* varEquality = Expr::eq(
-                            lhsVar,
-                            rhsVar
-                        );
-                        SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
-                        newSH->print(std::cout);
-                        CFDEBUG(std::cout << std::endl);
-                        return newSH;
-                    } else {
-                        // TODOsh: later there might be pointer arithmetic here.
-                        CFDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
-                        CFDEBUG(std::cout << "LHS TYPE: " << lhs->getType() << std::endl);
-                        CFDEBUG(std::cout << "RHS TYPE: " << rhs->getType() << std::endl); 
-                        return sh;
-                    }
-                } else if(this->isPtrArithFuncName(rhsFun->name())){
-                    CFDEBUG(std::cout << "ASSIGN: rhs ptr arithmetic" << std::endl;);
-                    std::pair<const Expr*, bool> parsedResult = this->getUsedArithExprAndVar(lhsVar, rhsFun);
-                    assert(parsedResult.second);
-                    const Expr* rhsExpr = parsedResult.first;
-
-                    this->updateBindingsEqualVarAndRhsArithExpr(lhsVar, rhsFun, rhsExpr, true);
-
-                    // if(ExprType::BIN == rhsExpr->getType()){
-                    //     const BinExpr* arithExpr = (const BinExpr*) rhsExpr;
-                    //     if(BinExpr::Binary::Plus == arithExpr->getOp()){
-                    //         const Expr* arithLhs = arithExpr->getLhs();
-                    //         const Expr* arithRhs = arithExpr->getRhs();
-                    //         if(arithLhs->isVar()){
-                    //             // This is for normal ptr arithmetic
-                    //             // normal ptr arithmetic is of the form
-                    //             // $p1 = $p0 + arithRhs
-                    //             const VarExpr* ptrVar = (const VarExpr*) arithLhs;
-                    //             int lhsOffset = this->varEquiv->getOffset(ptrVar->name());
-                    //             int rhsOffset = 0;
-                    //             assert(lhsOffset >= 0);
-                    //             auto rhsComputeResult = arithRhs->translateToInt(this->varEquiv);
-                    //             if(rhsComputeResult.first){
-                    //                 rhsOffset = rhsComputeResult.second;
-                    //                 this->varEquiv->addNewOffset(lhsVarName, (lhsOffset + rhsOffset));
-                    //             } else {
-                    //                 CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET 1!!!" << std::endl; rhsExpr->print(std::cout););
-                    //             }
-                    //         } else {
-                    //             // For other ptr arithmetic like struct and array
-                    //             int offsetVal = this->computeArithmeticOffsetValue(rhsExpr);
-                    //             const Expr* extractedExpr = this->extractPtrArithmeticVar(rhsExpr);
-                    //             assert(extractedExpr->isVar());
-                    //             const VarExpr* ptrVar = (const VarExpr*)extractedExpr;
-                    //             std::string ptrVarName = ptrVar->name();
-                    //             this->varEquiv->addNewOffset(lhsVarName, offsetVal);
-                    //         }
-                    //     }
-                    // } else {
-                    //     CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET !!!" << std::endl; rhsExpr->print(std::cout));
-                    // }
-
-                    // this->varEquiv->addNewName(lhsVarName);
-                    const Expr* varEquality = Expr::eq(
-                        lhsVar,
-                        rhsExpr
-                    );
-                    SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
-                    newSH->print(std::cout);
-                    CFDEBUG(std::cout << std::endl;);
-                    return newSH;
-                } 
-                //2. Deal with variables
-                else if(this->isUnaryAssignFuncName(rhsFun->name())){
-                    // TODOsh: only support a single parameter here
-                    const Expr* arg1 = rhsFun->getArgs().front();
-                    CFDEBUG(std::cout << "Arg1 Type: " << arg1->getType() << std::endl);
-                    
-                    if(arg1->isValue()){
-                        this->updateBindingsEqualVarAndRhsValue(lhsVar, arg1);
-                        // this->varEquiv->addNewName(lhsVarName);
-                        // if(ExprType::INT ==  arg1->getType()){
-                        //     const IntLit* intValExpr =(const IntLit*)arg1;
-                        //     this->varEquiv->addNewVal(lhsVarName, intValExpr->getVal());
-                        // }
-                        const Expr* valEquality = Expr::eq(lhsVar, arg1);
-                        SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, valEquality);
-                        newSH->print(std::cout);
-                        CFDEBUG(std::cout << std::endl);
-                        return newSH;
-                    } else if(arg1->isVar()){
-                        // original var get from the boogie ast
-                        const VarExpr* rhsOrigVar = (const VarExpr*) arg1;
-                        std::string rhsOrigVarName = rhsOrigVar->name();
-                        // var get after dealing with the repeating
-                        const VarExpr* rhsVar = this->getUsedVarAndName(rhsOrigVarName).first;
-                        std::string rhsVarName = this->getUsedVarAndName(rhsOrigVarName).second;
-                        this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
-
-                        // varEquiv->linkName(lhsVarName, rhsVarName);
-                        // // if the int value can be computed, update the link 
-                        // if(this->varEquiv->getIntVal(rhsVar->name()).first){
-                        //     const IntLit* intValExpr = (const IntLit*) arg1;
-                        //     this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
-                        // }
-                        const Expr* varEquality = Expr::eq(
-                            this->varFactory->getVar(lhsVarOrigName),
-                            this->varFactory->getVar(rhsOrigVarName)
-                        );
-                        SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
-                        newSH->print(std::cout);
-                        CFDEBUG(std::cout << std::endl);
-                        return newSH;
-                    } 
-                    else {
-                        CFDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
-                        CFDEBUG(std::cout << "LHS TYPE: " << lhs->getType() << std::endl);
-                        CFDEBUG(std::cout << "RHS TYPE: " << rhs->getType() << std::endl); 
-                        return sh;
-                    }
-                    // 3. Deal with arithmetic functions
-                } else if(this->isBinaryArithFuncName(rhsFun->name())){
-                    CFDEBUG(std::cout << "ASSIGN: rhs binary arithmetic" << std::endl;);
-                    this->varEquiv->addNewName(lhsVarName);
-
-                    const Expr* rhsExpr = this->parseVarArithmeticExpr(rhsFun);
-                    CFDEBUG(std::cout << "RIGHT HAND SIDE ARITHMETIC FORMULA: " << rhsFun << std::endl;rhsExpr->print(std::cout);std::cout << std::endl;);
-                    
-                    auto computeIntResult = rhsExpr->translateToInt(this->varEquiv);
-                    if(computeIntResult.first){
-                        this->varEquiv->addNewVal(lhsVarName, computeIntResult.second);
-                    } else {
-                        CFDEBUG(std::cout << "INFO: cannot compute int value." <<std::endl;);
-                    }
-                    const Expr* equality = Expr::eq(
-                        this->varFactory->getVar(lhsVarOrigName),
-                        rhsExpr
-                    );
-                    SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, equality);
-                    newSH->print(std::cout);
-                    CFDEBUG(std::cout << std::endl);
-                    return newSH;
-                    // 4. Deal with load and store instructions
-                } else if(this->isStoreLoadFuncName(rhsFun->name())){
-                    CFDEBUG(std::cout << "ASSIGN: rhs store or load" << std::endl;);
-                    // This may contain the pointer arithmetic
-                    if(rhsFun->name().find("$store") != std::string::npos){
-                        // lhsVarName is not needed, since lhsVar is not used in store instruction.
-                        return this->executeStore(sh, rhsFun);
-                    } else if(rhsFun->name().find("$load") != std::string::npos){
-                        return this->executeLoad(sh, lhsVarName, lhsVarOrigName, rhsFun);
-                    } else {
-                        CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
-                    }
-                    // 5. deal with boolean functions
-                } else if(this->isUnaryBooleanFuncName(rhsFun->name())){
-                    CFDEBUG(std::cout << "ASSIGN: rhs unary boolean function" << std::endl;);
-                    if(rhsFun->name().find("$not") != std::string::npos){
-                        const Expr* arg = rhsFun->getArgs().front();
-                        const Expr* notPure = this->parseUnaryBooleanExpression(rhsFun->name(), arg);
-                        this->varEquiv->addNewName(lhsVarName);
-                        const Expr* newPureConj = Expr::iff(
-                            this->varFactory->getVar(lhsVarOrigName),
-                            notPure
-                        );
-                        const Expr* newPure = Expr::and_(newPureConj, sh->getPure());
-                        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
-                        newSH->print(std::cout);
-                        std::cout << std::endl;
-                        return newSH;
-                    } else {
-                        CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
-                        return sh;
-                    }
-                } else if(this->isBinaryBooleanFuncName(rhsFun->name())){
-                    CFDEBUG(std::cout << "ASSIGN: rhs binary boolean function" << std::endl;);
-                    const Expr* arg1 = rhsFun->getArgs().front();
-                    const Expr* arg2 = rhsFun->getArgs().back();
-                    const Expr* rhsExpr = this->parseBinaryBooleanExpression(rhsFun->name(), arg1, arg2);
-                    const Expr* newPureConj = Expr::iff(
-                        this->varFactory->getVar(lhsVarOrigName),
-                        rhsExpr
-                    );
-                    const Expr* newPure = Expr::and_(
-                        newPureConj,
-                        sh->getPure()
-                    );
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
-                    newSH->print(std::cout);
-                    std::cout << std::endl;
-                    return newSH;
-                }
-                else {
-                    CFDEBUG(std::cout <<  "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl);
-                    CFDEBUG(std::cout <<  "FUNC NAME: " << rhsFun->name() << std::endl); 
-                    return sh;
-                }
-            } else {
-                // If RHS is not a function, directly equal them and update varEquiv accordingly..
-                CFDEBUG(std::cout << "INFO: ASSIGN RHS is not a funcExpr"; rhs->print(cout); std::cout << " ";; lhs->print(cout); cout << std::endl;);
-                if(rhs->isVar()){
-                    CFDEBUG(std::cout << "INFO: RHS is Var" << std::endl;);
-                    const VarExpr* rhsOrigVar = (const VarExpr*) rhs;
+                    const VarExpr* rhsOrigVar = (const VarExpr*) arg1;
                     std::string rhsOrigVarName = rhsOrigVar->name();
-                    const VarExpr* rhsVar = this->getUsedVarAndName(rhsOrigVarName).first;
-                    std::string rhsVarName = this->getUsedVarAndName(rhsOrigVarName).second;
+                    const VarExpr* rhsVar = this->varFactory->getVar(rhsOrigVarName);
+                    std::string rhsVarName = rhsVar->name();
 
                     this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
-                    // auto computeIntResult = rhsVar->translateToInt(this->varEquiv);
-                    // if(computeIntResult.first){
-                    //     this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
-                    // } else {
-                    //     CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
-                    // }
-                    // const Expr* eq = Expr::eq(
-                    //     this->varFactory->getVar(lhsVarOrigName),
-                    //     this->varFactory->getVar(rhsOrigVarName)
-                    // );
-                   
-                    // this->varEquiv->linkName(lhsVarName, rhsVarName);
-                    // if(this->isPtrVar(rhsOrigVarName) || this->isPtrVar(lhsVarOrigName)){
-                    //     this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
-                    //     this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(rhsVarName));
-                    // }
-                    const Expr* eq = Expr::eq(
+                    
+                    const Expr* varEquality = Expr::eq(
                         lhsVar,
                         rhsVar
                     );
-                    const Expr* newPure = Expr::and_(
-                        sh->getPure(),
-                        eq
-                    );
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                    SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
                     newSH->print(std::cout);
-                    std::cout << std::endl;
+                    CFDEBUG(std::cout << std::endl);
                     return newSH;
-                } else { 
-                    this->varEquiv->addNewName(lhsVarName);
-                    const Expr* rhsExpr = rhs;
-                    auto computeIntResult = rhs->translateToInt(this->varEquiv);
-                    if(computeIntResult.first){
-                        this->varEquiv->addNewVal(lhsVarName, computeIntResult.second);
-                    } else {
-                        CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
-                    }
-                    const Expr* eq = Expr::eq(
-                        this->varFactory->getVar(lhsVarOrigName),
-                        rhs
-                    );
-                    const Expr* newPure = Expr::and_(
-                        sh->getPure(),
-                        eq
-                    );
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
-                    newSH->print(std::cout);
-                    std::cout << std::endl;
-                    return newSH;
+                } else {
+                    // TODOsh: later there might be pointer arithmetic here.
+                    CFDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
+                    CFDEBUG(std::cout << "LHS TYPE: " << lhs->getType() << std::endl);
+                    CFDEBUG(std::cout << "RHS TYPE: " << rhs->getType() << std::endl); 
+                    return sh;
                 }
+            } else if(this->isPtrArithFuncName(rhsFun->name())){
+                CFDEBUG(std::cout << "ASSIGN: rhs ptr arithmetic" << std::endl;);
+                std::pair<const Expr*, bool> parsedResult = this->getUsedArithExprAndVar(lhsVar, rhsFun);
+                assert(parsedResult.second);
+                const Expr* rhsExpr = parsedResult.first;
+
+                this->updateBindingsEqualVarAndRhsArithExpr(lhsVar, rhsFun, rhsExpr, true);
+
+                // if(ExprType::BIN == rhsExpr->getType()){
+                //     const BinExpr* arithExpr = (const BinExpr*) rhsExpr;
+                //     if(BinExpr::Binary::Plus == arithExpr->getOp()){
+                //         const Expr* arithLhs = arithExpr->getLhs();
+                //         const Expr* arithRhs = arithExpr->getRhs();
+                //         if(arithLhs->isVar()){
+                //             // This is for normal ptr arithmetic
+                //             // normal ptr arithmetic is of the form
+                //             // $p1 = $p0 + arithRhs
+                //             const VarExpr* ptrVar = (const VarExpr*) arithLhs;
+                //             int lhsOffset = this->varEquiv->getOffset(ptrVar->name());
+                //             int rhsOffset = 0;
+                //             assert(lhsOffset >= 0);
+                //             auto rhsComputeResult = arithRhs->translateToInt(this->varEquiv);
+                //             if(rhsComputeResult.first){
+                //                 rhsOffset = rhsComputeResult.second;
+                //                 this->varEquiv->addNewOffset(lhsVarName, (lhsOffset + rhsOffset));
+                //             } else {
+                //                 CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET 1!!!" << std::endl; rhsExpr->print(std::cout););
+                //             }
+                //         } else {
+                //             // For other ptr arithmetic like struct and array
+                //             int offsetVal = this->computeArithmeticOffsetValue(rhsExpr);
+                //             const Expr* extractedExpr = this->extractPtrArithmeticVar(rhsExpr);
+                //             assert(extractedExpr->isVar());
+                //             const VarExpr* ptrVar = (const VarExpr*)extractedExpr;
+                //             std::string ptrVarName = ptrVar->name();
+                //             this->varEquiv->addNewOffset(lhsVarName, offsetVal);
+                //         }
+                //     }
+                // } else {
+                //     CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET !!!" << std::endl; rhsExpr->print(std::cout));
+                // }
+
+                // this->varEquiv->addNewName(lhsVarName);
+                const Expr* varEquality = Expr::eq(
+                    lhsVar,
+                    rhsExpr
+                );
+                SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
+                newSH->print(std::cout);
+                CFDEBUG(std::cout << std::endl;);
+                return newSH;
+            } 
+            //2. Deal with variables
+            else if(this->isUnaryAssignFuncName(rhsFun->name())){
+                // TODOsh: only support a single parameter here
+                const Expr* arg1 = rhsFun->getArgs().front();
+                CFDEBUG(std::cout << "Arg1 Type: " << arg1->getType() << std::endl);
+                
+                if(arg1->isValue()){
+                    this->updateBindingsEqualVarAndRhsValue(lhsVar, arg1);
+                    // this->varEquiv->addNewName(lhsVarName);
+                    // if(ExprType::INT ==  arg1->getType()){
+                    //     const IntLit* intValExpr =(const IntLit*)arg1;
+                    //     this->varEquiv->addNewVal(lhsVarName, intValExpr->getVal());
+                    // }
+                    const Expr* valEquality = Expr::eq(lhsVar, arg1);
+                    SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, valEquality);
+                    newSH->print(std::cout);
+                    CFDEBUG(std::cout << std::endl);
+                    return newSH;
+                } else if(arg1->isVar()){
+                    // original var get from the boogie ast
+                    const VarExpr* rhsOrigVar = (const VarExpr*) arg1;
+                    std::string rhsOrigVarName = rhsOrigVar->name();
+                    // var get after dealing with the repeating
+                    const VarExpr* rhsVar = this->getUsedVarAndName(rhsOrigVarName).first;
+                    std::string rhsVarName = this->getUsedVarAndName(rhsOrigVarName).second;
+                    this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
+
+                    // varEquiv->linkName(lhsVarName, rhsVarName);
+                    // // if the int value can be computed, update the link 
+                    // if(this->varEquiv->getIntVal(rhsVar->name()).first){
+                    //     const IntLit* intValExpr = (const IntLit*) arg1;
+                    //     this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
+                    // }
+                    const Expr* varEquality = Expr::eq(
+                        this->varFactory->getVar(lhsVarOrigName),
+                        this->varFactory->getVar(rhsOrigVarName)
+                    );
+                    SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
+                    newSH->print(std::cout);
+                    CFDEBUG(std::cout << std::endl);
+                    return newSH;
+                } 
+                else {
+                    CFDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
+                    CFDEBUG(std::cout << "LHS TYPE: " << lhs->getType() << std::endl);
+                    CFDEBUG(std::cout << "RHS TYPE: " << rhs->getType() << std::endl); 
+                    return sh;
+                }
+                // 3. Deal with arithmetic functions
+            } else if(this->isBinaryArithFuncName(rhsFun->name())){
+                CFDEBUG(std::cout << "ASSIGN: rhs binary arithmetic" << std::endl;);
+                this->varEquiv->addNewName(lhsVarName);
+
+                const Expr* rhsExpr = this->parseVarArithmeticExpr(rhsFun);
+                CFDEBUG(std::cout << "RIGHT HAND SIDE ARITHMETIC FORMULA: " << rhsFun << std::endl;rhsExpr->print(std::cout);std::cout << std::endl;);
+                
+                auto computeIntResult = rhsExpr->translateToInt(this->varEquiv);
+                if(computeIntResult.first){
+                    this->varEquiv->addNewVal(lhsVarName, computeIntResult.second);
+                } else {
+                    CFDEBUG(std::cout << "INFO: cannot compute int value." <<std::endl;);
+                }
+                const Expr* equality = Expr::eq(
+                    this->varFactory->getVar(lhsVarOrigName),
+                    rhsExpr
+                );
+                SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, equality);
+                newSH->print(std::cout);
+                CFDEBUG(std::cout << std::endl);
+                return newSH;
+                // 4. Deal with load and store instructions
+            } else if(this->isStoreLoadFuncName(rhsFun->name())){
+                CFDEBUG(std::cout << "ASSIGN: rhs store or load" << std::endl;);
+                // This may contain the pointer arithmetic
+                if(rhsFun->name().find("$store") != std::string::npos){
+                    // lhsVarName is not needed, since lhsVar is not used in store instruction.
+                    return this->executeStore(sh, rhsFun);
+                } else if(rhsFun->name().find("$load") != std::string::npos){
+                    return this->executeLoad(sh, lhsVarName, lhsVarOrigName, rhsFun);
+                } else {
+                    CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
+                }
+                // 5. deal with boolean functions
+            } else if(this->isUnaryBooleanFuncName(rhsFun->name())){
+                CFDEBUG(std::cout << "ASSIGN: rhs unary boolean function" << std::endl;);
+                if(rhsFun->name().find("$not") != std::string::npos){
+                    const Expr* arg = rhsFun->getArgs().front();
+                    const Expr* notPure = this->parseUnaryBooleanExpression(rhsFun->name(), arg);
+                    this->varEquiv->addNewName(lhsVarName);
+                    const Expr* newPureConj = Expr::iff(
+                        this->varFactory->getVar(lhsVarOrigName),
+                        notPure
+                    );
+                    const Expr* newPure = Expr::and_(newPureConj, sh->getPure());
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                    newSH->print(std::cout);
+                    std::cout << std::endl;
+                    return newSH;
+                } else {
+                    CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
+                    return sh;
+                }
+            } else if(this->isBinaryBooleanFuncName(rhsFun->name())){
+                CFDEBUG(std::cout << "ASSIGN: rhs binary boolean function" << std::endl;);
+                const Expr* arg1 = rhsFun->getArgs().front();
+                const Expr* arg2 = rhsFun->getArgs().back();
+                const Expr* rhsExpr = this->parseBinaryBooleanExpression(rhsFun->name(), arg1, arg2);
+                const Expr* newPureConj = Expr::iff(
+                    this->varFactory->getVar(lhsVarOrigName),
+                    rhsExpr
+                );
+                const Expr* newPure = Expr::and_(
+                    newPureConj,
+                    sh->getPure()
+                );
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                newSH->print(std::cout);
+                std::cout << std::endl;
+                return newSH;
             }
-        
+            else {
+                CFDEBUG(std::cout <<  "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl);
+                CFDEBUG(std::cout <<  "FUNC NAME: " << rhsFun->name() << std::endl); 
+                return sh;
+            }
+        } else {
+            // If RHS is not a function, directly equal them and update varEquiv accordingly..
+            CFDEBUG(std::cout << "INFO: ASSIGN RHS is not a funcExpr"; rhs->print(cout); std::cout << " ";; lhs->print(cout); cout << std::endl;);
+            if(rhs->isVar()){
+                CFDEBUG(std::cout << "INFO: RHS is Var" << std::endl;);
+                const VarExpr* rhsOrigVar = (const VarExpr*) rhs;
+                std::string rhsOrigVarName = rhsOrigVar->name();
+                const VarExpr* rhsVar = this->getUsedVarAndName(rhsOrigVarName).first;
+                std::string rhsVarName = this->getUsedVarAndName(rhsOrigVarName).second;
+
+                this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
+                // auto computeIntResult = rhsVar->translateToInt(this->varEquiv);
+                // if(computeIntResult.first){
+                //     this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
+                // } else {
+                //     CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
+                // }
+                // const Expr* eq = Expr::eq(
+                //     this->varFactory->getVar(lhsVarOrigName),
+                //     this->varFactory->getVar(rhsOrigVarName)
+                // );
+               
+                // this->varEquiv->linkName(lhsVarName, rhsVarName);
+                // if(this->isPtrVar(rhsOrigVarName) || this->isPtrVar(lhsVarOrigName)){
+                //     this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
+                //     this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(rhsVarName));
+                // }
+                const Expr* eq = Expr::eq(
+                    lhsVar,
+                    rhsVar
+                );
+                const Expr* newPure = Expr::and_(
+                    sh->getPure(),
+                    eq
+                );
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                newSH->print(std::cout);
+                std::cout << std::endl;
+                return newSH;
+            } else { 
+                this->varEquiv->addNewName(lhsVarName);
+                const Expr* rhsExpr = rhs;
+                auto computeIntResult = rhs->translateToInt(this->varEquiv);
+                if(computeIntResult.first){
+                    this->varEquiv->addNewVal(lhsVarName, computeIntResult.second);
+                } else {
+                    CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
+                }
+                const Expr* eq = Expr::eq(
+                    this->varFactory->getVar(lhsVarOrigName),
+                    rhs
+                );
+                const Expr* newPure = Expr::and_(
+                    sh->getPure(),
+                    eq
+                );
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                newSH->print(std::cout);
+                std::cout << std::endl;
+                return newSH;
+            }
+        }
+    
         return sh;
     }
 
@@ -1277,7 +1299,8 @@ namespace smack{
                 if(newCurrentDstPtIndex ==  newDstHeadPtIndex){
                     isLeft = false;
                 }
-                if(newCurrentDstPtIndex >  newDstTailPtIndex){
+                if(newCurrentDstPtIndex >  newDstTailPtIndex || 
+                   newCurrentDstPtIndex == newDstTailPtIndex && SpatialLiteral::Kind::PT != spl->getId()){
                     isRight = true;
                 }
             } 
@@ -2711,7 +2734,8 @@ namespace smack{
     int BlockExecutor::getStepSizeOfPtrVar(std::string varName){
         // varName is used varname
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
-        assert(VarType::PTR == this->getVarType(varName));
+        assert(VarType::PTR == this->getVarType(varName) || 
+               VarType::NIL == this->getVarType(varName));
         std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(varOrigName);
         int result = sizeInfo.second/8;
         return result;
@@ -2736,7 +2760,8 @@ namespace smack{
             const VarExpr* rhsVar = (const VarExpr*) rhs;
             std::string lhsUsedVarName = lhsVar->name();
             std::string rhsUsedVarName = rhsVar->name();
-            if(VarType::PTR == this->getVarType(rhsUsedVarName)){
+            if(VarType::PTR == this->getVarType(rhsUsedVarName) || 
+               VarType::NIL == this->getVarType(rhsUsedVarName)){
                 this->setPtrVarStepSize(lhsUsedVarName, this->getStepSizeOfPtrVar(rhsUsedVarName));
             } else {
                 assert(storedSize > 0);
@@ -2757,9 +2782,12 @@ namespace smack{
                 assert(storedSize > 0);
                 this->setDataVarBitwidth(lhsVar->name(), 8 * storedSize);
             }
-            else if(VarType::PTR == this->getVarType(extractedRhsVar->name())){
+            else if(VarType::PTR == this->getVarType(extractedRhsVar->name()) || 
+                    VarType::NIL == this->getVarType(extractedRhsVar->name())){
                 assert(extractedRhsVar != nullptr);
-                assert(VarType::PTR == this->getVarType(extractedRhsVar->name()));
+
+                assert(VarType::PTR == this->getVarType(extractedRhsVar->name()) || 
+                       VarType::NIL == this->getVarType(extractedRhsVar->name()));
                 int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
                 int extractedRhsStepSize = this->getStepSizeOfPtrVar(extractedRhsVar->name());
                 if(extractedRhsStepSize == 0){
@@ -2835,7 +2863,8 @@ namespace smack{
                 this->varEquiv->addNewOffset(lhsVar->name(), rhsPtrArithmeticOffset);
             }
             if(storedExpr->translateToInt(this->varEquiv).first){
-                assert(false);
+                // TODOsh: EMERGENT..
+                //assert(false);
                 this->varEquiv->addNewVal(lhsVar->name(), storedExpr->translateToInt(this->varEquiv).second);
             }
         }

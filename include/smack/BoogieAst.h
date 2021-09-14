@@ -1237,6 +1237,8 @@ namespace smack {
             }
             return false;
         }
+
+        std::string getType() const { return this->type;}
         static bool classof(const Decl *D) { return D->getKind() == CONSTANT; }
     };
 

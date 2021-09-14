@@ -49,7 +49,9 @@ namespace smack{
         // ------------------ Variable Utilities
         // << HIGH LEVEL METHODS >>
         const VarExpr* createAndRegisterFreshDataVar(int size);
+        void registerDataVar(const VarExpr* usedDataVar);
         const VarExpr* createAndRegisterFreshPtrVar(int stepSize, std::string mallocName, int offset);
+        const VarExpr* registerPtrVar(const VarExpr* usedPtrVar, std::string mallocName, int offset);
         bool isPtrVar(std::string name);
         VarType getVarType(std::string varName);
         int getBitwidthOfDataVar(std::string varName);

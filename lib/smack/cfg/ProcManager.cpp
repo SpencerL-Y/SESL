@@ -9,7 +9,7 @@
 namespace smack {
     int ProcManager::inlineDepthBound = 10;
     unordered_map<string, pair<ProcDecl *, int>> ProcManager::originProcedures = {};
-    set<string> constVarSet = {};
+    set<string> ProcManager::constVarSet = {};
 
     ProcManager::ProcManager(ProcDecl *old) : oldProc(old), newProc(nullptr), nameCounter(0) {
         copyOldProcInfo(old);
@@ -382,7 +382,7 @@ namespace smack {
     }
 
     void ProcManager::setConstVarSet(set<string> &constSet) {
-        smack::constVarSet = constSet;
+        ProcManager::constVarSet = constSet;
     }
 
 }

@@ -26,7 +26,7 @@ namespace smack{
                 }
             }
             if(!sizeAttrFound){
-                CFDEBUG(std::cout << "ERROR: global attribute " << cd->getName() << " does not have attribute  ointer_to_size");
+                CFDEBUG(std::cout << "ERROR: global attribute " << cd->getName() << " does not have attribute  pointer_to_size");
                 return nullptr;
             }
             // treat the global ptr the same way as $alloc

@@ -81,7 +81,7 @@ namespace smack {
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const;
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const;
 
         static const Expr *exists(std::list<Binding>, const Expr *e);
 
@@ -200,7 +200,7 @@ namespace smack {
         BinExpr(const Binary b, const Expr *l, const Expr *r)
                 : op(b), lhs(l), rhs(r) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
@@ -228,7 +228,7 @@ namespace smack {
     public:
         FunExpr(std::string f, std::list<const Expr *> xs) : fun(f), args(xs) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -249,7 +249,7 @@ namespace smack {
     public:
         BoolLit(bool b) : val(b) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
@@ -270,7 +270,7 @@ namespace smack {
     public:
         RModeLit(RModeKind v) : val(v) {}
 \
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
         
         //virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
@@ -304,7 +304,7 @@ namespace smack {
         
         void print(std::ostream &os) const;
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
@@ -332,7 +332,7 @@ namespace smack {
             val = s.str();
         }
         
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -358,7 +358,7 @@ namespace smack {
         FPLit(std::string v, unsigned ss, unsigned es)
                 : specialValue(v), sigSize(ss), expSize(es) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -375,7 +375,7 @@ namespace smack {
     public:
         StringLit(std::string v) : val(v) {}
         
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -392,7 +392,7 @@ namespace smack {
     public:
         NegExpr(const Expr *e) : expr(e) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -411,7 +411,7 @@ namespace smack {
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -438,7 +438,7 @@ namespace smack {
     public:
         QuantExpr(Quantifier q, std::list<Binding> vs, const Expr *e)
                 : quant(q), vars(vs), expr(e) {}
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -458,7 +458,7 @@ namespace smack {
 
         SelExpr(const Expr *a, const Expr *i)
                 : base(a), idxs(std::list<const Expr *>(1, i)) {}
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -481,7 +481,7 @@ namespace smack {
         UpdExpr(const Expr *a, const Expr *i, const Expr *v)
                 : base(a), idxs(std::list<const Expr *>(1, i)), val(v) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -497,6 +497,8 @@ namespace smack {
         // TODOsh: implement and modify to make it compatible with bytewise
         bool isByteLevel;
         std::vector<const VarExpr*> byteVars;
+
+        bool isGlobalVar(std::set<std::string> globalVarNames) const;
     public:
         VarExpr(std::string v) : var(v), isByteLevel(false) {}
         VarExpr(std::string v, std::vector<const VarExpr*> bv) : var(v), isByteLevel(true), byteVars(bv) {}
@@ -504,7 +506,7 @@ namespace smack {
 
         z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const override;
 
@@ -528,7 +530,7 @@ namespace smack {
 
         void print(std::ostream &os) const;
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
@@ -548,7 +550,7 @@ namespace smack {
         BvExtract(const Expr *var, const Expr *upper, const Expr *lower)
                 : var(var), upper(upper), lower(lower) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -566,7 +568,7 @@ namespace smack {
     public:
         BvConcat(const Expr *left, const Expr *right) : left(left), right(right) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -853,7 +855,7 @@ namespace smack {
 
         std::string getName() const { return name; }
 
-        virtual const Attr* renameClone(std::string funcName, int usedNum) const;
+        virtual const Attr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const;
 
         static const Attr *attr(std::string s);
 
@@ -939,7 +941,7 @@ namespace smack {
 
         static const Stmt *code(std::string s);
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const;
 
         virtual void print(std::ostream &os) const = 0;
     };
@@ -954,7 +956,7 @@ namespace smack {
 
         void print(std::ostream &os) const;
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         static bool classof(const Stmt *S) { return S->getKind() == ASSERT; }
     };
@@ -973,7 +975,7 @@ namespace smack {
 
         std::list<const Expr *> getRhs() const { return rhs; }
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         static bool classof(const Stmt *S) { return S->getKind() == ASSIGN; }
     };
@@ -999,7 +1001,7 @@ namespace smack {
 
         const Expr *getExpr() const { return expr; }
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         static bool classof(const Stmt *S) { return S->getKind() == ASSUME; }
     };
@@ -1013,7 +1015,7 @@ namespace smack {
 
         void print(std::ostream &os) const;
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         SHExprPtr getSymbHeap() const { return symbheap; }
 
@@ -1035,7 +1037,7 @@ namespace smack {
 
         void print(std::ostream &os) const;
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         std::string getProc() const { return this->proc; }
 
@@ -1054,7 +1056,7 @@ namespace smack {
     public:
         Comment(std::string s) : Stmt(COMMENT), str(s) {}
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1069,7 +1071,7 @@ namespace smack {
 
         GotoStmt(std::list<std::string> ts) : Stmt(GOTO), targets(ts) {}
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1082,7 +1084,7 @@ namespace smack {
     public:
         HavocStmt(std::list<std::string> vs) : Stmt(HAVOC), vars(vs) {}
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1097,7 +1099,7 @@ namespace smack {
 
         ReturnStmt(const Expr *e = nullptr) : Stmt(RETURN), expr(e) {}
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1110,7 +1112,7 @@ namespace smack {
     public:
         CodeStmt(std::string s) : Stmt(CODE), code(s) {}
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1149,7 +1151,7 @@ namespace smack {
     public:
         virtual ~Decl() {}
 
-        virtual const Decl* renameClone(std::string funcName, int usedNum) const;
+        virtual const Decl* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const;
 
         virtual void print(std::ostream &os) const = 0;
 
@@ -1208,7 +1210,7 @@ namespace smack {
     public:
         AxiomDecl(std::string n, const Expr *e) : Decl(AXIOM, n, {}), expr(e) {}
 
-        virtual const Decl* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Decl* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1247,7 +1249,7 @@ namespace smack {
                  std::string t, const Expr *b)
                 : Decl(FUNCTION, n, ax), params(ps), type(t), body(b) {}
 
-        virtual const Decl* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Decl* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1262,7 +1264,7 @@ namespace smack {
 
         VarDecl(std::string n, std::string t) : Decl(VARIABLE, n, {}), type(t) {}
 
-        virtual const Decl* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Decl* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 

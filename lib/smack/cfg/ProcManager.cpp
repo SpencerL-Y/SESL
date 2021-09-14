@@ -9,6 +9,7 @@
 namespace smack {
     int ProcManager::inlineDepthBound = 2;
     unordered_map<string, pair<ProcDecl *, int>> ProcManager::originProcedures = {};
+    set<string> constVarSet = {};
 
     ProcManager::ProcManager(ProcDecl *old) : oldProc(old), newProc(nullptr), nameCounter(0) {
         copyOldProcInfo(old);
@@ -67,7 +68,7 @@ namespace smack {
                 newStmts.push_back(Stmt::goto_(newTargets));
                 continue;
             }
-            newStmts.push_back(stmt->renameClone(procName, renameCounter));
+            newStmts.push_back(stmt->renameClone(procName, renameCounter, ProcManager::constVarSet));
         }
         auto newBlock = new Block(newName, newStmts);
         blockList.push_back(newBlock);
@@ -343,7 +344,7 @@ namespace smack {
         }
         // copy declarations
         for (auto &decl : procDecl->getDeclarations()) {
-            Decl *p = const_cast<Decl *>(decl->renameClone(procName, renameCounter));
+            Decl *p = const_cast<Decl *>(decl->renameClone(procName, renameCounter, ProcManager::constVarSet));
             declarationList.push_back(p);
         }
         // copy returns
@@ -378,6 +379,10 @@ namespace smack {
 
     string ProcManager::getFunctionName() {
         return procName + "_" + to_string(renameCounter);
+    }
+
+    void ProcManager::setConstVarSet(set<string> &constSet) {
+        smack::constVarSet = constSet;
     }
 
 }

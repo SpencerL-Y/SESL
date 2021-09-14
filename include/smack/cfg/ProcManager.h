@@ -27,6 +27,7 @@ namespace smack {
         unordered_map<Block *, string> newNames;
         unordered_map<string, string> reNames;
         static unordered_map<string, pair<ProcDecl *, int>> originProcedures;
+        static set<string> constVarSet;
         vector<Block *> funcCallBlock, returnBlock;
         ParameterList params;
         ParameterList rets;
@@ -77,6 +78,8 @@ namespace smack {
         ProcDecl *getRenamedProc();
 
         vector<Block *> &getReturnBlockVec();
+
+        static void setConstVarSet(set<string>& constSet);
     };
 }
 

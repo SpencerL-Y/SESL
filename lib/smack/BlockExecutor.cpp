@@ -1277,7 +1277,8 @@ namespace smack{
                 if(newCurrentDstPtIndex ==  newDstHeadPtIndex){
                     isLeft = false;
                 }
-                if(newCurrentDstPtIndex >  newDstTailPtIndex){
+                if(newCurrentDstPtIndex >  newDstTailPtIndex || 
+                   newCurrentDstPtIndex == newDstTailPtIndex && SpatialLiteral::Kind::PT != spl->getId()){
                     isRight = true;
                 }
             } 

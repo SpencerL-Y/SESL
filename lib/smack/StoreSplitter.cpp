@@ -13,6 +13,7 @@ namespace smack
     }
 
     int BlkSplitUtil::addSplit(int offset){
+        assert(offset >= 0);
         if(this->isInitialized(offset)){
             CFDEBUG(std::cout << "ERROR: split position is a pt, unable to split.." << std::endl;);
             return -1;

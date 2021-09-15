@@ -102,6 +102,9 @@ namespace smack{
         const SpatialLiteral* createBlkAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int byteSize);
         std::list<const SpatialLiteral*> splitBlkByCreatingPt(std::string mallocName, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
         std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyBlkPredicate(const SpatialLiteral* oldBlk, const Expr* oldPure);
+        // special cases
+        int getMaxRegionLength(SHExprPtr sh);
+
         // ----------------- Bytelevel Utilities
         bool isMemcopyOverlapping(const VarExpr* srcVar, const VarExpr* dstVar, int copySize);
 

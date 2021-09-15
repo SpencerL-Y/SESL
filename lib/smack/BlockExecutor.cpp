@@ -559,8 +559,13 @@ namespace smack{
                varExpr->name().find("$M") != std::string::npos ){
                 return this->varEquiv->getOffset(varExpr->name());
             } else if (varExpr->name().find("$i") != std::string::npos) {
-                assert(varExpr->translateToInt(this->varEquiv).first);
-                return varExpr->translateToInt(this->varEquiv).second;
+                //assert(varExpr->translateToInt(this->varEquiv).first);
+                //TODOsh: EMERGENT
+                if(varExpr->translateToInt(this->varEquiv).first){
+                    return varExpr->translateToInt(this->varEquiv).second;
+                } else {
+                    return -100000;
+                }
             } else {
                 CFDEBUG(std::cout << "ERROR: UNSOLVED Arithmetic offset computation " << expression << std::endl;);
                 return 0;
@@ -1693,7 +1698,7 @@ namespace smack{
             return newSH;
         }
         // if the store is out of range, set inference error
-        if(offset >= mallocBlkSize){
+        if(offset >= mallocBlkSize || offset < 0){
             std::list<const SpatialLiteral*> newSpatial;
             // the symbolic heap is set to error
             newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE));
@@ -3276,6 +3281,22 @@ namespace smack{
         }
         resultPredicateList.push_back(tempRhsBlk);
         return {resultPredicateList, resultPure};
+    }
+
+
+    int BlockExecutor::getMaxRegionLength(SHExprPtr sh){
+        int max = -1;
+        for(const SpatialLiteral* spl : sh->getSpatialExpr()){
+            if(spl->getId() == SpatialLiteral::Kind::SPT){
+                const SizePtLit* spt = (const SizePtLit*) spl;
+                assert(spt->getSize()->translateToInt(this->varEquiv).first);
+                int tempVal = spt->getSize()->translateToInt(this->varEquiv).second; 
+                if(tempVal > max){
+                    max = tempVal;
+                }
+            }
+        }
+        return max;
     }
 
 

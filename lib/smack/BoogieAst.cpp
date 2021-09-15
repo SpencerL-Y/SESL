@@ -602,42 +602,55 @@ namespace smack {
                 if(!lhs->isValue() && !rhs->isValue()){
                     res = (left or right);
                 } else {
-                    const z3::expr bLeft = lhs->isValue() ? 
-                                            ((((const IntLit*) lhs)->getVal() == 0) ? 
-                                                false
-                                                :
-                                                true)
-                                            : 
-                                            left;
-                    const z3::expr bRight = rhs->isValue() ? 
-                                            ((((const IntLit*) rhs)->getVal() == 0) ? 
-                                                false
-                                                :
-                                                true)
-                                            : 
-                                            right;
-                    res = (bLeft or bRight);
+                    if(lhs->isValue() && !rhs->isValue() && 
+                       lhs->getType() == ExprType::INT){
+                        const IntLit* lhsVal = (const IntLit*) lhs;
+                        bool lhsBool = (lhsVal->getVal() == 0) ? false : true;
+                        res = (z3Ctx.bool_val(lhsBool) or right);
+                    } else if(rhs->isValue() && !lhs->isValue() 
+                           && rhs->getType() == ExprType::INT){
+                        const IntLit* rhsVal = (const IntLit*) rhs;
+                        bool rhsBool = (rhsVal->getVal() == 0) ? false : true;
+                        res = (left or z3Ctx.bool_val(rhsBool));
+                    } else if(rhs->isValue() && lhs->isValue() 
+                           && rhs->getType() == ExprType::INT
+                           && lhs->getType() == ExprType::INT){
+                        const IntLit* lhsVal = (const IntLit*) lhs;
+                        bool lhsBool = (lhsVal->getVal() == 0) ? false : true;
+                        const IntLit* rhsVal = (const IntLit*) rhs;
+                        bool rhsBool = (rhsVal->getVal() == 0) ? false : true;
+                        res = (z3Ctx.bool_val(lhsBool) or z3Ctx.bool_val(rhsBool));
+                    } else {
+                        res = (left or right);
+                    }
                 }
                 break;
             case And:
+            
                 if(!lhs->isValue() && !rhs->isValue()){
                     res = (left and right);
                 } else {
-                    const z3::expr bLeft = lhs->isValue() ? 
-                                            ((((const IntLit*) lhs)->getVal() == 0) ? 
-                                                false
-                                                :
-                                                true)
-                                            : 
-                                            left;
-                    const z3::expr bRight = rhs->isValue() ? 
-                                            ((((const IntLit*) rhs)->getVal() == 0) ? 
-                                                false
-                                                :
-                                                true)
-                                            : 
-                                            right;
-                    res = (bLeft and bRight);
+                    if(lhs->isValue() && !rhs->isValue() && 
+                       lhs->getType() == ExprType::INT){
+                        const IntLit* lhsVal = (const IntLit*) lhs;
+                        bool lhsBool = (lhsVal->getVal() == 0) ? false : true;
+                        res = (z3Ctx.bool_val(lhsBool) and right);
+                    } else if(rhs->isValue() && !lhs->isValue() 
+                           && rhs->getType() == ExprType::INT){
+                        const IntLit* rhsVal = (const IntLit*) rhs;
+                        bool rhsBool = (rhsVal->getVal() == 0) ? false : true;
+                        res = (left and z3Ctx.bool_val(rhsBool));
+                    } else if(rhs->isValue() && lhs->isValue() 
+                           && rhs->getType() == ExprType::INT
+                           && lhs->getType() == ExprType::INT){
+                        const IntLit* lhsVal = (const IntLit*) lhs;
+                        bool lhsBool = (lhsVal->getVal() == 0) ? false : true;
+                        const IntLit* rhsVal = (const IntLit*) rhs;
+                        bool rhsBool = (rhsVal->getVal() == 0) ? false : true;
+                        res = (z3Ctx.bool_val(lhsBool) and z3Ctx.bool_val(rhsBool));
+                    } else {
+                        res = (left and right);
+                    }
                 }
                     
                 break;
@@ -875,6 +888,11 @@ namespace smack {
         return {true, ans};
     }
 
+
+    int IntLit::getVal() const{
+        return std::atoi(this->val.c_str());
+    }
+
     const Expr* BvLit::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         return this;
     }
@@ -912,7 +930,16 @@ namespace smack {
 
     z3::expr NotExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
         auto exp = expr->translateToZ3(z3Ctx, cfg, varFac);
-        return not exp;
+        if(expr->isValue() && expr->getType() == ExprType::INT){
+            const IntLit* intExpr = (const IntLit*) expr;
+            if(intExpr->getVal() == 0){
+                return z3Ctx.bool_val(true);
+            } else {
+                return z3Ctx.bool_val(false);
+            }
+        } else {
+            return not exp;
+        }
     }
 
     const Expr* QuantExpr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{

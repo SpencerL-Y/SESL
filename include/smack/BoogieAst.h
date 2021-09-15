@@ -313,7 +313,7 @@ namespace smack {
 
         ExprType getType() const { return ExprType::INT; }
 
-        int getVal() const { return atoi(val.c_str()); }
+        int getVal() const;
 
         bool isVar() const { return false; }
 

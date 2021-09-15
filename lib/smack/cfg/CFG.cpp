@@ -147,9 +147,9 @@ namespace smack {
 
     std::string CFG::getVarType(string varName) {
         if (varType.find(varName) != varType.end()) {
-            for (const auto &i : varType) {
-                std::cout << i.first << " " << i.second << " " << varName << std::endl;
-            }
+            // for (const auto &i : varType) {
+            //     std::cout << i.first << " " << i.second << " " << varName << std::endl;
+            // }
             return varType[varName];
             
         } else {

@@ -599,10 +599,47 @@ namespace smack {
                 res = z3::implies(left, right);
                 break;
             case Or:
-                res = (left or right);
+                if(!lhs->isValue() && !rhs->isValue()){
+                    res = (left or right);
+                } else {
+                    const z3::expr bLeft = lhs->isValue() ? 
+                                            ((((const IntLit*) lhs)->getVal() == 0) ? 
+                                                false
+                                                :
+                                                true)
+                                            : 
+                                            left;
+                    const z3::expr bRight = rhs->isValue() ? 
+                                            ((((const IntLit*) rhs)->getVal() == 0) ? 
+                                                false
+                                                :
+                                                true)
+                                            : 
+                                            right;
+                    res = (bLeft or bRight);
+                }
                 break;
             case And:
-                res = (left and right);
+                if(!lhs->isValue() && !rhs->isValue()){
+                    res = (left and right);
+                } else {
+                    const z3::expr bLeft = lhs->isValue() ? 
+                                            ((((const IntLit*) lhs)->getVal() == 0) ? 
+                                                false
+                                                :
+                                                true)
+                                            : 
+                                            left;
+                    const z3::expr bRight = rhs->isValue() ? 
+                                            ((((const IntLit*) rhs)->getVal() == 0) ? 
+                                                false
+                                                :
+                                                true)
+                                            : 
+                                            right;
+                    res = (bLeft and bRight);
+                }
+                    
                 break;
             case Eq:
                 // Equality here is regarded as assignment and need to test the type of lhs and rhs

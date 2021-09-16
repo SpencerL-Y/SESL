@@ -31,7 +31,7 @@ namespace smack
             for(int i = 0; iter != this->splitAxis.end(); i++, ++iter){
                 if(this->splitAxis[i] > offset){
                     this->splitAxis.insert(iter, offset);
-                    return i + 1;
+                    return (this->splitAxis[0] == 0) ? i + 1 : i;
                 }
             }
             int originalIndex = this->splitAxis.size();
@@ -73,7 +73,7 @@ namespace smack
             auto iter = this->splitAxis.begin();
             for(int i = 0; iter != this->splitAxis.end(); i++, ++iter){
                 if(this->splitAxis[i] > offset){
-                    return i + 1;
+                    return (this->splitAxis[0] == 0) ? i + 1 : i;
                 }
             }
             int originalIndex = this->splitAxis.size();

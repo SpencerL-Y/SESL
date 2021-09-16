@@ -846,6 +846,8 @@ namespace smack{
                 return this->executeVeriCall(sh, call);
             } else if(call->getProc().find("$memcpy") != std::string::npos){
                 return this->executeMemcpy(sh, call);
+            } else if(call->getProc().find("$memset") != std::string::npos){
+                return this->executeMemset(sh, call);
             }
             else {
                 this->executeUnintepreted(sh, call);
@@ -1392,6 +1394,265 @@ namespace smack{
         std::cout << std::endl;
 
         return newSH;
+    }
+
+
+
+    SHExprPtr BlockExecutor::executeMemset(SHExprPtr sh, const CallStmt* stmt){
+        const Expr* newPure = sh->getPure();
+        std::list<const SpatialLiteral*> newSpatial;
+
+        
+        const Expr* arg1Target = nullptr;
+        const Expr* arg2Content = nullptr;
+        const Expr* arg3Size = nullptr;
+
+        assert(stmt->getProc().find("$memset") != std::string::npos);
+        std::vector<const Expr*> paramsVec;
+        for(const Expr* p : stmt->getParams()){
+            paramsVec.push_back(p);
+        }
+        arg1Target = paramsVec[1];
+        arg2Content = paramsVec[2];
+        arg3Size = paramsVec[3];
+
+
+        // configuration of the target position
+        const VarExpr* targetOrigVar = nullptr;
+        const VarExpr* targetVar = nullptr;
+        std::string targetOrigVarName;
+        std::string targetVarName;
+        std::string targetMallocName;
+        int targetOffset = -1;
+        int targetBlkSize = -1;
+
+        if(arg1Target->isVar()){
+            targetOrigVar = (const VarExpr*) arg1Target;
+            targetOrigVarName = targetOrigVar->name();
+            targetVar = this->getUsedVarAndName(targetOrigVarName).first;
+            targetVarName = this->getUsedVarAndName(targetOrigVarName).second;
+            assert(this->getVarType(targetVarName) == VarType::PTR || 
+                   this->getVarType(targetVarName) == VarType::NIL);
+            targetMallocName = this->varEquiv->getBlkName(targetVarName);
+            targetOffset = this->varEquiv->getOffset(targetVarName);
+            targetBlkSize = sh->getBlkSize(targetMallocName)->translateToInt(this->varEquiv).second;
+        } else if(ExprType::FUNC == arg1Target->getType()){
+            // target position is a ptr arithmetic
+            const FunExpr* ptrArithFunc = (const FunExpr*) arg1Target;
+            assert(this->isPtrArithFuncName(ptrArithFunc->name()));
+            std::pair<const VarExpr*, const Expr*> newTargetVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPure);
+            const VarExpr* freshTargetVar = newTargetVarPurePair.first;
+            newPure = newTargetVarPurePair.second;
+            targetOrigVar = freshTargetVar;
+            targetOrigVarName = freshTargetVar->name();
+            targetVar = freshTargetVar;
+            targetVarName = freshTargetVar->name();
+            assert(this->getVarType(targetVarName) == VarType::PTR || 
+                   this->getVarType(targetVarName) == VarType::NIL);
+            targetMallocName = this->varEquiv->getBlkName(targetVarName);
+
+            
+        } else {
+            CFDEBUG(std::cout << "ERROR: memset wrong target expr type, check" << std::endl;);
+            assert(false);
+            return sh;
+        }
+        // configuration of the memset content
+        const VarExpr* contentOrigVar = nullptr;
+        const VarExpr* contentVar = nullptr;
+        std::string contentOrigVarName;
+        std::string contentVarName;
+        int memsetContent = 0;
+
+        if(arg2Content->isVar()){   
+            contentOrigVar = (const VarExpr*) arg2Content;
+            contentOrigVarName = contentOrigVar->name();
+            contentVar = this->getUsedVarAndName(contentOrigVarName).first;
+            contentVarName = this->getUsedVarAndName(contentOrigVarName).second;
+        } else if(arg2Content->isValue()){
+            contentOrigVar = this->createAndRegisterFreshDataVar(1);
+            contentOrigVarName = contentOrigVar->name();
+            contentVar = contentOrigVar;
+            contentVarName = contentVar->name();
+            newPure = Expr::and_(
+                newPure,
+                Expr::eq(arg2Content, contentVar)
+            );
+        }
+        else {// this should not happen
+            CFDEBUG(std::cout << "ERROR: This should not happen in memset content" << std::endl;);
+            assert(false);
+            return sh;
+        } 
+
+
+        // configuration of the stored length
+        int memsetLength = -1;
+        if(arg3Size->isVar()){
+            const VarExpr* sizeOrigVar = (const VarExpr*) arg3Size;
+            const Expr* usedVar = this->getUsedVarAndName(sizeOrigVar->name()).first;
+            assert(usedVar->translateToInt(this->varEquiv).first);
+            memsetLength = usedVar->translateToInt(this->varEquiv).second;  
+        } else if(arg3Size->isValue()){
+            assert(arg3Size->getType() == ExprType::INT);
+            assert(arg3Size->translateToInt(this->varEquiv).first);
+            memsetLength = arg3Size->translateToInt(this->varEquiv).second;
+        } 
+        else {
+            CFDEBUG(std::cout << "ERROR: This should not happen in memset arg3Size" << std::endl;);
+            return sh;
+        }
+
+        // erronous situations classified
+        bool isHeadPtSplitted = this->storeSplit->isInitialized(targetMallocName, targetOffset) && !this->storeSplit->getOffsetPos(targetMallocName, targetOffset).first;
+
+        bool isTailPtSplitted = this->storeSplit->isInitialized(targetMallocName, targetOffset + memsetLength) && !this->storeSplit->getOffsetPos(targetMallocName, targetOffset + memsetLength).first;
+
+        CFDEBUG(std::cout << "INFO: is memset head pt splitted: " << isHeadPtSplitted << std::endl;);
+        CFDEBUG(std::cout << "INFO: is memset tail pt splitted: " << isTailPtSplitted << std::endl;);
+
+
+        
+        CFDEBUG(std::cout << "INFO: -------------------- BEGIN MEMSET --------------------" << std::endl;);
+        bool isHeadInitialized = this->storeSplit->isInitialized(targetMallocName, targetOffset);
+        bool isTailInitialized = this->storeSplit->isInitialized(targetMallocName, targetOffset + memsetLength - 1);
+        int headPtIndex = this->storeSplit->getInitializedPos(targetMallocName, targetOffset).second;
+        int headBlkIndex = isHeadInitialized ? -1 : this->storeSplit->getSplit(targetMallocName, targetOffset);
+        int tailPtIndex = this->storeSplit->getInitializedPos(targetMallocName, targetOffset + memsetLength - 1).second;
+        int tailBlkIndex = isTailInitialized ? -1 : this->storeSplit->getSplit(targetMallocName, targetOffset + memsetLength - 1);
+
+        CFDEBUG(std::cout << "target head initialized: " << isHeadInitialized << std::endl;);
+        CFDEBUG(std::cout << "target tail initialized: " << isTailInitialized << std::endl;);
+        CFDEBUG(std::cout << "target head pt index and blk index: " << headPtIndex << " " << headBlkIndex << std::endl;);
+        CFDEBUG(std::cout << "target tail pt index and blk index: " << tailPtIndex << " " << tailBlkIndex << std::endl;);
+
+        bool beginCounting = false;
+        bool beginBytifying = false;
+        int currentPtIndex = 1;
+        int currentBlkIndex = 1;
+        // bytify all the predicate
+        std::list<const SpatialLiteral*> bytifiedSpatial;
+        for(const SpatialLiteral* spl : sh->getSpatialExpr()){
+            if(SpatialLiteral::Kind::SPT == spl->getId()){
+                if(!spl->getBlkName().compare(targetMallocName)){
+                    beginCounting = true;
+                } else {
+                    beginCounting = false;
+                }
+            }
+            if(isHeadInitialized && currentPtIndex >= headPtIndex || 
+               !isHeadInitialized && currentBlkIndex >= headBlkIndex){
+                beginBytifying = true;
+            }
+            if(isTailInitialized && currentPtIndex > tailPtIndex || 
+              !isTailInitialized && currentBlkIndex > tailBlkIndex){
+                beginBytifying = false;
+            }
+
+            if(beginCounting){
+                if(SpatialLiteral::Kind::BLK == spl->getId()){
+                    if(beginBytifying){
+                        std::pair<std::list<const SpatialLiteral*>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
+                        for(const SpatialLiteral* i : resultBytifiedPurePair.first){
+                            bytifiedSpatial.push_back(i);
+                        }
+                        newPure = resultBytifiedPurePair.second;
+                    } else {
+                        bytifiedSpatial.push_back(spl);
+                    }
+                    currentBlkIndex += 1;
+                } else if(SpatialLiteral::Kind::PT == spl->getId()){
+                    bytifiedSpatial.push_back(spl);
+                    currentPtIndex += 1;
+                } else {
+                    bytifiedSpatial.push_back(spl);
+                }
+            } else {
+                bytifiedSpatial.push_back(spl);
+            }
+
+        }
+        // setting the corresponding sector
+
+
+        int newHeadPtIndex = this->storeSplit->getOffsetPos(targetMallocName, targetOffset).second;
+        int newTailPtIndex = this->storeSplit->getInitializedPos(targetMallocName, targetOffset + memsetLength - 1).second;
+        CFDEBUG(std::cout << "new headPtIndex and tailPtIndex: " << newHeadPtIndex << " " << newTailPtIndex << std::endl;);
+
+        std::list<const SpatialLiteral*> newLeftSpatial;
+        std::list<const SpatialLiteral*> newRightSpatial;
+        bool isLeft = true;
+        bool isRight = false;
+        assert(newHeadPtIndex <= newTailPtIndex);
+        bool newBeginCounting = false;
+        int newCurrentPtIndex = 0;
+        for(const SpatialLiteral* spl : bytifiedSpatial){
+            if(SpatialLiteral::Kind::SPT == spl->getId()
+               && !spl->getBlkName().compare(targetMallocName)){
+                newBeginCounting = true;
+            }
+            if(newBeginCounting){
+                assert(!(isLeft && isRight));
+                if(SpatialLiteral::Kind::PT == spl->getId()){
+                    newCurrentPtIndex  += 1;
+                } 
+                if(newCurrentPtIndex == newHeadPtIndex){
+                    isLeft = false;
+                }
+                if(newCurrentPtIndex > newTailPtIndex || 
+                   newCurrentPtIndex == newTailPtIndex && SpatialLiteral::Kind::PT != spl->getId()){
+                       isRight = true;
+                }
+            }
+            if(isLeft){
+                newLeftSpatial.push_back(spl);
+            }
+            if(isRight){
+                newRightSpatial.push_back(spl);
+            }
+        }
+        // wipe old storeSplit
+        this->storeSplit->wipeInterval(targetMallocName, targetOffset, targetOffset + memsetLength);
+        // add left
+        for(const SpatialLiteral* i : newLeftSpatial){
+            newSpatial.push_back(i);   
+        }
+
+        // add middle
+        for(int i = 0; i < memsetLength; i++){
+            const VarExpr* newFromVar = this->createAndRegisterFreshPtrVar(1, targetMallocName, targetOffset + i);
+            const VarExpr* newToVar = contentVar;
+            newPure = Expr::and_(
+                newPure,
+                Expr::eq(
+                    newFromVar, 
+                    Expr::add(
+                        targetVar, 
+                        Expr::lit((long long)1)
+                    )
+                )
+            );
+            const Expr* empBlkExpr = Expr::add(newFromVar, Expr::lit((long long) 1));
+            const SpatialLiteral* newPt = this->createPtAccordingToMallocName(targetMallocName, newFromVar, newToVar, 1);
+            
+            this->storeSplit->addSplit(targetMallocName, targetOffset + i);
+            this->storeSplit->addSplitLength(targetMallocName, targetOffset + i, 1);
+            newSpatial.push_back(newPt);
+            if(i < memsetLength - 1){
+                const SpatialLiteral* newBlk = this->createBlkAccordingToMallocName(targetMallocName, empBlkExpr, empBlkExpr, 0);
+                newSpatial.push_back(newBlk);
+            }
+        }
+
+        // add right
+        for(const SpatialLiteral* i : newRightSpatial){
+            newSpatial.push_back(i);
+        }
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+        newSH->print(std::cout);
+        std::cout << std::endl;
+        return newSH;
+ 
     }
 
     SHExprPtr 
@@ -1998,6 +2259,7 @@ namespace smack{
             }
             
         } else {
+            CFDEBUG(std::cout << "INFO: store situation A.3" << std::endl;);
             CFDEBUG(std::cout << "INFO: new store offset" << std::endl;);
             // if the position is not stored yet, create a new pt predicate to store it
             // set offset to allocated in the storeSplit
@@ -2777,6 +3039,7 @@ namespace smack{
 
 
     void BlockExecutor::updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs, int storedSize){
+        assert(storedSize > 0);
         // lhs and rhs are both used var
         if(rhs->isVar()){
             const VarExpr* rhsVar = (const VarExpr*) rhs;
@@ -2784,7 +3047,11 @@ namespace smack{
             std::string rhsUsedVarName = rhsVar->name();
             if(VarType::PTR == this->getVarType(rhsUsedVarName) || 
                VarType::NIL == this->getVarType(rhsUsedVarName)){
-                this->setPtrVarStepSize(lhsUsedVarName, this->getStepSizeOfPtrVar(rhsUsedVarName));
+                if(this->getStepSizeOfPtrVar(rhsUsedVarName) != 0){
+                    this->setPtrVarStepSize(lhsUsedVarName, this->getStepSizeOfPtrVar(rhsUsedVarName));
+                } else {
+                    this->setPtrVarStepSize(lhsUsedVarName, storedSize);
+                }
             } else {
                 assert(storedSize > 0);
                 this->setDataVarBitwidth(lhsUsedVarName, 8 * storedSize);

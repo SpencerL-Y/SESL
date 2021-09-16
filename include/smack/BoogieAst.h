@@ -270,7 +270,7 @@ namespace smack {
 
     public:
         RModeLit(RModeKind v) : val(v) {}
-\
+
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
         
         //virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
@@ -313,7 +313,7 @@ namespace smack {
 
         ExprType getType() const { return ExprType::INT; }
 
-        int getVal() const { return atoi(val.c_str()); }
+        int getVal() const;
 
         bool isVar() const { return false; }
 

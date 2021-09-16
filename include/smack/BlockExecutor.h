@@ -154,6 +154,8 @@ namespace smack{
 
         SHExprPtr executeMemcpy(SHExprPtr sh, const CallStmt* stmt);
 
+        SHExprPtr executeMemset(SHExprPtr sh, const CallStmt* stmt);
+
         SHExprPtr executeUnintepreted(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);

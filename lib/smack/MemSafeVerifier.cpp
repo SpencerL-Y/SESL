@@ -15,13 +15,12 @@
 
 namespace smack {
     using llvm::errs;
-    char MemSafeVerifier::ID = 1;
+    char MemSafeVerifier::ID = 0;
 
     void MemSafeVerifier::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
-        //AU.setPreservesAll();
+        AU.setPreservesAll();
         AU.addRequired<SmackModuleGenerator>();
     }
-
     bool MemSafeVerifier::runOnModule(llvm::Module &M){
         std::cout << "-----------------START MEMSAFE ANALYSIS---------------" << std::endl;
         SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
@@ -105,6 +104,7 @@ namespace smack {
             bool infErrorSafeSat = checker->checkInferenceError().first;
             if(!memLeakSafeSat || !infErrorSafeSat){
                 std::cout << "INFO: BUG FOUND, STOP EXCUTION" << std::endl;
+                this->violationPath = p;
                 break;
             }
             std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;

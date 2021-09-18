@@ -4,20 +4,25 @@
 #include "llvm/Pass.h"
 #include "BlockExecutor.h"
 #include "utils/CenterDebug.h"
+#include "smack/cfg/CFGExecutor.h"
 
 namespace smack
 {
     class MemSafeVerifier : public llvm::ModulePass
     {
     private:
-        
+        ExecutionPath violationPath;
     public:
         static char ID;
+
         MemSafeVerifier(/* args */) : llvm::ModulePass(ID){};
         ~MemSafeVerifier(){};
         virtual bool runOnModule(llvm::Module &m);
         virtual llvm::StringRef getPassName() const { return "MemSafeVerifier"; }
         virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
+
+        ExecutionPath getViolationPath(){ return this->violationPath;}
+
     };
     class TransToZ3;
     class MemSafeChecker {

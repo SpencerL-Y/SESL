@@ -151,6 +151,7 @@ add_library(smackTranslator STATIC
   include/smack/VarEquiv.h
   include/smack/VarFactory.h
   include/smack/StoreSplitter.h
+	include/smack/MemoryManager.h
         include/smack/cfg/CFGExecutor.h
   include/smack/ExecutionState.h
   include/smack/SVNaming.h
@@ -191,6 +192,7 @@ add_library(smackTranslator STATIC
   lib/smack/VarEquiv.cpp
   lib/smack/VarFactory.cpp
   lib/smack/StoreSplitter.cpp
+	lib/smack/MemoryManager.cpp
         lib/smack/cfg/CFGExecutor.cpp
         lib/smack/cfg/ProcManager.cpp
         include/smack/cfg/ProcManager.h

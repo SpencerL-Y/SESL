@@ -6,6 +6,8 @@
 
 namespace smack{
     using llvm::errs;   
+
+    MemoryManagerPtr BlockExecutor::ExprMemoryManager = std::make_shared<MemoryManager>();
     
     SHExprPtr BlockExecutor::executeGlobal(SHExprPtr sh){
         CFDEBUG(std::cout << "INFO: static initialization" << std::endl;);
@@ -58,6 +60,7 @@ namespace smack{
 
                 assert(allocSize > 0);
                 const Expr* blkSize = new IntLit((long long)allocSize);
+                REGISTER_EXPRPTR(blkSize);
                 this->varEquiv->addNewName(staticVarName);
                 this->varEquiv->addNewBlkName(staticVarName);
                 this->varEquiv->addNewOffset(staticVarName, 0);
@@ -71,17 +74,18 @@ namespace smack{
                     blkSize,
                     staticVarName
                 );
+                REGISTER_EXPRPTR(sSizePt);
                 // bool empty = (allocSize > 0) ? false : true;
 
+                const Expr* add = Expr::add(staticVar, blkSize);
+                REGISTER_EXPRPTR(add);
                 const SpatialLiteral* sAllocBlk = SpatialLiteral::gcBlk(
                     staticVar,
-                    Expr::add(
-                        staticVar,
-                        blkSize
-                    ),
+                    add,
                     staticVarName,
                     allocSize
                 );
+                REGISTER_EXPRPTR(sAllocBlk);
 
                 newSpatialExpr.push_back(sSizePt);
                 newSpatialExpr.push_back(sAllocBlk);
@@ -173,6 +177,7 @@ namespace smack{
                         lhsVar,
                         rhsVar
                     );
+                    REGISTER_EXPRPTR(varEquality);
                     SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl);
@@ -231,6 +236,7 @@ namespace smack{
                     lhsVar,
                     rhsExpr
                 );
+                REGISTER_EXPRPTR(varEquality);
                 SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
@@ -250,6 +256,7 @@ namespace smack{
                     //     this->varEquiv->addNewVal(lhsVarName, intValExpr->getVal());
                     // }
                     const Expr* valEquality = Expr::eq(lhsVar, arg1);
+                    REGISTER_EXPRPTR(valEquality);
                     SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, valEquality);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl);
@@ -273,6 +280,7 @@ namespace smack{
                         this->varFactory->getVar(lhsVarOrigName),
                         this->varFactory->getVar(rhsOrigVarName)
                     );
+                    REGISTER_EXPRPTR(varEquality);
                     SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl);
@@ -302,6 +310,7 @@ namespace smack{
                     this->varFactory->getVar(lhsVarOrigName),
                     rhsExpr
                 );
+                REGISTER_EXPRPTR(equality);
                 SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, equality);
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl);
@@ -329,7 +338,9 @@ namespace smack{
                         this->varFactory->getVar(lhsVarOrigName),
                         notPure
                     );
+                    REGISTER_EXPRPTR(newPureConj);
                     const Expr* newPure = Expr::and_(newPureConj, sh->getPure());
+                    REGISTER_EXPRPTR(newPure);
                     SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
                     newSH->print(std::cout);
                     std::cout << std::endl;
@@ -347,10 +358,12 @@ namespace smack{
                     this->varFactory->getVar(lhsVarOrigName),
                     rhsExpr
                 );
+                REGISTER_EXPRPTR(newPureConj);
                 const Expr* newPure = Expr::and_(
                     newPureConj,
                     sh->getPure()
                 );
+                REGISTER_EXPRPTR(newPure);
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
                 newSH->print(std::cout);
                 std::cout << std::endl;
@@ -392,10 +405,12 @@ namespace smack{
                     lhsVar,
                     rhsVar
                 );
+                REGISTER_EXPRPTR(eq);
                 const Expr* newPure = Expr::and_(
                     sh->getPure(),
                     eq
                 );
+                REGISTER_EXPRPTR(newPure);
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
                 newSH->print(std::cout);
                 std::cout << std::endl;
@@ -413,10 +428,12 @@ namespace smack{
                     this->varFactory->getVar(lhsVarOrigName),
                     rhs
                 );
+                REGISTER_EXPRPTR(eq);
                 const Expr* newPure = Expr::and_(
                     sh->getPure(),
                     eq
                 );
+                REGISTER_EXPRPTR(newPure);
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
                 newSH->print(std::cout);
                 std::cout << std::endl;
@@ -461,23 +478,22 @@ namespace smack{
     }
 
     const Expr* BlockExecutor::parseBinaryArithmeticExpression(std::string name, const Expr* left, const Expr* right){
+        const Expr* result = nullptr;
         if(name.find("$add") != std::string::npos){
-            const Expr* addition = Expr::add(left, right);
-            return addition;
+            result = Expr::add(left, right);
         } else if(name.find("$sub") != std::string::npos){
-            const Expr* substraction = Expr::substract(left, right);
-            return substraction;
+            result = Expr::substract(left, right);
         } else if(name.find("$mul") != std::string::npos){
-            const Expr* multiplication = Expr::multiply(left, right);
-            return multiplication;
+            result = Expr::multiply(left, right);
         } else if(name.find("$sdiv") != std::string::npos 
                || name.find("$udiv") != std::string::npos){
-            const Expr* division = Expr::divide(left, right);
-            return division;
+            result = Expr::divide(left, right);
         } else {
             CFDEBUG(std::cout << "ERROR: UNKNWON BINARY ARITHMETIC FUNCTION");
             return NULL;
         }
+        REGISTER_EXPRPTR(result);
+        return result;
     }
 
 
@@ -679,13 +695,15 @@ namespace smack{
     }
 
     const Expr* BlockExecutor::parseUnaryBooleanExpression(std::string funcName, const Expr* inner){
+        const Expr* result = nullptr;
         if(funcName.find("$not") != std::string::npos){
-            const Expr* result = Expr::not_(this->parseCondition(inner));
-            return result;
+            result = Expr::not_(this->parseCondition(inner));
         } else {
             CFDEBUG(std::cout << "ERROR: UNKNOWN unary boolean expression" << std::endl;);
             return NULL;
         }
+        REGISTER_EXPRPTR(result);
+        return result;
     }
 
     const Expr* BlockExecutor::parseBinaryBooleanExpression(std::string funcName, const Expr* lhs, const Expr* rhs){
@@ -708,43 +726,35 @@ namespace smack{
             finalRhs = rhs;
         }
 
+        const Expr* result = nullptr;
         if(funcName.find("$and") != std::string::npos){
-            const Expr* result = Expr::and_(finalLhs, finalRhs);
-            return result;
+            result = Expr::and_(finalLhs, finalRhs);
         } else if(funcName.find("$or") != std::string::npos){
-            const Expr* result = Expr::or_(finalLhs, finalRhs);
-            return result;
+            result = Expr::or_(finalLhs, finalRhs);
         } else if(funcName.find("$xor") != std::string::npos){
-            const Expr *result = Expr::xor_(finalLhs, finalRhs);
-            return result;
+            result = Expr::xor_(finalLhs, finalRhs);
         } else if(funcName.find("$ule") != std::string::npos ||
-        funcName.find("$sle") != std::string::npos){
-            const Expr *result = Expr::le(finalLhs, finalRhs);
-            return result;
+                funcName.find("$sle") != std::string::npos){
+            result = Expr::le(finalLhs, finalRhs);
         } else if(funcName.find("$ult") != std::string::npos || 
-        funcName.find("$slt") != std::string::npos){
-            const Expr* result = Expr::lt(finalLhs, finalRhs);
-            return result;
+                funcName.find("$slt") != std::string::npos){
+            result = Expr::lt(finalLhs, finalRhs);
         } else if(funcName.find("$uge") != std::string::npos ||
-        funcName.find("$sge") != std::string::npos){
-            const Expr *result = Expr::ge(finalLhs, finalRhs);
-            return result;
+                funcName.find("$sge") != std::string::npos){
+            result = Expr::ge(finalLhs, finalRhs);
         } else if(funcName.find("$ugt") != std::string::npos ||
-        funcName.find("$sgt") != std::string::npos){
-            const Expr *result = Expr::gt(finalLhs, finalRhs);
-            return result;
+                funcName.find("$sgt") != std::string::npos){
+            result = Expr::gt(finalLhs, finalRhs);
         } else if(funcName.find("$eq") != std::string::npos) {
-            const Expr * result = Expr::eq(finalLhs, finalRhs);
-            return result;
+            result = Expr::eq(finalLhs, finalRhs);
         } else if(funcName.find("$ne") != std::string::npos){
-            const Expr* result = Expr::neq(finalLhs, finalRhs);
-            return result;
-        }
-        
-        else {
+            result = Expr::neq(finalLhs, finalRhs);
+        } else {
             CFDEBUG(std::cout << "ERROR: UNSOLVED Boolean Expression Name" << std::endl;);
             return NULL;
         }
+        REGISTER_EXPRPTR(result);
+        return result;
     }
 
     bool BlockExecutor::isPtrArithFuncName(std::string name){
@@ -792,6 +802,7 @@ namespace smack{
                 sh->getPure(),
                 cond
             );
+            REGISTER_EXPRPTR(newPure);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
             newSH->print(std::cout);
             std::cout << std::endl;
@@ -816,11 +827,14 @@ namespace smack{
             const BinExpr* condBin = (const BinExpr*) cond;
             const Expr* newLhs = this->parseCondition(condBin->getLhs());
             const Expr* newRhs = this->parseCondition(condBin->getRhs());
-            return new BinExpr(condBin->getOp(), newLhs, newRhs);
+            const Expr* nbe = new BinExpr(condBin->getOp(), newLhs, newRhs);
+            REGISTER_EXPRPTR(nbe);
+            return nbe;
         } else if(ExprType::NOT == cond->getType()){
             const NotExpr* origExpr = (const NotExpr*)cond;
             const Expr* inner = this->parseCondition(origExpr->getExpr());
             const Expr* result = Expr::not_(inner);
+            REGISTER_EXPRPTR(result);
             return result;
         }
         else {
@@ -879,12 +893,13 @@ namespace smack{
             this->cfg->addVarType(nondetIntVar->name(), "i" + std::to_string(byteSize * 8));
             this->varEquiv->addNewName(nondetIntVar->name());
             this->varEquiv->linkName(retVarName, nondetIntVar->name());
-
+            const Expr* eq = Expr::eq(retVar, nondetIntVar);
+            REGISTER_EXPRPTR(eq);
             const Expr* newPure = Expr::and_(
                 sh->getPure(),
-                Expr::eq(retVar, nondetIntVar)
+                eq
             );
-
+            REGISTER_EXPRPTR(newPure);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
             newSH->print(std::cout);
             std::cout << std::endl;
@@ -905,12 +920,13 @@ namespace smack{
             this->cfg->addVarType(nondetBoolVar->name(), "i1");
             this->varEquiv->addNewName(nondetBoolVar->name());
             this->varEquiv->linkName(retVarName, nondetBoolVar->name());
-
+            const Expr* eq = Expr::eq(retVar, nondetBoolVar);
+            REGISTER_EXPRPTR(eq);
             const Expr* newPure = Expr::and_(
                 sh->getPure(),
-                Expr::eq(retVar, nondetBoolVar)
+                eq
             );
-
+            REGISTER_EXPRPTR(newPure);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
             newSH->print(std::cout);
             std::cout << std::endl;
@@ -1038,7 +1054,9 @@ namespace smack{
         // if the copy is overlapping, report the error
 
         if(this->isMemcopyOverlapping(srcVar, dstVar, copySize)){
-            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE));
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE);
+            REGISTER_EXPRPTR(errlit);
+            newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
             newSH->print(std::cout);
             std::cout << std::endl;
@@ -1046,7 +1064,9 @@ namespace smack{
             return newSH;
         }
         if(srcOffset + copySize > srcBlkSize || dstOffset + copySize > dstBlkSize){
-            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE));
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE);
+            REGISTER_EXPRPTR(errlit);
+            newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
             newSH->print(std::cout);
             std:;cout << std::endl;
@@ -1055,7 +1075,9 @@ namespace smack{
             return newSH;
         }
         if(copySize < 0){
-            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE));
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE);
+            REGISTER_EXPRPTR(errlit);
+            newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
             newSH->print(std::cout);
             std::cout << std::endl;
@@ -1375,7 +1397,10 @@ namespace smack{
             
 
             const SpatialLiteral* newSetPt = this->createPtAccordingToMallocName(dstMallocName, freshFromVar, toVar, ptStepSize);
-            const Expr* empBlkExpr = Expr::add(freshFromVar, Expr::lit((long long) ptStepSize));
+            const Expr* lit = Expr::lit((long long) ptStepSize);
+            REGISTER_EXPRPTR(lit);
+            const Expr* empBlkExpr = Expr::add(freshFromVar, lit);
+            REGISTER_EXPRPTR(empBlkExpr);
             const SpatialLiteral* emptyBlk = this->createBlkAccordingToMallocName(dstMallocName, empBlkExpr, empBlkExpr, 0);
             this->storeSplit->addSplit(dstMallocName, cumulatedOffset);
             this->storeSplit->addSplitLength(dstMallocName, cumulatedOffset, ptStepSize);
@@ -1474,10 +1499,13 @@ namespace smack{
             contentOrigVarName = contentOrigVar->name();
             contentVar = contentOrigVar;
             contentVarName = contentVar->name();
+            const Expr* eq = Expr::eq(arg2Content, contentVar);
+            REGISTER_EXPRPTR(eq);
             newPure = Expr::and_(
                 newPure,
-                Expr::eq(arg2Content, contentVar)
+                eq
             );
+            REGISTER_EXPRPTR(newPure);
         }
         else {// this should not happen
             CFDEBUG(std::cout << "ERROR: This should not happen in memset content" << std::endl;);
@@ -1622,17 +1650,21 @@ namespace smack{
         for(int i = 0; i < memsetLength; i++){
             const VarExpr* newFromVar = this->createAndRegisterFreshPtrVar(1, targetMallocName, targetOffset + i);
             const VarExpr* newToVar = contentVar;
+            const Expr* lit1 = Expr::lit((long long)1);
+            REGISTER_EXPRPTR(lit1);
+            const Expr* add = Expr::add(targetVar, lit1);
+            REGISTER_EXPRPTR(add);
+            const Expr* eq = Expr::eq(newFromVar, add);
+            REGISTER_EXPRPTR(eq);
             newPure = Expr::and_(
                 newPure,
-                Expr::eq(
-                    newFromVar, 
-                    Expr::add(
-                        targetVar, 
-                        Expr::lit((long long)1)
-                    )
-                )
+                eq
             );
-            const Expr* empBlkExpr = Expr::add(newFromVar, Expr::lit((long long) 1));
+            REGISTER_EXPRPTR(newPure);
+            const Expr* lit2 = Expr::lit((long long)1);
+            REGISTER_EXPRPTR(lit2);
+            const Expr* empBlkExpr = Expr::add(newFromVar, lit2);
+            REGISTER_EXPRPTR(empBlkExpr);
             const SpatialLiteral* newPt = this->createPtAccordingToMallocName(targetMallocName, newFromVar, newToVar, 1);
             
             this->storeSplit->addSplit(targetMallocName, targetOffset + i);
@@ -1671,7 +1703,9 @@ namespace smack{
             this->varEquiv->linkName(retVarName, freshVar->name());
 
             const Expr* newConj = Expr::eq(retVar, freshVar);
+            REGISTER_EXPRPTR(newConj);
             const Expr* newPure = Expr::and_(sh->getPure(), newConj);
+            REGISTER_EXPRPTR(newPure);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
             newSH->print(std::cout);
             std::cout << std::endl;
@@ -1698,10 +1732,12 @@ namespace smack{
                 retVar,
                 this->varFactory->getNullVar()
             );
+            REGISTER_EXPRPTR(pureConj);
             const Expr* newPure = Expr::and_(
                 sh->getPure(),
                 pureConj
             );
+            REGISTER_EXPRPTR(newPure);
 
             if(param->isVar()){
                 const VarExpr* paramOrigVar = (const VarExpr*)param;
@@ -1723,19 +1759,21 @@ namespace smack{
                     this->varFactory->getVar(retOrigVarName),
                     this->varFactory->getVar(paramOrigVarName),
                     retVarName
-                ); 
+                );
+                REGISTER_EXPRPTR(sizePt);
                 // bool empty = (paramVar->translateToInt(this->varEquiv).second > 0) ? false : true;
                 int blkSize = paramVar->translateToInt(this->varEquiv).second;
+                const Expr* add = Expr::add(
+                        this->varFactory->getVar(retOrigVarName),
+                        this->varFactory->getVar(paramOrigVarName));
+                REGISTER_EXPRPTR(add);
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
                     this->varFactory->getVar(retOrigVarName),
-                    Expr::add(
-                        this->varFactory->getVar(retOrigVarName),
-                        this->varFactory->getVar(paramOrigVarName)
-                    ),
+                    add,
                     retVarName,
                     blkSize
                 );
-
+                REGISTER_EXPRPTR(allocBlk);
                 newSpatialExpr.push_back(sizePt);
                 newSpatialExpr.push_back(allocBlk);
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
@@ -1762,18 +1800,19 @@ namespace smack{
                     sizeExpr,
                     retVarName
                 );
+                REGISTER_EXPRPTR(sizePt);
                 // bool empty = (sizeExpr->translateToInt(this->varEquiv).second == 0) ? true : false;
                 
                 int blkSize = param->translateToInt(this->varEquiv).second;
+                const Expr* add = Expr::add(this->varFactory->getVar(retOrigVarName), sizeExpr);
+                REGISTER_EXPRPTR(add);
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
                     this->varFactory->getVar(retOrigVarName),
-                    Expr::add(
-                        this->varFactory->getVar(retOrigVarName),
-                        sizeExpr
-                    ),
+                    add,
                     retVarName,
                     blkSize
                 );
+                REGISTER_EXPRPTR(allocBlk);
                 newSpatialExpr.push_back(sizePt);
                 newSpatialExpr.push_back(allocBlk);
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
@@ -1812,6 +1851,7 @@ namespace smack{
                 if(this->varEquiv->isFreedName(linkVarName)){
                     CFDEBUG(std:: cout << "INFO: INVALID FREE" << std::endl;);
                     const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::INVALID_FREE);
+                    REGISTER_EXPRPTR(errlit);
                     std::list<const SpatialLiteral*> newSpatialExpr;
                     newSpatialExpr.push_back(errlit);
                     SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatialExpr);
@@ -1822,6 +1862,7 @@ namespace smack{
                     if(this->varEquiv->getOffset(freedVar->name()) != 0){
                         // This means the freed variable is not an allocated location and error happens.
                         const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::INVALID_FREE);
+                        REGISTER_EXPRPTR(errlit);
                         std::list<const SpatialLiteral*> newSpatialExpr;
                         newSpatialExpr.push_back(errlit);
                         SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatialExpr);
@@ -1951,7 +1992,9 @@ namespace smack{
         if(!mallocName.compare("$Null")){
             std::list<const SpatialLiteral*> newSpatial;
             // the symbolic heap is set to error
-            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::NULL_REF));
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::NULL_REF);
+            REGISTER_EXPRPTR(errlit);
+            newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
             newSH->print(std::cout);
             std::cout << std::endl;
@@ -1962,7 +2005,9 @@ namespace smack{
         if(offset >= mallocBlkSize || offset < 0){
             std::list<const SpatialLiteral*> newSpatial;
             // the symbolic heap is set to error
-            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE));
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE);
+            REGISTER_EXPRPTR(errlit);
+            newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
             newSH->print(std::cout);
             std::cout << std::endl;
@@ -2029,13 +2074,19 @@ namespace smack{
                                 // add type info of fresh variable according to the var type
                                 this->updateVarType(freshVar, varArg2, varArg2, storedSize);
                                 // update newPure
-                                newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
+                                const Expr* eq = Expr::eq(freshVar, varArg2);
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
                             } else if(arg2->isValue()){
                                 // update the equivalent classes
                                 this->updateBindingsEqualVarAndRhsValue(freshVar, arg2);
                                 //add type info to cfg
                                 this->updateVarType(freshVar, arg2, arg2, storedSize);
-                                newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
+                                const Expr* eq = Expr::eq(freshVar, arg2);
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
                             }  
                             else {    
                                 // the stored expression is an arithmetic expression
@@ -2052,7 +2103,10 @@ namespace smack{
                                 this->updateVarType(freshVar, arg2, storedExpr, storedSize);
 
                                 // update new pure
-                                newPure = Expr::and_(newPure, Expr::eq(freshVar, storedExpr));
+                                const Expr* eq = Expr::eq(freshVar, storedExpr);
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
                             }
 
                             if(!ptLiteral->isByteLevel()){
@@ -2087,13 +2141,19 @@ namespace smack{
                                 // add type info of fresh variable according to the var type
                                 this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
                                 // update newPure
-                                newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, varArg2));
+                                const Expr* eq = Expr::eq(freshStoredVar, varArg2);
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
                             } else if(arg2->isValue()){
                                 // update the equivalent classes
                                 this->updateBindingsEqualVarAndRhsValue(freshStoredVar, arg2);
                                 //add type info to cfg
                                 this->updateVarType(freshStoredVar, arg2, arg2, storedSize);
-                                newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, arg2));
+                                const Expr* eq = Expr::eq(freshStoredVar, arg2);
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
                             }  
                             else {    
                                 // the stored expression is an arithmetic expression
@@ -2109,7 +2169,10 @@ namespace smack{
                                 // add type info
                                 this->updateVarType(freshStoredVar, arg2, storedExpr, storedSize);
                                 // update new pure
-                                newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, storedExpr));
+                                const Expr* eq = Expr::eq(freshStoredVar, storedExpr);
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
                             }
 
                             
@@ -2191,13 +2254,19 @@ namespace smack{
                                 // add type info of fresh variable according to the var type
                                 this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
                                 // update newPure
-                                newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, varArg2));
+                                const Expr* eq = Expr::eq(freshStoredVar, varArg2);
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
                             } else if(arg2->isValue()){
                                 // update the equivalent classes
                                 this->updateBindingsEqualVarAndRhsValue(freshStoredVar, arg2);
                                 //add type info to cfg
                                 this->updateVarType(freshStoredVar, arg2, arg2, storedSize);
-                                newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, arg2));
+                                const Expr* eq = Expr::eq(freshStoredVar, arg2);
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
                             }  
                             else {    
                                 // the stored expression is an arithmetic expression
@@ -2214,7 +2283,10 @@ namespace smack{
                                 this->updateVarType(freshStoredVar, arg2, storedExpr, storedSize);
 
                                 // update new pure
-                                newPure = Expr::and_(newPure, Expr::eq(freshStoredVar, storedExpr));
+                                const Expr* eq = Expr::eq(freshStoredVar, storedExpr);
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
                             }
 
 
@@ -2280,6 +2352,7 @@ namespace smack{
                         const Expr* newPure = sh->getPure();
                         std::list<const SpatialLiteral*> newSpatialExpr;
                         const SpatialLiteral* errLit = SpatialLiteral::errlit(true, ErrType::STORE_EMP);
+                        REGISTER_EXPRPTR(errLit);
                         newSpatialExpr.push_back(errLit);
                         SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
                         newSH->print(std::cout);
@@ -2307,13 +2380,19 @@ namespace smack{
                         // add type info of fresh variable according to the var type
                         this->updateVarType(freshVar, varArg2, varArg2, storedSize);
                         // update newPure
-                        newPure = Expr::and_(newPure, Expr::eq(freshVar, varArg2));
+                        const Expr* eq = Expr::eq(freshVar, varArg2);
+                        REGISTER_EXPRPTR(eq);
+                        newPure = Expr::and_(newPure, eq);
+                        REGISTER_EXPRPTR(newPure);
                     } else if(arg2->isValue()){
                         // update the equivalent classes
                         this->updateBindingsEqualVarAndRhsValue(freshVar, arg2);
                         //add type info to cfg
                         this->updateVarType(freshVar, arg2, arg2, storedSize);
-                        newPure = Expr::and_(newPure, Expr::eq(freshVar, arg2));
+                        const Expr* eq = Expr::eq(freshVar, arg2);
+                        REGISTER_EXPRPTR(eq);
+                        newPure = Expr::and_(newPure, eq);
+                        REGISTER_EXPRPTR(newPure);
                     }  
                     else {    
                         // the stored expression is an arithmetic expression
@@ -2330,7 +2409,10 @@ namespace smack{
                         this->updateVarType(freshVar, arg2, storedExpr, storedSize);
 
                         // update new pure
-                        newPure = Expr::and_(newPure, Expr::eq(freshVar, storedExpr));
+                        const Expr* eq = Expr::eq(freshVar, storedExpr);
+                        REGISTER_EXPRPTR(eq);
+                        newPure = Expr::and_(newPure, eq);
+                        REGISTER_EXPRPTR(newPure);
                     }
                     // modify the spatial literals
                     
@@ -2343,20 +2425,30 @@ namespace smack{
                         breakBlk->getBlkName(),
                         leftBlkSize
                     );
-
+                    REGISTER_EXPRPTR(leftBlk);
                     const SpatialLiteral* storedPt = this->createPtAccordingToMallocName(mallocName, varArg1, freshVar, storedSize);
 
                     CFDEBUG(std::cout << "Store type: " << arg2TypeStr << " Store stepsize: " << storedSize << std::endl;);
                     long long size = storedSize;
                     // bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
-                    int rightBlkSize = this->computeArithmeticOffsetValue(breakBlk->getTo())- this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size)));
+                    const Expr* lit1 = Expr::lit(size);
+                    REGISTER_EXPRPTR(lit1);
+                    const Expr* add1 = Expr::add(varArg1, lit1);
+                    REGISTER_EXPRPTR(add1);
+                    int rightBlkSize = this->computeArithmeticOffsetValue(breakBlk->getTo())- this->computeArithmeticOffsetValue(add1);
                     CFDEBUG(std::cout << "INFO: rightBlkSize " << rightBlkSize << std::endl;);
+
+                    const Expr* lit2 = Expr::lit(size);
+                    REGISTER_EXPRPTR(lit2);
+                    const Expr* add2 = Expr::add(varArg1, lit2);
+                    REGISTER_EXPRPTR(add2);
                     const SpatialLiteral* rightBlk = SpatialLiteral::gcBlk(
-                        Expr::add(varArg1, Expr::lit(size)),
+                        add2,
                         breakBlk->getTo(),
                         breakBlk->getBlkName(),
                         rightBlkSize
                     );
+                    REGISTER_EXPRPTR(rightBlk);
                     newSpatial.push_back(leftBlk);
                     newSpatial.push_back(storedPt);
                     newSpatial.push_back(rightBlk);
@@ -2416,9 +2508,9 @@ namespace smack{
                 // compute the stepSize information of the variable
                 CFDEBUG(std::cout << "INFO: loadedPosition is funcexpr" << std::endl;);
                 const Expr* newPure = sh->getPure();
-                std::pair<const VarExpr*, const Expr*> newLoadedVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(loadedPositionFunc, newPure);
-                const VarExpr* freshLoadedVar = newLoadedVarPurePair.first;
-                newPure = newLoadedVarPurePair.second;
+                std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(loadedPositionFunc, newPure);
+                const VarExpr* freshLoadedVar =  newLoadedVarPurePair.first;
+                newPure =  newLoadedVarPurePair.second;
 
                 ldOrigPtr = freshLoadedVar;
                 ldPtr = freshLoadedVar;
@@ -2442,7 +2534,9 @@ namespace smack{
         if(!mallocName.compare("$Null")){
             // the symbolic heap is set to error
             std::list<const SpatialLiteral*> newSpatial;
-            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::NULL_REF));
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::NULL_REF);
+            REGISTER_EXPRPTR(errlit);
+            newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
             newSH->print(std::cout);
             std::cout << std::endl;
@@ -2453,7 +2547,9 @@ namespace smack{
             // If the ptr offset is overflow
             std::list<const SpatialLiteral*> newSpatial;
             // the symbolic heap is set to error
-            newSpatial.push_back(SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE));
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE);
+            REGISTER_EXPRPTR(errlit);
+            newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
             newSH->print(std::cout);
             std::cout << std::endl;
@@ -2506,33 +2602,37 @@ namespace smack{
                             if(loadedSize == this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
                                 // Situation B.1.(1)
                                 this->updateBindingsEqualVarAndRhsVar(lhsVar, toExprVar);
-                                newPure = Expr::and_(newPure, Expr::eq(lhsVar, toExprVar));
-                                   
-                                const Expr* newPure = Expr::and_(
-                                     sh->getPure(),
-                                     Expr::eq(
-                                        lhsVar, 
-                                        toExprVar
-                                    )
-                                );
+                                const Expr* eq1 = Expr::eq(lhsVar, toExprVar);
+                                REGISTER_EXPRPTR(eq1);
+                                newPure = Expr::and_(newPure, eq1);
+                                REGISTER_EXPRPTR(newPure);
+                                const Expr* eq2 =  Expr::eq(lhsVar, toExprVar);
+                                REGISTER_EXPRPTR(eq2);
+                                const Expr* newPure = Expr::and_(sh->getPure(), eq2);
                                 newSpatial.push_back(spl);
                             } else if(loadedSize < this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
                                 // Situation B.1.(2)
                                 if(pt->isByteLevel()){
-                                    std::pair<const VarExpr*, const Expr*> newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
-                                    this->updateBindingsEqualVarAndRhsVar(lhsVar, newLoadedVarPurePair.first);
-                                    newPure = newLoadedVarPurePair.second;
-                                    newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedVarPurePair.first));
+                                    std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
+                                    this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                                    newPure =  newLoadedVarPurePair.second;
+                                    const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                                    REGISTER_EXPRPTR(eq);
+                                    newPure = Expr::and_(newPure, eq);
+                                    REGISTER_EXPRPTR(newPure);
                                     newSpatial.push_back(spl);  
                                 } else {
                                     std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
                                     const PtLit* newPt = newPtPurePair.first;
                                     newSpatial.push_back(newPt);
                                     newPure = newPtPurePair.second;
-                                    std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair = this->updateLoadBytifiedPtPredicatePartial(newPt, 0, loadedSize, newPure);
-                                    this->updateBindingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
-                                    newPure = newLoadedvarPurePair.second;
-                                    newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedvarPurePair.first));
+                                    std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(newPt, 0, loadedSize, newPure);
+                                    this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                                    newPure =  newLoadedVarPurePair.second;
+                                    const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                                    REGISTER_EXPRPTR(eq);
+                                    newPure = Expr::and_(newPure, eq);
+                                    REGISTER_EXPRPTR(newPure);
                                 }
                             } else {
                                 CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
@@ -2581,19 +2681,25 @@ namespace smack{
                                 const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
                                 CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
                                 if(pt->isByteLevel()){
-                                    std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                    this->updateBindingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
-                                    newPure = newLoadedvarPurePair.second;
-                                    newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedvarPurePair.first));
+                                    std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
+                                    this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                                    newPure =  newLoadedVarPurePair.second;
+                                    const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                                    REGISTER_EXPRPTR(eq);
+                                    newPure = Expr::and_(newPure, eq);
+                                    REGISTER_EXPRPTR(newPure);
                                     newSpatial.push_back(spl);
                                 } else {
                                     std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
                                     newSpatial.push_back(newPtPurePair.first);
                                     newPure = newPtPurePair.second;
-                                    std::pair<const VarExpr*, const Expr*> newLoadedvarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                    this->updateBindingsEqualVarAndRhsVar(lhsVar, newLoadedvarPurePair.first);
-                                    newPure = newLoadedvarPurePair.second;
-                                    newPure = Expr::and_(newPure, Expr::eq(lhsVar, newLoadedvarPurePair.first));
+                                    std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
+                                    this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                                    newPure =  newLoadedVarPurePair.second;
+                                    const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                                    REGISTER_EXPRPTR(eq);
+                                    newPure = Expr::and_(newPure, eq);
+                                    REGISTER_EXPRPTR(newPure);
                                 }
                             } else {
                                 CFDEBUG(std::cout << "ERROR: load error, this should be a PT predicate." <<  std::endl;);
@@ -2641,7 +2747,10 @@ namespace smack{
                 // Situation B.3.(1)
                 // regard the unintialized region as data variable
                 const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(loadedSize);
-                newPure = Expr::and_(newPure, Expr::eq(freshPtVar, lhsVar));
+                const Expr* eq = Expr::eq(freshPtVar, lhsVar);
+                REGISTER_EXPRPTR(eq);
+                newPure = Expr::and_(newPure, eq);
+                REGISTER_EXPRPTR(newPure);
                 int splitBlkIndex = this->storeSplit->addSplit(mallocName, loadedOffset);
                                     this->storeSplit->addSplitLength(mallocName, loadedOffset, loadedSize);
                 int currentIndex = 1;
@@ -2654,6 +2763,7 @@ namespace smack{
                         const BlkLit* breakBlk = (const BlkLit*) i;
                         if(breakBlk->isEmpty()){
                             const SpatialLiteral* errLit =  SpatialLiteral::errlit(true, ErrType::LOAD_EMP);
+                            REGISTER_EXPRPTR(errLit);
                             newSpatial.push_back(errLit);
                             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
                             newSH->print(std::cout);
@@ -2762,6 +2872,7 @@ namespace smack{
                 assert(multiArg1->isValue());
                 if(multiArg2->isValue()){
                     const Expr* lengthExpr = Expr::multiply(multiArg1, multiArg2);
+                    REGISTER_EXPRPTR(lengthExpr);
                     this->varEquiv->addNewName(retVarName);
                     this->varEquiv->addNewBlkName(retVarName);
                     this->varEquiv->addNewOffset(retVarName, 0);
@@ -2777,18 +2888,19 @@ namespace smack{
                         this->varFactory->getVar(retOrigVarName),
                         lengthExpr,
                         retVarName
-                    ); 
+                    );
+                    REGISTER_EXPRPTR(sizePt);
                     // bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
+                    const Expr* add = Expr::add(this->varFactory->getVar(retOrigVarName), lengthExpr);
+                    REGISTER_EXPRPTR(add);
                     const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
                         this->varFactory->getVar(retOrigVarName),
-                        Expr::add(
-                            this->varFactory->getVar(retOrigVarName),
-                            lengthExpr
-                        ),
+                        add,
                         retVarName,
                         allocSize
                     );
+                    REGISTER_EXPRPTR(allocBlk);
 
                     newSpatialExpr.push_back(sizePt);
                     newSpatialExpr.push_back(allocBlk);
@@ -2802,6 +2914,7 @@ namespace smack{
                     const VarExpr* multiArg2Var = this->varFactory->getVar(multiArg2OrigVarName);
 
                     const Expr* lengthExpr = Expr::multiply(multiArg1, multiArg2Var);
+                    REGISTER_EXPRPTR(lengthExpr);
                     this->varEquiv->addNewName(retVarName);
                     this->varEquiv->addNewBlkName(retVarName);
                     this->varEquiv->addNewOffset(retVarName, 0);
@@ -2818,17 +2931,18 @@ namespace smack{
                         lengthExpr,
                         retVarName
                     ); 
+                    REGISTER_EXPRPTR(sizePt);
                     bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
+                    const Expr* add = Expr::add(this->varFactory->getVar(retOrigVarName), lengthExpr);
+                    REGISTER_EXPRPTR(add);
                     const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
                         this->varFactory->getVar(retOrigVarName),
-                        Expr::add(
-                            this->varFactory->getVar(retOrigVarName),
-                            lengthExpr
-                        ),
+                        add,
                         retVarName,
                         allocSize
                     );
+                    REGISTER_EXPRPTR(allocBlk);
 
                     newSpatialExpr.push_back(sizePt);
                     newSpatialExpr.push_back(allocBlk);
@@ -2859,15 +2973,15 @@ namespace smack{
                     ); 
                     bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
+                    const Expr* add = Expr::add(this->varFactory->getVar(retOrigVarName), lengthExpr);
+                    REGISTER_EXPRPTR(add);
                     const SpatialLiteral* allocBlk = SpatialLiteral::blk(
                         this->varFactory->getVar(retOrigVarName),
-                        Expr::add(
-                            this->varFactory->getVar(retOrigVarName),
-                            lengthExpr
-                        ),
+                        add,
                         retVarName,
                         allocSize
                     );
+                    REGISTER_EXPRPTR(allocBlk);
 
                     newSpatialExpr.push_back(sizePt);
                     newSpatialExpr.push_back(allocBlk);
@@ -2920,7 +3034,9 @@ namespace smack{
             if(errlit->isFresh()){
                 CFDEBUG(std::cout << "INFO: execute error.." << std::endl;);
                 std::list<const SpatialLiteral*> newSpatial;
-                newSpatial.push_back(SpatialLiteral::errlit(false, errlit->getReason()));
+                const SpatialLiteral* sp = SpatialLiteral::errlit(false, errlit->getReason());
+                REGISTER_EXPRPTR(sp);
+                newSpatial.push_back(sp);
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(currSH->getPure(), newSpatial);
                 newSH->print(std::cout);
                 return newSH;
@@ -3167,17 +3283,21 @@ namespace smack{
         const Expr* resultPure = oldPure;
         std::vector<const BytePt*> bytifiedPts;
         for(int i = 0; i < oldPt->getStepSize(); i++){
-            const Expr* bptFromExpr = Expr::add(oldPt->getFrom(), Expr::lit((long long)i)); 
+            const Expr* lit = Expr::lit((long long)i);
+            REGISTER_EXPRPTR(lit);
+            const Expr* bptFromExpr = Expr::add(oldPt->getFrom(), lit); 
+            REGISTER_EXPRPTR(bptFromExpr);
             const VarExpr* fromVar = (const VarExpr*)(oldPt->getFrom());
             int offset = this->varEquiv->getOffset(fromVar->name());
             CFDEBUG(std::cout << "old pt blkname: " << oldPt->getBlkName() << " offset: " << offset << std::endl;)
             const VarExpr* bptFrom = this->createAndRegisterFreshPtrVar(1, oldPt->getBlkName(), offset + i);
             const VarExpr* bptTo = this->createAndRegisterFreshDataVar(1);
-            resultPure = Expr::and_(
-                resultPure,
-                Expr::eq(bptFrom, bptFromExpr)
-            );
+            const Expr* eq = Expr::eq(bptFrom, bptFromExpr);
+            REGISTER_EXPRPTR(eq);
+            resultPure = Expr::and_(resultPure, eq);
+            REGISTER_EXPRPTR(resultPure);
             const BytePt* bpt = SpatialLiteral::bytePt(bptFrom, bptTo);
+            REGISTER_EXPRPTR(bpt);
             bytifiedPts.push_back(bpt);
         }
         const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(bytifiedPts, oldPt->getTo());
@@ -3185,6 +3305,7 @@ namespace smack{
             resultPure,
             equalConstraint
         );
+        REGISTER_EXPRPTR(resultPure);
         std::string mallocName = oldPt->getBlkName();
         
         const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName
@@ -3204,6 +3325,7 @@ namespace smack{
             // rearrange the symbolic heap
             const VarExpr* newBySizeVar = this->createAndRegisterFreshDataVar(1);
             const BytePt* cnbpt = SpatialLiteral::bytePt(bpt->getFrom(), newBySizeVar);
+            REGISTER_EXPRPTR(cnbpt);
             newBytifiedPts.push_back(cnbpt);
         }
         
@@ -3212,6 +3334,7 @@ namespace smack{
             resultPure,
             equalConstraint
         );
+        REGISTER_EXPRPTR(resultPure);
         const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts));
         return {resultPt, resultPure};
     }
@@ -3236,6 +3359,7 @@ namespace smack{
             const VarExpr* newBySizeVar = this->createAndRegisterFreshDataVar(1);
             const BytePt* obpt = oldBytifiedPts[offset + i];
             const BytePt* cnbpt = SpatialLiteral::bytePt(obpt->getFrom(), newBySizeVar);
+            REGISTER_EXPRPTR(cnbpt);
             newBytifiedPts[offset + i] = cnbpt;
             computeBytifiedPts.push_back(cnbpt);
         }
@@ -3244,12 +3368,14 @@ namespace smack{
             resultPure,
             modifyEqualConstraint
         );
+        REGISTER_EXPRPTR(resultPure);
 
         const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, freshPtVar);
         resultPure = Expr::and_(
             resultPure,
             equalConstraint
         );
+        REGISTER_EXPRPTR(resultPure);
         const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts));
         return {resultPt, resultPure};
     }
@@ -3266,6 +3392,7 @@ namespace smack{
         for(const BytePt* bpt :  oldBytifiedPts){
             const VarExpr* newBySizeVar = this->createAndRegisterFreshDataVar(1);
             const BytePt* nbpt = SpatialLiteral::bytePt(bpt->getFrom(), freshPtVar);
+            REGISTER_EXPRPTR(nbpt);
             newBytifiedPts.push_back(nbpt);
         }
         const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, storedVar);
@@ -3273,6 +3400,7 @@ namespace smack{
             resultPure,
             equalConstraint
         );
+        REGISTER_EXPRPTR(resultPure);
         const PtLit* resultPt = (const PtLit*)(this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts));
         return {resultPt, resultPure};
     }
@@ -3294,7 +3422,7 @@ namespace smack{
             const Expr* oldFrom = oldBytifiedPts[offset + i]->getFrom();
             const VarExpr* newTo = this->createAndRegisterFreshDataVar(1);
             const BytePt* nbpt = SpatialLiteral::bytePt(oldFrom, newTo);
-
+            REGISTER_EXPRPTR(nbpt);
             newBytifiedPts[offset + i] = nbpt;
             computeBytifiedPts.push_back(nbpt);
         }
@@ -3307,11 +3435,13 @@ namespace smack{
             resultPure,
             modifyEqualConstraint
         );
+        REGISTER_EXPRPTR(resultPure);
 
         resultPure = Expr::and_(
             resultPure,
             modifyEqualConstraint
         );
+        REGISTER_EXPRPTR(resultPure);
         const PtLit* resultPt = (const PtLit* ) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts));
         return {resultPt, resultPure};
     }
@@ -3335,6 +3465,7 @@ namespace smack{
             resultPure,
             loadedEqualConstraint
         );
+        REGISTER_EXPRPTR(resultPure);
         return {freshLoadedVar, resultPure};
     }
         
@@ -3348,6 +3479,7 @@ namespace smack{
     (std::vector<const BytePt*> bytifiedPts, const Expr* highLevelExpr){
         const Expr* computedSum = this->computeValueOfBytifiedPtsSequence(bytifiedPts);
         const Expr* result = Expr::eq(computedSum, highLevelExpr);
+        REGISTER_EXPRPTR(result);
         return result;
     }
 
@@ -3356,13 +3488,20 @@ namespace smack{
     BlockExecutor::computeValueOfBytifiedPtsSequence
     (std::vector<const BytePt*> bytifiedPts){
         const Expr* time = Expr::lit((long long) 256);
+        REGISTER_EXPRPTR(time);
         const Expr* computedSum = Expr::lit((long long)0);
+        REGISTER_EXPRPTR(computedSum);
         for(int i = 0; i < bytifiedPts.size(); i++){
             const Expr* base = Expr::lit((long long)1);
+            REGISTER_EXPRPTR(base);
             for(int j = i; j < bytifiedPts.size() - 1; j++){
                 base = Expr::multiply(base, time);
+                REGISTER_EXPRPTR(base);
             }
-            computedSum = Expr::add(computedSum, Expr::multiply(base, bytifiedPts[i]->getTo()));
+            const Expr* mul = Expr::multiply(base, bytifiedPts[i]->getTo());
+            REGISTER_EXPRPTR(mul);
+            computedSum = Expr::add(computedSum, mul);
+            REGISTER_EXPRPTR(computedSum);
         }
         return computedSum;
     }
@@ -3394,10 +3533,10 @@ namespace smack{
         this->updateBindingsEqualVarAndRhsArithExpr(freshVar, arg, parsedUsedExpr.first, parsedUsedExpr.second);
         this->updateVarType(freshVar, arg, parsedUsedExpr.first, -1);
         CFDEBUG(std::cout << "INFO: extracted size: " << extractedStepSize << std::endl;)
-        resultPure = Expr::and_(    
-            resultPure,
-            Expr::eq(freshVar, parsedUsedExpr.first)
-        );  
+        const Expr* eq = Expr::eq(freshVar, parsedUsedExpr.first);
+        REGISTER_EXPRPTR(eq);
+        resultPure = Expr::and_(resultPure,eq);
+        REGISTER_EXPRPTR(resultPure);
         return {freshVar, resultPure};
     }
 
@@ -3483,21 +3622,27 @@ namespace smack{
 
     const SpatialLiteral* 
     BlockExecutor::createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize,std::vector<const BytePt*> bytifiedPts){
+        const SpatialLiteral* sp = nullptr;
         if(this->varEquiv->isStructArrayPtr(mallocName)){
-            return SpatialLiteral::gcPt(from, to, mallocName, stepSize, bytifiedPts);
+            sp = SpatialLiteral::gcPt(from, to, mallocName, stepSize, bytifiedPts);
         } else {
-            return SpatialLiteral::pt(from, to, mallocName, stepSize, bytifiedPts);
+            sp = SpatialLiteral::pt(from, to, mallocName, stepSize, bytifiedPts);
         }
+        REGISTER_EXPRPTR(sp);
+        return sp;
     }
 
     const SpatialLiteral* 
     BlockExecutor::createBlkAccordingToMallocName
     (std::string mallocName, const Expr* from, const Expr* to, int byteSize){
+        const SpatialLiteral* sp = nullptr;
         if(this->varEquiv->isStructArrayPtr(mallocName)){
-            return SpatialLiteral::gcBlk(from, to, mallocName, byteSize);
+            sp = SpatialLiteral::gcBlk(from, to, mallocName, byteSize);
         } else {
-            return SpatialLiteral::blk(from, to, mallocName, byteSize);
+            sp = SpatialLiteral::blk(from, to, mallocName, byteSize);
         }
+        REGISTER_EXPRPTR(sp);
+        return sp;
     }
 
 
@@ -3519,7 +3664,11 @@ namespace smack{
         std::list<const SpatialLiteral*> resultList;
         const SpatialLiteral* leftBlk = this->createBlkAccordingToMallocName(mallocName, oldBlkFrom, from, ptFromOffset - oldBlkFromOffset);
         const SpatialLiteral* createdPt = this->createPtAccordingToMallocName(mallocName, from, to, stepSize);
-        const SpatialLiteral* rightBlk = this->createBlkAccordingToMallocName(mallocName, Expr::add(from, Expr::lit((long long) stepSize)), oldBlkTo, oldBlkToOffset - ptFromOffset - stepSize);
+        const Expr* lit = Expr::lit((long long) stepSize);
+        REGISTER_EXPRPTR(lit);
+        const Expr* add = Expr::add(from, lit);
+        REGISTER_EXPRPTR(add);
+        const SpatialLiteral* rightBlk = this->createBlkAccordingToMallocName(mallocName, add, oldBlkTo, oldBlkToOffset - ptFromOffset - stepSize);
         resultList.push_back(leftBlk);
         resultList.push_back(createdPt);
         resultList.push_back(rightBlk);
@@ -3538,7 +3687,10 @@ namespace smack{
             const Expr* tempFrom = tempRhsBlk->getFrom();
             int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom);
             const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, mallocName, fromVarOffset);
-            resultPure = Expr::and_(resultPure, Expr::eq(tempFrom, fromVar));
+            const Expr* eq = Expr::eq(tempFrom, fromVar);
+            REGISTER_EXPRPTR(eq);
+            resultPure = Expr::and_(resultPure, eq);
+            REGISTER_EXPRPTR(resultPure);
             const VarExpr* toVar = this->createAndRegisterFreshDataVar(1);
             splittedTriplet = this->splitBlkByCreatingPt(mallocName, fromVar, toVar, 1, tempRhsBlk);
             assert(3 == splittedTriplet.size());

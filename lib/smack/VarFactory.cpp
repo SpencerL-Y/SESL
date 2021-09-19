@@ -1,4 +1,5 @@
 #include <smack/VarFactory.h>
+#include "smack/BlockExecutor.h"
 
 namespace smack
 {
@@ -13,6 +14,7 @@ namespace smack
         }
         const VarExpr* newVar = new VarExpr(name + bb_repeat_str + std::to_string(this->varsMap[name]));
         this->varNameRestoreMap[newVar->name()] = name;
+        BlockExecutor::ExprMemoryManager->registerPointer((Expr*)newVar);
         return newVar;
     }
 
@@ -35,6 +37,7 @@ namespace smack
             return nullptr;
         } else {
             const VarExpr* varExpr = new VarExpr(name + bb_repeat_str + std::to_string(this->varsMap[name]));
+            BlockExecutor::ExprMemoryManager->registerPointer((Expr*)varExpr);
             return varExpr;
         }
     }
@@ -51,6 +54,7 @@ namespace smack
 
     const VarExpr* VarFactory::getFreshVar(int byteSize){
         const VarExpr* fresh = new VarExpr("$fresh" + std::to_string(freshIndex));
+        BlockExecutor::ExprMemoryManager->registerPointer((Expr*)fresh);
         this->varNameRestoreMap[fresh->name()] = fresh->name();
         this->freshVar2Byte[fresh] = byteSize;
         this->freshVarInstances[fresh->name()] = fresh;

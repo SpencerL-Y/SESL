@@ -3165,6 +3165,7 @@ namespace smack{
                 if(this->getStepSizeOfPtrVar(rhsUsedVarName) != 0){
                     this->setPtrVarStepSize(lhsUsedVarName, this->getStepSizeOfPtrVar(rhsUsedVarName));
                 } else {
+                    assert(storedSize > 0);
                     this->setPtrVarStepSize(lhsUsedVarName, storedSize);
                 }
             } else {

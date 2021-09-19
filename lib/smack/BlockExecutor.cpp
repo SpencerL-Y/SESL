@@ -3155,7 +3155,6 @@ namespace smack{
 
 
     void BlockExecutor::updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs, int storedSize){
-        assert(storedSize > 0);
         // lhs and rhs are both used var
         if(rhs->isVar()){
             const VarExpr* rhsVar = (const VarExpr*) rhs;

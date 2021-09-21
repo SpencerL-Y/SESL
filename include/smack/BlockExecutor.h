@@ -11,6 +11,7 @@
 #include "smack/Debug.h"
 #include "smack/BoogieAst.h"
 #include "smack/ExecutionState.h"
+#include "smack/MemoryManager.h"
 #include "smack/VarEquiv.h"
 #include "smack/VarFactory.h"
 #include "smack/StoreSplitter.h"
@@ -130,6 +131,8 @@ namespace smack{
         void updateBindingsEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr, const Expr* storedExpr, bool isPtr);   
 
     public:
+        static MemoryManagerPtr ExprMemoryManager;
+
         BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb); this->cfg->addVarType("$Null", "ref64");}
 
         // --------------------- Execution for initialization
@@ -194,6 +197,8 @@ namespace smack{
     };
     typedef std::shared_ptr<BlockExecutor> BlockExecutorPtr;
 
+    #define REGISTER_EXPRPTR(ptr) \
+        BlockExecutor::ExprMemoryManager->registerPointer(ptr)
     
 }
 

@@ -107,6 +107,7 @@ namespace smack {
                 std::cout << "INFO: BUG FOUND, STOP EXCUTION" << std::endl;
                 break;
             }
+            BlockExecutor::ExprMemoryManager->clearMemory();
             std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
         }
 

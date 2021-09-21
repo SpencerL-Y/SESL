@@ -18,6 +18,7 @@ namespace smack
         virtual bool runOnModule(llvm::Module &m);
         virtual llvm::StringRef getPassName() const {return "ViolationPathGen";}
         virtual void getAnalysisUsage(llvm::AnalysisUsage & AU) const;
+        std::string generateSVCOMPWitness();
 
     };
     

@@ -15,13 +15,12 @@
 
 namespace smack {
     using llvm::errs;
-    char MemSafeVerifier::ID = 1;
+    char MemSafeVerifier::ID = 0;
 
     void MemSafeVerifier::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
-        //AU.setPreservesAll();
+        AU.setPreservesAll();
         AU.addRequired<SmackModuleGenerator>();
     }
-
     bool MemSafeVerifier::runOnModule(llvm::Module &M){
         std::cout << "-----------------START MEMSAFE ANALYSIS---------------" << std::endl;
         SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
@@ -105,6 +104,7 @@ namespace smack {
             bool infErrorSafeSat = checker->checkInferenceError().first;
             if(!memLeakSafeSat || !infErrorSafeSat){
                 std::cout << "INFO: BUG FOUND, STOP EXCUTION" << std::endl;
+                this->violationPath = p;
                 break;
             }
             BlockExecutor::ExprMemoryManager->clearMemory();
@@ -149,7 +149,8 @@ namespace smack {
             (this->ctx->bool_val(true) && slah_api::newEmp(*(this->ctx)));
             CFDEBUG(std::cout << "INFO: Check " << std::endl;);
             CFDEBUG(std::cout << premise << std::endl;);
-            CFDEBUG(std::cout << "|" << std::endl <<
+            CFDEBUG(std::cout << 
+                    "|" << std::endl <<
                     "|———— " << std::endl << 
                     "|" << std::endl<< std::endl );
             CFDEBUG(std::cout << consequent << std::endl;);

@@ -1497,12 +1497,10 @@ namespace smack {
 
     const Stmt* AssumeStmt::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum, usedVarNames);
-        std::list<const Attr*> renamedAttrs;
+        AssumeStmt* clonedStmt = new AssumeStmt(renamedExpr);
         for(const Attr* a : this->attrs){
-            renamedAttrs.push_back(a->renameClone(funcName, usedNum, usedVarNames));
+            clonedStmt->add(a->renameClone(funcName, usedNum, usedVarNames));
         }
-        const Stmt* clonedStmt = new AssumeStmt(renamedExpr);
-        // TODOsh: what is the attr used for?
         return clonedStmt;
     }
 

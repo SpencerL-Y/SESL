@@ -155,6 +155,8 @@ add_library(smackTranslator STATIC
         include/smack/cfg/CFGExecutor.h
   include/smack/ExecutionState.h
   include/smack/SVNaming.h
+  include/smack/ViolationPathGen.h
+  include/tinyxml/tinyxml2.h
   lib/smack/Translator.cpp
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp
@@ -199,6 +201,8 @@ add_library(smackTranslator STATIC
         lib/smack/cfg/CFGUtils.cpp
         include/smack/cfg/CFGUtils.h
   lib/smack/SVNaming.cpp
+  lib/smack/ViolationPathGen.cpp
+  lib/tinyxml/tinyxml2.cpp
   )
 
 add_executable(llvm2bpl

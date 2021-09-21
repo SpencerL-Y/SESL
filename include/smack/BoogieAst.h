@@ -997,6 +997,7 @@ namespace smack {
             }
             return false;
         }
+        std::list<const Attr*> getAttrs() const { return this->attrs;};
 
         void print(std::ostream &os) const;
 

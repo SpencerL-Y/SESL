@@ -10,6 +10,7 @@
 #include <sstream>
 #include <cstring>
 #include "smack/cfg/CFG.h"
+#include "smack/BlockExecutor.h"
 #include "smack/VarFactory.h"
 #include "utils/CenterDebug.h"
 #include "utils/TranslatorUtil.h"
@@ -1145,6 +1146,7 @@ namespace smack {
             return new PtLit(from, to, blkName, stepSize);
         } else {
             const BytePt* bpt = new BytePt(from, to);
+            REGISTER_EXPRPTR(bpt);
             std::vector<const BytePt*> bytifiedVec;
             bytifiedVec.push_back(bpt);
             return new PtLit(from, to, blkName, stepSize, bytifiedVec);

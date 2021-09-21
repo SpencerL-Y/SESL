@@ -107,6 +107,7 @@ namespace smack {
                 this->violationPath = p;
                 break;
             }
+            BlockExecutor::ExprMemoryManager->clearMemory();
             std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
         }
 

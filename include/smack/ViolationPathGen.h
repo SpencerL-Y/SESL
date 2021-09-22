@@ -24,7 +24,11 @@ namespace smack
         std::string generateSVCOMPWitness(ExecutionPath violatedPath);
         void createKeysForGraphml(XMLElement* graphElement);
         void createPreludeForGraph(XMLElement* graph);
+        void createEntryNodeForGraph(XMLElement* graph);
+        void createSinkNodeForGraph(XMLElement* graph);
         void createNodeAndEdgeForGraph(XMLElement* graph, ExecutionPath violatedPath);
+        void createNodeForGraph(XMLElement* graph, std::string nodeId);
+        void createEdgeForGraph(XMLElement* graph, std::string fromNodeId, std::string toNodeId, int lineNum);
         std::string getISO8601Time();
         std::string getHashForFile(std::string path);
     };

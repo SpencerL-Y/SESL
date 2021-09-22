@@ -109,6 +109,15 @@ namespace smack {
         return statePtr;
     }
 
+    void CFGExecutor::printProc() {
+        for (auto &v : exePathVec) {
+            for (int i = 0; i < v.length(); ++ i) {
+                v[i]->getStateBlock()->print(cout);
+                cout << endl;
+            }
+        }
+    }
+
     StatePtr ExecutionPath::operator[](int pos) const {
         return exePath[pos];
     }

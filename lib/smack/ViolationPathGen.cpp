@@ -45,7 +45,7 @@ namespace smack
 
 
     std::string ViolationPathGen::generateSVCOMPWitness(ExecutionPath violatedPath){
-        FILE* fp = fopen("/home/clexma/Desktop/Disk_D/testWitness.graphml", "w");
+        FILE* fp = fopen("~/Desktop/Disk_D/testWitness.graphml", "w");
         XMLDocument* doc = new XMLDocument();
         XMLDeclaration* docDecl = doc->NewDeclaration();
         doc->LinkEndChild(docDecl);

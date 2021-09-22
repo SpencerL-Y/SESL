@@ -105,6 +105,7 @@ namespace smack {
         auto& stmts = statePtr->getStateBlock()->getStatements();
         assert(Stmt::ASSUME == stmts.front()->getKind());
         stmts.pop_front();
+//        stmts.push_front(AssumeStmt::comment("condition-false"));
         return statePtr;
     }
 

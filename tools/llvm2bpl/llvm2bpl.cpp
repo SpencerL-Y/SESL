@@ -59,6 +59,10 @@ static llvm::cl::opt<std::string>
                   llvm::cl::Required, llvm::cl::value_desc("filename"));
 
 static llvm::cl::opt<std::string>
+    OriginFilePass("c", llvm::cl::desc("Input sourcecode file path"),
+                    llvm::cl::init("FILE NAME"), llvm::cl::value_desc("filename"));
+
+static llvm::cl::opt<std::string>
     OutputFilename("bpl", llvm::cl::desc("Output Boogie filename"),
                    llvm::cl::init(""), llvm::cl::value_desc("filename"));
 
@@ -271,7 +275,7 @@ int main(int argc, char **argv) {
     // TODOsh: currently the symbolic execution is in this pass
     pass_manager.add(new smack::SmackModuleGenerator());
     pass_manager.add(new smack::MemSafeVerifier());
-    pass_manager.add(new smack::ViolationPathGen());
+    pass_manager.add(new smack::ViolationPathGen(OriginFilePass));
     pass_manager.add(new smack::BplFilePrinter(F->os()));
   }
 

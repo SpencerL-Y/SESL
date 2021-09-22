@@ -218,7 +218,12 @@ namespace smack
                             codeLine = attrVals.front();
                             attrVals.pop_front();
                         }
-                        std::cout << "LOC: " << codeLine << std::endl;
+                        int stateInt = ((const IntLit*) codeLine)->getVal();
+                        if(stateInt == locVec.back()){
+                            
+                        } else {
+                            locVec.push_back(stateInt);
+                        }
                     }
                 }
             }

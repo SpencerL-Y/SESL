@@ -221,7 +221,7 @@ namespace smack
         std::string originFileStr = ss.str();
         
         unsigned char shStr[SHA256_DIGEST_LENGTH];
-        SHA256(originFileStr.c_str(), originFileStr.length(), shStr);
+        SHA256((const unsigned char *)originFileStr.c_str(), originFileStr.length(), shStr);
 
         char outputBuf[2];
         std::string resultStr = "";

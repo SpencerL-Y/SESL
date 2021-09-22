@@ -227,7 +227,10 @@ message(STATUS "Z3_FOUND: ${Z3_FOUND}" )
 message(STATUS "Found Z3: ${Z3_VERSION_STRING}")
 include_directories (${Z3_CXX_INCLUDE_DIRS})
 
-find_package(OPENSSL REQUIRED)
+find_package(OpenSSL REQUIRED)
+message(STATUS "OPENSSL_FOUND: ${OPENSSL_FOUND}")
+include_directories(${OPENSSL_INCLUDE_DIR})
+
 
 
 # We need the release build of sea-dsa otherwise we'll see a lot of crashes in
@@ -243,7 +246,7 @@ set(SL_LIB /usr/local/lib)
 include_directories(${SL_DIR})
 link_directories(${SL_LIB})
 
-target_link_libraries(smackTranslator ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS} ${Z3_LIBRARIES})
+target_link_libraries(smackTranslator ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS} ${Z3_LIBRARIES} ${OPENSSL_LIBRARIES})
 target_link_libraries(llvm2bpl smackTranslator utils SeaDsaAnalysis ${SL_LIB}/libslah.so ${SL_LIB}/libz3.so )
 
 INSTALL(TARGETS llvm2bpl

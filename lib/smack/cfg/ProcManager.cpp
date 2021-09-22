@@ -216,7 +216,7 @@ namespace smack {
                     auto index = lReturns.begin();
 
                     StatementList retProcessBlockStmt;
-                    retProcessBlockStmt.push_back(Stmt::call(targetProc->getName(),{},{}, {Attr::attr("call end")}));
+                    retProcessBlockStmt.push_back(Stmt::call("boogie_si_record_ref",{},{}, {Attr::attr("call end"),Attr::attr(targetProc->getName())}));
                     for (auto &[name, type] : returns) {
                         auto stmt = Stmt::assign(Expr::id(*index++), Expr::id(name));
                         cout << "Add assign statement: ";
@@ -250,7 +250,7 @@ namespace smack {
             //generate pass block statements
             StatementList passBlockStmts;
             {
-                passBlockStmts.push_back(Stmt::call(targetProc->getName(), {},{}, {Attr::attr("call start")}));
+                passBlockStmts.push_back(Stmt::call("boogie_si_record_ref",{},{}, {Attr::attr("call start"),Attr::attr(targetProc->getName())}));
                 auto it = augmentList.begin();
                 for (auto&[name, type] : parameterList) {
                     auto stmt = Stmt::assign(Expr::id(name), *(it++));

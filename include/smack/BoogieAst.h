@@ -59,11 +59,10 @@ namespace smack {
     };
 
     enum ErrType{
-        INVALID_FREE,
-        NULL_REF,
-        OUT_OF_RANGE,
-        STORE_EMP,
-        LOAD_EMP
+        VALID_FREE,
+        VALID_DEREF,
+        VALID_MEMTRACK,
+        VALID_MEMCLEANUP
     };
 
     class Expr {

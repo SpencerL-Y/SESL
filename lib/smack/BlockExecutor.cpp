@@ -1054,7 +1054,7 @@ namespace smack{
         // if the copy is overlapping, report the error
 
         if(this->isMemcopyOverlapping(srcVar, dstVar, copySize)){
-            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE);
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::VALID_DEREF);
             REGISTER_EXPRPTR(errlit);
             newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
@@ -1064,7 +1064,7 @@ namespace smack{
             return newSH;
         }
         if(srcOffset + copySize > srcBlkSize || dstOffset + copySize > dstBlkSize){
-            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE);
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::VALID_DEREF);
             REGISTER_EXPRPTR(errlit);
             newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
@@ -1075,7 +1075,7 @@ namespace smack{
             return newSH;
         }
         if(copySize < 0){
-            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE);
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::VALID_DEREF);
             REGISTER_EXPRPTR(errlit);
             newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
@@ -1850,7 +1850,7 @@ namespace smack{
 
                 if(this->varEquiv->isFreedName(linkVarName)){
                     CFDEBUG(std:: cout << "INFO: INVALID FREE" << std::endl;);
-                    const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::INVALID_FREE);
+                    const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::VALID_FREE);
                     REGISTER_EXPRPTR(errlit);
                     std::list<const SpatialLiteral*> newSpatialExpr;
                     newSpatialExpr.push_back(errlit);
@@ -1861,7 +1861,7 @@ namespace smack{
                     CFDEBUG(std:: cout << "INFO: INVALID FREE" << std::endl;);
                     if(this->varEquiv->getOffset(freedVar->name()) != 0){
                         // This means the freed variable is not an allocated location and error happens.
-                        const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::INVALID_FREE);
+                        const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::VALID_FREE);
                         REGISTER_EXPRPTR(errlit);
                         std::list<const SpatialLiteral*> newSpatialExpr;
                         newSpatialExpr.push_back(errlit);
@@ -1992,7 +1992,7 @@ namespace smack{
         if(!mallocName.compare("$Null")){
             std::list<const SpatialLiteral*> newSpatial;
             // the symbolic heap is set to error
-            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::NULL_REF);
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::VALID_DEREF);
             REGISTER_EXPRPTR(errlit);
             newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
@@ -2005,7 +2005,7 @@ namespace smack{
         if(offset >= mallocBlkSize || offset < 0){
             std::list<const SpatialLiteral*> newSpatial;
             // the symbolic heap is set to error
-            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE);
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::VALID_DEREF);
             REGISTER_EXPRPTR(errlit);
             newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
@@ -2351,7 +2351,7 @@ namespace smack{
                     if(breakBlk->isEmpty()){
                         const Expr* newPure = sh->getPure();
                         std::list<const SpatialLiteral*> newSpatialExpr;
-                        const SpatialLiteral* errLit = SpatialLiteral::errlit(true, ErrType::STORE_EMP);
+                        const SpatialLiteral* errLit = SpatialLiteral::errlit(true, ErrType::VALID_DEREF);
                         REGISTER_EXPRPTR(errLit);
                         newSpatialExpr.push_back(errLit);
                         SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
@@ -2534,7 +2534,7 @@ namespace smack{
         if(!mallocName.compare("$Null")){
             // the symbolic heap is set to error
             std::list<const SpatialLiteral*> newSpatial;
-            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::NULL_REF);
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::VALID_DEREF);
             REGISTER_EXPRPTR(errlit);
             newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
@@ -2547,7 +2547,7 @@ namespace smack{
             // If the ptr offset is overflow
             std::list<const SpatialLiteral*> newSpatial;
             // the symbolic heap is set to error
-            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::OUT_OF_RANGE);
+            const SpatialLiteral* errlit = SpatialLiteral::errlit(true, ErrType::VALID_DEREF);
             REGISTER_EXPRPTR(errlit);
             newSpatial.push_back(errlit);
             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(sh->getPure(), newSpatial);
@@ -2762,7 +2762,7 @@ namespace smack{
                         // the blk to break is found
                         const BlkLit* breakBlk = (const BlkLit*) i;
                         if(breakBlk->isEmpty()){
-                            const SpatialLiteral* errLit =  SpatialLiteral::errlit(true, ErrType::LOAD_EMP);
+                            const SpatialLiteral* errLit =  SpatialLiteral::errlit(true, ErrType::VALID_DEREF);
                             REGISTER_EXPRPTR(errLit);
                             newSpatial.push_back(errLit);
                             SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);

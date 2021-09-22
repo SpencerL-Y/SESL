@@ -1,4 +1,4 @@
-#include "smack.h"
+
 #include <stdlib.h>
 #include "memory.h"
 

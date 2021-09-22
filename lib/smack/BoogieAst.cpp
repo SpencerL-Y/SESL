@@ -1327,17 +1327,15 @@ namespace smack {
     }
 
     std::string ErrorLit::getReasonStr() const {
-        if(this->getReason() == ErrType::INVALID_FREE){
+        if(this->getReason() == ErrType::VALID_FREE){
             return "INVALID_FREE";
-        } else if(this->getReason() == ErrType::LOAD_EMP){
-            return "LOAD_EMP";
-        } else if(this->getReason() == ErrType::NULL_REF){
-            return "NULL_REF";
-        } else if(this->getReason() == ErrType::OUT_OF_RANGE){
-            return "OUT_OF_RANGE";
-        } else if(this->getReason() == ErrType::STORE_EMP){
-            return "STORE_EMP";
-        } else {
+        } else if(this->getReason() == ErrType::VALID_DEREF){
+            return "INVALID_DEREF";
+        } else if(this->getReason() == ErrType::VALID_MEMCLEANUP){
+            return "INVALID_MEMCLEANUP";
+        } else if(this->getReason() == ErrType::VALID_MEMTRACK){
+            return "INVALID_MEMTRACK";
+        }  else {
             return "UNKNOWN";
         }
     }

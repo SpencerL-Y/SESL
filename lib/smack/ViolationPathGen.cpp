@@ -9,6 +9,7 @@
 #include <ctime>
 #include <chrono>
 #include <iomanip>
+#include <map>
 #include "openssl/sha.h"
 
 using namespace tinyxml2;
@@ -36,15 +37,15 @@ namespace smack
                 std::cout << std::endl;
             }
         }
-        this->generateSVCOMPWitness();
+        this->generateSVCOMPWitness(violationPath);
         std::cout << "------------ END GENERATIING VIOLATION PATH -----------" << std::endl;
 
         return false;
     }
 
 
-    std::string ViolationPathGen::generateSVCOMPWitness(){
-        FILE* fp = fopen("/home/clexma/Desktop/Disk_D/testWitness.graphml", "w");
+    std::string ViolationPathGen::generateSVCOMPWitness(ExecutionPath violatedPath){
+        FILE* fp = fopen("~/Desktop/Disk_D/testWitness.graphml", "w");
         XMLDocument* doc = new XMLDocument();
         XMLDeclaration* docDecl = doc->NewDeclaration();
         doc->LinkEndChild(docDecl);
@@ -54,6 +55,8 @@ namespace smack
         this->createKeysForGraphml(graphElement);
             XMLElement* graph = graphElement->InsertNewChildElement("graph");
             this->createPreludeForGraph(graph);
+            this->createNodeAndEdgeForGraph(graph, violatedPath);
+            
 
 
 
@@ -162,11 +165,6 @@ namespace smack
             witnessTypeKey->SetAttribute("for", "graph");
             witnessTypeKey->SetAttribute("id", "witness-type");
 
-            // XMLElement* hashKey = graphElement->InsertNewChildElement("key");
-            // witnessTypeKey->SetAttribute("attr.name", "inputWitnessHash");
-            // witnessTypeKey->SetAttribute("attr.type", "string");
-            // witnessTypeKey->SetAttribute("for", "graph");
-            // witnessTypeKey->SetAttribute("id", "inputwitnesshash");
     }
 
 
@@ -203,6 +201,87 @@ namespace smack
         data->SetAttribute("key", "programhash");
             data->SetText(this->getHashForFile(originFilePath).c_str());
     }
+
+
+    void ViolationPathGen::createNodeAndEdgeForGraph(XMLElement* graph, ExecutionPath violatedPath){
+        std::vector<int> locVec;
+        for(StatePtr s : violatedPath.getExePath()){
+            for(const Stmt* stmt : s->getStateBlock()->getStatements()){
+                if(Stmt::Kind::ASSUME == stmt->getKind()){
+                    const AssumeStmt* as = (const AssumeStmt*) stmt;
+                    if(as->hasAttr("sourceloc")){
+                        const Attr* slAttr = as->getAttrs().front();
+                        std::list<const Expr*> attrVals = slAttr->getVals();
+                        const Expr* codeLine = nullptr;
+                        for(int i = 0; i < 2; i++){
+                            codeLine = attrVals.front();
+                            attrVals.pop_front();
+                        }
+                        int stateInt = ((const IntLit*) codeLine)->getVal();\
+                        if(locVec.size() > 0){
+                            if(stateInt == locVec.back()){
+
+                            } else {
+                                locVec.push_back(stateInt);
+                            }
+                        } else {
+                            locVec.push_back(stateInt);
+                        }
+                    }
+                }
+            }
+        }
+        this->createEntryNodeForGraph(graph);
+        for(int i = 0; i < locVec.size(); i++){
+            if(i != 0 && i != locVec.size() - 1){
+                this->createEdgeForGraph(graph, "S" + std::to_string(i), "S" + std::to_string(i + 1), locVec[i]);
+                this->createNodeForGraph(graph, "S" + std::to_string(i + 1));
+            } else if(i == 0){
+                this->createEdgeForGraph(graph, "entry", "S" + std::to_string(i), locVec[i]);
+            } else {
+                this->createEdgeForGraph(graph, "S" + std::to_string(i), "sink", locVec[i]);
+                this->createSinkNodeForGraph(graph);
+            }
+        }
+    }
+
+    void ViolationPathGen::createEntryNodeForGraph(XMLElement* graph){
+        XMLElement* entry = graph->InsertNewChildElement("node");
+        entry->SetAttribute("id", "entry");
+        XMLElement* entryData = entry->InsertNewChildElement("data");
+        entryData->SetAttribute("key", "entry");
+        entryData->SetText("true");
+    }
+
+    void ViolationPathGen::createSinkNodeForGraph(XMLElement* graph){
+        XMLElement* sink = graph->InsertNewChildElement("node");
+        sink->SetAttribute("id", "sink");
+        XMLElement* sinkData = sink->InsertNewChildElement("data");
+        sinkData->SetAttribute("key", "sink");
+        sinkData->SetText("true");
+    }
+
+    void ViolationPathGen::createNodeForGraph(XMLElement* graph, std::string nodeId){
+        graph->InsertNewChildElement("node")->SetAttribute("id", nodeId.c_str());
+    }
+
+    void ViolationPathGen::createEdgeForGraph(XMLElement* graph, std::string fromNodeId, std::string toNodeId, int lineNum){
+        XMLElement* edge = graph->InsertNewChildElement("edge");
+        edge->SetAttribute("source", fromNodeId.c_str());
+        edge->SetAttribute("target", toNodeId.c_str());
+        XMLElement* start = edge->InsertNewChildElement("data");
+        start->SetAttribute("key", "startline");
+        start->SetText(std::to_string(lineNum).c_str());
+
+        XMLElement* end = edge->InsertNewChildElement("data");
+        end->SetAttribute("key", "endline");
+        end->SetText(std::to_string(lineNum).c_str());
+        
+    }
+
+
+
+
 
     std::string ViolationPathGen::getISO8601Time() {
         auto now = std::chrono::system_clock::now();

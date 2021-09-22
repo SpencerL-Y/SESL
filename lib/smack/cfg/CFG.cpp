@@ -62,12 +62,28 @@ namespace smack {
 #if CENTER_DEBUG
                         cout << "from bb: " << sb->getName() << " to bb: ";
 #endif
+                        bool condition = true;
                         for (auto &to_bb : targets) {
 #if CENTER_DEBUG
                             cout << to_bb << " ";
 #endif
                             auto toState = getState(to_bb);
                             assert(fromState && toState);
+                            // add condition info
+                            if (targets.size() > 1) {
+                                {
+                                    auto &stmts = toState->getStateBlock()->getStatements();
+                                    auto it = stmts.begin();
+                                    for (;it != stmts.end(); ++ it) {
+                                        if ((*it)->getKind() == Stmt::ASSUME) {
+                                            continue;
+                                        }
+                                        break;
+                                    }
+                                    stmts.insert(it, Stmt::comment(condition ? "condition-true" : "condition-false"));
+                                }
+                                condition ^= 1;
+                            }
                             auto edgePtr = createEdge(fromState, toState);
                             edgePtr->setGuard(assume);
                             fromState->addEdge(edgePtr);

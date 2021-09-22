@@ -13,7 +13,7 @@ namespace smack {
       ptr->print(std::cout);
       std::cout << '\n';
     }
-    //for(const Expr* ptr : this->pointers) delete ptr;
+    for(const Expr* ptr : this->pointers) delete ptr;
     std::cout << "====================================End Clearing===============================\n";
     pointers.clear();
   }

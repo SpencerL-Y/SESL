@@ -654,7 +654,9 @@ def arguments():
     #     m = re.match('.*SMACK-OPTIONS:[ ]+(.*)$', line)
     #     if m:
     #       return args = parser.parse_args(m.group(1).split() + sys.argv[1:])
-
+    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+    print(args.input_files)
+    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
     return args
 
 
@@ -720,7 +722,7 @@ def frontend(args):
 def llvm_to_bpl(args):
     """Translate the LLVM bitcode file to a Boogie source file."""
 
-    cmd = ['llvm2bpl', args.linked_bc_file, '-bpl', args.bpl_file]
+    cmd = ['llvm2bpl', args.linked_bc_file, '-bpl', args.bpl_file, '-c', args.input_files[0]]
     cmd += ['-warn-type', args.warn]
     cmd += ['-sea-dsa=ci']
     # This flag can lead to unsoundness in Rust regressions.

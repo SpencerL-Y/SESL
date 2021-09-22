@@ -1,10 +1,15 @@
 #include "smack/ViolationPathGen.h"
 #include "smack/BoogieAst.h"
 #include "smack/MemSafeVerifier.h"
-#include "tinyxml/tinyxml2.h"
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <stdlib.h>
+#include <ctime>
+#include <chrono>
+#include <iomanip>
+#include "openssl/sha.h"
 
 using namespace tinyxml2;
 namespace smack
@@ -46,7 +51,23 @@ namespace smack
         XMLElement* graphElement = doc->NewElement("graphml");
         graphElement->SetAttribute("xmlns", "http://graphml.graphdrawing.org/xmlns");
         graphElement->SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-            XMLElement* violationNodeKey = graphElement->InsertNewChildElement("key");
+        this->createKeysForGraphml(graphElement);
+            XMLElement* graph = graphElement->InsertNewChildElement("graph");
+            this->createPreludeForGraph(graph);
+
+
+
+
+
+        doc->LinkEndChild(graphElement);
+        XMLPrinter* printer = new XMLPrinter(fp);
+        doc->Print(printer);
+        return "nullptr";
+    }
+
+    
+    void ViolationPathGen::createKeysForGraphml(XMLElement* graphElement){
+        XMLElement* violationNodeKey = graphElement->InsertNewChildElement("key");
             violationNodeKey->SetAttribute("attr.name", "isViolationNode");
             violationNodeKey->SetAttribute("attr.type", "boolean");
             violationNodeKey->SetAttribute("for", "node");
@@ -133,7 +154,7 @@ namespace smack
             originfileKey->SetAttribute("for", "edge");
             originfileKey->SetAttribute("id", "originfile");
                 originfileKey->InsertNewChildElement("default")
-                                ->SetText("ADD CURRENT TEXT HERE");
+                                ->SetText(originFilePath.c_str());
             
             XMLElement* witnessTypeKey = graphElement->InsertNewChildElement("key");
             witnessTypeKey->SetAttribute("attr.name", "witness-type");
@@ -141,23 +162,77 @@ namespace smack
             witnessTypeKey->SetAttribute("for", "graph");
             witnessTypeKey->SetAttribute("id", "witness-type");
 
-            XMLElement* hashKey = graphElement->InsertNewChildElement("key");
-            witnessTypeKey->SetAttribute("attr.name", "inputWitnessHash");
-            witnessTypeKey->SetAttribute("attr.type", "string");
-            witnessTypeKey->SetAttribute("for", "graph");
-            witnessTypeKey->SetAttribute("id", "inputwitnesshash");
-
-
-
-
-
-
-
-        doc->LinkEndChild(graphElement);
-        XMLPrinter* printer = new XMLPrinter(fp);
-        doc->Print(printer);
-        return "nullptr";
+            // XMLElement* hashKey = graphElement->InsertNewChildElement("key");
+            // witnessTypeKey->SetAttribute("attr.name", "inputWitnessHash");
+            // witnessTypeKey->SetAttribute("attr.type", "string");
+            // witnessTypeKey->SetAttribute("for", "graph");
+            // witnessTypeKey->SetAttribute("id", "inputwitnesshash");
     }
 
+
+    void ViolationPathGen::createPreludeForGraph(XMLElement* graph){
+        XMLElement* data = graph->InsertNewChildElement("data");
+        data->SetAttribute("key", "witness-type");
+            data->SetText("violation_witness");
+    
+        data = graph->InsertNewChildElement("data");
+        data->SetAttribute("key", "sourcecodelang");
+            data->SetText("C");
+
+        data = graph->InsertNewChildElement("data");
+        data->SetAttribute("key", "producer");
+            data->SetText("TOOL NAME");
+
+        data = graph->InsertNewChildElement("data");
+        data->SetAttribute("key", "specification");
+            data->SetText("SPEC");
+
+        data = graph->InsertNewChildElement("data");
+        data->SetAttribute("key", "programfile");
+            data->SetText(originFilePath.c_str());
+
+        data = graph->InsertNewChildElement("data");
+        data->SetAttribute("key", "architecture");
+            data->SetText(std::to_string(PTR_BYTEWIDTH * 8).c_str());
+
+        data = graph->InsertNewChildElement("data");
+        data->SetAttribute("key", "creationtime");
+            data->SetText(this->getISO8601Time().c_str());
+
+        data = graph->InsertNewChildElement("data");
+        data->SetAttribute("key", "programhash");
+            data->SetText(this->getHashForFile(originFilePath).c_str());
+    }
+
+    std::string ViolationPathGen::getISO8601Time() {
+        auto now = std::chrono::system_clock::now();
+        auto itt = std::chrono::system_clock::to_time_t(now);
+        std::ostringstream ss;
+        ss << std::put_time(gmtime(&itt), "%FT%TZ");
+        return ss.str();
+    }
+
+
+    std::string ViolationPathGen::getHashForFile(std::string path){
+        auto ss = ostringstream();
+        ifstream input_file(path);
+        ss << input_file.rdbuf();
+        //std::cout << ss.str() << std::endl;
+        std::string originFileStr = ss.str();
+        
+        unsigned char shStr[SHA256_DIGEST_LENGTH];
+        SHA256(originFileStr.c_str(), originFileStr.length(), shStr);
+
+        char outputBuf[2];
+        std::string resultStr = "";
+        for(int i = 0; i < SHA256_DIGEST_LENGTH; i++){
+            sprintf(outputBuf, "%02x", shStr[i]);
+            resultStr += outputBuf;
+        }
+        std::cout << "HASH Result: " << resultStr  << std::endl;
+        return resultStr;
+    }
+
+    
 
 } // namespace smack

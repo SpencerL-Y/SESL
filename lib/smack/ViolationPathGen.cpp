@@ -9,6 +9,7 @@
 #include <ctime>
 #include <chrono>
 #include <iomanip>
+#include <map>
 #include "openssl/sha.h"
 
 using namespace tinyxml2;
@@ -36,14 +37,14 @@ namespace smack
                 std::cout << std::endl;
             }
         }
-        this->generateSVCOMPWitness();
+        this->generateSVCOMPWitness(violationPath);
         std::cout << "------------ END GENERATIING VIOLATION PATH -----------" << std::endl;
 
         return false;
     }
 
 
-    std::string ViolationPathGen::generateSVCOMPWitness(){
+    std::string ViolationPathGen::generateSVCOMPWitness(ExecutionPath violatedPath){
         FILE* fp = fopen("/home/clexma/Desktop/Disk_D/testWitness.graphml", "w");
         XMLDocument* doc = new XMLDocument();
         XMLDeclaration* docDecl = doc->NewDeclaration();
@@ -54,6 +55,8 @@ namespace smack
         this->createKeysForGraphml(graphElement);
             XMLElement* graph = graphElement->InsertNewChildElement("graph");
             this->createPreludeForGraph(graph);
+            this->createNodeAndEdgeForGraph(graph, violatedPath);
+            
 
 
 
@@ -162,11 +165,6 @@ namespace smack
             witnessTypeKey->SetAttribute("for", "graph");
             witnessTypeKey->SetAttribute("id", "witness-type");
 
-            // XMLElement* hashKey = graphElement->InsertNewChildElement("key");
-            // witnessTypeKey->SetAttribute("attr.name", "inputWitnessHash");
-            // witnessTypeKey->SetAttribute("attr.type", "string");
-            // witnessTypeKey->SetAttribute("for", "graph");
-            // witnessTypeKey->SetAttribute("id", "inputwitnesshash");
     }
 
 
@@ -203,6 +201,31 @@ namespace smack
         data->SetAttribute("key", "programhash");
             data->SetText(this->getHashForFile(originFilePath).c_str());
     }
+
+
+    void ViolationPathGen::createNodeAndEdgeForGraph(XMLElement* graph, ExecutionPath violatedPath){
+        std::map<int, bool> nodeRegister;
+        std::vector<int> locVec;
+        for(StatePtr s : violatedPath.getExePath()){
+            for(const Stmt* stmt : s->getStateBlock()->getStatements()){
+                if(Stmt::Kind::ASSUME == stmt->getKind()){
+                    const AssumeStmt* as = (const AssumeStmt*) stmt;
+                    if(as->hasAttr("sourceloc")){
+                        const Attr* slAttr = as->getAttrs().front();
+                        std::list<const Expr*> attrVals = slAttr->getVals();
+                        const Expr* codeLine = nullptr;
+                        for(int i = 0; i < 2; i++){
+                            codeLine = attrVals.front();
+                            attrVals.pop_front();
+                        }
+                        std::cout << "LOC: " << codeLine << std::endl;
+                    }
+                }
+            }
+        }
+    }
+
+
 
     std::string ViolationPathGen::getISO8601Time() {
         auto now = std::chrono::system_clock::now();

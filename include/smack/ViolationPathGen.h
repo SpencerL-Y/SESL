@@ -3,6 +3,7 @@
 
 #include "llvm/Pass.h"
 #include "utils/CenterDebug.h"
+#include "smack/cfg/CFGExecutor.h"
 
 #include "tinyxml/tinyxml2.h"
 using namespace tinyxml2;
@@ -20,9 +21,10 @@ namespace smack
         virtual bool runOnModule(llvm::Module &m);
         virtual llvm::StringRef getPassName() const {return "ViolationPathGen";}
         virtual void getAnalysisUsage(llvm::AnalysisUsage & AU) const;
-        std::string generateSVCOMPWitness();
+        std::string generateSVCOMPWitness(ExecutionPath violatedPath);
         void createKeysForGraphml(XMLElement* graphElement);
         void createPreludeForGraph(XMLElement* graph);
+        void createNodeAndEdgeForGraph(XMLElement* graph, ExecutionPath violatedPath);
         std::string getISO8601Time();
         std::string getHashForFile(std::string path);
     };

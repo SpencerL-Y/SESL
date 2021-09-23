@@ -4,6 +4,7 @@
 #include "llvm/Pass.h"
 #include "BlockExecutor.h"
 #include "utils/CenterDebug.h"
+#include "ExecutionState.h"
 #include "smack/cfg/CFGExecutor.h"
 
 namespace smack
@@ -36,7 +37,7 @@ namespace smack
             MemSafeChecker(std::shared_ptr<TransToZ3> trans, StatementList& stmtList, SHExprPtr fsh);
             ~MemSafeChecker();
             void setSH(SHExprPtr sh);
-            bool checkCurrentMemLeak();
+            std::pair<bool, int> checkCurrentMemLeak(ExecutionStatePtr state, CFGPtr mainGraph);
             std::pair<bool, const Stmt*> checkInferenceError(); 
             bool checkPathFeasibility();
             // Return value: checkResult, Error Stmt

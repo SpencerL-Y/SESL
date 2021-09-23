@@ -10,6 +10,7 @@
 #include <chrono>
 #include <iomanip>
 #include <map>
+#include <dirent.h>
 #include "openssl/sha.h"
 
 using namespace tinyxml2;
@@ -45,7 +46,11 @@ namespace smack
 
 
     std::string ViolationPathGen::generateSVCOMPWitness(ExecutionPath violatedPath){
-        FILE* fp = fopen("~/Desktop/Disk_D/testWitness.graphml", "w");
+        char currentPath[100];
+        getcwd(currentPath, sizeof(currentPath));
+        std::string pathStr = currentPath;
+        FILE* fp = fopen((pathStr + "/testWitness.graphml").c_str(), "w");
+        std::cout << "INFO: witness output: " << pathStr + "/testWitness.graphml" << std::endl;
         XMLDocument* doc = new XMLDocument();
         XMLDeclaration* docDecl = doc->NewDeclaration();
         doc->LinkEndChild(docDecl);
@@ -56,12 +61,6 @@ namespace smack
             XMLElement* graph = graphElement->InsertNewChildElement("graph");
             this->createPreludeForGraph(graph);
             this->createNodeAndEdgeForGraph(graph, violatedPath);
-            
-
-
-
-
-
         doc->LinkEndChild(graphElement);
         XMLPrinter* printer = new XMLPrinter(fp);
         doc->Print(printer);

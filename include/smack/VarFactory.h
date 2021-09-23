@@ -24,12 +24,16 @@ namespace smack
         // null variable
         const VarExpr* nullVar;
         std::unordered_map<std::string, const VarExpr*> freshVarInstances;
+        // varUsedInfoMap: cache the varname and whether they have been used
+        std::set<std::string> unusedNames;
+    
         int freshIndex;
         typedef std::shared_ptr<VarFactory> VarFactoryPtr;
     public:
         VarFactory(/* args */){freshIndex = 0; this->nullVar = new VarExpr("$Null"); varNameRestoreMap["$Null"] = "$Null";};
         const VarExpr* useVar(std::string name);
         const VarExpr* getVar(std::string name);
+        const VarExpr* getVarConsume(std::string name);
         const IntLit* getInt(int i);
         const VarExpr* getFreshVar(int byteSize);
         const VarExpr* getNullVar();
@@ -41,6 +45,7 @@ namespace smack
         std::unordered_map<int, const IntLit*> getIntsMap();
         std::unordered_map<const VarExpr*, int> getFreshVar2Byte();
         std::unordered_map<std::string, std::string> getVarNameRestoreMap();
+        std::set<std::string> getUnusedNames();
         int getFreshIndex();
          
         void setVarsMap(std::unordered_map<std::string, int> varsMap);
@@ -48,6 +53,11 @@ namespace smack
         void setFreshVar2Byte(std::unordered_map<const VarExpr*, int> freshVar2Byte);
         void setVarNameRestoreMap(std::unordered_map<std::string, std::string> varNameRestoreMap);
         void setFreshIndex(int freshIndex);
+        void setUnusedNames(std::set<std::string> unusedNames);
+
+        // unusedName operations
+        void addUnusedName(std::string name);
+        void removeUnusedName(std::string name);
 
         VarFactoryPtr clone();
         ~VarFactory(){};

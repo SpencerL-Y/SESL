@@ -13,6 +13,9 @@
 #include <cstdlib>
 #include <smack/Naming.h>
 
+#define MEMTRACK 1
+#define MEMCLEAN 2
+
 namespace smack {
     using llvm::errs;
     char MemSafeVerifier::ID = 0;
@@ -100,7 +103,7 @@ namespace smack {
             trans->translate();
 
             MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans, finalStmts, currSH);
-            bool memLeakSafeSat = checker->checkCurrentMemLeak();
+            bool memLeakSafeSat = checker->checkCurrentMemLeak(currExecState, mainGraph).first;
             bool infErrorSafeSat = checker->checkInferenceError().first;
             if(!memLeakSafeSat || !infErrorSafeSat){
                 std::cout << "INFO: BUG FOUND, STOP EXCUTION" << std::endl;
@@ -133,13 +136,13 @@ namespace smack {
         this->trans->setSymbolicHeapHExpr(sh);
     }
 
-    bool MemSafeChecker::checkCurrentMemLeak(){
+    std::pair<bool, int> MemSafeChecker::checkCurrentMemLeak(ExecutionStatePtr state, CFGPtr mainGraph){
 
         
         bool pathFeasible = this->checkPathFeasibility();
         if(!pathFeasible){
             DEBUG_WITH_COLOR(std::cout << "CHECK: Satisfied, path condition false!" << std::endl, color::green);
-            return true;
+            return {true, 0};
         } else {
             //CFDEBUG(std::cout << trans->getFinalExpr() << std::endl;);
             // this->trans->setSymbolicHeapHExpr(this->finalSH);
@@ -157,10 +160,36 @@ namespace smack {
             z3::check_result result = slah_api::checkEnt(premise, consequent);
             if(result == z3::unsat){
                 DEBUG_WITH_COLOR(std::cout << "CHECK: MemLeak Satisfied!" << std::endl, color::green);
-                return true;
+                return {true, 0};
             } else {
                 DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: MemLeak!!!" << std::endl;, color::red);
-                return false;
+                std::set<std::string> blknamesRemained;
+                // gather all the blknames
+                for(const SpatialLiteral* spl : state->getSH()->getSpatialExpr()){
+                    if(spl->getId() != SpatialLiteral::Kind::EMP 
+                    || spl->getId() != SpatialLiteral::Kind::ERR){
+                        if(!state->getVarEquiv()->isStructArrayPtr(spl->getBlkName()) && 
+                            blknamesRemained.find(spl->getBlkName()) == blknamesRemained.end()){
+                            blknamesRemained.insert(spl->getBlkName());
+                        }
+                    }
+                }
+                for(std::string unusedName : state->getVarFactory()->getUnusedNames()){
+                    std::string unusedOrigName = state->getVarFactory()->getOrigVarName(unusedName);
+                    std::pair<std::string, int> sizeInfo = mainGraph->getVarDetailType(unusedOrigName);
+                    if(!sizeInfo.first.compare("ref")){
+                        std::string unusedBlkName = state->getVarEquiv()->getBlkName(unusedName);
+                        if(state->getVarEquiv()->getOffset(unusedName) == 0 &&
+                           blknamesRemained.find(unusedBlkName) != blknamesRemained.end()){
+                            continue;
+                        } else {
+                            DEBUG_WITH_COLOR(std::cout << "LEAK: Memtrack!!!" << std::endl;, color::red);
+                            return {false, MEMTRACK};
+                        }
+                    }
+                }
+                DEBUG_WITH_COLOR(std::cout << "LEAK: Memclean!!!" << std::endl;, color::red);
+                return {false, MEMCLEAN};
             }   
         }
     }

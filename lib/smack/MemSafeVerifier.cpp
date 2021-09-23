@@ -103,6 +103,8 @@ namespace smack {
             trans->translate();
 
             MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans, finalStmts, currSH);
+            
+            std::cout << std::endl;
             bool memLeakSafeSat = checker->checkCurrentMemLeak(currExecState, mainGraph).first;
             bool infErrorSafeSat = checker->checkInferenceError().first;
             if(!memLeakSafeSat || !infErrorSafeSat){

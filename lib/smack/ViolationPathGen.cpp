@@ -56,12 +56,6 @@ namespace smack
             XMLElement* graph = graphElement->InsertNewChildElement("graph");
             this->createPreludeForGraph(graph);
             this->createNodeAndEdgeForGraph(graph, violatedPath);
-            
-
-
-
-
-
         doc->LinkEndChild(graphElement);
         XMLPrinter* printer = new XMLPrinter(fp);
         doc->Print(printer);

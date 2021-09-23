@@ -168,7 +168,7 @@ namespace smack{
 
                     const VarExpr* rhsOrigVar = (const VarExpr*) arg1;
                     std::string rhsOrigVarName = rhsOrigVar->name();
-                    const VarExpr* rhsVar = this->varFactory->getVar(rhsOrigVarName);
+                    const VarExpr* rhsVar = this->varFactory->getVarConsume(rhsOrigVarName);
                     std::string rhsVarName = rhsVar->name();
 
                     this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
@@ -277,8 +277,8 @@ namespace smack{
                     //     this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
                     // }
                     const Expr* varEquality = Expr::eq(
-                        this->varFactory->getVar(lhsVarOrigName),
-                        this->varFactory->getVar(rhsOrigVarName)
+                        lhsVar,
+                        rhsVar
                     );
                     REGISTER_EXPRPTR(varEquality);
                     SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
@@ -307,7 +307,7 @@ namespace smack{
                     CFDEBUG(std::cout << "INFO: cannot compute int value." <<std::endl;);
                 }
                 const Expr* equality = Expr::eq(
-                    this->varFactory->getVar(lhsVarOrigName),
+                    lhsVar,
                     rhsExpr
                 );
                 REGISTER_EXPRPTR(equality);
@@ -335,7 +335,7 @@ namespace smack{
                     const Expr* notPure = this->parseUnaryBooleanExpression(rhsFun->name(), arg);
                     this->varEquiv->addNewName(lhsVarName);
                     const Expr* newPureConj = Expr::iff(
-                        this->varFactory->getVar(lhsVarOrigName),
+                        lhsVar,
                         notPure
                     );
                     REGISTER_EXPRPTR(newPureConj);
@@ -355,7 +355,7 @@ namespace smack{
                 const Expr* arg2 = rhsFun->getArgs().back();
                 const Expr* rhsExpr = this->parseBinaryBooleanExpression(rhsFun->name(), arg1, arg2);
                 const Expr* newPureConj = Expr::iff(
-                    this->varFactory->getVar(lhsVarOrigName),
+                    lhsVar,
                     rhsExpr
                 );
                 REGISTER_EXPRPTR(newPureConj);
@@ -392,8 +392,8 @@ namespace smack{
                 //     CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
                 // }
                 // const Expr* eq = Expr::eq(
-                //     this->varFactory->getVar(lhsVarOrigName),
-                //     this->varFactory->getVar(rhsOrigVarName)
+                //     lhsVar,
+                //     rhsVar
                 // );
                
                 // this->varEquiv->linkName(lhsVarName, rhsVarName);
@@ -425,7 +425,7 @@ namespace smack{
                     CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
                 }
                 const Expr* eq = Expr::eq(
-                    this->varFactory->getVar(lhsVarOrigName),
+                    lhsVar,
                     rhs
                 );
                 REGISTER_EXPRPTR(eq);
@@ -1756,19 +1756,19 @@ namespace smack{
                     newSpatialExpr.push_back(sp);
                 }
                 const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                    this->varFactory->getVar(retOrigVarName),
-                    this->varFactory->getVar(paramOrigVarName),
+                    retVar,
+                    paramVar,
                     retVarName
                 );
                 REGISTER_EXPRPTR(sizePt);
                 // bool empty = (paramVar->translateToInt(this->varEquiv).second > 0) ? false : true;
                 int blkSize = paramVar->translateToInt(this->varEquiv).second;
                 const Expr* add = Expr::add(
-                        this->varFactory->getVar(retOrigVarName),
-                        this->varFactory->getVar(paramOrigVarName));
+                        retVar,
+                        paramVar);
                 REGISTER_EXPRPTR(add);
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
-                    this->varFactory->getVar(retOrigVarName),
+                    retVar,
                     add,
                     retVarName,
                     blkSize
@@ -1804,7 +1804,7 @@ namespace smack{
                 // bool empty = (sizeExpr->translateToInt(this->varEquiv).second == 0) ? true : false;
                 
                 int blkSize = param->translateToInt(this->varEquiv).second;
-                const Expr* add = Expr::add(this->varFactory->getVar(retOrigVarName), sizeExpr);
+                const Expr* add = Expr::add(retVar, sizeExpr);
                 REGISTER_EXPRPTR(add);
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
                     this->varFactory->getVar(retOrigVarName),
@@ -1839,7 +1839,7 @@ namespace smack{
             if(ExprType::VAR == arg1->getType()){
                 const VarExpr* freedOrigVar = (const VarExpr*) arg1;
                 std::string freedOrigVarName = freedOrigVar->name();
-                const VarExpr* freedVar = this->varFactory->getVar(freedOrigVarName);
+                const VarExpr* freedVar = this->varFactory->getVarConsume(freedOrigVarName);
 
                 std::string allocVarName = this->varEquiv->getAllocName(freedVar->name());
                 std::string linkVarName = this->varEquiv->getBlkName(freedVar->name());
@@ -2885,17 +2885,17 @@ namespace smack{
                         newSpatialExpr.push_back(sp);
                     }
                     const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                        this->varFactory->getVar(retOrigVarName),
+                        retVar,
                         lengthExpr,
                         retVarName
                     );
                     REGISTER_EXPRPTR(sizePt);
                     // bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
-                    const Expr* add = Expr::add(this->varFactory->getVar(retOrigVarName), lengthExpr);
+                    const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
                     const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
-                        this->varFactory->getVar(retOrigVarName),
+                        retVar,
                         add,
                         retVarName,
                         allocSize
@@ -2927,17 +2927,17 @@ namespace smack{
                         newSpatialExpr.push_back(sp);
                     }
                     const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                        this->varFactory->getVar(retOrigVarName),
+                        retVar,
                         lengthExpr,
                         retVarName
                     ); 
                     REGISTER_EXPRPTR(sizePt);
                     bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
-                    const Expr* add = Expr::add(this->varFactory->getVar(retOrigVarName), lengthExpr);
+                    const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
                     const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
-                        this->varFactory->getVar(retOrigVarName),
+                        retVar,
                         add,
                         retVarName,
                         allocSize
@@ -2967,16 +2967,16 @@ namespace smack{
                         newSpatialExpr.push_back(sp);
                     }
                     const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                        this->varFactory->getVar(retOrigVarName),
+                        retVar,
                         lengthExpr,
                         retVarName
                     ); 
                     bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
-                    const Expr* add = Expr::add(this->varFactory->getVar(retOrigVarName), lengthExpr);
+                    const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
                     const SpatialLiteral* allocBlk = SpatialLiteral::blk(
-                        this->varFactory->getVar(retOrigVarName),
+                        retVar,
                         add,
                         retVarName,
                         allocSize
@@ -3509,7 +3509,7 @@ namespace smack{
 
     std::pair<const VarExpr*, std::string> BlockExecutor::getUsedVarAndName(std::string origVarName){
         // obtain the used var if it is used..
-        const VarExpr* usedVar = this->varFactory->getVar(origVarName);
+        const VarExpr* usedVar = this->varFactory->getVarConsume(origVarName);
         std::string usedVarName = usedVar->name();
         return {usedVar, usedVarName};
     }

@@ -14,6 +14,7 @@ namespace smack
         }
         const VarExpr* newVar = new VarExpr(name + bb_repeat_str + std::to_string(this->varsMap[name]));
         this->varNameRestoreMap[newVar->name()] = name;
+        this->addUnusedName(newVar->name());
         BlockExecutor::ExprMemoryManager->registerPointer((Expr*)newVar);
         return newVar;
     }
@@ -40,6 +41,12 @@ namespace smack
             BlockExecutor::ExprMemoryManager->registerPointer((Expr*)varExpr);
             return varExpr;
         }
+    }
+
+    const VarExpr* VarFactory::getVarConsume(std::string name){
+        const VarExpr* varExpr = this->getVar(name);
+        this->removeUnusedName(varExpr->name());
+        return varExpr;
     }
 
     const IntLit* VarFactory::getInt(int i){
@@ -112,6 +119,30 @@ namespace smack
         this->freshIndex = freshIndex;
     }
 
+
+    void VarFactory::addUnusedName(std::string name){
+        if(this->unusedNames.find(name) != this->unusedNames.end()){
+            CFDEBUG(std::cout << "ERROR: unused name exists, should not appear twice." << std::endl;);
+        } else {
+            this->unusedNames.insert(name);
+        }
+    }
+    void VarFactory::removeUnusedName(std::string name){
+        if(this->unusedNames.find(name) != this->unusedNames.end()){
+            this->unusedNames.erase(name);
+        } else {
+            CFDEBUG(std::cout << "WARNING: unused name does not exists." << std::endl;);
+        }
+    }
+
+    void VarFactory::setUnusedNames(std::set<std::string> unusedNames){
+        this->unusedNames = unusedNames;
+    }
+
+    std::set<std::string> VarFactory::getUnusedNames(){
+        return this->unusedNames;
+    }
+
     VarFactoryPtr VarFactory::clone(){
         VarFactoryPtr newVarFac = std::make_shared<VarFactory>();
         newVarFac->setFreshIndex(this->freshIndex);
@@ -119,6 +150,7 @@ namespace smack
         newVarFac->setIntsMap(this->intsMap);
         newVarFac->setVarNameRestoreMap(this->varNameRestoreMap);
         newVarFac->setVarsMap(this->varsMap);
+        newVarFac->setUnusedNames(this->unusedNames);
         return newVarFac;
     }
 

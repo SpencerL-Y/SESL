@@ -180,10 +180,10 @@ int main(int argc, char **argv) {
     // internalize all functions and globals and preserve key globals
     pass_manager.add(llvm::createInternalizePass(PreserveKeyGlobals));
    
-    pass_manager.add(llvm::createGlobalDCEPass());
-    pass_manager.add(llvm::createDeadCodeEliminationPass());
-    pass_manager.add(llvm::createGlobalDCEPass());
-    pass_manager.add(llvm::createDeadCodeEliminationPass());
+    // pass_manager.add(llvm::createGlobalDCEPass());
+    // pass_manager.add(llvm::createDeadCodeEliminationPass());
+    // pass_manager.add(llvm::createGlobalDCEPass());
+    // pass_manager.add(llvm::createDeadCodeEliminationPass());
     //TODOsh: modify this pass for later verification
     //pass_manager.add(new smack::RemoveDeadDefs());
   }

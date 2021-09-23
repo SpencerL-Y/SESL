@@ -30,10 +30,8 @@ namespace smack
     // varToIntVal: cache the calculated value of integer variables (used in store and load)
         std::map<std::string, int> varToIntVal;
     // structArrayPtr: remember the ptr created by alloc, which is used when struct and array are used
-
-    // dataToPtrMap: cache the possibly equivalence between data variables and ptr variable for memcpy and memset
-        std::map<std::string, std::string> dataToPtrMap;
         std::map<std::string, bool> structArrayPtr;
+    
     // freedBlkName: a set used to store the blkNames freed, used to find double free
         std::set<std::string> freedBlkName;
     
@@ -70,14 +68,10 @@ namespace smack
         void linkIntVar(std::string newname, std::string oldname);
         std::pair<bool, int> getIntVal(std::string name);
 
-        // dataToPtrMap operations
-
-        void linkDataVarAndPtrVar(std::string dataName, std::string ptrName);
-        std::string getDataNameLinkPtrVar(std::string dataName);
-
         // alloc ptr operations
         void setStructArrayPtr(std::string name, bool val);
         bool isStructArrayPtr(std::string name);
+
 
         // freedBlkName operations
         void addNewFreedName(std::string name);
@@ -91,12 +85,14 @@ namespace smack
         std::map<std::string, int> getPointsToBlkOffset();
         std::map<std::string, int> getVarToIntVal();
         std::map<std::string, bool> getStructArrayPtr();
+        std::set<std::string> getUnusedNames();
         std::set<std::string> getFreedBlkName();
         void setVarAllocEqualMap(std::map<std::string, std::string> i);
         void setPointsToBlkMap(std::map<std::string, std::string> i);
         void setPointsToBlkOffset(std::map<std::string, int> i);
         void setVarToIntVal(std::map<std::string, int> i);
         void setStructArrayPtr(std::map<std::string, bool> i);
+        void setUnusedNames(std::set<std::string> i);
         void setFreedBlkName(std::set<std::string> i);
 
 

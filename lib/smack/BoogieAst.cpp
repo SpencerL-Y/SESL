@@ -687,7 +687,7 @@ namespace smack {
                             );
                         }
                     } else if (leftVarSize < rightVarSize) {
-                        CFDEBUG(std::cout << "leftVarSize < rightVarSize" << leftVarSize << " " << rightVarSize << std::endl;);
+                        //CFDEBUG(std::cout << "leftVarSize < rightVarSize" << leftVarSize << " " << rightVarSize << std::endl;);
                         // Truncated
                         for (int index = 0; index < leftVarSize; index++) {
                             resultEquality = (resultEquality &&
@@ -698,7 +698,7 @@ namespace smack {
                             );
                         }
                     } else if (leftVarSize > rightVarSize) {
-                        CFDEBUG(std::cout << "leftVarSize > rightVarSize: " << leftVarSize << " " << rightVarSize << std::endl;);
+                        //CFDEBUG(std::cout << "leftVarSize > rightVarSize: " << leftVarSize << " " << rightVarSize << std::endl;);
                         // Size extended
                         for (int index = 0; index < leftVarSize; index++) {
                             if (index < rightVarSize) {
@@ -794,10 +794,10 @@ namespace smack {
     std::pair<bool, int> BinExpr::translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const {
         const auto left = lhs->translateToInt(varEquivPtr);
         const auto right = rhs->translateToInt(varEquivPtr);
-        DEBUG_WITH_COLOR(std::cout << "In binExpr TransToInt function!" << std::endl, color::yellow);
+        CDEBUG(std::cout << "In binExpr TransToInt function!" << std::endl;);
         CDEBUG(std::cout << "left: " << left.second << " right: " << right.second << " op: " << op << std::endl);
         if (!(left.first && right.first)) {
-            DEBUG_WITH_COLOR(std::cout << "Can not translate ";this->print(std::cout); std::cout << endl;, color::red);
+            CDEBUG(std::cout << "WARNING: Can not translate ";this->print(std::cout); std::cout << endl;);
             return {false, 0};
         }
         int res = 0;
@@ -1299,8 +1299,7 @@ namespace smack {
         auto f = from->translateToZ3(z3Ctx, cfg, varFac);
         auto t = to->translateToZ3(z3Ctx, cfg, varFac);
         z3::expr ex = z3Ctx.bool_val(true);
-        DEBUG_WITH_COLOR(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl,
-                         color::yellow);
+        CDEBUG(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl;);
         z3::expr res = slah_api::newBlk(f, t);
         return res;
     }
@@ -1434,9 +1433,11 @@ namespace smack {
     }
 
     void SymbolicHeapExpr::print(std::ostream &os) const {
+        if(FULL_DEBUG && OPEN_SH){
         os << "SymbHeap(" << pure << "|";
         print_seq<const SpatialLiteral *>(os, spatialExpr, " # ");
         os << ")";
+        }
     }
 
     const Expr* StringLit::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{

@@ -9,14 +9,20 @@
 #pragma once
 #include <iostream>
 #include <unordered_map>
-#define CENTER_DEBUG 1
+#define FULL_DEBUG 1
+#define OPEN_CDEBUG 0
+#define OPEN_CFDEBUG 0
+#define OPEN_COLOR_DEBUG 1
+#define OPEN_VAREQUIV_PRINT 0
+#define OPEN_VARTYPE 0
+#define OPEN_SH 0
+#define OPEN_MEMMANAGE 0
+
 const bool hasColor = true;
 
 
-#define OPEN_CDEBUG true
-
 #define CDEBUG(X) do { \
-    if (CENTER_DEBUG && OPEN_CDEBUG) {\
+    if (FULL_DEBUG && OPEN_CDEBUG) {\
         if (hasColor)               \
             std::cout<<"\033[33m"; \
         X;             \
@@ -26,7 +32,7 @@ const bool hasColor = true;
 } while(false);
 
 #define CFDEBUG(X) do {\
-    if (CENTER_DEBUG) {\
+    if (FULL_DEBUG && OPEN_CFDEBUG) {\
         if (hasColor)   std::cout<<"\033[34m";\
         X;             \
         if (hasColor)   \
@@ -50,7 +56,7 @@ static const std::unordered_map<std::string, bool> DISPLAY_TABLE{
         {color::white, true}
 };
 #define DEBUG_WITH_COLOR(X, COLOR) do { \
-    if (CENTER_DEBUG) {                 \
+    if (FULL_DEBUG && OPEN_COLOR_DEBUG) {                 \
         if (!DISPLAY_TABLE.at(COLOR)) break; \
         if (hasColor)   std::cout<< COLOR; \
         X;                              \

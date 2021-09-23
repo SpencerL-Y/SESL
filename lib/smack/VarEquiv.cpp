@@ -39,6 +39,7 @@ namespace smack
     }
 
     void VarEquiv::debugPrint(){
+        if(FULL_DEBUG &&  OPEN_VAREQUIV_PRINT){
         DEBUG_WITH_COLOR(std::cout << "Debug VarEquiv: " << std::endl, color::green);
         for(auto i : this->varAllocEqualMap){
             DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
@@ -64,6 +65,7 @@ namespace smack
             DEBUG_WITH_COLOR(std::cout << i << " ";, color::green);
         }
         DEBUG_WITH_COLOR(std::cout << std::endl;, color::green);
+        }
     }
     // name2blk operations
 
@@ -117,7 +119,7 @@ namespace smack
 
     void VarEquiv::addNewOffset(std::string name, int offset){
         if(this->pointsToBlkOffset.find(name) != this->pointsToBlkOffset.end()){
-            DEBUG_WITH_COLOR(std::cout << "name,offset: " << name << ", " << offset << " already exists. " << std::endl, color::green);
+            CFDEBUG(std::cout << "name,offset: " << name << ", " << offset << " already exists. " << std::endl;);
         } else {
             this->pointsToBlkOffset[name] = offset;
         }
@@ -137,7 +139,8 @@ namespace smack
         if(this->pointsToBlkOffset.find(name) != this->pointsToBlkOffset.end()){
             return pointsToBlkOffset[name];
         } else {
-            DEBUG_WITH_COLOR(std::cout << "ERROR: VarEquiv blkoffset no name exists. " << name << std::endl, color::green);
+            // TODOsh: find what may cause this negative ERROR
+            CFDEBUG(std::cout << "ERROR: VarEquiv blkoffset no name exists. " << name << std::endl);
             return -1;
         }
     }
@@ -147,7 +150,7 @@ namespace smack
         if(this->varToIntVal.find(name) == this->varToIntVal.end()){
             this->varToIntVal[name] = val;
         } else {
-            DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap no name exists. " << std::endl, color::green);
+            CFDEBUG(std::cout << "ERROR: VarIntMap no name exists. " << std::endl);
         }
     }
 
@@ -158,9 +161,9 @@ namespace smack
         } else {
             if((this->varToIntVal.find(newname) ==  this->varToIntVal.end()) && (this->varToIntVal.find(oldname) ==  this->varToIntVal.end())
             ){  
-                DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl, color::green);
+                CFDEBUG(std::cout << "WARNING: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl);
             } else {
-                DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl, color::green);
+                CFDEBUG(std::cout << "ERROR: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl);
             }
             
         }
@@ -171,9 +174,9 @@ namespace smack
             return std::pair<bool, int>(true, this->varToIntVal[name]);
         } else {
             if(!name.find("$p") == std::string::npos && name.find("$") != std::string::npos){
-                DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl, color::green);
+                CFDEBUG(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl);
             } else {
-                DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl, color::green);
+                CFDEBUG(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl);
             }
             
             return std::pair<bool, int>(false, 0);

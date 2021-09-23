@@ -8,6 +8,7 @@ namespace smack {
   }
 
   void MemoryManager::clearMemory() {
+    if(OPEN_MEMMANAGE && FULL_DEBUG){
     std::cout << "====================================Begin Clearing===============================\n";
     for(const Expr* ptr : this->pointers) {
       ptr->print(std::cout);
@@ -16,5 +17,6 @@ namespace smack {
     for(const Expr* ptr : this->pointers) delete ptr;
     std::cout << "====================================End Clearing===============================\n";
     pointers.clear();
+    }
   }
 }

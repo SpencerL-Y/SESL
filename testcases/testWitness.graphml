@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <key attr.name="isViolationNode" attr.type="boolean" for="node" id="violation">
+        <default>false</default>
+    </key>
+    <key attr.name="isEntryNode" attr.type="boolean" for="node" id="entry">
+        <default>false</default>
+    </key>
+    <key attr.name="isSinkNode" attr.type="boolean" for="node" id="sink">
+        <default>false</default>
+    </key>
+    <key attr.name="violatedProperty" attr.type="string" for="node" id="violatedProperty"/>
+    <key attr.name="sourcecodeLanguage" attr.type="string" for="graph" id="sourcecodelang"/>
+    <key attr.name="programFile" attr.type="string" for="graph" id="programfile"/>
+    <key attr.name="programHash" attr.type="string" for="graph" id="programhash"/>
+    <key attr.name="specification" attr.type="string" for="graph" id="specification"/>
+    <key attr.name="architecture" attr.type="string" for="graph" id="architecture"/>
+    <key attr.name="producer" attr.type="string" for="graph" id="producer"/>
+    <key attr.name="creationTime" attr.type="string" for="graph" id="creationtime"/>
+    <key attr.name="startline" attr.type="int" for="edge" id="startline"/>
+    <key attr.name="endline" attr.type="int" for="edge" id="endline"/>
+    <key attr.name="originFileName" attr.type="string" for="edge" id="originfile">
+        <default>svcomp/memsafety/test-0235-3.c</default>
+    </key>
+    <key attr.name="witness-type" attr.type="string" for="graph" id="witness-type"/>
+    <graph>
+        <data key="witness-type">violation_witness</data>
+        <data key="sourcecodelang">C</data>
+        <data key="producer">TOOL NAME</data>
+        <data key="specification">SPEC</data>
+        <data key="programfile">svcomp/memsafety/test-0235-3.c</data>
+        <data key="architecture">64</data>
+        <data key="creationtime">2021-09-23T12:49:16Z</data>
+        <data key="programhash">c2c613697edc82870b8750bfc454d913e15ae48b14b4ceb8ca927e66f6c2bea5</data>
+        <node id="entry">
+            <data key="entry">true</data>
+        </node>
+    </graph>
+</graphml>

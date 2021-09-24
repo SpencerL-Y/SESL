@@ -17,6 +17,8 @@
 #define OPEN_VARTYPE 0
 #define OPEN_SH 0
 #define OPEN_MEMMANAGE 0
+#define OPEN_VIOLATION_PATH 0
+#define OPEN_EXECUTION_PATH 0
 
 const bool hasColor = true;
 

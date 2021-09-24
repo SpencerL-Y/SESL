@@ -45,14 +45,16 @@ namespace smack {
         CFGExecutor cfgExec(mainGraph);
         cfgExec.generatePathByUpperBound();
 //        cfgExec.printPath();
+        if(FULL_DEBUG && OPEN_EXECUTION_PATH){
         std::cout << "======== STATIC POINTER PROBLEM =======" << std::endl;
         std::cout << "================================================================================" << std::endl;
 
         for(const ConstDecl* cd : mainGraph->getConstDecls()){
             cd->print(std::cout);
         }
+        }
         for(ExecutionPath p : cfgExec.getExecPathVec()){
-
+            if(FULL_DEBUG && OPEN_EXECUTION_PATH){
             std::cout << "=========== DO SYMBOLIC EXECUTION FOR ONE PATH" << std::endl;
             // initialization of the execution initial state
             //---------------------- initializatio of SH
@@ -63,6 +65,7 @@ namespace smack {
                     stmt->print(std::cout);
                     std::cout << std::endl;
                 }
+            }
             }
             const Expr* boolTrue = Expr::lit(true);
             // initial list of spatial lits
@@ -113,7 +116,9 @@ namespace smack {
                 break;
             }
             BlockExecutor::ExprMemoryManager->clearMemory();
+            if(FULL_DEBUG && OPEN_EXECUTION_PATH){
             std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
+            }
         }
 
         

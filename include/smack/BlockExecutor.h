@@ -80,6 +80,8 @@ namespace smack{
         bool isBinaryArithFuncName(std::string name);
         bool isStoreLoadFuncName(std::string name);
         bool isPtrArithFuncName(std::string name);
+
+        bool isDebugFuncName(std::string name);
         // ---------------- Arithmetic Utilities
         // <<<HIGH LEVEL METHOD >>>
         // lhsVar is for linking of ptr arithmetic 

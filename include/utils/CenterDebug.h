@@ -42,6 +42,7 @@ const bool hasColor = true;
     }\
 } while(false);
 
+
 namespace color {
     const std::string red = "\033[31m";
     const std::string green = "\033[32m";

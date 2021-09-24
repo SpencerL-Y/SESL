@@ -787,6 +787,17 @@ namespace smack{
             return false;
         }
     }
+
+    bool BlockExecutor::isDebugFuncName(std::string name){
+        if(name.find("boogie_si_record") != std::string::npos){
+            return true;
+        } else if(!name.compare("abort")){
+            return true;
+        } 
+        else {
+            return false;
+        }
+    }
     //----------------------- Assign execution utils end ---------------
 
 
@@ -861,9 +872,11 @@ namespace smack{
                 return this->executeMemcpy(sh, call);
             } else if(call->getProc().find("$memset") != std::string::npos){
                 return this->executeMemset(sh, call);
+            } else if(this->isDebugFuncName(call->getProc())){
+                return sh;
             }
             else {
-                this->executeUnintepreted(sh, call);
+                return this->executeUnintepreted(sh, call);
                 CFDEBUG(std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl);
             }
         } else {
@@ -1671,29 +1684,31 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::executeUnintepreted
     (SHExprPtr sh, const CallStmt* stmt){
-        if(stmt->getReturns().size() > 0){
-            CFDEBUG(std::cout << "INFO: execute Unintepreted function. " << stmt->getProc() << std::endl;);
-            std::string retOrigVarName = stmt->getReturns().front();
-            const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
-            std::string retVarName = retVar->name();
-            std::pair<std::string, int> typeInfo = this->cfg->getVarDetailType(retOrigVarName);
-            const VarExpr* freshVar = this->varFactory->getFreshVar(typeInfo.second);
-            this->cfg->addVarType(freshVar->name(), "i" + std::to_string(typeInfo.second));
+        SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::UNKNOWN);
+        return newSH;
+        // if(stmt->getReturns().size() > 0){
+        //     CFDEBUG(std::cout << "INFO: execute Unintepreted function. " << stmt->getProc() << std::endl;);
+        //     std::string retOrigVarName = stmt->getReturns().front();
+        //     const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
+        //     std::string retVarName = retVar->name();
+        //     std::pair<std::string, int> typeInfo = this->cfg->getVarDetailType(retOrigVarName);
+        //     const VarExpr* freshVar = this->varFactory->getFreshVar(typeInfo.second);
+        //     this->cfg->addVarType(freshVar->name(), "i" + std::to_string(typeInfo.second));
 
-            this->varEquiv->addNewName(freshVar->name());
-            this->varEquiv->linkName(retVarName, freshVar->name());
+        //     this->varEquiv->addNewName(freshVar->name());
+        //     this->varEquiv->linkName(retVarName, freshVar->name());
 
-            const Expr* newConj = Expr::eq(retVar, freshVar);
-            REGISTER_EXPRPTR(newConj);
-            const Expr* newPure = Expr::and_(sh->getPure(), newConj);
-            REGISTER_EXPRPTR(newPure);
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
-            newSH->print(std::cout);
-            CFDEBUG(std::cout << std::endl;);
-            return newSH;
-        } else {
-            return sh;  
-        }
+        //     const Expr* newConj = Expr::eq(retVar, freshVar);
+        //     REGISTER_EXPRPTR(newConj);
+        //     const Expr* newPure = Expr::and_(sh->getPure(), newConj);
+        //     REGISTER_EXPRPTR(newPure);
+        //     SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+        //     newSH->print(std::cout);
+        //     CFDEBUG(std::cout << std::endl;);
+        //     return newSH;
+        // } else {
+        //     return sh;  
+        // }
         
     }
 
@@ -2154,7 +2169,9 @@ namespace smack{
                         } else {
                             CFDEBUG(std::cout << "INFO: store situation A.1.(3)" << std::endl;);
                             // situation A.1.(3), currently not considered
+                            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
                             CFDEBUG(std::cout << "INFO: situation A.1.(3), currently not considered" << std::endl;);
+                            return newSH;
                             
                         }
                         currentIndex += 1;
@@ -2309,11 +2326,11 @@ namespace smack{
                     currentIndex == splitBlkIndex){
                     const BlkLit* breakBlk = (const BlkLit*) i;
                     // if the blk to break is empty, there is an error
-                    if(breakBlk->isEmpty()){
-                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
-                        CFDEBUG(std::cout << "INFO: break empty blk" << std::endl;);
-                        return newSH;
-                    }
+                    // if(breakBlk->isEmpty()){
+                    //     SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                    //     CFDEBUG(std::cout << "INFO: break empty blk" << std::endl;);
+                    //     return newSH;
+                    // }
                     CFDEBUG(std::cout << "INFO: storedSize: " << offset << " " << storedSize << std::endl;);
                     // add the split pos to length map to storeSplit
                     this->storeSplit->addSplitLength(mallocName, offset, storedSize);
@@ -2705,11 +2722,11 @@ namespace smack{
                     ){
                         // the blk to break is found
                         const BlkLit* breakBlk = (const BlkLit*) i;
-                        if(breakBlk->isEmpty()){
-                            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
-                            CFDEBUG(std::cout << "INFO: break empty blk" << std::endl;);
-                            return newSH;
-                        }
+                        // if(breakBlk->isEmpty()){
+                        //     SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        //     CFDEBUG(std::cout << "INFO: break empty blk" << std::endl;);
+                        //     return newSH;
+                        // }
 
                         std::list<const SpatialLiteral*> splittedResult = this->splitBlkByCreatingPt    (mallocName, ldPtr, freshPtVar, loadedSize, breakBlk);
                         for(const SpatialLiteral* splsp : splittedResult){

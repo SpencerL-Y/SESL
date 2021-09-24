@@ -14,6 +14,7 @@ class TestRunner():
         self.doInit()
         self.success = []
         self.unmatch = []
+        self.unknown = []
         self.raiseExeception = []
 
 
@@ -86,6 +87,8 @@ class TestRunner():
                         ret = "RAISE EXCEPTION"
                     if 'Stack dump' in line:
                         ret = "RAISE EXCEPTION"
+                    if 'CHECKUNKNOWN' in line: 
+                        ret = "UNKNOWN"
                 f.close()
                 return ret
 
@@ -99,6 +102,8 @@ class TestRunner():
 
             if result == "RAISE EXCEPTION":
                 self.raiseExeception.append(name)
+            elif result == "UNKNOWN":
+                self.unknown.append(name)
             elif result != prop:
                 self.unmatch.append(name)
             elif result == prop:
@@ -143,6 +148,10 @@ class TestRunner():
                 print('Real error:\t', self.error[suc])
             if suc in self.inference_error:
                 print('Inferred error:\t', self.inference_error[suc])
+        print('\n')
+        print("Unknown result: {}".format(len(self.unknown)))
+        for unk in self.unknown:
+            print("Test: {}".format(unk))
         print('\n')
         print("Unmatch result: {}".format(len(self.unmatch)))
         for unm in self.unmatch:

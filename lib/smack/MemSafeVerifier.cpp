@@ -214,11 +214,19 @@ namespace smack {
                     const SHStmt* shs = (const SHStmt*) s;
                     if(SpatialLiteral::Kind::ERR == 
                         shs->getSymbHeap()->getSpatialExpr().front()->getId()){
+                            
                             const ErrorLit* err = (const ErrorLit*)(shs->getSymbHeap()->getSpatialExpr().front());
-                            DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: Inference error:" << err->getReasonStr() << std::endl;, color::red);
-                            previous->print(std::cout);
-                            std::cout << std::endl;
-                            return std::pair<bool, const Stmt*>(false, previous);
+                            if(err->getReason() == ErrType::UNKNOWN){
+                                DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: Inference unknown:" << err->getReasonStr() << std::endl;, color::yellow);
+                                previous->print(std::cout);
+                                std::cout << std::endl;
+                                return std::pair<bool, const Stmt*>(false, previous);
+                            } else {
+                                DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: Inference error:" << err->getReasonStr() << std::endl;, color::red);
+                                previous->print(std::cout);
+                                std::cout << std::endl;
+                                return std::pair<bool, const Stmt*>(false, previous);
+                            }
                         }
                 }
                 previous = s;

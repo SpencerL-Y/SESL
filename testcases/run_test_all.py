@@ -15,11 +15,13 @@ class TestRunner():
         self.safeCase = set()
         self.success = []
         self.unmatch = []
+        self.unknown = []
         self.raiseExeception = []
         self.memory_exceed = []
         self.timeout = []
         self.total_success = 0
         self.total_unmatach = 0
+        self.total_unknown = 0
         self.total_exception = 0
         self.total_memory_exceed = 0
         self.total_timeout = 0
@@ -83,6 +85,8 @@ class TestRunner():
                     info = line.split(':')[-1]
                     self.inference_error.setdefault(programName, []).append(info.strip('\n').strip('!').strip(' '))
                     ret = "UNSAFE"
+                if 'CHECKUNKNOWN' in line:
+                    ret = 'UNKNOWN'
                 if 'Exception' in line:
                     ret = "RAISE EXCEPTION"
                 if 'Stack dump' in line:
@@ -101,6 +105,8 @@ class TestRunner():
         if result == "RAISE EXCEPTION":
             self.raiseExeception.append(name)
             self.total_exception += 1
+        elif result == "UNKNOWN":
+            self.unknown.append(name)
         elif result != prop:
             self.unmatch.append(name)
             self.total_unmatach += 1
@@ -160,6 +166,10 @@ class TestRunner():
                 print('Real error:\t', self.error[suc])
             if suc in self.inference_error:
                 print('Inferred error:\t', self.inference_error[suc])
+        print('\n')
+        print("Unknown result: {}".format(len(self.unknown)))
+        for unk in self.unknown:
+            print("Test: {}".format(unk))
         print('\n')
         print("Unmatch result: {}".format(len(self.unmatch)))
         for unm in self.unmatch:

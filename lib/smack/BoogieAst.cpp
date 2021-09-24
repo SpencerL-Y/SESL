@@ -1334,7 +1334,9 @@ namespace smack {
             return "INVALID_MEMCLEANUP";
         } else if(this->getReason() == ErrType::VALID_MEMTRACK){
             return "INVALID_MEMTRACK";
-        }  else {
+        }  else if(this->getReason() == ErrType::UNKNOWN){
+            return "UNKNOWN";
+        } else {
             return "UNKNOWN";
         }
     }

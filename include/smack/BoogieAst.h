@@ -59,10 +59,13 @@ namespace smack {
     };
 
     enum ErrType{
+        // memory safety error
         VALID_FREE,
         VALID_DEREF,
         VALID_MEMTRACK,
-        VALID_MEMCLEANUP
+        VALID_MEMCLEANUP,
+        // UNKNOWN situation
+        UNKNOWN    
     };
 
     class Expr {

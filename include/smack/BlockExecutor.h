@@ -1,3 +1,5 @@
+// Author: Xie Li
+// Insitute: ISCAS 
 #ifndef BLOCKEXECUTOR_H
 #define BLOCKEXECUTOR_H
 #include <z3++.h>
@@ -78,6 +80,8 @@ namespace smack{
         bool isBinaryArithFuncName(std::string name);
         bool isStoreLoadFuncName(std::string name);
         bool isPtrArithFuncName(std::string name);
+
+        bool isDebugFuncName(std::string name);
         // ---------------- Arithmetic Utilities
         // <<<HIGH LEVEL METHOD >>>
         // lhsVar is for linking of ptr arithmetic 
@@ -98,6 +102,8 @@ namespace smack{
         int parseStoreFuncSize(std::string funcName);
         int parseLoadFuncSize(std::string funcName);
         // ------------------ Symbolic Heap Utilities
+        SHExprPtr createErrLitSH(const Expr* newPure, ErrType errType);
+
         const SpatialLiteral* createPtAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize);
         const SpatialLiteral* createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts);
         const SpatialLiteral* createBlkAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int byteSize);

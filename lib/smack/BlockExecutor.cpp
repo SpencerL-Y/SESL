@@ -163,8 +163,6 @@ namespace smack{
                 CFDEBUG(std::cout << "Arg1 Type: " << arg1->getType() << std::endl);
                 
                 if(arg1->isVar()){
-
-
                     const VarExpr* rhsOrigVar = (const VarExpr*) arg1;
                     std::string rhsOrigVarName = rhsOrigVar->name();
                     const VarExpr* rhsVar = this->varFactory->getVarConsume(rhsOrigVarName);
@@ -459,7 +457,8 @@ namespace smack{
         // TODO: only consider one type of the assignment here
         // later we should add other similar function expression here
         if(name.find("$zext") != std::string::npos ||
-           name.find("$sext") != std::string::npos ){
+           name.find("$sext") != std::string::npos ||
+           name.find("$trunc") != std::string::npos){
             return true;
         } else {
             return false;
@@ -872,7 +871,8 @@ namespace smack{
                 return this->executeMemcpy(sh, call);
             } else if(call->getProc().find("$memset") != std::string::npos || call->getProc().find("memset") != std::string::npos){
                 return this->executeMemset(sh, call);
-            } else if(this->isDebugFuncName(call->getProc())){
+            } 
+            else if(this->isDebugFuncName(call->getProc())){
                 return sh;
             }
             else {
@@ -1070,6 +1070,26 @@ namespace smack{
             CFDEBUG(std::cout << "ERROR: unspecified situation of dst ptr" << std::endl;);
             assert(false);
             return sh;
+        }
+
+        if(stmt->getProc().find("$memcpy") == std::string::npos){
+            assert(stmt->getReturns().size() == 1);
+            std::string callRetOrigVarName= stmt->getReturns().front();
+            std::pair<const VarExpr*, std::string> callRetVarNamePair = this->useVarAndName(callRetOrigVarName);
+            const VarExpr* callRetVar = callRetVarNamePair.first;
+            std::string callRetVarName = callRetVarNamePair.second;
+            const VarExpr* callRhsVar = dstVar;
+
+            this->updateBindingsEqualVarAndRhsVar(callRetVar, callRhsVar);
+            const Expr* eq = Expr::eq(
+                callRetVar,
+                callRhsVar
+            );
+            REGISTER_EXPRPTR(eq);
+            newPure = Expr::and_(
+                sh->getPure(),
+                newPure
+            );
         }
         CFDEBUG(std::cout << "INFO: Memcpy dst information --------------" << std::endl;);
         CFDEBUG(std::cout << "INFO: Memcpy dst: " << dstMallocName << " " << dstOffset << " " << copySize - 1 << std::endl;)
@@ -1425,9 +1445,6 @@ namespace smack{
         CFDEBUG(std::cout << std::endl;)
         return newSH;
     }
-
-
-
     SHExprPtr BlockExecutor::executeMemset(SHExprPtr sh, const CallStmt* stmt){
         const Expr* newPure = sh->getPure();
         std::list<const SpatialLiteral*> newSpatial;
@@ -1437,14 +1454,20 @@ namespace smack{
         const Expr* arg2Content = nullptr;
         const Expr* arg3Size = nullptr;
 
-        assert(stmt->getProc().find("$memset") != std::string::npos);
+        assert(stmt->getProc().find("memset") != std::string::npos);
         std::vector<const Expr*> paramsVec;
         for(const Expr* p : stmt->getParams()){
             paramsVec.push_back(p);
         }
-        arg1Target = paramsVec[1];
-        arg2Content = paramsVec[2];
-        arg3Size = paramsVec[3];
+        if(stmt->getProc().find("$memset") != std::string::npos){
+            arg1Target = paramsVec[1];
+            arg2Content = paramsVec[2];
+            arg3Size = paramsVec[3];
+        } else {
+            arg1Target = paramsVec[0];
+            arg2Content = paramsVec[1];
+            arg3Size = paramsVec[2];
+        }
 
 
         // configuration of the target position
@@ -1486,6 +1509,26 @@ namespace smack{
             CFDEBUG(std::cout << "ERROR: memset wrong target expr type, check" << std::endl;);
             assert(false);
             return sh;
+        }
+
+        if(stmt->getProc().find("$memset") == std::string::npos){
+            assert(stmt->getReturns().size() == 1);
+            std::string callRetOrigVarName= stmt->getReturns().front();
+            std::pair<const VarExpr*, std::string> callRetVarNamePair = this->useVarAndName(callRetOrigVarName);
+            const VarExpr* callRetVar = callRetVarNamePair.first;
+            std::string callRetVarName = callRetVarNamePair.second;
+            const VarExpr* callRhsVar = targetVar;
+
+            this->updateBindingsEqualVarAndRhsVar(callRetVar, callRhsVar);
+            const Expr* eq = Expr::eq(
+                callRetVar,
+                callRhsVar
+            );
+            REGISTER_EXPRPTR(eq);
+            newPure = Expr::and_(
+                sh->getPure(),
+                newPure
+            );
         }
         // configuration of the memset content
         const VarExpr* contentOrigVar = nullptr;
@@ -1869,6 +1912,11 @@ namespace smack{
                     } else {
                         allocVarName = linkVarName;
                     }
+                }
+                if(this->varEquiv->isStructArrayPtr(linkVarName)){
+                    CFDEBUG(std::cout << "INFO: FREE GLOBAL PTR, UNKNOWN" << std::endl;);
+                    SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::UNKNOWN);
+                    return newSH;
                 }
 
                 const Expr* newPure = sh->getPure();
@@ -2623,8 +2671,9 @@ namespace smack{
                     return newSH;
                 } else {
                     // Situation B.3.(2).1
-                    CFDEBUG(std::cout << "ERROR: currently not support, to be added later" << std::endl;)
-                    assert(false);
+                    CFDEBUG(std::cout << "INFO: Situation 3.(2).1 currently not support, to be added later" << std::endl;)
+                    SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                    return newSH;
                 } 
             } else if(this->storeSplit->isInitialized(mallocName, loadedOffset)){
                 // Situation B.2

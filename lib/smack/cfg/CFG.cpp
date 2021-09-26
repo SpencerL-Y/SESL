@@ -165,7 +165,7 @@ namespace smack {
         if (varType.find(varName) != varType.end()) {
             if(FULL_DEBUG && OPEN_VARTYPE){
             for (const auto &i : varType) {
-                if(!i.first.compare(varName))
+                //if(!i.first.compare(varName))
                     std::cout << i.first << " " << i.second << " " << varName << std::endl;
             }
             }

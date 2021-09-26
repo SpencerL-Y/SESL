@@ -94,7 +94,7 @@ class TestRunner():
 
             file_path = self.path + '/' + name + '.log'
             result = checkVerify(file_path, name)
-            print("Running test: [{}]".format(name + '.c'))
+            print("Running test: [{}]".format(name + '.i'))
             print("Tool: " + result + '\nReal: ' + prop + "\n")
             command = 'rm -rf ' + file_path
             if result != "RAISE EXCEPTION":

@@ -1229,14 +1229,14 @@ namespace smack{
         CFDEBUG(std::cout << "INFO: src bytified ---" << std::endl;);
         for(const SpatialLiteral* sbsl : srcBytifiedSpatial){
             sbsl->print(std::cout);
-            std::cout << " # ";
-            std::cout << std::endl;
+            CFDEBUG(std::cout << " # ");
+            CFDEBUG(std::cout << std::endl);
         }
         CFDEBUG(std::cout << "INFO: copied ---" << std::endl;);
         for(const SpatialLiteral* cpsl : copiedSpatialPts){
             cpsl->print(std::cout);
-            std::cout << " # ";
-            std::cout << std::endl;
+            CFDEBUG(std::cout << " # ");
+            CFDEBUG(std::cout << std::endl);
         }
 
 
@@ -1312,8 +1312,8 @@ namespace smack{
         CFDEBUG(std::cout << "INFO: dst bytified ---" << std::endl;);
         for(const SpatialLiteral* dbsl : dstBytifiedSpatial){
             dbsl->print(std::cout);
-            std::cout << " # ";
-            std::cout << std::endl;
+            CFDEBUG(std::cout << " # ");
+            CFDEBUG(std::cout << std::endl);
         }
         
         // rename all the ptr variable, add zero blk literals to the copiedVector
@@ -1368,20 +1368,20 @@ namespace smack{
         CFDEBUG(std::cout << "INFO: LEFT---" << std::endl;);
         for(const SpatialLiteral* lsl : leftLiterals){
             lsl->print(std::cout);
-            std::cout << " # ";
-            std::cout << std::endl;
+            CFDEBUG(std::cout << " # ");
+            CFDEBUG(std::cout << std::endl);
         }
         CFDEBUG(std::cout << "INFO: COPIED---" << std::endl;);
         for(const SpatialLiteral* csl : copiedSpatialPts){
             csl->print(std::cout);
-            std::cout << " # ";
-            std::cout << std::endl;
+            CFDEBUG(std::cout << " # ");
+            CFDEBUG(std::cout << std::endl);
         }
         CFDEBUG(std::cout << "INFO: RIGHT---" << std::endl;);
         for(const SpatialLiteral* rsl : rightLiterals){
             rsl->print(std::cout);
-            std::cout << " # ";
-            std::cout << std::endl;
+            CFDEBUG(std::cout << " # ");
+            CFDEBUG(std::cout << std::endl);
         }
 
 

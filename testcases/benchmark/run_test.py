@@ -39,7 +39,7 @@ class TestRunner():
 
         for name in files:
             if c_file.get(name) is None:
-                print('Test case [{}] leak of .c file'.format(name))
+                print('Test case [{}] leak of .c/.i file'.format(name))
                 continue
             if out_file.get(name) is None:
                 print('Test case [{}] leak of {} file'.format(name, self.propertyType))
@@ -60,7 +60,7 @@ class TestRunner():
         for name, prop in self.testCases:
             try:
                 command = 'smack {}/{} -ll {}/{}_IR.ll --bpl {}/{}.bpl -t --sh-mem-leak 2>1 1>>{}.log'.format(self.path,
-                                                                                                              name + '.c',
+                                                                                                              name + '.i',
                                                                                                               self.path,
                                                                                                               name,
                                                                                                               self.path,

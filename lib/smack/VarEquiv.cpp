@@ -26,7 +26,7 @@ namespace smack
         if(varAllocEqualMap.find(name) != varAllocEqualMap.end()){
             return varAllocEqualMap[name];
         } else {
-            return "$none"; 
+            return "$Null"; 
         }
     }
 
@@ -92,7 +92,7 @@ namespace smack
             return pointsToBlkMap[name];
         } else {
             CFDEBUG(std::cout << "ERROR: getBlkName error: " << name << std::endl;);
-            return nullptr;
+            return "$Null";
         }
     }
 
@@ -192,7 +192,7 @@ namespace smack
 
     
     bool VarEquiv::isStructArrayPtr(std::string name){
-        assert(name.find("$p") != std::string::npos || name.find("$") == std::string::npos);
+        //assert(name.find("$p") != std::string::npos || name.find("$") == std::string::npos);
         return this->structArrayPtr[name];
     }
 

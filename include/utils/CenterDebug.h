@@ -15,12 +15,12 @@
 
 #define OPEN_COLOR_DEBUG 1
 
-#define OPEN_VAREQUIV_PRINT 1
+#define OPEN_VAREQUIV_PRINT 0
 #define OPEN_VARTYPE 0
 #define OPEN_SH 1
 #define OPEN_MEMMANAGE 0
 #define OPEN_VIOLATION_PATH 1
-#define OPEN_EXECUTION_PATH 0
+#define OPEN_EXECUTION_PATH 1
 
 const bool hasColor = true;
 

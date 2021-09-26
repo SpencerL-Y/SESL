@@ -868,9 +868,9 @@ namespace smack{
                 return this->executeAlloc(sh, call);
             } else if(call->getProc().find("__VERIFIER") != std::string::npos){
                 return this->executeVeriCall(sh, call);
-            } else if(call->getProc().find("$memcpy") != std::string::npos){
+            } else if(call->getProc().find("$memcpy") != std::string::npos || call->getProc().find("memcpy") != std::string::npos ){
                 return this->executeMemcpy(sh, call);
-            } else if(call->getProc().find("$memset") != std::string::npos){
+            } else if(call->getProc().find("$memset") != std::string::npos || call->getProc().find("memset") != std::string::npos){
                 return this->executeMemset(sh, call);
             } else if(this->isDebugFuncName(call->getProc())){
                 return sh;
@@ -990,9 +990,20 @@ namespace smack{
         for(const Expr* p : params){
             paramsVec.push_back(p);
         }
-        const Expr* sourceLocation = paramsVec[3];
-        const Expr* dstLocation = paramsVec[2];
-        const Expr* copySizeExpr = paramsVec[4];
+        const Expr* sourceLocation;
+        const Expr* dstLocation;
+        const Expr* copySizeExpr;
+        if(stmt->getProc().find("$memcpy") != std::string::npos){
+            sourceLocation = paramsVec[3];
+            dstLocation = paramsVec[2];
+            copySizeExpr = paramsVec[4];
+        } 
+        else {
+            sourceLocation = paramsVec[1];
+            dstLocation = paramsVec[0];
+            copySizeExpr = paramsVec[2];
+        }
+        CFDEBUG(std::cout << copySizeExpr << std::endl;);
         
         copySize = copySizeExpr->translateToInt(this->varEquiv).second;
         

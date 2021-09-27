@@ -255,38 +255,37 @@ INSTALL(TARGETS llvm2bpl
 
 INSTALL(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/bin/smack
-  ${CMAKE_CURRENT_SOURCE_DIR}/bin/smack-doctor
   ${CMAKE_CURRENT_SOURCE_DIR}/bin/smack-svcomp-wrapper.sh
   PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
   GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
   DESTINATION bin
 )
 
-INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/share/smack
-  DESTINATION share
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/
+  DESTINATION bin
   USE_SOURCE_PERMISSIONS
-  FILES_MATCHING PATTERN "*.py" PATTERN "*.h" PATTERN "*.c" PATTERN "Makefile" PATTERN "*.rs" PATTERN "*.f90" PATTERN "*.di" PATTERN "*.toml"
+  FILES_MATCHING PATTERN "*.py" PATTERN "*.h" PATTERN "*.c" PATTERN "Makefile"
 )
 
 INSTALL(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/bin/versions
-  DESTINATION share/smack
+  DESTINATION scripts
   RENAME versions.py
 )
 
-INSTALL(FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack/Cargo.toml
-  ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack/build.rs
-  DESTINATION share/smack/lib
-)
+# INSTALL(FILES
+#   ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack/Cargo.toml
+#   ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack/build.rs
+#   DESTINATION share/smack/lib
+# )
 
-INSTALL(FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack-rust.c
-  DESTINATION share/smack/lib/src
-)
+# INSTALL(FILES
+#   ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack-rust.c
+#   DESTINATION share/smack/lib/src
+# )
 
-INSTALL(FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack.rs
-  DESTINATION share/smack/lib/src
-  RENAME lib.rs
-)
+# INSTALL(FILES
+#   ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack.rs
+#   DESTINATION share/smack/lib/src
+#   RENAME lib.rs
+# )

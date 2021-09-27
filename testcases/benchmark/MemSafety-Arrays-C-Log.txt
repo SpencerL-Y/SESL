@@ -1,0 +1,1057 @@
+Adding testcase [array03-alloca-2]
+Adding testcase [Arrays01-EquivalentConstantIndices-1]
+Adding testcase [standard_copy4_ground-1]
+Adding testcase [standard_copy8_ground-1]
+Adding testcase [standard_two_index_02]
+Adding testcase [java_BubbleSort-alloca-1]
+Adding testcase [standard_two_index_09]
+Adding testcase [standard_copyInitSum2_ground-1]
+Adding testcase [standard_two_index_04]
+Adding testcase [standard_palindrome_ground]
+Adding testcase [standard_copyInitSum2_ground-2]
+Adding testcase [cstrchr-alloca-2]
+Adding testcase [standard_seq_init_ground]
+Adding testcase [standard_copy3_ground-1]
+Adding testcase [standard_partition_ground-1]
+Adding testcase [openbsd_cstrcspn-alloca-2]
+Adding testcase [diff-alloca-2]
+Adding testcase [standard_find_ground-1]
+Adding testcase [sorting_selectionsort_2_ground]
+Adding testcase [cstrcat_unsafe]
+Adding testcase [rec_strlen-alloca-1]
+Adding testcase [standard_running-2]
+Adding testcase [openbsd_cmemrchr-alloca-2]
+Adding testcase [openbsd_cstrncat-alloca-2]
+Adding testcase [openbsd_cstrnlen-alloca-1]
+Adding testcase [standard_strcmp_ground]
+Adding testcase [openbsd_cstrstr-alloca-2]
+Adding testcase [standard_init8_ground-2]
+Adding testcase [standard_two_index_07]
+Adding testcase [array01-alloca-2]
+Adding testcase [knapsack_alloca_unsafe]
+Adding testcase [standard_copy7_ground-1]
+Adding testcase [standard_partition_original_ground]
+Adding testcase [sanfoundry_02_ground]
+Adding testcase [standard_partial_init_ground]
+Adding testcase [standard_two_index_01]
+Adding testcase [sanfoundry_27_ground]
+Adding testcase [Arrays02-EquivalentConstantIndices]
+Adding testcase [openbsd_cmemchr-alloca-2]
+Adding testcase [standard_sentinel-1]
+Adding testcase [reverse_array_alloca_unsafe]
+Adding testcase [standard_copy3_ground-2]
+Adding testcase [cstrpbrk-alloca-2]
+Adding testcase [standard_init7_ground-2]
+Adding testcase [bubblesort-alloca-2]
+Adding testcase [standard_sentinel-2]
+Adding testcase [sanfoundry_24-2]
+Adding testcase [cstrspn-alloca-1]
+Adding testcase [standard_copy9_ground-1]
+Adding testcase [standard_copy7_ground-2]
+Adding testcase [sorting_bubblesort_ground-2]
+Adding testcase [subseq-alloca-2]
+Adding testcase [standard_init2_ground-1]
+Adding testcase [standard_copy5_ground-1]
+Adding testcase [cstrpbrk_unsafe]
+Adding testcase [openbsd_cmemset-alloca-1]
+Adding testcase [openbsd_cstpcpy-alloca-1]
+Adding testcase [standard_copy9_ground-2]
+Adding testcase [standard_strcpy_ground-2]
+Adding testcase [openbsd_cstrpbrk-alloca-2]
+Adding testcase [array02-alloca-2]
+Adding testcase [cstrncat_unsafe]
+Adding testcase [standard_init8_ground-1]
+Adding testcase [bubblesort_unsafe]
+Adding testcase [standard_compare_ground]
+Adding testcase [sanfoundry_24-1]
+Adding testcase [mult_array-alloca-1]
+Adding testcase [sorting_selectionsort_ground-1]
+Adding testcase [insertionsort-alloca-1]
+Adding testcase [openbsd_cstrcpy-alloca-2]
+Adding testcase [standard_two_index_08]
+Adding testcase [sorting_bubblesort_ground-1]
+Adding testcase [standard_init3_ground-2]
+Adding testcase [standard_copyInitSum_ground]
+Adding testcase [openbsd_cstrlen-alloca-1]
+Adding testcase [openbsd_cstrncmp-alloca-2]
+Adding testcase [standard_strcpy_original-1]
+Adding testcase [mult_array_unsafe]
+Adding testcase [standard_two_index_03]
+Adding testcase [Arrays03-ValueRestictsIndex-1]
+Adding testcase [standard_init5_ground-2]
+Adding testcase [standard_copy5_ground-2]
+Adding testcase [standard_vararg_ground]
+Adding testcase [strreplace-alloca-2]
+Adding testcase [stroeder1-alloca-1]
+Adding testcase [openbsd_cstrcmp-alloca-1]
+Adding testcase [substring-alloca-2]
+Adding testcase [count_down_unsafe]
+Adding testcase [standard_copy2_ground-1]
+Adding testcase [LexIndexValue-Array-1]
+Adding testcase [LexIndexValue-Array-2]
+Adding testcase [cstrncpy-alloca-2]
+Adding testcase [diff_usafe]
+Adding testcase [sanfoundry_43_ground]
+Adding testcase [selectionsort_unsafe]
+Adding testcase [standard_init5_ground-1]
+Adding testcase [standard_copy6_ground-2]
+Adding testcase [standard_init6_ground-2]
+Adding testcase [standard_find_ground-2]
+Adding testcase [standard_copyInitSum3_ground]
+Adding testcase [standard_minInArray_ground-2]
+Adding testcase [standard_copy6_ground-1]
+Adding testcase [standard_init7_ground-1]
+Adding testcase [standard_copyInit_ground]
+Adding testcase [cstrcat-alloca-2]
+Adding testcase [standard_init6_ground-1]
+Adding testcase [standard_strcpy_original-2]
+Adding testcase [standard_partition_ground-2]
+Adding testcase [stroeder2-alloca-1]
+Adding testcase [cstrncmp-alloca-1]
+Adding testcase [reverse_array_unsafe]
+Adding testcase [Arrays03-ValueRestictsIndex-2]
+Adding testcase [cstrcspn-alloca-1]
+Adding testcase [openbsd_cstrncpy-alloca-2]
+Adding testcase [standard_init1_ground-1]
+Adding testcase [standard_minInArray_ground-1]
+Adding testcase [standard_init9_ground-2]
+Adding testcase [standard_vector_difference_ground]
+Adding testcase [standard_init3_ground-1]
+Adding testcase [standard_copy2_ground-2]
+Adding testcase [standard_compareModified_ground]
+Adding testcase [standard_running-1]
+Adding testcase [standard_two_index_06]
+Adding testcase [openbsd_cstrcat-alloca-2]
+Adding testcase [standard_copy1_ground-1]
+Adding testcase [cstrchr_unsafe]
+Adding testcase [standard_init9_ground-1]
+Adding testcase [relax-2]
+Adding testcase [count_down-alloca-1]
+Adding testcase [standard_maxInArray_ground]
+Adding testcase [openbsd_cbzero-alloca-2]
+Adding testcase [lis_unsafe]
+Adding testcase [standard_reverse_ground]
+Adding testcase [sanfoundry_10_ground]
+Adding testcase [Arrays01-EquivalentConstantIndices-2]
+Adding testcase [standard_copy8_ground-2]
+Adding testcase [standard_copy4_ground-2]
+Adding testcase [standard_init1_ground-2]
+Adding testcase [standard_init4_ground-1]
+Adding testcase [lis-alloca-1]
+Adding testcase [standard_allDiff2_ground]
+Adding testcase [relax-1]
+Adding testcase [add_last_unsafe]
+Adding testcase [cstrlen-alloca-2]
+Adding testcase [cstrcpy-alloca-1]
+Adding testcase [cstrncat-alloca-2]
+Adding testcase [openbsd_cstpncpy-alloca-1]
+Adding testcase [openbsd_cstrlcpy-alloca-1]
+Adding testcase [sorting_selectionsort_ground-2]
+Adding testcase [add_last-alloca-1]
+Adding testcase [standard_strcpy_ground-1]
+Adding testcase [cstrncpy_unsafe]
+Adding testcase [data_structures_set_multi_proc_ground-1]
+Adding testcase [standard_copy1_ground-2]
+Adding testcase [openbsd_cstrspn-alloca-2]
+Adding testcase [cstrlen_unsafe]
+Adding testcase [data_structures_set_multi_proc_ground-2]
+Adding testcase [selectionsort-alloca-1]
+Adding testcase [standard_two_index_05]
+Adding testcase [NonTermination3-1]
+Adding testcase [standard_password_ground]
+Adding testcase [LexIndexValue-Pointer-2]
+Adding testcase [standard_init4_ground-2]
+Adding testcase [standard_init2_ground-2]
+Adding testcase [data_structures_set_multi_proc_trivial_ground]
+Adding testcase [LexIndexValue-Pointer-3]
+Adding testcase [stroeder1_unsafe]
+Adding testcase [sorting_bubblesort_2_ground]
+Adding testcase [LexIndexValue-Pointer-1]
+Adding testcase [standard_sentinel.i.v+cfa-reducer]
+Adding testcase [cstrcmp-alloca-2]
+Running test: [array03-alloca-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [Arrays01-EquivalentConstantIndices-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_copy4_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_copy8_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_two_index_02.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [java_BubbleSort-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_two_index_09.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_copyInitSum2_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_two_index_04.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_palindrome_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_copyInitSum2_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [cstrchr-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_seq_init_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_copy3_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_partition_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [openbsd_cstrcspn-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [diff-alloca-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [standard_find_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [sorting_selectionsort_2_ground.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [cstrcat_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [rec_strlen-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_running-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cmemrchr-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cstrncat-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cstrnlen-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_strcmp_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cstrstr-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_init8_ground-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [standard_two_index_07.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [array01-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [knapsack_alloca_unsafe.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [standard_copy7_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_partition_original_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [sanfoundry_02_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_partial_init_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_two_index_01.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [sanfoundry_27_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [Arrays02-EquivalentConstantIndices.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [openbsd_cmemchr-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_sentinel-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [reverse_array_alloca_unsafe.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [standard_copy3_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [cstrpbrk-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_init7_ground-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [bubblesort-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_sentinel-2.i]
+Tool: UNSAFE
+Real: SAFE
+
+Running test: [sanfoundry_24-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [cstrspn-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_copy9_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_copy7_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [sorting_bubblesort_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [subseq-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_init2_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_copy5_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [cstrpbrk_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [openbsd_cmemset-alloca-1.i]
+Tool: UNSAFE
+Real: SAFE
+
+Running test: [openbsd_cstpcpy-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_copy9_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_strcpy_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [openbsd_cstrpbrk-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [array02-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [cstrncat_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_init8_ground-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [bubblesort_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_compare_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [sanfoundry_24-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [mult_array-alloca-1.i]
+Tool: UNSAFE
+Real: SAFE
+
+Running test: [sorting_selectionsort_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [insertionsort-alloca-1.i]
+Tool: UNSAFE
+Real: SAFE
+
+Running test: [openbsd_cstrcpy-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_two_index_08.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [sorting_bubblesort_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_init3_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_copyInitSum_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cstrlen-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cstrncmp-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_strcpy_original-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [mult_array_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_two_index_03.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [Arrays03-ValueRestictsIndex-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_init5_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_copy5_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_vararg_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [strreplace-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [stroeder1-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cstrcmp-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [substring-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [count_down_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_copy2_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [LexIndexValue-Array-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [LexIndexValue-Array-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [cstrncpy-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [diff_usafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [sanfoundry_43_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [selectionsort_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_init5_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_copy6_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_init6_ground-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [standard_find_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_copyInitSum3_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_minInArray_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_copy6_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_init7_ground-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [standard_copyInit_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [cstrcat-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_init6_ground-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [standard_strcpy_original-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_partition_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [stroeder2-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [cstrncmp-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [reverse_array_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [Arrays03-ValueRestictsIndex-2.i]
+Tool: UNSAFE
+Real: SAFE
+
+Running test: [cstrcspn-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cstrncpy-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_init1_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_minInArray_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_init9_ground-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [standard_vector_difference_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_init3_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_copy2_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_compareModified_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_running-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_two_index_06.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cstrcat-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_copy1_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [cstrchr_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_init9_ground-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [relax-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [count_down-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_maxInArray_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cbzero-alloca-2.i]
+Tool: UNSAFE
+Real: SAFE
+
+Running test: [lis_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_reverse_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [sanfoundry_10_ground.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [Arrays01-EquivalentConstantIndices-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_copy8_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_copy4_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_init1_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_init4_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [lis-alloca-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [standard_allDiff2_ground.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [relax-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [add_last_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [cstrlen-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [cstrcpy-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [cstrncat-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cstpncpy-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [openbsd_cstrlcpy-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [sorting_selectionsort_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [add_last-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_strcpy_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [cstrncpy_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [data_structures_set_multi_proc_ground-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [standard_copy1_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [openbsd_cstrspn-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [cstrlen_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [data_structures_set_multi_proc_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [selectionsort-alloca-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_two_index_05.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [NonTermination3-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [standard_password_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [LexIndexValue-Pointer-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_init4_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [standard_init2_ground-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [data_structures_set_multi_proc_trivial_ground.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [LexIndexValue-Pointer-3.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [stroeder1_unsafe.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [sorting_bubblesort_2_ground.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [LexIndexValue-Pointer-1.i]
+Tool: UNSAFE
+Real: SAFE
+
+Running test: [standard_sentinel.i.v+cfa-reducer.i]
+Tool: UNSAFE
+Real: SAFE
+
+Running test: [cstrcmp-alloca-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Success verified: 11
+Test [array03-alloca-2] is [SAFE]:
+Test [diff-alloca-2] is [SAFE]:
+Test [standard_init8_ground-2] is [SAFE]:
+Test [knapsack_alloca_unsafe] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Inferred error:	 ['INVALID_DEREF']
+Test [standard_sentinel-1] is [UNSAFE]:
+Real error:	 ['def-behavior']
+Inferred error:	 ['INVALID_DEREF']
+Test [reverse_array_alloca_unsafe] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Inferred error:	 ['INVALID_DEREF']
+Test [standard_init7_ground-2] is [SAFE]:
+Test [standard_init6_ground-2] is [SAFE]:
+Test [standard_init9_ground-2] is [SAFE]:
+Test [lis-alloca-1] is [SAFE]:
+Test [NonTermination3-1] is [UNSAFE]:
+Real error:	 ['termination', 'valid-deref']
+Inferred error:	 ['INVALID_DEREF']
+
+
+Unknown result: 1
+Test: sanfoundry_10_ground
+
+
+Unmatch result: 13
+Test [Arrays02-EquivalentConstantIndices] is [UNSAFE]:
+Real error:	 ['termination']
+Test [standard_sentinel-2] is [SAFE]:
+Inferred error:	 ['INVALID_DEREF']
+Test [openbsd_cmemset-alloca-1] is [SAFE]:
+Inferred error:	 ['INVALID_DEREF']
+Test [standard_init8_ground-1] is [UNSAFE]:
+Real error:	 ['unreach-call']
+Test [mult_array-alloca-1] is [SAFE]:
+Inferred error:	 ['INVALID_DEREF']
+Test [insertionsort-alloca-1] is [SAFE]:
+Inferred error:	 ['INVALID_DEREF']
+Test [standard_init7_ground-1] is [UNSAFE]:
+Real error:	 ['unreach-call']
+Test [standard_init6_ground-1] is [UNSAFE]:
+Real error:	 ['unreach-call']
+Test [Arrays03-ValueRestictsIndex-2] is [SAFE]:
+Inferred error:	 ['INVALID_DEREF']
+Test [standard_init9_ground-1] is [UNSAFE]:
+Real error:	 ['unreach-call']
+Test [openbsd_cbzero-alloca-2] is [SAFE]:
+Inferred error:	 ['INVALID_DEREF']
+Test [LexIndexValue-Pointer-1] is [SAFE]:
+Inferred error:	 ['MemLeak']
+Test [standard_sentinel.i.v+cfa-reducer] is [SAFE]:
+Inferred error:	 ['INVALID_DEREF']
+
+
+Raise exception: 146
+Arrays01-EquivalentConstantIndices-1
+standard_copy4_ground-1
+standard_copy8_ground-1
+standard_two_index_02
+java_BubbleSort-alloca-1
+standard_two_index_09
+standard_copyInitSum2_ground-1
+standard_two_index_04
+standard_palindrome_ground
+standard_copyInitSum2_ground-2
+cstrchr-alloca-2
+standard_seq_init_ground
+standard_copy3_ground-1
+standard_partition_ground-1
+openbsd_cstrcspn-alloca-2
+standard_find_ground-1
+sorting_selectionsort_2_ground
+cstrcat_unsafe
+rec_strlen-alloca-1
+standard_running-2
+openbsd_cmemrchr-alloca-2
+openbsd_cstrncat-alloca-2
+openbsd_cstrnlen-alloca-1
+standard_strcmp_ground
+openbsd_cstrstr-alloca-2
+standard_two_index_07
+array01-alloca-2
+standard_copy7_ground-1
+standard_partition_original_ground
+sanfoundry_02_ground
+standard_partial_init_ground
+standard_two_index_01
+sanfoundry_27_ground
+openbsd_cmemchr-alloca-2
+standard_copy3_ground-2
+cstrpbrk-alloca-2
+bubblesort-alloca-2
+sanfoundry_24-2
+cstrspn-alloca-1
+standard_copy9_ground-1
+standard_copy7_ground-2
+sorting_bubblesort_ground-2
+subseq-alloca-2
+standard_init2_ground-1
+standard_copy5_ground-1
+cstrpbrk_unsafe
+openbsd_cstpcpy-alloca-1
+standard_copy9_ground-2
+standard_strcpy_ground-2
+openbsd_cstrpbrk-alloca-2
+array02-alloca-2
+cstrncat_unsafe
+bubblesort_unsafe
+standard_compare_ground
+sanfoundry_24-1
+sorting_selectionsort_ground-1
+openbsd_cstrcpy-alloca-2
+standard_two_index_08
+sorting_bubblesort_ground-1
+standard_init3_ground-2
+standard_copyInitSum_ground
+openbsd_cstrlen-alloca-1
+openbsd_cstrncmp-alloca-2
+standard_strcpy_original-1
+mult_array_unsafe
+standard_two_index_03
+Arrays03-ValueRestictsIndex-1
+standard_init5_ground-2
+standard_copy5_ground-2
+standard_vararg_ground
+strreplace-alloca-2
+stroeder1-alloca-1
+openbsd_cstrcmp-alloca-1
+substring-alloca-2
+count_down_unsafe
+standard_copy2_ground-1
+LexIndexValue-Array-1
+LexIndexValue-Array-2
+cstrncpy-alloca-2
+diff_usafe
+sanfoundry_43_ground
+selectionsort_unsafe
+standard_init5_ground-1
+standard_copy6_ground-2
+standard_find_ground-2
+standard_copyInitSum3_ground
+standard_minInArray_ground-2
+standard_copy6_ground-1
+standard_copyInit_ground
+cstrcat-alloca-2
+standard_strcpy_original-2
+standard_partition_ground-2
+stroeder2-alloca-1
+cstrncmp-alloca-1
+reverse_array_unsafe
+cstrcspn-alloca-1
+openbsd_cstrncpy-alloca-2
+standard_init1_ground-1
+standard_minInArray_ground-1
+standard_vector_difference_ground
+standard_init3_ground-1
+standard_copy2_ground-2
+standard_compareModified_ground
+standard_running-1
+standard_two_index_06
+openbsd_cstrcat-alloca-2
+standard_copy1_ground-1
+cstrchr_unsafe
+relax-2
+count_down-alloca-1
+standard_maxInArray_ground
+lis_unsafe
+standard_reverse_ground
+Arrays01-EquivalentConstantIndices-2
+standard_copy8_ground-2
+standard_copy4_ground-2
+standard_init1_ground-2
+standard_init4_ground-1
+standard_allDiff2_ground
+relax-1
+add_last_unsafe
+cstrlen-alloca-2
+cstrcpy-alloca-1
+cstrncat-alloca-2
+openbsd_cstpncpy-alloca-1
+openbsd_cstrlcpy-alloca-1
+sorting_selectionsort_ground-2
+add_last-alloca-1
+standard_strcpy_ground-1
+cstrncpy_unsafe
+data_structures_set_multi_proc_ground-1
+standard_copy1_ground-2
+openbsd_cstrspn-alloca-2
+cstrlen_unsafe
+data_structures_set_multi_proc_ground-2
+selectionsort-alloca-1
+standard_two_index_05
+standard_password_ground
+LexIndexValue-Pointer-2
+standard_init4_ground-2
+standard_init2_ground-2
+data_structures_set_multi_proc_trivial_ground
+LexIndexValue-Pointer-3
+stroeder1_unsafe
+sorting_bubblesort_2_ground
+cstrcmp-alloca-2

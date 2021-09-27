@@ -1,0 +1,877 @@
+Adding testcase [memleaks_test8]
+Adding testcase [memleaks_test5]
+Adding testcase [memleaks_test7-1]
+Test case [ArraysOfVariableLength2_-read] leak of .c/.i file
+Adding testcase [split_list_test05-1]
+Test case [memset_-write] leak of .c/.i file
+Adding testcase [length_test03-2]
+Test case [StructInitialization] leak of .c/.i file
+Adding testcase [test-0102-2]
+Adding testcase [complex_data_creation_test01-2]
+Test case [StructInitialization2] leak of .c/.i file
+Adding testcase [test-bitfields-2-2]
+Adding testcase [test-bitfields-3-2]
+Adding testcase [test-0521]
+Adding testcase [test-0220]
+Adding testcase [memleaks_test12-1]
+Adding testcase [memleaks_test14_1]
+Adding testcase [memleaks_test8_1]
+Adding testcase [memleaks_test6_2]
+Adding testcase [20020406-1]
+Adding testcase [memleaks_test23_2]
+Adding testcase [test-0219]
+Adding testcase [memleaks_test11_1]
+Adding testcase [memleaks_test9_2]
+Adding testcase [test-0232-1]
+Adding testcase [memleaks_test11_2]
+Test case [memsetNonZero3_-write] leak of .c/.i file
+Adding testcase [test-0235-2]
+Test case [memsetNonZero3] leak of .c/.i file
+Adding testcase [length_test03-1]
+Adding testcase [test-0137]
+Adding testcase [test-0019-2]
+Adding testcase [memleaks_test18_1]
+Adding testcase [memleaks_test22_2-1]
+Adding testcase [memleaks_test17_3]
+Adding testcase [test-0237]
+Adding testcase [memleaks_test8_2]
+Adding testcase [memleaks_test10-1]
+Adding testcase [memleaks_test22_1-2]
+Adding testcase [test-bitfields-3-1]
+Adding testcase [test-0102-1]
+Adding testcase [memleaks_test20-2]
+Adding testcase [memleaks_test5_2]
+Adding testcase [memleaks_test1-2]
+Adding testcase [memleaks_test5_1]
+Adding testcase [memleaks_test23_3]
+Test case [memsetNonZero2_-write] leak of .c/.i file
+Adding testcase [memleaks_test6_3]
+Adding testcase [memleaks_test6_1]
+Test case [ArraysOfVariableLength5] leak of .c/.i file
+Adding testcase [test-bitfields-2-1]
+Adding testcase [test-0158-3]
+Adding testcase [memleaks_test1-1]
+Adding testcase [lockfree-3.3]
+Adding testcase [memleaks_test19-1]
+Adding testcase [memleaks_test17_2-1]
+Adding testcase [test-0217]
+Test case [ArraysWithLenghtAtDeclaration_-read] leak of .c/.i file
+Adding testcase [test-0218]
+Adding testcase [optional_data_creation_test04-2]
+Adding testcase [test-0504]
+Adding testcase [memleaks_test13_1]
+Test case [memset] leak of .c/.i file
+Adding testcase [test-0158-1]
+Adding testcase [memleaks_test20-1]
+Adding testcase [memleaks_test4-2]
+Adding testcase [complex_data_creation_test02-1]
+Adding testcase [lockfree-3.2]
+Adding testcase [test-bitfields-3.1-2]
+Test case [memset3] leak of .c/.i file
+Adding testcase [memleaks_test12-2]
+Adding testcase [memleaks_test13]
+Adding testcase [20051113-1]
+Adding testcase [test-bitfields-1-2]
+Adding testcase [memleaks_test4-1]
+Adding testcase [memleaks_test22_3-1]
+Adding testcase [memleaks_test14_2]
+Adding testcase [memleaks_test17_2-2]
+Test case [StructInitialization1] leak of .c/.i file
+Adding testcase [memleaks_test17_1-1]
+Adding testcase [split_list_test05-2]
+Test case [memset3_-write] leak of .c/.i file
+Test case [ArraysOfVariableLength] leak of .c/.i file
+Adding testcase [test-0234-2]
+Adding testcase [memleaks_test15-2]
+Adding testcase [memleaks_test18_3]
+Adding testcase [memleaks_test9]
+Test case [ArraysWithLenghtAtDeclaration_-write] leak of .c/.i file
+Adding testcase [memleaks_test22_3-2]
+Adding testcase [memleaks_test14_3]
+Adding testcase [test-bitfields-2.1-1]
+Test case [ArraysOfVariableLength2_-write] leak of .c/.i file
+Adding testcase [cmp-freed-ptr]
+Adding testcase [test-0134]
+Adding testcase [lockfree-3.1]
+Adding testcase [memleaks_test3-1]
+Adding testcase [memleaks_test7-2]
+Adding testcase [memleaks_test22_5]
+Adding testcase [c.03-alloca-2]
+Adding testcase [memleaks_test23_4]
+Adding testcase [complex_data_creation_test01-1]
+Adding testcase [960521-1-3]
+Test case [ArraysOfVariableLength_-write] leak of .c/.i file
+Adding testcase [test-bitfields-1-1]
+Test case [memsetNonZero2] leak of .c/.i file
+Adding testcase [test-0232-2]
+Test case [ArraysOfVariableLength_-read] leak of .c/.i file
+Adding testcase [memleaks_test13_2]
+Adding testcase [lockfree-3.0]
+Adding testcase [memleaks_test21-2]
+Adding testcase [960521-1-1]
+Adding testcase [memleaks_test22_1-1]
+Adding testcase [memleaks_test15-1]
+Adding testcase [memleaks_test22_2-2]
+Test case [ArraysOfVariableLength6] leak of .c/.i file
+Adding testcase [memleaks_test18_2]
+Adding testcase [test-bitfields-3.1-1]
+Test case [memsetNonZero] leak of .c/.i file
+Adding testcase [test-memleak_nexttime]
+Adding testcase [memleaks_test1-3]
+Adding testcase [optional_data_creation_test04-1]
+Adding testcase [memleaks_test10-2]
+Adding testcase [test-0232-3]
+Adding testcase [memleaks_test6]
+Test case [ArraysOfVariableLength2] leak of .c/.i file
+Adding testcase [memleaks_test16]
+Adding testcase [960521-1-2]
+Adding testcase [memleaks_test22_4]
+Adding testcase [memleaks_test16_1]
+Adding testcase [memleaks_test19-2]
+Adding testcase [memleaks_test11]
+Test case [ArraysWithLenghtAtDeclaration] leak of .c/.i file
+Adding testcase [memleaks_test23_1]
+Adding testcase [memleaks_test9_1]
+Test case [memsetNonZero_-write] leak of .c/.i file
+Adding testcase [complex_data_creation_test02-2]
+Adding testcase [memleaks_test14]
+Adding testcase [test-bitfields-2.1-2]
+Adding testcase [test-0235-1]
+Test case [memset2] leak of .c/.i file
+Adding testcase [test-0234-1]
+Adding testcase [memleaks_test3-2]
+Test case [memset2_-write] leak of .c/.i file
+Adding testcase [memleaks_test18]
+Adding testcase [test-0158-2]
+Test case [ArraysOfVariableLength4] leak of .c/.i file
+Adding testcase [test-0513]
+Adding testcase [test-0236]
+Adding testcase [memleaks_test21-1]
+Adding testcase [test-0235-3]
+Adding testcase [test-0019-1]
+Adding testcase [memleaks_test16_2]
+Adding testcase [memleaks_test17_1-2]
+Adding testcase [test-0214]
+Running test: [memleaks_test8.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test5.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test7-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [split_list_test05-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [length_test03-2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0102-2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [complex_data_creation_test01-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-bitfields-2-2.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [test-bitfields-3-2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-0521.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0220.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memleaks_test12-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test14_1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test8_1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test6_2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [20020406-1.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memleaks_test23_2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [test-0219.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [memleaks_test11_1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test9_2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-0232-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test11_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0235-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [length_test03-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0137.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [test-0019-2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test18_1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test22_2-1.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memleaks_test17_3.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0237.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test8_2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test10-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test22_1-2.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [test-bitfields-3-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [test-0102-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test20-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [memleaks_test5_2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test1-2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test5_1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test23_3.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [memleaks_test6_3.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test6_1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-bitfields-2-1.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [test-0158-3.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test1-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [lockfree-3.3.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test19-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test17_2-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0217.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [test-0218.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [optional_data_creation_test04-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [test-0504.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [memleaks_test13_1.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [test-0158-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test20-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test4-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [complex_data_creation_test02-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [lockfree-3.2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-bitfields-3.1-2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test12-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [memleaks_test13.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [20051113-1.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [test-bitfields-1-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test4-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test22_3-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [memleaks_test14_2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test17_2-2.i]
+Tool: UNSAFE
+Real: SAFE
+
+Running test: [memleaks_test17_1-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [split_list_test05-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0234-2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test15-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test18_3.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test9.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test22_3-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test14_3.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [test-bitfields-2.1-1.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [cmp-freed-ptr.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-0134.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [lockfree-3.1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test3-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test7-2.i]
+Tool: UNSAFE
+Real: SAFE
+
+Running test: [memleaks_test22_5.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [c.03-alloca-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test23_4.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [complex_data_creation_test01-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [960521-1-3.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-bitfields-1-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [test-0232-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test13_2.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [lockfree-3.0.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test21-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [960521-1-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test22_1-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test15-1.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memleaks_test22_2-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [memleaks_test18_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-bitfields-3.1-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [test-memleak_nexttime.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test1-3.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [optional_data_creation_test04-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test10-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0232-3.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test6.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test16.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [960521-1-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test22_4.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test16_1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test19-2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test11.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test23_1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [memleaks_test9_1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [complex_data_creation_test02-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test14.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [test-bitfields-2.1-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [test-0235-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0234-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test3-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test18.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0158-2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-0513.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0236.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test21-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-0235-3.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0019-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test16_2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test17_1-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0214.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Success verified: 59
+Test [memleaks_test8] is [SAFE]:
+Test [memleaks_test5] is [SAFE]:
+Test [memleaks_test7-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [complex_data_creation_test01-2] is [SAFE]:
+Test [test-bitfields-3-2] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Inferred error:	 ['INVALID_DEREF']
+Test [test-0521] is [SAFE]:
+Test [memleaks_test8_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [memleaks_test6_2] is [UNSAFE]:
+Real error:	 ['valid-free']
+Inferred error:	 ['INVALID_FREE']
+Test [memleaks_test9_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [test-0232-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [test-0235-2] is [SAFE]:
+Test [length_test03-1] is [SAFE]:
+Test [test-0019-2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [memleaks_test18_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [test-0237] is [SAFE]:
+Test [memleaks_test8_2] is [UNSAFE]:
+Real error:	 ['valid-free']
+Inferred error:	 ['INVALID_FREE']
+Test [memleaks_test10-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [test-0102-1] is [SAFE]:
+Test [memleaks_test5_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [memleaks_test1-2] is [UNSAFE]:
+Real error:	 ['valid-free']
+Inferred error:	 ['INVALID_FREE']
+Test [memleaks_test6_3] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [memleaks_test6_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [test-0158-3] is [UNSAFE]:
+Real error:	 ['valid-free']
+Inferred error:	 ['INVALID_FREE']
+Test [memleaks_test1-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [memleaks_test19-1] is [SAFE]:
+Test [test-0158-1] is [SAFE]:
+Test [memleaks_test20-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [memleaks_test4-2] is [SAFE]:
+Test [test-bitfields-3.1-2] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Inferred error:	 ['INVALID_DEREF']
+Test [memleaks_test4-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [split_list_test05-2] is [SAFE]:
+Test [memleaks_test15-2] is [SAFE]:
+Test [memleaks_test9] is [SAFE]:
+Test [cmp-freed-ptr] is [UNSAFE]:
+Real error:	 ['valid-free']
+Inferred error:	 ['INVALID_FREE']
+Test [c.03-alloca-2] is [SAFE]:
+Test [960521-1-3] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Inferred error:	 ['INVALID_DEREF']
+Test [test-0232-2] is [SAFE]:
+Test [lockfree-3.0] is [SAFE]:
+Test [960521-1-1] is [UNSAFE]:
+Real error:	 ['valid-free']
+Inferred error:	 ['INVALID_FREE']
+Test [test-memleak_nexttime] is [SAFE]:
+Test [memleaks_test1-3] is [SAFE]:
+Test [memleaks_test10-2] is [SAFE]:
+Test [test-0232-3] is [UNSAFE]:
+Real error:	 ['valid-free']
+Inferred error:	 ['INVALID_FREE']
+Test [memleaks_test6] is [SAFE]:
+Test [memleaks_test16] is [SAFE]:
+Test [960521-1-2] is [SAFE]:
+Test [memleaks_test16_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [memleaks_test11] is [SAFE]:
+Test [memleaks_test9_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [test-0234-1] is [SAFE]:
+Test [memleaks_test3-2] is [SAFE]:
+Test [memleaks_test18] is [SAFE]:
+Test [test-0158-2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [test-0513] is [SAFE]:
+Test [test-0236] is [SAFE]:
+Test [memleaks_test21-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [test-0019-1] is [SAFE]:
+Test [memleaks_test16_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [memleaks_test17_1-2] is [SAFE]:
+
+
+Unknown result: 20
+Test: test-bitfields-2-2
+Test: test-0220
+Test: 20020406-1
+Test: test-0219
+Test: test-0137
+Test: memleaks_test22_2-1
+Test: memleaks_test22_1-2
+Test: memleaks_test23_3
+Test: test-bitfields-2-1
+Test: test-0217
+Test: test-0218
+Test: memleaks_test13_1
+Test: memleaks_test13
+Test: 20051113-1
+Test: test-bitfields-2.1-1
+Test: test-0134
+Test: memleaks_test23_4
+Test: memleaks_test13_2
+Test: memleaks_test15-1
+Test: test-0214
+
+
+Unmatch result: 22
+Test [split_list_test05-1] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Test [length_test03-2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [test-0102-2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test14_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test11_1] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [memleaks_test11_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test17_3] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [lockfree-3.3] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test17_2-1] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [lockfree-3.2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test17_2-2] is [SAFE]:
+Inferred error:	 ['INVALID_DEREF']
+Test [memleaks_test17_1-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [test-0234-2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test18_3] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [lockfree-3.1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test3-1] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [memleaks_test7-2] is [SAFE]:
+Inferred error:	 ['MemLeak']
+Test [complex_data_creation_test01-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test18_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test19-2] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [test-0235-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [test-0235-3] is [UNSAFE]:
+Real error:	 ['valid-deref']
+
+
+Raise exception: 26
+memleaks_test12-1
+memleaks_test23_2
+test-bitfields-3-1
+memleaks_test20-2
+memleaks_test5_1
+optional_data_creation_test04-2
+test-0504
+complex_data_creation_test02-1
+memleaks_test12-2
+test-bitfields-1-2
+memleaks_test22_3-1
+memleaks_test14_2
+memleaks_test22_3-2
+memleaks_test14_3
+memleaks_test22_5
+test-bitfields-1-1
+memleaks_test21-2
+memleaks_test22_1-1
+memleaks_test22_2-2
+test-bitfields-3.1-1
+optional_data_creation_test04-1
+memleaks_test22_4
+memleaks_test23_1
+complex_data_creation_test02-2
+memleaks_test14
+test-bitfields-2.1-2

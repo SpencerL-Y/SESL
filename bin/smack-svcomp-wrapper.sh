@@ -11,6 +11,8 @@ DOTNET_BIN="${ROOT}/smack-deps/dotnet"
 
 export DOTNET_ROOT=${DOTNET_BIN}
 export PATH=${DOTNET_BIN}:${SMACK_BIN}:${BOOGIE_BIN}:${CORRAL_BIN}:${Z3_BIN}:$PATH
+export LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH
+
 
 smack -x=svcomp --verifier=svcomp -q $@
 

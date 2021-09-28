@@ -4,6 +4,12 @@
 
 SmackBasedPrj is a tool for memory safety checking. It is an symbolic execution extension of existing state-of-the-art tool SMACK on separation logic. 
 
+## Dependency
+
+We build our tool based on 
+- **[SMACK](https://smackers.github.io/)**: we brought the frontend of this to into use, which provide a magnificant translation from source code to Boogie IVL based on LLVM passes.
+
+
 ## Installation
 
 System requirement: 
@@ -58,6 +64,6 @@ Testcases are listed in folder ```testcases```
 
 ## SV-COMP
 
-For convenience, the link of all the testcases of memory safetyof [SV-COMP] can be found [HERE](https://github.com/zhuyutian57/SV-COMP-MemSafety). 
+For convenience, the link of all the testcases of memory safetyof [SV-COMP](https://sv-comp.sosy-lab.org/2022/) can be found [HERE](https://github.com/zhuyutian57/SV-COMP-MemSafety). 
 
 

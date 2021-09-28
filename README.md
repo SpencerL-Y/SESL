@@ -1,4 +1,4 @@
-# SmackBasedPrj
+# SESL: A Symbolic Executor based on Separation Logic
 
 ## Introduction
 
@@ -7,7 +7,9 @@ SmackBasedPrj is a tool for memory safety checking. It is an symbolic execution 
 ## Dependency
 
 We build our tool based on 
-- **[SMACK](https://smackers.github.io/)**: we brought the frontend of this to into use, which provide a magnificant translation from source code to Boogie IVL based on LLVM passes.
+
+- **[SMACK](https://smackers.github.io/)**: We brought the frontend of SMACK into use, which provides a magnificant translation from source code to Boogie IVL based on LLVM passes.
+
 
 
 ## Installation
@@ -64,6 +66,8 @@ Testcases are listed in folder ```testcases```
 
 ## SV-COMP
 
-For convenience, the link of all the testcases of memory safetyof [SV-COMP](https://sv-comp.sosy-lab.org/2022/) can be found [HERE](https://github.com/zhuyutian57/SV-COMP-MemSafety). 
+
+For convenience, the link of all the testcases of memory safety of [SV-COMP](https://sv-comp.sosy-lab.org/2022/) can be found [HERE](https://github.com/zhuyutian57/SV-COMP-MemSafety). 
+
 
 

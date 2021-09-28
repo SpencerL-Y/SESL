@@ -241,9 +241,9 @@ set(CMAKE_BUILD_TYPE "Release")
 # add_subdirectory(sea-dsa/lib/seadsa)
 set(CMAKE_BUILD_TYPE ${SMACK_BUILD_TYPE})
 
-# add link of separation logic library slah
 set(SL_DIR ${PROJECT_SOURCE_DIR}/include)
 set(SL_LIB ${PROJECT_SOURCE_DIR}/lib)
+#set(SL_LIB /usr/local/lib)
 include_directories(${SL_DIR})
 link_directories(${SL_LIB})
 

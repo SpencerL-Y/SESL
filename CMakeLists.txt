@@ -248,6 +248,7 @@ include_directories(${SL_DIR})
 link_directories(${SL_LIB})
 
 target_link_libraries(smackTranslator ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS} ${Z3_LIBRARIES} ${OPENSSL_LIBRARIES})
+# target_link_libraries(llvm2bpl smackTranslator utils SeaDsaAnalysis ${SL_LIB}/libslah.so ${SL_LIB}/libz3.so )
 target_link_libraries(llvm2bpl smackTranslator utils SeaDsaAnalysis ${SL_LIB}/libslah.so ${SL_LIB}/libz3.so )
 
 INSTALL(TARGETS llvm2bpl
@@ -262,15 +263,13 @@ INSTALL(FILES
   DESTINATION bin
 )
 
-INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/
-  DESTINATION bin
-  USE_SOURCE_PERMISSIONS
-  FILES_MATCHING PATTERN "*.py" PATTERN "*.h" PATTERN "*.c" PATTERN "Makefile"
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts
+  DESTINATION bin PATTERN "*.h" PATTERN "*.c" PATTERN "Makefile"
 )
 
 INSTALL(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/bin/versions
-  DESTINATION scripts
+  DESTINATION bin/scripts
   RENAME versions.py
 )
 

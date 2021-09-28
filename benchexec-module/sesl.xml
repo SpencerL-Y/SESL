@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE benchmark PUBLIC "+//IDN sosy-lab.org//DTD BenchExec benchmark 1.9//EN" "https://www.sosy-lab.org/benchexec/benchmark-1.9.dtd">
-<benchmark tool="tool_module.smackbasedprj" timelimit="10 min" memlimit="10 GB" cpuCores="8">
+<benchmark tool="sesl" timelimit="10 min" memlimit="10 GB" cpuCores="8">
 
   <resultfiles>**.graphml</resultfiles>
 

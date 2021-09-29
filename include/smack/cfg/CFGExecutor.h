@@ -43,6 +43,7 @@ namespace smack {
         void generatePathByStep();
         void printPath(bool printDetail = false);
         vector<ExecutionPath> getExecPathVec();
+        void printProc();
     };
 }
 

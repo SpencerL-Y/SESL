@@ -105,7 +105,17 @@ namespace smack {
         auto& stmts = statePtr->getStateBlock()->getStatements();
         assert(Stmt::ASSUME == stmts.front()->getKind());
         stmts.pop_front();
+//        stmts.push_front(AssumeStmt::comment("condition-false"));
         return statePtr;
+    }
+
+    void CFGExecutor::printProc() {
+        for (auto &v : exePathVec) {
+            for (int i = 0; i < v.length(); ++ i) {
+                v[i]->getStateBlock()->print(cout);
+                cout << endl;
+            }
+        }
     }
 
     StatePtr ExecutionPath::operator[](int pos) const {

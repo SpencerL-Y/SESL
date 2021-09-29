@@ -9,7 +9,6 @@ void reach_error() { assert(0); }
 #include <string.h>
 
 char a[sizeof(int*)];
-
 void foo(void)
 {
    int *p = (int *)malloc(10);

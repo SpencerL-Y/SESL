@@ -151,9 +151,12 @@ add_library(smackTranslator STATIC
   include/smack/VarEquiv.h
   include/smack/VarFactory.h
   include/smack/StoreSplitter.h
+	include/smack/MemoryManager.h
         include/smack/cfg/CFGExecutor.h
   include/smack/ExecutionState.h
   include/smack/SVNaming.h
+  include/smack/ViolationPathGen.h
+  include/tinyxml/tinyxml2.h
   lib/smack/Translator.cpp
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp
@@ -191,23 +194,26 @@ add_library(smackTranslator STATIC
   lib/smack/VarEquiv.cpp
   lib/smack/VarFactory.cpp
   lib/smack/StoreSplitter.cpp
+	lib/smack/MemoryManager.cpp
         lib/smack/cfg/CFGExecutor.cpp
         lib/smack/cfg/ProcManager.cpp
         include/smack/cfg/ProcManager.h
         lib/smack/cfg/CFGUtils.cpp
         include/smack/cfg/CFGUtils.h
   lib/smack/SVNaming.cpp
+  lib/smack/ViolationPathGen.cpp
+  lib/tinyxml/tinyxml2.cpp
   )
 
 add_executable(llvm2bpl
   tools/llvm2bpl/llvm2bpl.cpp
-)
+        include/smack/memoryManager/memoryManager.h)
 
 # We need to include Boost header files at least for macOS
-find_package (Boost 1.55)
-if (Boost_FOUND)
-  include_directories (${Boost_INCLUDE_DIRS})
-endif ()
+# find_package (Boost 1.55)
+# if (Boost_FOUND)
+#   include_directories (${Boost_INCLUDE_DIRS})
+# endif ()
 # We have to import LLVM's cmake definitions to build sea-dsa
 # Borrowed from sea-dsa's CMakeLists.txt
 find_package (LLVM ${LLVM_SHORT_VERSION} CONFIG)
@@ -216,24 +222,34 @@ include(AddLLVM)
 include(HandleLLVMOptions)
 # Add Z3 to do the symbolic execution on separation logic
 find_package(Z3 REQUIRED CONFIG)
+message(STATUS "Z3DIR: ${CMAKE_PREFIX_PATH}")
 message(STATUS "Z3_FOUND: ${Z3_FOUND}" )
 message(STATUS "Found Z3: ${Z3_VERSION_STRING}")
 include_directories (${Z3_CXX_INCLUDE_DIRS})
+
+find_package(OpenSSL REQUIRED)
+message(STATUS "OPENSSL_FOUND: ${OPENSSL_FOUND}")
+include_directories(${OPENSSL_INCLUDE_DIR})
+
+
+
 # We need the release build of sea-dsa otherwise we'll see a lot of crashes in
 # sv-comp benchmarks.
 # The following solution is from: https://stackoverflow.com/questions/30985215/passing-variables-down-to-subdirectory-only
 set(SMACK_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
 set(CMAKE_BUILD_TYPE "Release")
-add_subdirectory(sea-dsa/lib/seadsa)
+# add_subdirectory(sea-dsa/lib/seadsa)
 set(CMAKE_BUILD_TYPE ${SMACK_BUILD_TYPE})
 
+# add link of separation logic library slah
 set(SL_DIR ${PROJECT_SOURCE_DIR}/include)
-set(SL_LIB /usr/local/lib)
+set(SL_LIB ${PROJECT_SOURCE_DIR}/lib)
 include_directories(${SL_DIR})
 link_directories(${SL_LIB})
 
-target_link_libraries(smackTranslator ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS} ${Z3_LIBRARIES})
-target_link_libraries(llvm2bpl smackTranslator utils SeaDsaAnalysis ${SL_LIB}/libslah.so ${SL_LIB}/libz3.so)
+target_link_libraries(smackTranslator ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS} ${Z3_LIBRARIES} ${OPENSSL_LIBRARIES})
+# target_link_libraries(llvm2bpl smackTranslator utils SeaDsaAnalysis ${SL_LIB}/libslah.so ${SL_LIB}/libz3.so )
+target_link_libraries(llvm2bpl smackTranslator utils SeaDsaAnalysis ${SL_LIB}/libslah.so ${SL_LIB}/libz3.so )
 
 INSTALL(TARGETS llvm2bpl
   RUNTIME DESTINATION bin
@@ -241,38 +257,35 @@ INSTALL(TARGETS llvm2bpl
 
 INSTALL(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/bin/smack
-  ${CMAKE_CURRENT_SOURCE_DIR}/bin/smack-doctor
   ${CMAKE_CURRENT_SOURCE_DIR}/bin/smack-svcomp-wrapper.sh
   PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
   GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
   DESTINATION bin
 )
 
-INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/share/smack
-  DESTINATION share
-  USE_SOURCE_PERMISSIONS
-  FILES_MATCHING PATTERN "*.py" PATTERN "*.h" PATTERN "*.c" PATTERN "Makefile" PATTERN "*.rs" PATTERN "*.f90" PATTERN "*.di" PATTERN "*.toml"
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts
+  DESTINATION bin PATTERN "*.h" PATTERN "*.c" PATTERN "Makefile"
 )
 
 INSTALL(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/bin/versions
-  DESTINATION share/smack
+  DESTINATION bin/scripts
   RENAME versions.py
 )
 
-INSTALL(FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack/Cargo.toml
-  ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack/build.rs
-  DESTINATION share/smack/lib
-)
+# INSTALL(FILES
+#   ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack/Cargo.toml
+#   ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack/build.rs
+#   DESTINATION share/smack/lib
+# )
 
-INSTALL(FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack-rust.c
-  DESTINATION share/smack/lib/src
-)
+# INSTALL(FILES
+#   ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack-rust.c
+#   DESTINATION share/smack/lib/src
+# )
 
-INSTALL(FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack.rs
-  DESTINATION share/smack/lib/src
-  RENAME lib.rs
-)
+# INSTALL(FILES
+#   ${CMAKE_CURRENT_SOURCE_DIR}/share/smack/lib/smack.rs
+#   DESTINATION share/smack/lib/src
+#   RENAME lib.rs
+# )

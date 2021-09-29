@@ -24,8 +24,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
 
-#include "seadsa/InitializePasses.hh"
-#include "seadsa/support/RemovePtrToInt.hh"
+//#include "seadsa/InitializePasses.hh"
+//#include "seadsa/support/RemovePtrToInt.hh"
 #include "smack/AddTiming.h"
 #include "smack/BplFilePrinter.h"
 #include "smack/CodifyStaticInits.h"
@@ -44,6 +44,7 @@
 #include "smack/SplitAggregateValue.h"
 #include "smack/VerifierCodeMetadata.h"
 #include "smack/MemSafeVerifier.h"
+#include "smack/ViolationPathGen.h"
 #include "utils/Devirt.h"
 #include "utils/InitializePasses.h"
 #include "utils/MergeGEP.h"
@@ -56,6 +57,10 @@ static llvm::cl::opt<std::string>
     InputFilename(llvm::cl::Positional,
                   llvm::cl::desc("<input LLVM bitcode file>"),
                   llvm::cl::Required, llvm::cl::value_desc("filename"));
+
+static llvm::cl::opt<std::string>
+    OriginFilePass("c", llvm::cl::desc("Input sourcecode file path"),
+                    llvm::cl::init("FILE NAME"), llvm::cl::value_desc("filename"));
 
 static llvm::cl::opt<std::string>
     OutputFilename("bpl", llvm::cl::desc("Output Boogie filename"),
@@ -158,7 +163,7 @@ int main(int argc, char **argv) {
 
   llvm::initializeCodifyStaticInitsPass(Registry);
   llvm::initializeDevirtualizePass(Registry);
-  llvm::initializeRemovePtrToIntPass(Registry);
+  //llvm::initializeRemovePtrToIntPass(Registry);
 
   llvm::legacy::PassManager pass_manager;
 
@@ -175,15 +180,15 @@ int main(int argc, char **argv) {
     // internalize all functions and globals and preserve key globals
     pass_manager.add(llvm::createInternalizePass(PreserveKeyGlobals));
    
-    pass_manager.add(llvm::createGlobalDCEPass());
-    pass_manager.add(llvm::createDeadCodeEliminationPass());
-    pass_manager.add(llvm::createGlobalDCEPass());
-    pass_manager.add(llvm::createDeadCodeEliminationPass());
+    // pass_manager.add(llvm::createGlobalDCEPass());
+    // pass_manager.add(llvm::createDeadCodeEliminationPass());
+    // pass_manager.add(llvm::createGlobalDCEPass());
+    // pass_manager.add(llvm::createDeadCodeEliminationPass());
     //TODOsh: modify this pass for later verification
     //pass_manager.add(new smack::RemoveDeadDefs());
   }
   
-  pass_manager.add(seadsa::createRemovePtrToIntPass());
+  //pass_manager.add(seadsa::createRemovePtrToIntPass());
   pass_manager.add(llvm::createLowerSwitchPass());
   // pass_manager.add(llvm::createCFGSimplificationPass());
   // Shaobo: sea-dsa is inconsistent with the pass below.
@@ -270,6 +275,7 @@ int main(int argc, char **argv) {
     // TODOsh: currently the symbolic execution is in this pass
     pass_manager.add(new smack::SmackModuleGenerator());
     pass_manager.add(new smack::MemSafeVerifier());
+    pass_manager.add(new smack::ViolationPathGen(OriginFilePass));
     pass_manager.add(new smack::BplFilePrinter(F->os()));
   }
 

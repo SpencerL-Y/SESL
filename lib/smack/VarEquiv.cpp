@@ -26,7 +26,7 @@ namespace smack
         if(varAllocEqualMap.find(name) != varAllocEqualMap.end()){
             return varAllocEqualMap[name];
         } else {
-            return "$none"; 
+            return "$Null"; 
         }
     }
 
@@ -39,27 +39,33 @@ namespace smack
     }
 
     void VarEquiv::debugPrint(){
+        if(FULL_DEBUG &&  OPEN_VAREQUIV_PRINT){
         DEBUG_WITH_COLOR(std::cout << "Debug VarEquiv: " << std::endl, color::green);
         for(auto i : this->varAllocEqualMap){
             DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
         }
         DEBUG_WITH_COLOR(std::cout << "Debug BlkLinkName: " << std::endl, color::green);
         for(auto i : this->pointsToBlkMap){
-            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
+            DEBUG_WITH_COLOR(std::cout << "PtrName: " << i.first << "| AllocName: " << i.second << std::endl, color::green);
         }
         DEBUG_WITH_COLOR(std::cout << "Debug Offset:" << std::endl, color::green);
         for(auto i : this->pointsToBlkOffset) {
-            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
+            DEBUG_WITH_COLOR(std::cout << "PtrName: " << i.first << "| Offset: " << i.second << std::endl, color::green);
         }
         DEBUG_WITH_COLOR(std::cout << "Debug IntVal: " << std::endl, color::green);
         for(auto i : this->varToIntVal){
-            DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Val: " << i.second << std::endl, color::green);
+            DEBUG_WITH_COLOR(std::cout << "DataName: " << i.first << "| Val: " << i.second << std::endl, color::green);
+        }
+        DEBUG_WITH_COLOR(std::cout << "Debug Data to Ptr: " << std::endl, color::green);
+        for(auto i : this->varToIntVal){
+            DEBUG_WITH_COLOR(std::cout << "DataName: " << i.first << "| PtrName: " << i.second << std::endl, color::green);
         }
         DEBUG_WITH_COLOR(std::cout << "Debug freedBlkName: " << std::endl, color::green);
         for(auto i : this->getFreedBlkName()){
             DEBUG_WITH_COLOR(std::cout << i << " ";, color::green);
         }
         DEBUG_WITH_COLOR(std::cout << std::endl;, color::green);
+        }
     }
     // name2blk operations
 
@@ -77,7 +83,7 @@ namespace smack
            pointsToBlkMap.find(blkname) != pointsToBlkMap.end()){
             pointsToBlkMap[newname] = pointsToBlkMap[blkname];
         } else {
-            CFDEBUG(std::cout << "ERROR: VarEquiv new blk name exists " <<  newname << " " << blkname << " "  << (pointsToBlkMap.find(newname) == pointsToBlkMap.end()) << " " << (pointsToBlkMap.find(blkname) != pointsToBlkMap.end()) << std::endl);
+            CFDEBUG(std::cout << "WARNING: VarEquiv new blk name exists " <<  newname << " " << blkname << " "  << (pointsToBlkMap.find(newname) == pointsToBlkMap.end()) << " " << (pointsToBlkMap.find(blkname) != pointsToBlkMap.end()) << std::endl);
         }
     }
 
@@ -86,7 +92,17 @@ namespace smack
             return pointsToBlkMap[name];
         } else {
             CFDEBUG(std::cout << "ERROR: getBlkName error: " << name << std::endl;);
-            return nullptr;
+            return "$Null";
+        }
+    }
+
+
+    void VarEquiv::modifyBlkName(std::string name, std::string newBlkname){
+        if(pointsToBlkMap.find(name) != pointsToBlkMap.end()){
+            pointsToBlkMap[name] = newBlkname;
+        } else {
+            CFDEBUG(std::cout << "ERROR: modifyBlkName error: " << name << std::endl;);
+            return;
         }
     }
 
@@ -103,9 +119,19 @@ namespace smack
 
     void VarEquiv::addNewOffset(std::string name, int offset){
         if(this->pointsToBlkOffset.find(name) != this->pointsToBlkOffset.end()){
-            DEBUG_WITH_COLOR(std::cout << "name,offset: " << name << ", " << offset << " already exists. " << std::endl, color::green);
+            CFDEBUG(std::cout << "name,offset: " << name << ", " << offset << " already exists. " << std::endl;);
         } else {
             this->pointsToBlkOffset[name] = offset;
+        }
+    }
+
+
+    void VarEquiv::modifyOffset(std::string name, int newOffset){
+        if(this->pointsToBlkOffset.find(name) != this->pointsToBlkOffset.end()){
+            this->pointsToBlkOffset[name] = newOffset;
+        } else {
+            CFDEBUG(std::cout << "ERROR: offset not exist, modify failed.." << std::endl;);
+            return;
         }
     }
 
@@ -113,7 +139,8 @@ namespace smack
         if(this->pointsToBlkOffset.find(name) != this->pointsToBlkOffset.end()){
             return pointsToBlkOffset[name];
         } else {
-            DEBUG_WITH_COLOR(std::cout << "ERROR: VarEquiv blkoffset no name exists. " << std::endl, color::green);
+            // TODOsh: find what may cause this negative ERROR
+            CFDEBUG(std::cout << "ERROR: VarEquiv blkoffset no name exists. " << name << std::endl);
             return -1;
         }
     }
@@ -123,7 +150,7 @@ namespace smack
         if(this->varToIntVal.find(name) == this->varToIntVal.end()){
             this->varToIntVal[name] = val;
         } else {
-            DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap no name exists. " << std::endl, color::green);
+            CFDEBUG(std::cout << "ERROR: VarIntMap no name exists. " << std::endl);
         }
     }
 
@@ -134,9 +161,9 @@ namespace smack
         } else {
             if((this->varToIntVal.find(newname) ==  this->varToIntVal.end()) && (this->varToIntVal.find(oldname) ==  this->varToIntVal.end())
             ){  
-                DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl, color::green);
+                CFDEBUG(std::cout << "WARNING: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl);
             } else {
-                DEBUG_WITH_COLOR(std::cout << "ERROR: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl, color::green);
+                CFDEBUG(std::cout << "ERROR: VarIntMap link error. Newname: " << (this->varToIntVal.find(newname) !=  this->varToIntVal.end()) << " OldName: " << (this->varToIntVal.find(oldname) !=  this->varToIntVal.end()) << " " << newname << " " << oldname << std::endl);
             }
             
         }
@@ -146,10 +173,10 @@ namespace smack
         if(this->varToIntVal.find(name) != this->varToIntVal.end()){
             return std::pair<bool, int>(true, this->varToIntVal[name]);
         } else {
-            if(!name.find("$p")){
-                DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl, color::green);
+            if(!name.find("$p") == std::string::npos && name.find("$") != std::string::npos){
+                CFDEBUG(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl);
             } else {
-                DEBUG_WITH_COLOR(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl, color::green);
+                CFDEBUG(std::cout << "WARNING: VarIntMap get warning. " << name << std::endl);
             }
             
             return std::pair<bool, int>(false, 0);
@@ -158,14 +185,14 @@ namespace smack
     // isAllocPtr operations
 
     void VarEquiv::setStructArrayPtr(std::string name, bool val){
-        assert(name.find("$p") != std::string::npos);
+        assert(name.find("$p") != std::string::npos || name.find("$") == std::string::npos);
         this->structArrayPtr[name] = val;
     }
 
 
     
     bool VarEquiv::isStructArrayPtr(std::string name){
-        assert(name.find("$p") != std::string::npos);
+        //assert(name.find("$p") != std::string::npos || name.find("$") == std::string::npos);
         return this->structArrayPtr[name];
     }
 

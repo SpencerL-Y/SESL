@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <set>
 #include <memory>
 #include "z3++.h"
 #include "utils/TranslatorUtil.h"
@@ -58,11 +59,13 @@ namespace smack {
     };
 
     enum ErrType{
-        INVALID_FREE,
-        NULL_REF,
-        OUT_OF_RANGE,
-        STORE_EMP,
-        LOAD_EMP
+        // memory safety error
+        VALID_FREE,
+        VALID_DEREF,
+        VALID_MEMTRACK,
+        VALID_MEMCLEANUP,
+        // UNKNOWN situation
+        UNKNOWN    
     };
 
     class Expr {
@@ -81,7 +84,7 @@ namespace smack {
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const;
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const;
 
         static const Expr *exists(std::list<Binding>, const Expr *e);
 
@@ -200,7 +203,7 @@ namespace smack {
         BinExpr(const Binary b, const Expr *l, const Expr *r)
                 : op(b), lhs(l), rhs(r) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
@@ -228,7 +231,7 @@ namespace smack {
     public:
         FunExpr(std::string f, std::list<const Expr *> xs) : fun(f), args(xs) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -249,7 +252,7 @@ namespace smack {
     public:
         BoolLit(bool b) : val(b) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
@@ -269,8 +272,8 @@ namespace smack {
 
     public:
         RModeLit(RModeKind v) : val(v) {}
-\
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
         
         //virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
@@ -304,7 +307,7 @@ namespace smack {
         
         void print(std::ostream &os) const;
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
@@ -312,7 +315,7 @@ namespace smack {
 
         ExprType getType() const { return ExprType::INT; }
 
-        int getVal() const { return atoi(val.c_str()); }
+        int getVal() const;
 
         bool isVar() const { return false; }
 
@@ -332,7 +335,7 @@ namespace smack {
             val = s.str();
         }
         
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -358,7 +361,7 @@ namespace smack {
         FPLit(std::string v, unsigned ss, unsigned es)
                 : specialValue(v), sigSize(ss), expSize(es) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -375,7 +378,7 @@ namespace smack {
     public:
         StringLit(std::string v) : val(v) {}
         
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -392,7 +395,7 @@ namespace smack {
     public:
         NegExpr(const Expr *e) : expr(e) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -411,7 +414,7 @@ namespace smack {
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -438,7 +441,7 @@ namespace smack {
     public:
         QuantExpr(Quantifier q, std::list<Binding> vs, const Expr *e)
                 : quant(q), vars(vs), expr(e) {}
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -458,7 +461,7 @@ namespace smack {
 
         SelExpr(const Expr *a, const Expr *i)
                 : base(a), idxs(std::list<const Expr *>(1, i)) {}
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -481,7 +484,7 @@ namespace smack {
         UpdExpr(const Expr *a, const Expr *i, const Expr *v)
                 : base(a), idxs(std::list<const Expr *>(1, i)), val(v) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -494,15 +497,19 @@ namespace smack {
 
     class VarExpr : public Expr {
         std::string var;
+        // TODOsh: implement and modify to make it compatible with bytewise
+        bool isByteLevel;
+        std::vector<const VarExpr*> byteVars;
 
+        bool isGlobalVar(std::set<std::string> globalVarNames) const;
     public:
-        VarExpr(std::string v) : var(v) {}
-
+        VarExpr(std::string v) : var(v), isByteLevel(false) {}
+        VarExpr(std::string v, std::vector<const VarExpr*> bv) : var(v), isByteLevel(true), byteVars(bv) {}
         std::string name() const { return var; }
 
         z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const override;
 
@@ -526,7 +533,7 @@ namespace smack {
 
         void print(std::ostream &os) const;
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
@@ -546,7 +553,7 @@ namespace smack {
         BvExtract(const Expr *var, const Expr *upper, const Expr *lower)
                 : var(var), upper(upper), lower(lower) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -564,7 +571,7 @@ namespace smack {
     public:
         BvConcat(const Expr *left, const Expr *right) : left(left), right(right) {}
 
-        virtual const Expr* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -575,6 +582,8 @@ namespace smack {
         bool isValue() const { return false; }
     };
 
+    
+    class BytePt;
     class SpatialLiteral : public Expr {
     public:
         enum Kind {
@@ -590,15 +599,23 @@ namespace smack {
 
         static const SpatialLiteral *emp();
 
-        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName);
+        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize);
 
-        static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, bool empty);
+        // TODOsh: implement and modify to make it compatible with bytewise
+        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts);
 
-        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName);
+        static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, int byteSize);
 
-        static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, bool empty);
+        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize);
+
+        // TODOsh: implement and modify to make it compatible with bytewise
+        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts);
+
+        static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize);
 
         static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName);
+
+        static const BytePt *bytePt(const Expr* from, const Expr* to);
 
         static const SpatialLiteral *errlit(bool f, ErrType r);
 
@@ -632,29 +649,71 @@ namespace smack {
     };
 
 
+ // TODOsh: implement and modify to make it compatible with bytewise
+    class BytePt : public SpatialLiteral {
+        const Expr* from;
+        const Expr* to;
+        public: 
+            BytePt(const Expr* f, const Expr* t) : from(f), to(t) {}
+            const Expr* getFrom() const { return from; }
+            const Expr* getTo() const { return to; }
+
+            void print(std::ostream &os) const;
+
+            virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+
+    };
+
     class PtLit : public SpatialLiteral {
         const Expr *from;
         const Expr *to;
+        int stepSize;
+        bool isBytewise;
+        std::vector<const BytePt*> bytifiedPts;
+        
 
     public:
-        PtLit(const Expr *f, const Expr *t, std::string blkName) : from(f), to(t) {
+        PtLit(const Expr *f, const Expr *t, std::string blkName, int ss) : from(f), to(t), stepSize(ss), 
+        isBytewise(false)  {
+            setId(SpatialLiteral::Kind::PT);
+            setBlkName(blkName);
+        }
+
+        PtLit(const Expr *f, const Expr* t, std::string blkName, int ss, std::vector<const BytePt*> bpts) :
+        from(f), to(t), stepSize(ss), isBytewise(true), bytifiedPts(bpts)
+        {
             setId(SpatialLiteral::Kind::PT);
             setBlkName(blkName);
         }
 
         void print(std::ostream &os) const;
 
+        bool isByteLevel() const { return this->isBytewise; }
+
+        int getStepSize() const { return this->stepSize; }
+
+        std::vector<const BytePt*> getBytifiedPts() const { return this->bytifiedPts; }
+
         const Expr *getFrom() const { return from; }
 
         const Expr *getTo() const { return to; }
 
+        // TODOsh: implement and modify to make it compatible with bytewise
+        // return the  ith pt predicate in the bytified version 
+        const Expr* getByte(int i) const {return this->bytifiedPts[i];}
+
+        // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
     };
 
+    
+
     class GCPtLit : public PtLit {
     public:
-        GCPtLit(const Expr *f, const Expr *t, std::string blkName) : PtLit(f, t, blkName) {};
+        GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss) : PtLit(f, t, blkName, ss) {};
+        GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::vector<const BytePt*> bgcpts) : PtLit(f,t,blkName, ss, bgcpts) {};
 
+        // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
     };
 
@@ -663,16 +722,23 @@ namespace smack {
         const Expr *from;
         const Expr *to;
         bool isEmptyBlk;
+        int blkByteSize;
     public:
-        BlkLit(const Expr *f, const Expr *t, std::string blkName, bool empty) : from(f), to(t) {
+        BlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize) : from(f), to(t), blkByteSize(byteSize) {
             setId(SpatialLiteral::Kind::BLK);
             setBlkName(blkName);
-            isEmptyBlk = empty;
+            if(byteSize == 0){
+                isEmptyBlk = true;
+            } else {
+                isEmptyBlk = false;
+            }
         }
 
         void print(std::ostream &os) const;
 
         bool isEmpty() const { return isEmptyBlk; }
+
+        int getBlkByteSize() const {return blkByteSize;}
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
 
@@ -683,7 +749,7 @@ namespace smack {
 
     class GCBlkLit : public BlkLit {
     public:
-        GCBlkLit(const Expr *f, const Expr *t, std::string blkName, bool empty) : BlkLit(f, t, blkName, empty) {};
+        GCBlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize) : BlkLit(f, t, blkName, byteSize) {};
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
     };
@@ -786,13 +852,13 @@ namespace smack {
 
         Attr(std::string n, std::list<const Expr *> vs) : name(n), vals(vs) {}
 
-        void print(std::ostream &os) const;
+        std::list<const Expr*> getVals() const {return this->vals;}
 
-        
+        void print(std::ostream &os) const;        
 
         std::string getName() const { return name; }
 
-        virtual const Attr* renameClone(std::string funcName, int usedNum) const;
+        virtual const Attr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const;
 
         static const Attr *attr(std::string s);
 
@@ -878,7 +944,7 @@ namespace smack {
 
         static const Stmt *code(std::string s);
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const;
 
         virtual void print(std::ostream &os) const = 0;
     };
@@ -893,7 +959,7 @@ namespace smack {
 
         void print(std::ostream &os) const;
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         static bool classof(const Stmt *S) { return S->getKind() == ASSERT; }
     };
@@ -912,7 +978,7 @@ namespace smack {
 
         std::list<const Expr *> getRhs() const { return rhs; }
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         static bool classof(const Stmt *S) { return S->getKind() == ASSIGN; }
     };
@@ -933,12 +999,13 @@ namespace smack {
             }
             return false;
         }
+        std::list<const Attr*> getAttrs() const { return this->attrs;};
 
         void print(std::ostream &os) const;
 
         const Expr *getExpr() const { return expr; }
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         static bool classof(const Stmt *S) { return S->getKind() == ASSUME; }
     };
@@ -952,7 +1019,7 @@ namespace smack {
 
         void print(std::ostream &os) const;
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         SHExprPtr getSymbHeap() const { return symbheap; }
 
@@ -974,7 +1041,7 @@ namespace smack {
 
         void print(std::ostream &os) const;
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         std::string getProc() const { return this->proc; }
 
@@ -993,7 +1060,7 @@ namespace smack {
     public:
         Comment(std::string s) : Stmt(COMMENT), str(s) {}
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1008,7 +1075,7 @@ namespace smack {
 
         GotoStmt(std::list<std::string> ts) : Stmt(GOTO), targets(ts) {}
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1021,7 +1088,7 @@ namespace smack {
     public:
         HavocStmt(std::list<std::string> vs) : Stmt(HAVOC), vars(vs) {}
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1036,7 +1103,7 @@ namespace smack {
 
         ReturnStmt(const Expr *e = nullptr) : Stmt(RETURN), expr(e) {}
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1049,7 +1116,7 @@ namespace smack {
     public:
         CodeStmt(std::string s) : Stmt(CODE), code(s) {}
 
-        virtual const Stmt* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1088,7 +1155,7 @@ namespace smack {
     public:
         virtual ~Decl() {}
 
-        virtual const Decl* renameClone(std::string funcName, int usedNum) const;
+        virtual const Decl* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const;
 
         virtual void print(std::ostream &os) const = 0;
 
@@ -1147,7 +1214,7 @@ namespace smack {
     public:
         AxiomDecl(std::string n, const Expr *e) : Decl(AXIOM, n, {}), expr(e) {}
 
-        virtual const Decl* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Decl* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1163,6 +1230,9 @@ namespace smack {
                 : Decl(CONSTANT, n, ax), type(t), unique(u) {}
 
         void print(std::ostream &os) const;
+
+        std::list<const Attr*> getAttrs() const {return this->attrs;}
+
         bool isGlobalVariable() {
             for (auto attr : this->attrs) {
                 auto name = attr->getName();
@@ -1170,6 +1240,8 @@ namespace smack {
             }
             return false;
         }
+
+        std::string getType() const { return this->type;}
         static bool classof(const Decl *D) { return D->getKind() == CONSTANT; }
     };
 
@@ -1183,7 +1255,7 @@ namespace smack {
                  std::string t, const Expr *b)
                 : Decl(FUNCTION, n, ax), params(ps), type(t), body(b) {}
 
-        virtual const Decl* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Decl* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1198,7 +1270,7 @@ namespace smack {
 
         VarDecl(std::string n, std::string t) : Decl(VARIABLE, n, {}), type(t) {}
 
-        virtual const Decl* renameClone(std::string funcName, int usedNum) const override;
+        virtual const Decl* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
 
@@ -1380,7 +1452,7 @@ namespace smack {
 
         DeclarationList &getDeclarations() { return decls; }
 
-        void appendPrelude(std::string s) { prelude += s; }
+        void appendPrelude(std::string s) { /*prelude += s;*/ }
     };
 
     std::ostream &operator<<(std::ostream &os, const Expr &e);

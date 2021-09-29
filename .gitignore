@@ -42,3 +42,6 @@ corraldebug.out
 build
 
 *.log
+
+# VSCode 
+.vscode

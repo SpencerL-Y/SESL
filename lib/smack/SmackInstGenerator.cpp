@@ -56,9 +56,6 @@ Type *getElemType(const Type *t, unsigned idx) {
 }
 
 void SmackInstGenerator::emit(const Stmt *s) {
-  // stringstream str;
-  // s->print(str);
-  // SDEBUG(llvm::errs() << "emit:   " << str.str() << "\n");
   currBlock->addStmt(s);
 }
 
@@ -101,13 +98,13 @@ void SmackInstGenerator::annotate(llvm::Instruction &I, Block *B) {
       return;
     }
   }
-
   if (SmackOptions::SourceLocSymbols && I.getMetadata("dbg")) {
     const DebugLoc DL = I.getDebugLoc();
     auto *scope = cast<DIScope>(DL.getScope());
-    // TODOsh: remove annot 
-    //B->addStmt(Stmt::annot(Attr::attr("sourceloc", scope->getFilename().str(),
-                                      //DL.getLine(), DL.getCol())));
+    if (SmackOptions::AddLineInfo) {
+        B->addStmt(Stmt::annot(Attr::attr("sourceloc", scope->getFilename().str(),
+                                          DL.getLine(), DL.getCol())));
+    }
   }
 
   // https://stackoverflow.com/questions/22138947/reading-metadata-from-instruction
@@ -134,7 +131,7 @@ void SmackInstGenerator::annotate(llvm::Instruction &I, Block *B) {
         }
       }
       //TODOsh: remove annot
-      //B->addStmt(Stmt::annot(Attr::attr(name, attrs)));
+//      B->addStmt(Stmt::annot(Attr::attr(name, attrs)));
     }
   }
 }

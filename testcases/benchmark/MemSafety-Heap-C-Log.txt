@@ -1,0 +1,1007 @@
+Adding testcase [memleaks_test17_1-1]
+Adding testcase [memleaks_test20-1]
+Adding testcase [memleaks_test11]
+Adding testcase [ArraysOfVariableLength2_-read]
+Adding testcase [test-0235-3]
+Adding testcase [memleaks_test1-1]
+Adding testcase [test-0158-2]
+Adding testcase [test-0232-2]
+Adding testcase [StructInitialization2]
+Adding testcase [lockfree-3.0]
+Adding testcase [memleaks_test12-2]
+Adding testcase [memleaks_test22_1-1]
+Adding testcase [memleaks_test1-3]
+Adding testcase [complex_data_creation_test01-2]
+Adding testcase [memsetNonZero2_-write]
+Adding testcase [memleaks_test8_2]
+Adding testcase [ArraysOfVariableLength6]
+Adding testcase [ArraysWithLenghtAtDeclaration]
+Adding testcase [test-bitfields-1-1]
+Adding testcase [memleaks_test16_1]
+Adding testcase [test-0137]
+Adding testcase [20020406-1]
+Adding testcase [memsetNonZero2]
+Adding testcase [test-0232-3]
+Adding testcase [ArraysWithLenghtAtDeclaration_-read]
+Adding testcase [memleaks_test22_4]
+Adding testcase [memleaks_test19-1]
+Adding testcase [test-bitfields-3-1]
+Adding testcase [test-0019-1]
+Adding testcase [test-0220]
+Adding testcase [memleaks_test20-2]
+Adding testcase [memleaks_test23_4]
+Adding testcase [memleaks_test3-2]
+Adding testcase [complex_data_creation_test01-1]
+Adding testcase [memleaks_test9_2]
+Adding testcase [memleaks_test22_2-1]
+Adding testcase [memleaks_test16]
+Adding testcase [memleaks_test18_2]
+Adding testcase [test-0504]
+Adding testcase [memleaks_test17_1-2]
+Adding testcase [memleaks_test23_3]
+Adding testcase [test-0234-1]
+Adding testcase [lockfree-3.1]
+Adding testcase [test-0217]
+Adding testcase [memleaks_test14_2]
+Adding testcase [memleaks_test17_3]
+Adding testcase [test-0158-3]
+Adding testcase [complex_data_creation_test02-2]
+Adding testcase [memleaks_test22_1-2]
+Adding testcase [memleaks_test23_2]
+Adding testcase [memleaks_test14]
+Adding testcase [test-0218]
+Adding testcase [memleaks_test19-2]
+Adding testcase [memleaks_test18_3]
+Adding testcase [memleaks_test15-1]
+Adding testcase [split_list_test05-1]
+Adding testcase [test-bitfields-2-1]
+Adding testcase [memleaks_test3-1]
+Adding testcase [test-0235-1]
+Adding testcase [memleaks_test9_1]
+Adding testcase [memleaks_test17_2-1]
+Adding testcase [memset3]
+Adding testcase [memsetNonZero_-write]
+Adding testcase [c.03-alloca-2]
+Adding testcase [memleaks_test4-1]
+Adding testcase [StructInitialization]
+Adding testcase [memleaks_test22_3-2]
+Adding testcase [optional_data_creation_test04-2]
+Adding testcase [memleaks_test13]
+Adding testcase [memleaks_test23_1]
+Adding testcase [ArraysOfVariableLength_-read]
+Adding testcase [lockfree-3.3]
+Adding testcase [test-0513]
+Adding testcase [memleaks_test5_2]
+Adding testcase [test-0019-2]
+Adding testcase [test-bitfields-1-2]
+Adding testcase [test-0219]
+Adding testcase [memleaks_test6_2]
+Adding testcase [memsetNonZero3]
+Adding testcase [complex_data_creation_test02-1]
+Adding testcase [memleaks_test14_1]
+Adding testcase [length_test03-1]
+Adding testcase [memset]
+Adding testcase [memleaks_test14_3]
+Adding testcase [test-0134]
+Adding testcase [test-bitfields-3.1-1]
+Adding testcase [ArraysOfVariableLength5]
+Adding testcase [test-0237]
+Adding testcase [memleaks_test18_1]
+Adding testcase [memleaks_test22_5]
+Adding testcase [960521-1-3]
+Adding testcase [test-0232-1]
+Adding testcase [test-0214]
+Adding testcase [memleaks_test5_1]
+Adding testcase [ArraysWithLenghtAtDeclaration_-write]
+Adding testcase [memleaks_test10-2]
+Adding testcase [test-0235-2]
+Adding testcase [test-memleak_nexttime]
+Adding testcase [memsetNonZero]
+Adding testcase [memleaks_test21-1]
+Adding testcase [cmp-freed-ptr]
+Adding testcase [memleaks_test16_2]
+Adding testcase [memleaks_test22_3-1]
+Adding testcase [ArraysOfVariableLength2_-write]
+Adding testcase [memleaks_test11_1]
+Adding testcase [memleaks_test5]
+Adding testcase [memleaks_test13_2]
+Adding testcase [memleaks_test9]
+Adding testcase [test-0236]
+Adding testcase [memleaks_test21-2]
+Adding testcase [memleaks_test13_1]
+Adding testcase [memleaks_test6_1]
+Adding testcase [test-0102-2]
+Adding testcase [memleaks_test8]
+Adding testcase [ArraysOfVariableLength_-write]
+Adding testcase [960521-1-1]
+Adding testcase [memset2_-write]
+Adding testcase [memleaks_test6_3]
+Adding testcase [memleaks_test11_2]
+Adding testcase [memleaks_test10-1]
+Adding testcase [StructInitialization1]
+Adding testcase [memset_-write]
+Adding testcase [memleaks_test7-2]
+Adding testcase [test-0158-1]
+Adding testcase [memleaks_test18]
+Adding testcase [memset3_-write]
+Adding testcase [960521-1-2]
+Adding testcase [memsetNonZero3_-write]
+Adding testcase [test-0234-2]
+Adding testcase [memleaks_test8_1]
+Adding testcase [memleaks_test15-2]
+Adding testcase [test-bitfields-2.1-1]
+Adding testcase [lockfree-3.2]
+Adding testcase [test-bitfields-3.1-2]
+Adding testcase [test-bitfields-3-2]
+Adding testcase [ArraysOfVariableLength2]
+Adding testcase [memleaks_test12-1]
+Adding testcase [test-0102-1]
+Adding testcase [length_test03-2]
+Adding testcase [test-bitfields-2.1-2]
+Adding testcase [test-0521]
+Adding testcase [optional_data_creation_test04-1]
+Adding testcase [split_list_test05-2]
+Adding testcase [memleaks_test6]
+Adding testcase [memleaks_test4-2]
+Adding testcase [memleaks_test22_2-2]
+Adding testcase [memleaks_test1-2]
+Adding testcase [20051113-1]
+Adding testcase [memleaks_test17_2-2]
+Adding testcase [memleaks_test7-1]
+Adding testcase [ArraysOfVariableLength4]
+Adding testcase [memset2]
+Adding testcase [test-bitfields-2-2]
+Adding testcase [ArraysOfVariableLength]
+Running test: [memleaks_test17_1-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test20-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test11.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [ArraysOfVariableLength2_-read.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [test-0235-3.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test1-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0158-2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-0232-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [StructInitialization2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [lockfree-3.0.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test12-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test22_1-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test1-3.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [complex_data_creation_test01-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memsetNonZero2_-write.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test8_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [ArraysOfVariableLength6.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [ArraysWithLenghtAtDeclaration.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-bitfields-1-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [memleaks_test16_1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0137.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [20020406-1.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memsetNonZero2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0232-3.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [ArraysWithLenghtAtDeclaration_-read.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test22_4.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test19-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-bitfields-3-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [test-0019-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0220.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memleaks_test20-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test23_4.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test3-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [complex_data_creation_test01-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test9_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test22_2-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test16.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test18_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0504.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [memleaks_test17_1-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test23_3.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0234-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [lockfree-3.1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0217.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memleaks_test14_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test17_3.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0158-3.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [complex_data_creation_test02-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test22_1-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test23_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test14.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0218.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memleaks_test19-2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test18_3.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test15-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [split_list_test05-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-bitfields-2-1.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memleaks_test3-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0235-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test9_1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test17_2-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memset3.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memsetNonZero_-write.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [c.03-alloca-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test4-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [StructInitialization.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test22_3-2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [optional_data_creation_test04-2.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [memleaks_test13.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test23_1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [ArraysOfVariableLength_-read.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [lockfree-3.3.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0513.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test5_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0019-2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-bitfields-1-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [test-0219.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [memleaks_test6_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memsetNonZero3.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [complex_data_creation_test02-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [memleaks_test14_1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [length_test03-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memset.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test14_3.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0134.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [test-bitfields-3.1-1.i]
+Tool: RAISE EXCEPTION
+Real: SAFE
+
+Running test: [ArraysOfVariableLength5.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0237.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test18_1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test22_5.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [960521-1-3.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-0232-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-0214.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memleaks_test5_1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [ArraysWithLenghtAtDeclaration_-write.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test10-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0235-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-memleak_nexttime.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memsetNonZero.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test21-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [cmp-freed-ptr.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memleaks_test16_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test22_3-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [ArraysOfVariableLength2_-write.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memleaks_test11_1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test5.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test13_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test9.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0236.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test21-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test13_1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test6_1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0102-2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test8.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [ArraysOfVariableLength_-write.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [960521-1-1.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [memset2_-write.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test6_3.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test11_2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test10-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [StructInitialization1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memset_-write.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [memleaks_test7-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-0158-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test18.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memset3_-write.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [960521-1-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memsetNonZero3_-write.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [test-0234-2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test8_1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [memleaks_test15-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-bitfields-2.1-1.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [lockfree-3.2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-bitfields-3.1-2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [test-bitfields-3-2.i]
+Tool: UNSAFE
+Real: UNSAFE
+
+Running test: [ArraysOfVariableLength2.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [memleaks_test12-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-0102-1.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [length_test03-2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [test-bitfields-2.1-2.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [test-0521.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [optional_data_creation_test04-1.i]
+Tool: RAISE EXCEPTION
+Real: UNSAFE
+
+Running test: [split_list_test05-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test6.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test4-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test22_2-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test1-2.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [20051113-1.i]
+Tool: UNKNOWN
+Real: UNSAFE
+
+Running test: [memleaks_test17_2-2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memleaks_test7-1.i]
+Tool: SAFE
+Real: UNSAFE
+
+Running test: [ArraysOfVariableLength4.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [memset2.i]
+Tool: SAFE
+Real: SAFE
+
+Running test: [test-bitfields-2-2.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Running test: [ArraysOfVariableLength.i]
+Tool: UNKNOWN
+Real: SAFE
+
+Success verified: 66
+Test [memleaks_test11] is [SAFE]:
+Test [test-0158-2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [test-0232-2] is [SAFE]:
+Test [StructInitialization2] is [SAFE]:
+Test [lockfree-3.0] is [SAFE]:
+Test [memleaks_test12-2] is [SAFE]:
+Test [memleaks_test1-3] is [SAFE]:
+Test [complex_data_creation_test01-2] is [SAFE]:
+Test [ArraysOfVariableLength6] is [SAFE]:
+Test [ArraysWithLenghtAtDeclaration] is [SAFE]:
+Test [memsetNonZero2] is [SAFE]:
+Test [test-0232-3] is [UNSAFE]:
+Real error:	 ['valid-free']
+Inferred error:	 ['INVALID_FREE']
+Test [memleaks_test19-1] is [SAFE]:
+Test [test-0019-1] is [SAFE]:
+Test [memleaks_test20-2] is [SAFE]:
+Test [memleaks_test3-2] is [SAFE]:
+Test [memleaks_test16] is [SAFE]:
+Test [memleaks_test17_1-2] is [SAFE]:
+Test [memleaks_test23_3] is [SAFE]:
+Test [test-0234-1] is [SAFE]:
+Test [test-0158-3] is [UNSAFE]:
+Real error:	 ['valid-free']
+Inferred error:	 ['INVALID_FREE']
+Test [memleaks_test22_1-2] is [SAFE]:
+Test [memleaks_test14] is [SAFE]:
+Test [memset3] is [SAFE]:
+Test [c.03-alloca-2] is [SAFE]:
+Test [StructInitialization] is [SAFE]:
+Test [memleaks_test13] is [SAFE]:
+Test [memleaks_test23_1] is [SAFE]:
+Test [test-0513] is [SAFE]:
+Test [test-0019-2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [memsetNonZero3] is [SAFE]:
+Test [length_test03-1] is [SAFE]:
+Test [memset] is [SAFE]:
+Test [ArraysOfVariableLength5] is [SAFE]:
+Test [test-0237] is [SAFE]:
+Test [960521-1-3] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Inferred error:	 ['INVALID_DEREF']
+Test [test-0232-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Inferred error:	 ['MemLeak']
+Test [memleaks_test10-2] is [SAFE]:
+Test [test-0235-2] is [SAFE]:
+Test [test-memleak_nexttime] is [SAFE]:
+Test [memsetNonZero] is [SAFE]:
+Test [cmp-freed-ptr] is [UNSAFE]:
+Real error:	 ['valid-free']
+Inferred error:	 ['INVALID_FREE']
+Test [memleaks_test22_3-1] is [SAFE]:
+Test [memleaks_test5] is [SAFE]:
+Test [memleaks_test9] is [SAFE]:
+Test [test-0236] is [SAFE]:
+Test [memleaks_test21-2] is [SAFE]:
+Test [memleaks_test8] is [SAFE]:
+Test [960521-1-1] is [UNSAFE]:
+Real error:	 ['valid-free']
+Inferred error:	 ['INVALID_FREE']
+Test [StructInitialization1] is [SAFE]:
+Test [memleaks_test7-2] is [SAFE]:
+Test [test-0158-1] is [SAFE]:
+Test [memleaks_test18] is [SAFE]:
+Test [960521-1-2] is [SAFE]:
+Test [memleaks_test15-2] is [SAFE]:
+Test [test-bitfields-3.1-2] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Inferred error:	 ['INVALID_DEREF']
+Test [test-bitfields-3-2] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Inferred error:	 ['INVALID_DEREF']
+Test [test-0102-1] is [SAFE]:
+Test [test-0521] is [SAFE]:
+Test [split_list_test05-2] is [SAFE]:
+Test [memleaks_test6] is [SAFE]:
+Test [memleaks_test4-2] is [SAFE]:
+Test [memleaks_test22_2-2] is [SAFE]:
+Test [memleaks_test17_2-2] is [SAFE]:
+Test [ArraysOfVariableLength4] is [SAFE]:
+Test [memset2] is [SAFE]:
+
+
+Unknown result: 18
+Test: ArraysOfVariableLength2_-read
+Test: test-0137
+Test: 20020406-1
+Test: test-0220
+Test: test-0217
+Test: test-0218
+Test: test-bitfields-2-1
+Test: ArraysOfVariableLength_-read
+Test: test-0219
+Test: test-0134
+Test: test-0214
+Test: ArraysOfVariableLength2_-write
+Test: ArraysOfVariableLength_-write
+Test: test-bitfields-2.1-1
+Test: ArraysOfVariableLength2
+Test: 20051113-1
+Test: test-bitfields-2-2
+Test: ArraysOfVariableLength
+
+
+Unmatch result: 53
+Test [memleaks_test17_1-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test20-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [test-0235-3] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Test [memleaks_test1-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test22_1-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test8_2] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [memleaks_test16_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [ArraysWithLenghtAtDeclaration_-read] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Test [memleaks_test22_4] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test23_4] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Test [complex_data_creation_test01-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test9_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test22_2-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test18_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [lockfree-3.1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test14_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test17_3] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test23_2] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Test [memleaks_test19-2] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [memleaks_test18_3] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test15-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [split_list_test05-1] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Test [memleaks_test3-1] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [test-0235-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test9_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test17_2-1] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [memleaks_test4-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test22_3-2] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Test [lockfree-3.3] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test5_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test6_2] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [memleaks_test14_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test14_3] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Test [memleaks_test18_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test22_5] is [UNSAFE]:
+Real error:	 ['valid-deref']
+Test [memleaks_test5_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test21-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test16_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test11_1] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [memleaks_test13_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test13_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test6_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [test-0102-2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test6_3] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test11_2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test10-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [test-0234-2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test8_1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [lockfree-3.2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test12-1] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [length_test03-2] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+Test [memleaks_test1-2] is [UNSAFE]:
+Real error:	 ['valid-free']
+Test [memleaks_test7-1] is [UNSAFE]:
+Real error:	 ['valid-memtrack']
+
+
+Raise exception: 17
+memsetNonZero2_-write
+test-bitfields-1-1
+test-bitfields-3-1
+test-0504
+complex_data_creation_test02-2
+memsetNonZero_-write
+optional_data_creation_test04-2
+test-bitfields-1-2
+complex_data_creation_test02-1
+test-bitfields-3.1-1
+ArraysWithLenghtAtDeclaration_-write
+memset2_-write
+memset_-write
+memset3_-write
+memsetNonZero3_-write
+test-bitfields-2.1-2
+optional_data_creation_test04-1

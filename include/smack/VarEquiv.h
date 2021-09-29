@@ -31,6 +31,7 @@ namespace smack
         std::map<std::string, int> varToIntVal;
     // structArrayPtr: remember the ptr created by alloc, which is used when struct and array are used
         std::map<std::string, bool> structArrayPtr;
+    
     // freedBlkName: a set used to store the blkNames freed, used to find double free
         std::set<std::string> freedBlkName;
     
@@ -41,6 +42,7 @@ namespace smack
             this->addNewVal("$Null", 0);
             this->addNewBlkName("$Null");
             this->addNewOffset("$Null", 0);
+            
         };
         ~VarEquiv() {};
         // varAllocEqualMap operations
@@ -53,10 +55,12 @@ namespace smack
         void addNewBlkName(std::string name);
         void linkBlkName(std::string newname, std::string blkname);
         std::string getBlkName(std::string name);
+        void modifyBlkName(std::string name, std::string newBlkname);
         bool hasBlkName(std::string name);
 
         // pointsToBlkOffset operations
         void addNewOffset(std::string name, int offset);
+        void modifyOffset(std::string name, int newOffset);
         int getOffset(std::string name);
 
         // varToIntVal operations
@@ -67,6 +71,7 @@ namespace smack
         // alloc ptr operations
         void setStructArrayPtr(std::string name, bool val);
         bool isStructArrayPtr(std::string name);
+
 
         // freedBlkName operations
         void addNewFreedName(std::string name);
@@ -80,12 +85,14 @@ namespace smack
         std::map<std::string, int> getPointsToBlkOffset();
         std::map<std::string, int> getVarToIntVal();
         std::map<std::string, bool> getStructArrayPtr();
+        std::set<std::string> getUnusedNames();
         std::set<std::string> getFreedBlkName();
         void setVarAllocEqualMap(std::map<std::string, std::string> i);
         void setPointsToBlkMap(std::map<std::string, std::string> i);
         void setPointsToBlkOffset(std::map<std::string, int> i);
         void setVarToIntVal(std::map<std::string, int> i);
         void setStructArrayPtr(std::map<std::string, bool> i);
+        void setUnusedNames(std::set<std::string> i);
         void setFreedBlkName(std::set<std::string> i);
 
 

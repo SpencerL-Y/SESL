@@ -10,6 +10,7 @@
 #include <sstream>
 #include <cstring>
 #include "smack/cfg/CFG.h"
+#include "smack/BlockExecutor.h"
 #include "smack/VarFactory.h"
 #include "utils/CenterDebug.h"
 #include "utils/TranslatorUtil.h"
@@ -164,7 +165,7 @@ namespace smack {
         return new BvConcat(left, right);
     }
 
-    const Expr* Expr::renameClone(std::string funcName, int usedNum) const {
+    const Expr* Expr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         CFDEBUG(std::cout << "WARNING: Default renameClone used" << std::endl;);
         return this;
     }
@@ -289,7 +290,7 @@ namespace smack {
 
     const Stmt *Stmt::code(std::string s) { return new CodeStmt(s); }
 
-    const Stmt *Stmt::renameClone(std::string funcName, int usedNum) const {
+    const Stmt *Stmt::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         const Stmt* clonedStmt = nullptr;
         CFDEBUG(std::cout << "ERROR: This should be solved by children.." << std::endl;);
         return clonedStmt;
@@ -518,9 +519,9 @@ namespace smack {
         os << " " << rhs << ")";
     }
 
-    const Expr* BinExpr::renameClone(std::string funcName, int usedNum) const {
-        const Expr* renamedLhs = this->lhs->renameClone(funcName, usedNum);
-        const Expr* renamedRhs = this->rhs->renameClone(funcName, usedNum);
+    const Expr* BinExpr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
+        const Expr* renamedLhs = this->lhs->renameClone(funcName, usedNum, usedVarNames);
+        const Expr* renamedRhs = this->rhs->renameClone(funcName, usedNum, usedVarNames);
         switch (op) {
             case Iff:
                 return Expr::iff(renamedLhs, renamedRhs);
@@ -599,10 +600,60 @@ namespace smack {
                 res = z3::implies(left, right);
                 break;
             case Or:
-                res = (left or right);
+                if(!lhs->isValue() && !rhs->isValue()){
+                    res = (left or right);
+                } else {
+                    if(lhs->isValue() && !rhs->isValue() && 
+                       lhs->getType() == ExprType::INT){
+                        const IntLit* lhsVal = (const IntLit*) lhs;
+                        bool lhsBool = (lhsVal->getVal() == 0) ? false : true;
+                        res = (z3Ctx.bool_val(lhsBool) or right);
+                    } else if(rhs->isValue() && !lhs->isValue() 
+                           && rhs->getType() == ExprType::INT){
+                        const IntLit* rhsVal = (const IntLit*) rhs;
+                        bool rhsBool = (rhsVal->getVal() == 0) ? false : true;
+                        res = (left or z3Ctx.bool_val(rhsBool));
+                    } else if(rhs->isValue() && lhs->isValue() 
+                           && rhs->getType() == ExprType::INT
+                           && lhs->getType() == ExprType::INT){
+                        const IntLit* lhsVal = (const IntLit*) lhs;
+                        bool lhsBool = (lhsVal->getVal() == 0) ? false : true;
+                        const IntLit* rhsVal = (const IntLit*) rhs;
+                        bool rhsBool = (rhsVal->getVal() == 0) ? false : true;
+                        res = (z3Ctx.bool_val(lhsBool) or z3Ctx.bool_val(rhsBool));
+                    } else {
+                        res = (left or right);
+                    }
+                }
                 break;
             case And:
-                res = (left and right);
+            
+                if(!lhs->isValue() && !rhs->isValue()){
+                    res = (left and right);
+                } else {
+                    if(lhs->isValue() && !rhs->isValue() && 
+                       lhs->getType() == ExprType::INT){
+                        const IntLit* lhsVal = (const IntLit*) lhs;
+                        bool lhsBool = (lhsVal->getVal() == 0) ? false : true;
+                        res = (z3Ctx.bool_val(lhsBool) and right);
+                    } else if(rhs->isValue() && !lhs->isValue() 
+                           && rhs->getType() == ExprType::INT){
+                        const IntLit* rhsVal = (const IntLit*) rhs;
+                        bool rhsBool = (rhsVal->getVal() == 0) ? false : true;
+                        res = (left and z3Ctx.bool_val(rhsBool));
+                    } else if(rhs->isValue() && lhs->isValue() 
+                           && rhs->getType() == ExprType::INT
+                           && lhs->getType() == ExprType::INT){
+                        const IntLit* lhsVal = (const IntLit*) lhs;
+                        bool lhsBool = (lhsVal->getVal() == 0) ? false : true;
+                        const IntLit* rhsVal = (const IntLit*) rhs;
+                        bool rhsBool = (rhsVal->getVal() == 0) ? false : true;
+                        res = (z3Ctx.bool_val(lhsBool) and z3Ctx.bool_val(rhsBool));
+                    } else {
+                        res = (left and right);
+                    }
+                }
+                    
                 break;
             case Eq:
                 // Equality here is regarded as assignment and need to test the type of lhs and rhs
@@ -626,6 +677,7 @@ namespace smack {
 
                     z3::expr resultEquality = z3Ctx.bool_val(true);
                     if (leftVarSize == rightVarSize) {
+                        CFDEBUG(std::cout << "leftVarSize == rightVarSize" << leftVarSize << " " << rightVarSize << std::endl;);
                         for (int index = 0; index < leftVarSize; index++) {
                             resultEquality = (resultEquality &&
                                               (z3Ctx.int_const(
@@ -635,6 +687,7 @@ namespace smack {
                             );
                         }
                     } else if (leftVarSize < rightVarSize) {
+                        //CFDEBUG(std::cout << "leftVarSize < rightVarSize" << leftVarSize << " " << rightVarSize << std::endl;);
                         // Truncated
                         for (int index = 0; index < leftVarSize; index++) {
                             resultEquality = (resultEquality &&
@@ -645,6 +698,7 @@ namespace smack {
                             );
                         }
                     } else if (leftVarSize > rightVarSize) {
+                        //CFDEBUG(std::cout << "leftVarSize > rightVarSize: " << leftVarSize << " " << rightVarSize << std::endl;);
                         // Size extended
                         for (int index = 0; index < leftVarSize; index++) {
                             if (index < rightVarSize) {
@@ -740,10 +794,10 @@ namespace smack {
     std::pair<bool, int> BinExpr::translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const {
         const auto left = lhs->translateToInt(varEquivPtr);
         const auto right = rhs->translateToInt(varEquivPtr);
-        DEBUG_WITH_COLOR(std::cout << "In binExpr TransToInt function!" << std::endl, color::yellow);
+        CDEBUG(std::cout << "In binExpr TransToInt function!" << std::endl;);
         CDEBUG(std::cout << "left: " << left.second << " right: " << right.second << " op: " << op << std::endl);
         if (!(left.first && right.first)) {
-            DEBUG_WITH_COLOR(std::cout << "Can not translate ";this->print(std::cout); std::cout << endl;, color::red);
+            CDEBUG(std::cout << "WARNING: Can not translate ";this->print(std::cout); std::cout << endl;);
             return {false, 0};
         }
         int res = 0;
@@ -771,10 +825,10 @@ namespace smack {
         return {true, res};
     }
 
-    const Expr* FunExpr::renameClone(std::string funcName, int usedNum) const {
+    const Expr* FunExpr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         std::list<const Expr*> renamedArgs;
         for(const Expr* arg :  this->args){
-            renamedArgs.push_back(arg->renameClone(funcName, usedNum));
+            renamedArgs.push_back(arg->renameClone(funcName, usedNum, usedVarNames));
         }
         const Expr* clonedExpr = new FunExpr(this->fun, renamedArgs);
         return clonedExpr;
@@ -785,14 +839,14 @@ namespace smack {
         print_seq<const Expr *>(os, args, "(", ", ", ")");
     }
 
-    const Expr* BoolLit::renameClone(std::string funcName, int usedNum) const {
+    const Expr* BoolLit::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         // No copy since it is a constant
         return this;
     }
 
     void BoolLit::print(std::ostream &os) const { os << (val ? "true" : "false"); }
 
-    const Expr* RModeLit::renameClone(std::string funcName, int usedNum) const {
+    const Expr* RModeLit::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         // No copy since it is a constant
         return this;
     }
@@ -819,7 +873,7 @@ namespace smack {
 
     void IntLit::print(std::ostream &os) const { os << val; }
 
-    const Expr* IntLit::renameClone(std::string funcName, int usedNum) const {
+    const Expr* IntLit::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         return this;
     }
 
@@ -835,13 +889,18 @@ namespace smack {
         return {true, ans};
     }
 
-    const Expr* BvLit::renameClone(std::string funcName, int usedNum) const {
+
+    int IntLit::getVal() const{
+        return std::atoi(this->val.c_str());
+    }
+
+    const Expr* BvLit::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         return this;
     }
 
     void BvLit::print(std::ostream &os) const { os << val << "bv" << width; }
 
-    const Expr* FPLit::renameClone(std::string funcName, int usedNum) const {
+    const Expr* FPLit::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         return this;
     }
 
@@ -854,16 +913,16 @@ namespace smack {
         os << sigSize << "e" << expSize;
     }
 
-    const Expr* NegExpr::renameClone(std::string funcName, int usedNum) const{
-        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
+    const Expr* NegExpr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum, usedVarNames);
         const Expr* clonedExpr = new NegExpr(renamedExpr);
         return clonedExpr;
     }
 
     void NegExpr::print(std::ostream &os) const { os << "-(" << expr << ")"; }
 
-    const Expr* NotExpr::renameClone(std::string funcName, int usedNum) const{
-        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
+    const Expr* NotExpr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum, usedVarNames);
         const Expr* clonedExpr = new NotExpr(renamedExpr);
         return clonedExpr;
     }
@@ -872,10 +931,19 @@ namespace smack {
 
     z3::expr NotExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
         auto exp = expr->translateToZ3(z3Ctx, cfg, varFac);
-        return not exp;
+        if(expr->isValue() && expr->getType() == ExprType::INT){
+            const IntLit* intExpr = (const IntLit*) expr;
+            if(intExpr->getVal() == 0){
+                return z3Ctx.bool_val(true);
+            } else {
+                return z3Ctx.bool_val(false);
+            }
+        } else {
+            return not exp;
+        }
     }
 
-    const Expr* QuantExpr::renameClone(std::string funcName, int usedNum) const{
+    const Expr* QuantExpr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
         //TODOsh: currently no such instance, check later.
         return this;
     }
@@ -894,11 +962,11 @@ namespace smack {
         os << " :: " << expr << ")";
     }
 
-    const Expr* SelExpr::renameClone(std::string funcName, int usedNum) const {
-        const Expr* renamedBase = this->base->renameClone(funcName, usedNum);
+    const Expr* SelExpr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
+        const Expr* renamedBase = this->base->renameClone(funcName, usedNum, usedVarNames);
         std::list<const Expr*> renamedIdxs;
         for(const Expr* i : this->idxs){
-            renamedIdxs.push_back(i->renameClone(funcName, usedNum));
+            renamedIdxs.push_back(i->renameClone(funcName, usedNum, usedVarNames));
         }
         const Expr* clonedExpr = new SelExpr(renamedBase, renamedIdxs);
         return clonedExpr;
@@ -910,13 +978,13 @@ namespace smack {
         print_seq<const Expr *>(os, idxs, "[", ", ", "]");
     }
 
-    const Expr* UpdExpr::renameClone(std::string funcName, int usedNum) const{
-        const Expr* renamedBase = this->base->renameClone(funcName, usedNum);
+    const Expr* UpdExpr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
+        const Expr* renamedBase = this->base->renameClone(funcName, usedNum, usedVarNames);
         std::list<const Expr*> renamedIdxs;
         for(const Expr* i : this->idxs){
-          renamedIdxs.push_back(i->renameClone(funcName, usedNum));
+          renamedIdxs.push_back(i->renameClone(funcName, usedNum, usedVarNames));
         }
-        const Expr* renamedVal = this->val->renameClone(funcName, usedNum);
+        const Expr* renamedVal = this->val->renameClone(funcName, usedNum, usedVarNames);
         const Expr* clonedExpr = new UpdExpr(renamedBase, renamedIdxs, renamedVal);
         return clonedExpr;
     }
@@ -929,18 +997,41 @@ namespace smack {
     
     void VarExpr::print(std::ostream &os) const { os << var; }
 
-    const Expr* VarExpr::renameClone(std::string funcName, int usedNum) const{
-        if(this->name().find("$M") != std::string::npos){
+    const Expr* VarExpr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
+        if(this->isGlobalVar(usedVarNames)){
             return this;
-        } else {
+        } else if(this->name().find("$M") != std::string::npos){
+            // if it is a global variable
+            return this;
+        } else if(this->name().find("$") == std::string::npos){
+            // if it is a global static variable
+            return this;
+        } else if(!this->name().compare("$0.ref")){
+            // if it is a null variable
+            return this;
+        }
+        else {
             std::string renamedVar = this->var + "_" + funcName + std::to_string(usedNum);
             const Expr* clonedExpr = new VarExpr(renamedVar);
             return clonedExpr;
         }
     }
+
+
+    bool VarExpr::isGlobalVar(std::set<std::string> globalVarNames) const{
+        for(std::string gn : globalVarNames){
+            if(!this->name().compare(gn)){
+                return true;
+            }
+        }
+        return false;
+    }
     
     z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+        
+
         CFDEBUG(std::cout << "translating var" << this->name() << std::endl;);
+        // translating $Null
         std::pair<std::string, int> typeResult = cfg->getVarDetailType(varFac->getOrigVarName(this->name()));
         if (typeResult.second == 1) {
 
@@ -1005,10 +1096,10 @@ namespace smack {
            << ")";
     }
 
-    const Expr* IfThenElseExpr::renameClone(std::string funcName, int usedNum) const{
-        const Expr* renamedCond = this->cond->renameClone(funcName, usedNum);
-        const Expr* renamedTrueValue = this->trueValue->renameClone(funcName, usedNum);
-        const Expr* renamedFalseValue = this->falseValue->renameClone(funcName, usedNum);
+    const Expr* IfThenElseExpr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
+        const Expr* renamedCond = this->cond->renameClone(funcName, usedNum, usedVarNames);
+        const Expr* renamedTrueValue = this->trueValue->renameClone(funcName, usedNum, usedVarNames);
+        const Expr* renamedFalseValue = this->falseValue->renameClone(funcName, usedNum, usedVarNames);
 
         const Expr* clonedExpr = new IfThenElseExpr(renamedCond, renamedTrueValue, renamedFalseValue);
         return clonedExpr;
@@ -1023,10 +1114,10 @@ namespace smack {
         os << var << "[" << upper << ":" << lower << "]";
     }
 
-    const Expr* BvExtract::renameClone(std::string funcName, int usedNum) const {
-        const Expr* renamedVar = this->var->renameClone(funcName, usedNum);
-        const Expr* renamedUpper = this->upper->renameClone(funcName, usedNum);
-        const Expr* renamedLower = this->lower->renameClone(funcName, usedNum);
+    const Expr* BvExtract::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
+        const Expr* renamedVar = this->var->renameClone(funcName, usedNum, usedVarNames);
+        const Expr* renamedUpper = this->upper->renameClone(funcName, usedNum, usedVarNames);
+        const Expr* renamedLower = this->lower->renameClone(funcName, usedNum, usedVarNames);
 
         const Expr* clonedExpr = new BvExtract(renamedVar, renamedUpper, renamedLower);
         return clonedExpr;
@@ -1037,9 +1128,9 @@ namespace smack {
         os << "(" << left << "++" << right << ")";
     }
     
-    const Expr* BvConcat::renameClone(std::string funcName, int usedNum) const{
-        const Expr* renamedLeft = this->left->renameClone(funcName, usedNum);
-        const Expr* renamedRight = this->right->renameClone(funcName, usedNum);
+    const Expr* BvConcat::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
+        const Expr* renamedLeft = this->left->renameClone(funcName, usedNum, usedVarNames);
+        const Expr* renamedRight = this->right->renameClone(funcName, usedNum, usedVarNames);
 
         const Expr* clonedExpr = new BvConcat(renamedLeft, renamedRight);
         return clonedExpr;
@@ -1049,24 +1140,53 @@ namespace smack {
         return new EmpLit("");
     }
 
-    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName) {
-        return new PtLit(from, to, blkName);
+    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize) {
+        assert(stepSize > 0);
+        if(stepSize != 1){
+            return new PtLit(from, to, blkName, stepSize);
+        } else {
+            const BytePt* bpt = new BytePt(from, to);
+            REGISTER_EXPRPTR(bpt);
+            std::vector<const BytePt*> bytifiedVec;
+            bytifiedVec.push_back(bpt);
+            return new PtLit(from, to, blkName, stepSize, bytifiedVec);
+        }
     }
 
-    const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, std::string blkName, bool empty) {
-        return new BlkLit(from, to, blkName, empty);
+    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts){
+        assert(stepSize > 0);
+        assert(stepSize == bpts.size());
+        return new PtLit(from, to, blkName, stepSize, bpts);
+    }
+
+    const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, std::string blkName, int byteSize) {
+        assert(byteSize >= 0);
+        return new BlkLit(from, to, blkName, byteSize);
     }
 
     const SpatialLiteral *SpatialLiteral::spt(const Expr *var, const Expr *size, std::string blkName) {
         return new SizePtLit(var, size, blkName);
     }
 
-    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName) {
-        return new GCPtLit(from, to, blkName);
+    const BytePt *SpatialLiteral::bytePt(const Expr* from, const Expr* to) {
+        assert(from->isVar() && to->isVar());
+        return new BytePt(from, to);
     }
 
-    const SpatialLiteral *SpatialLiteral::gcBlk(const Expr *from, const Expr *to, std::string blkName, bool empty) {
-        return new GCBlkLit(from, to, blkName, empty);
+    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize) {
+        assert(stepSize > 0);
+        return new GCPtLit(from, to, blkName, stepSize);
+    }
+
+    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts){
+        assert(stepSize > 0);
+        assert(bgcpts.size() == stepSize);
+        return new GCPtLit(from, to, blkName, stepSize, bgcpts);
+    }
+
+    const SpatialLiteral *SpatialLiteral::gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize) {
+        assert(byteSize >= 0);
+        return new GCBlkLit(from, to, blkName, byteSize);
     }
 
     const SpatialLiteral *SpatialLiteral::errlit(bool f, ErrType reason) {
@@ -1083,41 +1203,78 @@ namespace smack {
         return res;
     }
 
+    void BytePt::print(std::ostream &os) const {
+        os << "[" << this->from << " :--> " << this->to << "]";
+    }
+
+    z3::expr BytePt::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+        const VarExpr *fromVar = (const VarExpr *) this->getFrom();
+        const VarExpr *toVar = (const VarExpr *) this->getTo();
+        z3::expr res = slah_api::newPto(
+            z3Ctx.int_const(fromVar->name().c_str()),
+            z3Ctx.int_const(toVar->name().c_str())
+        );
+        return res;
+    }
+
     void PtLit::print(std::ostream &os) const {
-        os << from << " >--> " << to;
+        if(!this->isByteLevel()){
+            os << from << " >--> " << to;
+        } else {
+            os << from << " >--> " << to << " {";
+            for(const BytePt* bpt : this->getBytifiedPts()){
+                bpt->print(os);
+            }
+            os << "} ";
+        }
     }
 
     z3::expr PtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
-        assert(this->getFrom()->isVar() && this->getTo()->isVar());
-        const VarExpr *fromVar = (const VarExpr *) this->getFrom();
-        const VarExpr *toVar = (const VarExpr *) this->getTo();
-        std::string fromOrigVarName = varFac->getOrigVarName(fromVar->name());
-        int stepWidth = cfg->getVarDetailType(fromOrigVarName).second / 8;
-        // e.g. a pointer $p with type int* points to a variable $fresh
-        // $p --> $fresh
-        // will be translated into
-        /*  ($fresh_0, $fresh_1, $fresh_2, $fresh_3) = i
-            | ($p_0, $p_1, $p_2, $p_3) --> $fresh_0 #
-              ($p_0, $p_1, $p_2, $p_3) + 1 --> $fresh_1 #
-              ($p_0, $p_1, $p_2, $p_3) + 2 --> $fresh_2 #
-              ($p_0, $p_1, $p_2, $p_3) + 3 --> $fresh_3
-       */
-        z3::expr res = slah_api::newEmp(z3Ctx);
-        for (int i = 0; i < stepWidth; i++) {
-            res = slah_api::sep(
+        if(!this->isByteLevel()){
+            // if the pt predicate is not bytified, old logic as usual
+            assert(this->getFrom()->isVar() && this->getTo()->isVar());
+            const VarExpr *fromVar = (const VarExpr *) this->getFrom();
+            const VarExpr *toVar = (const VarExpr *) this->getTo();
+            std::string fromOrigVarName = varFac->getOrigVarName(fromVar->name());
+            // TODOsh: change to stepSize later
+            int stepWidth = cfg->getVarDetailType(fromOrigVarName).second / 8;
+            // e.g. a pointer $p with type int* points to a variable $fresh
+            // $p --> $fresh
+            // will be translated into
+            /*  ($fresh_0, $fresh_1, $fresh_2, $fresh_3) = i
+                | ($p_0, $p_1, $p_2, $p_3) --> $fresh_0 #
+                  ($p_0, $p_1, $p_2, $p_3) + 1 --> $fresh_1 #
+                  ($p_0, $p_1, $p_2, $p_3) + 2 --> $fresh_2 #
+                  ($p_0, $p_1, $p_2, $p_3) + 3 --> $fresh_3
+           */
+            z3::expr res = slah_api::newEmp(z3Ctx);
+            for (int i = 0; i < stepWidth; i++) {
+                res = slah_api::sep(
+                        res,
+                        slah_api::newPto(
+                                z3Ctx.int_const((fromVar->name() + "_" + std::to_string(i)).c_str()),
+                                z3Ctx.int_const((toVar->name() + "_" + std::to_string(i)).c_str())
+                        )
+                );
+            }
+            // z3::expr res = slah_api::newPto(
+            //   from->translateToZ3(z3Ctx, cfg, varFac),
+            //   to->translateToZ3(z3Ctx, cfg, varFac)
+            // );
+            CDEBUG(std::cout << "in ptlit!" << res.to_string() << std::endl;);
+            return res;
+        } else {
+            // use new logic
+            z3::expr res = slah_api::newEmp(z3Ctx);
+            for(int i = 0; i < this->stepSize; i++){
+                res = slah_api::sep(
                     res,
-                    slah_api::newPto(
-                            z3Ctx.int_const((fromVar->name() + "_" + std::to_string(i)).c_str()),
-                            z3Ctx.int_const((toVar->name() + "_" + std::to_string(i)).c_str())
-                    )
-            );
+                    this->getByte(i)->translateToZ3(z3Ctx, cfg, varFac)
+                );
+            }
+            return res;
         }
-        // z3::expr res = slah_api::newPto(
-        //   from->translateToZ3(z3Ctx, cfg, varFac),
-        //   to->translateToZ3(z3Ctx, cfg, varFac)
-        // );
-        CDEBUG(std::cout << "in ptlit!" << res.to_string() << std::endl;);
-        return res;
+        
     }
 
     z3::expr GCPtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
@@ -1142,8 +1299,7 @@ namespace smack {
         auto f = from->translateToZ3(z3Ctx, cfg, varFac);
         auto t = to->translateToZ3(z3Ctx, cfg, varFac);
         z3::expr ex = z3Ctx.bool_val(true);
-        DEBUG_WITH_COLOR(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl,
-                         color::yellow);
+        CDEBUG(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl;);
         z3::expr res = slah_api::newBlk(f, t);
         return res;
     }
@@ -1170,16 +1326,16 @@ namespace smack {
     }
 
     std::string ErrorLit::getReasonStr() const {
-        if(this->getReason() == ErrType::INVALID_FREE){
+        if(this->getReason() == ErrType::VALID_FREE){
             return "INVALID_FREE";
-        } else if(this->getReason() == ErrType::LOAD_EMP){
-            return "LOAD_EMP";
-        } else if(this->getReason() == ErrType::NULL_REF){
-            return "NULL_REF";
-        } else if(this->getReason() == ErrType::OUT_OF_RANGE){
-            return "OUT_OF_RANGE";
-        } else if(this->getReason() == ErrType::STORE_EMP){
-            return "STORE_EMP";
+        } else if(this->getReason() == ErrType::VALID_DEREF){
+            return "INVALID_DEREF";
+        } else if(this->getReason() == ErrType::VALID_MEMCLEANUP){
+            return "INVALID_MEMCLEANUP";
+        } else if(this->getReason() == ErrType::VALID_MEMTRACK){
+            return "INVALID_MEMTRACK";
+        }  else if(this->getReason() == ErrType::UNKNOWN){
+            return "UNKNOWN";
         } else {
             return "UNKNOWN";
         }
@@ -1274,23 +1430,25 @@ namespace smack {
                 return st->getSize();
             }
         }
-        CFDEBUG(std::cout << "ERROR: Block Name not found" << std::endl;);
+        CFDEBUG(std::cout << "ERROR: Block Name not found: " <<  blkName << std::endl;);
         return nullptr;
     }
 
     void SymbolicHeapExpr::print(std::ostream &os) const {
+        if(FULL_DEBUG && OPEN_SH){
         os << "SymbHeap(" << pure << "|";
         print_seq<const SpatialLiteral *>(os, spatialExpr, " # ");
         os << ")";
+        }
     }
 
-    const Expr* StringLit::renameClone(std::string funcName, int usedNum) const{
+    const Expr* StringLit::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
         return this;
     }
 
     void StringLit::print(std::ostream &os) const { os << "\"" << val << "\""; }
 
-    const Attr* Attr::renameClone(std::string funcName, int usedNum) const{
+    const Attr* Attr::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
         // Currently no copy
         return this;
     }
@@ -1302,11 +1460,11 @@ namespace smack {
         os << "}";
     }
 
-    const Stmt* AssertStmt::renameClone(std::string funcName, int usedNum) const{
-        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
+    const Stmt* AssertStmt::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum, usedVarNames);
         std::list<const Attr*> renamedAttrs;
         for(const Attr* a : this->attrs){
-            renamedAttrs.push_back(a->renameClone(funcName, usedNum));
+            renamedAttrs.push_back(a->renameClone(funcName, usedNum, usedVarNames));
         }
         const Stmt* clonedStmt = new AssertStmt(renamedExpr, renamedAttrs);
         return clonedStmt;
@@ -1319,13 +1477,13 @@ namespace smack {
         os << expr << ";";
     }
 
-    const Stmt* AssignStmt::renameClone(std::string funcName, int usedNum) const {
+    const Stmt* AssignStmt::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         list<const Expr*> renamedLhs, renamedRhs;
         for(const Expr* le : this->lhs){
-            renamedLhs.push_back(le->renameClone(funcName, usedNum));
+            renamedLhs.push_back(le->renameClone(funcName, usedNum, usedVarNames));
         }
         for(const Expr* re : this->rhs){  
-            renamedRhs.push_back(re->renameClone(funcName, usedNum));
+            renamedRhs.push_back(re->renameClone(funcName, usedNum, usedVarNames));
         }
         const Stmt* clonedStmt = new AssignStmt(renamedLhs, renamedRhs);
         return clonedStmt;
@@ -1338,14 +1496,12 @@ namespace smack {
         os << ";";
     }
 
-    const Stmt* AssumeStmt::renameClone(std::string funcName, int usedNum) const {
-        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
-        std::list<const Attr*> renamedAttrs;
+    const Stmt* AssumeStmt::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum, usedVarNames);
+        AssumeStmt* clonedStmt = new AssumeStmt(renamedExpr);
         for(const Attr* a : this->attrs){
-            renamedAttrs.push_back(a->renameClone(funcName, usedNum));
+            clonedStmt->add(a->renameClone(funcName, usedNum, usedVarNames));
         }
-        const Stmt* clonedStmt = new AssumeStmt(renamedExpr);
-        // TODOsh: what is the attr used for?
         return clonedStmt;
     }
 
@@ -1357,7 +1513,7 @@ namespace smack {
     }
 
 // SHStmt
-    const Stmt* SHStmt::renameClone(std::string funcName, int usedNum) const {
+    const Stmt* SHStmt::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         CFDEBUG(std::cout << "ERROR: SHStmt rename should not happen.." << std::endl;);
         return nullptr;
     }
@@ -1366,17 +1522,17 @@ namespace smack {
         os << symbheap;
     }
 
-    const Stmt* CallStmt::renameClone(std::string funcName, int usedNum) const {
+    const Stmt* CallStmt::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         std::string renameProc = this->proc;
         std::list<const Attr*> renamedAttrs;
         std::list<const Expr*> renamedParams;
         std::list<std::string> renamedReturns;
 
         for(const Attr* a : this->attrs){
-            renamedAttrs.push_back(a->renameClone(funcName, usedNum));
+            renamedAttrs.push_back(a->renameClone(funcName, usedNum, usedVarNames));
         }
         for(const Expr* e : this->params){
-            renamedParams.push_back(e->renameClone(funcName, usedNum));
+            renamedParams.push_back(e->renameClone(funcName, usedNum, usedVarNames));
         }
         for(std::string ret : this->returns){
             renamedReturns.push_back(ret + "_" + funcName + std::to_string(usedNum));
@@ -1399,14 +1555,14 @@ namespace smack {
         os << ";";
     }
 
-    const Stmt* Comment::renameClone(std::string funcName, int usedNum) const {
+    const Stmt* Comment::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         // No copy for comment stmt since it is not important..
         return this;
     }
 
     void Comment::print(std::ostream &os) const { os << "/* " << str << " */"; }
 
-    const Stmt* GotoStmt::renameClone(std::string funcName, int usedNum) const {
+    const Stmt* GotoStmt::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         // No copy for goto since it is renamed at frontend
         return this;
     }
@@ -1417,7 +1573,7 @@ namespace smack {
         os << ";";
     }
 
-    const Stmt* HavocStmt::renameClone(std::string funcName, int usedNum) const { 
+    const Stmt* HavocStmt::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const { 
         std::list<std::string> renamedVars;
         for(std::string s : this->vars){
             renamedVars.push_back(s + "_" + funcName + std::to_string(usedNum));
@@ -1432,10 +1588,10 @@ namespace smack {
         os << ";";
     }
 
-    const Stmt* ReturnStmt::renameClone(std::string funcName, int usedNum) const {
+    const Stmt* ReturnStmt::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         if (nullptr == this->expr)
             return this;
-        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum, usedVarNames);
         const Stmt* clonedStmt = new ReturnStmt(renamedExpr);
         return clonedStmt;
     }
@@ -1451,12 +1607,12 @@ namespace smack {
         return expr;
     }
 
-    const Stmt* CodeStmt::renameClone(std::string funcName, int usedNum) const {
+    const Stmt* CodeStmt::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
       // No copy for code stmt since currently not finding relevant
         return this;
     }
     
-    const Decl* Decl::renameClone(std::string funcName, int usedNum) const{
+    const Decl* Decl::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
         return this;
     }
 
@@ -1472,8 +1628,8 @@ namespace smack {
         os << ";";
     }
     
-    const Decl* AxiomDecl::renameClone(std::string funcName, int usedNum) const {
-        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum);
+    const Decl* AxiomDecl::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
+        const Expr* renamedExpr = this->expr->renameClone(funcName, usedNum, usedVarNames);
         const Decl* clonedStmt = new AxiomDecl(this->name, renamedExpr);
         return clonedStmt;
     }
@@ -1492,7 +1648,7 @@ namespace smack {
         os << (unique ? "unique " : "") << name << ": " << type << ";";
     }
 
-    const Decl* FuncDecl::renameClone(std::string funcName, int usedNum) const {
+    const Decl* FuncDecl::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         // TODOsh: check this later, whether ok not processing the declaration
         return this;
     }
@@ -1511,7 +1667,7 @@ namespace smack {
             os << ";";
     }
 
-    const Decl* VarDecl::renameClone(std::string funcName, int usedNum) const {
+    const Decl* VarDecl::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const {
         std::string renamedVarName = this->name + "_" + funcName + std::to_string(usedNum);
         const Decl* clonedDecl = new VarDecl(renamedVarName, this->type);
         return clonedDecl;

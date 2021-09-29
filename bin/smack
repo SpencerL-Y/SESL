@@ -7,7 +7,8 @@ import os
 import sys
 
 sys.dont_write_bytecode = True # prevent creation of .pyc files
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../share'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), './'))
 
-import smack.top
-smack.top.main()
+
+import scripts.top
+scripts.top.main()

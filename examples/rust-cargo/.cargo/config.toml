@@ -1,2 +1,0 @@
-[build]
-rustflags = ["-A", "unused-imports", "-C", "opt-level=0", "-g", "--cfg", "verifier=\"smack\"", "--emit=llvm-ir"] 

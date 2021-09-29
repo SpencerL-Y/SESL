@@ -62,12 +62,28 @@ namespace smack {
 #if CENTER_DEBUG
                         cout << "from bb: " << sb->getName() << " to bb: ";
 #endif
+                        bool condition = true;
                         for (auto &to_bb : targets) {
 #if CENTER_DEBUG
                             cout << to_bb << " ";
 #endif
                             auto toState = getState(to_bb);
                             assert(fromState && toState);
+                            // add condition info
+                            if (targets.size() > 1) {
+                                {
+                                    auto &stmts = toState->getStateBlock()->getStatements();
+                                    auto it = stmts.begin();
+                                    for (;it != stmts.end(); ++ it) {
+                                        if ((*it)->getKind() == Stmt::ASSUME) {
+                                            continue;
+                                        }
+                                        break;
+                                    }
+                                    stmts.insert(it, Stmt::comment(condition ? "condition-true" : "condition-false"));
+                                }
+                                condition ^= 1;
+                            }
                             auto edgePtr = createEdge(fromState, toState);
                             edgePtr->setGuard(assume);
                             fromState->addEdge(edgePtr);
@@ -147,7 +163,15 @@ namespace smack {
 
     std::string CFG::getVarType(string varName) {
         if (varType.find(varName) != varType.end()) {
+            if(FULL_DEBUG && OPEN_VARTYPE){
+            for (const auto &i : varType) {
+                //if(!i.first.compare(varName))
+                    std::cout << i.first << " " << i.second << " " << varName << std::endl;
+            }
+            }
+            
             return varType[varName];
+            
         } else {
             for (const auto &i : varType) {
                 std::cout << i.first << " " << i.second << " " << varName << std::endl;
@@ -178,12 +202,14 @@ namespace smack {
     std::pair<std::string, int> CFG::getVarDetailType(std::string varName) {
         auto type = getVarType(varName);
         if (type[0] == 'i' || type[0] == 'M') {
+            // The variable is a data variable, ans represents the data size
             int ans = 0;
             for (int i = 1; i < type.length(); ++i) {
                 ans = ans * 10 + type[i] - '0';
             }
             return {type, ans};
         } else if (type[0] == 'r') {
+            // The variable is a pointer variable, ans represents the stepWidth
             int ans = 0;
             for (int i = 3; i < type.length(); ++i) {
                 ans = ans * 10 + type[i] - '0';
@@ -249,7 +275,12 @@ namespace smack {
     }
 
     void CFG::addVarType(std::string varName, std::string type) {
-        varType[varName] = type;
+        CFDEBUG(std::cout << "INFO: add var type: " << varName << type << std::endl;)
+        if(this->varType.find(varName) == this->varType.end()){
+            this->varType[varName] = type;
+        } else {
+            CFDEBUG(std::cout << "WARNING: varName exists: " << varName << std::endl;);
+        }
     }
 
     std::string CFG::getEntryBlockName() {
@@ -316,6 +347,7 @@ namespace smack {
     }
 
     void CFG::printConstDeclsInfo() {
+        cout << "=============================Printing Const Decls=============================";
         for (auto &decl : constDecls) {
             cout << "Decls: "; decl->print(cout);cout <<endl;
             cout << "\tvariable: " << decl->getName() << endl;

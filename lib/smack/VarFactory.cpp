@@ -1,4 +1,5 @@
 #include <smack/VarFactory.h>
+#include "smack/BlockExecutor.h"
 
 namespace smack
 {
@@ -13,23 +14,39 @@ namespace smack
         }
         const VarExpr* newVar = new VarExpr(name + bb_repeat_str + std::to_string(this->varsMap[name]));
         this->varNameRestoreMap[newVar->name()] = name;
+        this->addUnusedName(newVar->name());
+        BlockExecutor::ExprMemoryManager->registerPointer((Expr*)newVar);
         return newVar;
     }
 
     const VarExpr* VarFactory::getVar(std::string name){
+        // null
+        CFDEBUG(std::cout << "INFO: getVar " + name << std::endl;);
         if(name.find("$0.ref") != std::string::npos){
             return this->nullVar;
         }
+        if(name.find("$fresh") != std::string::npos){
+            return this->freshVarInstances[name];
+        }
+        // static complex var
         std::string bb_repeat_str = "_bb";
         if(this->varsMap.find(name) == this->varsMap.end()){
             CFDEBUG(std::cout << "WARNING: This is not correct use, please check, getVar after useVar" << std::endl;);
-            const VarExpr* newVar = new VarExpr(name + bb_repeat_str + "0");
-            this->varsMap[name] = 1;
+            // TODOsh: check whether to commented
+            // const VarExpr* newVar = new VarExpr(name + bb_repeat_str + "0");
+            // this->varsMap[name] = 1;
             return nullptr;
         } else {
             const VarExpr* varExpr = new VarExpr(name + bb_repeat_str + std::to_string(this->varsMap[name]));
+            BlockExecutor::ExprMemoryManager->registerPointer((Expr*)varExpr);
             return varExpr;
         }
+    }
+
+    const VarExpr* VarFactory::getVarConsume(std::string name){
+        const VarExpr* varExpr = this->getVar(name);
+        this->removeUnusedName(varExpr->name());
+        return varExpr;
     }
 
     const IntLit* VarFactory::getInt(int i){
@@ -44,11 +61,17 @@ namespace smack
 
     const VarExpr* VarFactory::getFreshVar(int byteSize){
         const VarExpr* fresh = new VarExpr("$fresh" + std::to_string(freshIndex));
+        BlockExecutor::ExprMemoryManager->registerPointer((Expr*)fresh);
         this->varNameRestoreMap[fresh->name()] = fresh->name();
         this->freshVar2Byte[fresh] = byteSize;
+        this->freshVarInstances[fresh->name()] = fresh;
         this->freshIndex++;
         return fresh;
     } 
+
+    const VarExpr* VarFactory::getNullVar(){
+        return this->nullVar;
+    }
     
     int VarFactory::getFreshVarSize(const VarExpr* var){
         if(this->freshVar2Byte.find(var) != this->freshVar2Byte.end()){
@@ -96,6 +119,30 @@ namespace smack
         this->freshIndex = freshIndex;
     }
 
+
+    void VarFactory::addUnusedName(std::string name){
+        if(this->unusedNames.find(name) != this->unusedNames.end()){
+            CFDEBUG(std::cout << "ERROR: unused name exists, should not appear twice." << std::endl;);
+        } else {
+            this->unusedNames.insert(name);
+        }
+    }
+    void VarFactory::removeUnusedName(std::string name){
+        if(this->unusedNames.find(name) != this->unusedNames.end()){
+            this->unusedNames.erase(name);
+        } else {
+            CFDEBUG(std::cout << "WARNING: unused name does not exists." << std::endl;);
+        }
+    }
+
+    void VarFactory::setUnusedNames(std::set<std::string> unusedNames){
+        this->unusedNames = unusedNames;
+    }
+
+    std::set<std::string> VarFactory::getUnusedNames(){
+        return this->unusedNames;
+    }
+
     VarFactoryPtr VarFactory::clone(){
         VarFactoryPtr newVarFac = std::make_shared<VarFactory>();
         newVarFac->setFreshIndex(this->freshIndex);
@@ -103,6 +150,7 @@ namespace smack
         newVarFac->setIntsMap(this->intsMap);
         newVarFac->setVarNameRestoreMap(this->varNameRestoreMap);
         newVarFac->setVarsMap(this->varsMap);
+        newVarFac->setUnusedNames(this->unusedNames);
         return newVarFac;
     }
 

@@ -58,7 +58,7 @@ Finally, run the tool by
 
 ```
 cd bin
-./test_build.sh exec
+./test_debug.sh exec
 ```
 This will compile the tool and then run an example in folder ```testcases/printtest/exec.c```
 

@@ -12,5 +12,5 @@ export LD_LIBRARY_PATH=${Z3_LIB}:${SLAH_LIB}:$LD_LIBRARY_PATH
 export PATH=${SMACK_BIN}:$PATH
 
 
-smack -q $@
+smack $@
 

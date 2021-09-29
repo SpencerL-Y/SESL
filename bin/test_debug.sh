@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 if [ ! -f "/usr/local/bin/libslah.so" ];then
   sudo cp ../lib/libslah.so /usr/local/lib
 fi

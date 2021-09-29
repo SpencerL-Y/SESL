@@ -74,7 +74,6 @@ namespace smack{
                     staticVarName
                 );
                 REGISTER_EXPRPTR(sSizePt);
-                // bool empty = (allocSize > 0) ? false : true;
 
                 const Expr* add = Expr::add(staticVar, blkSize);
                 REGISTER_EXPRPTR(add);
@@ -369,7 +368,9 @@ namespace smack{
             else {
                 CFDEBUG(std::cout <<  "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl);
                 CFDEBUG(std::cout <<  "FUNC NAME: " << rhsFun->name() << std::endl); 
-                return sh;
+                CFDEBUG(std::cout << "INFO: UNSOLVED FUNCEXPR NAME" << std::endl;);
+                SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::UNKNOWN);
+                return newSH;
             }
         } else {
             // If RHS is not a function, directly equal them and update varEquiv accordingly..
@@ -1811,8 +1812,12 @@ namespace smack{
                     retVarName
                 );
                 REGISTER_EXPRPTR(sizePt);
-                // bool empty = (paramVar->translateToInt(this->varEquiv).second > 0) ? false : true;
                 int blkSize = paramVar->translateToInt(this->varEquiv).second;
+                if(!paramVar->translateToInt(this->varEquiv).first){
+                    CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized malloc" << std::endl;);
+                    SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                    return newSH;
+                }
                 const Expr* add = Expr::add(
                         retVar,
                         paramVar);
@@ -1851,9 +1856,13 @@ namespace smack{
                     retVarName
                 );
                 REGISTER_EXPRPTR(sizePt);
-                // bool empty = (sizeExpr->translateToInt(this->varEquiv).second == 0) ? true : false;
-                
+
                 int blkSize = param->translateToInt(this->varEquiv).second;
+                if(!param->translateToInt(this->varEquiv).first){
+                    CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized malloc" << std::endl;);
+                    SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                    return newSH;
+                }
                 const Expr* add = Expr::add(retVar, sizeExpr);
                 REGISTER_EXPRPTR(add);
                 const SpatialLiteral* allocBlk = SpatialLiteral::blk(
@@ -2908,8 +2917,13 @@ namespace smack{
                         retVarName
                     );
                     REGISTER_EXPRPTR(sizePt);
-                    // bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
+
+                    if(!lengthExpr->translateToInt(this->varEquiv).first){
+                        CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized alloc" << std::endl;);
+                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        return newSH;
+                    }
                     const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
                     const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
@@ -2929,7 +2943,8 @@ namespace smack{
                 } else if(multiArg2->isVar()) {
                     const VarExpr* multiArg2OrigVar = (const VarExpr*) multiArg2;
                     std::string multiArg2OrigVarName = multiArg2OrigVar->name();
-                    const VarExpr* multiArg2Var = this->varFactory->getVar(multiArg2OrigVarName);
+                    std::pair<const VarExpr*, std::string> usedMultiArg2VarNamePair = this->getUsedVarAndName(multiArg2OrigVarName);
+                    const VarExpr* multiArg2Var = usedMultiArg2VarNamePair.first;
 
                     const Expr* lengthExpr = Expr::multiply(multiArg1, multiArg2Var);
                     REGISTER_EXPRPTR(lengthExpr);
@@ -2950,8 +2965,12 @@ namespace smack{
                         retVarName
                     ); 
                     REGISTER_EXPRPTR(sizePt);
-                    bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
+                    if(!lengthExpr->translateToInt(this->varEquiv).first){
+                        CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized alloc" << std::endl;);
+                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        return newSH;
+                    }
                     const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
                     const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
@@ -2989,8 +3008,12 @@ namespace smack{
                         lengthExpr,
                         retVarName
                     ); 
-                    bool empty = (lengthExpr->translateToInt(this->varEquiv).second > 0) ? false : true;
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
+                    if(!lengthExpr->translateToInt(this->varEquiv).first){
+                        CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized alloc" << std::endl;);
+                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        return newSH;
+                    }
                     const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
                     const SpatialLiteral* allocBlk = SpatialLiteral::blk(

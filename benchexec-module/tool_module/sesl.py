@@ -12,13 +12,13 @@ import benchexec.tools.template
 class Tool(benchexec.tools.template.BaseTool2):
 
     def executable(self, tool_locator):
-        return tool_locator.find_executable("sh")
+        return tool_locator.find_executable("smack-svcomp-wrapper.sh")
 
     def name(self):
         return "SESL"
 
     def cmdline(self, executable, options, task, rlimits):
-        options += ["./bin/sesl/smack-svcomp-wrapper.sh", "-t", "--sh-mem-leak"]
+        options += ["-t", "--sh-mem-leak", "--add-line-info"]
         options += [task.single_input_file]
         return [executable] + options
 

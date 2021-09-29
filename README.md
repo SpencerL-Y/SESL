@@ -44,14 +44,17 @@ cd bin
 ./build.sh
 cd ..
 ```
-Then configure the make files
+
+If the above build file failed, one can manually build install Z3 and build the tool by:
 ```
 mkdir build
 cd build
 cmake  -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug .. -G Ninja
 cd ..
 ```
-Then 
+
+
+Finally, run the tool by
 
 ```
 cd bin

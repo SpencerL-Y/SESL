@@ -238,7 +238,7 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 # The following solution is from: https://stackoverflow.com/questions/30985215/passing-variables-down-to-subdirectory-only
 set(SMACK_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
 set(CMAKE_BUILD_TYPE "Release")
-# add_subdirectory(sea-dsa/lib/seadsa)
+add_subdirectory(sea-dsa/lib/seadsa)
 set(CMAKE_BUILD_TYPE ${SMACK_BUILD_TYPE})
 
 # add link of separation logic library slah

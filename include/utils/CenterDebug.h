@@ -15,7 +15,7 @@
 
 #define OPEN_COLOR_DEBUG 1
 
-#define OPEN_VAREQUIV_PRINT 1
+#define OPEN_VAREQUIV_PRINT 0
 #define OPEN_VARTYPE 0
 #define OPEN_SH 1
 #define OPEN_MEMMANAGE 0

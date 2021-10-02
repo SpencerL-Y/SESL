@@ -59,7 +59,7 @@ class TestRunner():
     def run(self):
         for name, prop in self.testCases:
             try:
-                command = 'smack {}/{} -ll {}/{}_IR.ll --bpl {}/{}.bpl -t --sh-mem-leak 2>1 1>>{}.log'.format(self.path,
+                command = 'sesl {}/{} -ll {}/{}_IR.ll --bpl {}/{}.bpl -t --sh-mem-leak 2>1 1>>{}.log'.format(self.path,
                                                                                                               name + '.c',
                                                                                                               self.path,
                                                                                                               name,

@@ -336,18 +336,6 @@ if [ ${INSTALL_OBJECTIVEC} -eq 1 ] ; then
 fi
 
 
-if [ ${INSTALL_RUST} -eq 1 ] ; then
-  puts "Installing Rust"
-  if ! [ -x "$(command -v rustup)" ]; then
-      ${WGET} -O - --secure-protocol=TLSv1_2 https://sh.rustup.rs | bash -s -- -y
-      source $HOME/.cargo/env
-  fi
-  rustup toolchain install ${RUST_VERSION}
-  cargo install rustfilt
-  puts "Installed Rust"
-fi
-
-
 if [ ${INSTALL_Z3} -eq 1 ] ; then
   if [ ! -d "$Z3_DIR" ] ; then
     puts "Installing Z3"

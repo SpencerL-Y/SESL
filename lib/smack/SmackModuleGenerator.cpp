@@ -12,8 +12,8 @@
 #include "smack/SmackInstGenerator.h"
 #include "smack/SmackOptions.h"
 #include "smack/SmackRep.h"
-#include "smack/cfg/CFG.h"
-#include "smack/Translator.h"
+#include "smack/sesl/cfg/CFG.h"
+#include "smack/sesl/executor/Translator.h"
 
 #include <stdlib.h>
 #include <iostream>

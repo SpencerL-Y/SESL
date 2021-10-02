@@ -12,7 +12,7 @@ import benchexec.tools.template
 class Tool(benchexec.tools.template.BaseTool2):
 
     def executable(self, tool_locator):
-        return tool_locator.find_executable("smack-svcomp-wrapper.sh")
+        return tool_locator.find_executable("sesl-svcomp.sh")
 
     def name(self):
         return "SESL"

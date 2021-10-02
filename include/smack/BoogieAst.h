@@ -12,7 +12,7 @@
 #include <memory>
 #include "z3++.h"
 #include "utils/TranslatorUtil.h"
-#include "smack/VarEquiv.h"
+#include "smack/sesl/executor/VarEquiv.h"
 
 #define PTR_BYTEWIDTH 8
 #define INT_BYTEWIDTH 4

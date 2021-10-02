@@ -3,7 +3,7 @@
 #
 
 cmake_minimum_required(VERSION 3.4.3)
-project(smack)
+project(sesl)
 
 if (NOT WIN32 OR MSYS OR CYGWIN)
 
@@ -114,7 +114,6 @@ add_library(
 )
 
 add_library(smackTranslator STATIC
-  include/smack/Translator.h
   include/smack/AddTiming.h
   include/smack/BoogieAst.h
   include/smack/BplFilePrinter.h
@@ -141,23 +140,24 @@ add_library(smackTranslator STATIC
   include/smack/SplitAggregateValue.h
   include/smack/Prelude.h
   include/smack/SmackWarnings.h
-  include/smack/BlockExecutor.h
   include/smack/Solver.h
-        include/smack/cfg/CFG.h
-        include/smack/cfg/CFGState.h
-        include/smack/cfg/CFGEdge.h
-  include/smack/Lasso.h
-  include/smack/MemSafeVerifier.h
-  include/smack/VarEquiv.h
-  include/smack/VarFactory.h
-  include/smack/StoreSplitter.h
-	include/smack/MemoryManager.h
-        include/smack/cfg/CFGExecutor.h
-  include/smack/ExecutionState.h
   include/smack/SVNaming.h
-  include/smack/ViolationPathGen.h
-  include/tinyxml/tinyxml2.h
-  lib/smack/Translator.cpp
+        include/smack/sesl/executor/Translator.h
+        include/smack/sesl/executor/BlockExecutor.h
+        include/smack/sesl/cfg/CFG.h
+        include/smack/sesl/cfg/CFGState.h
+        include/smack/sesl/cfg/CFGEdge.h
+        include/smack/sesl/verifier/MemSafeVerifier.h
+        include/smack/sesl/executor/VarEquiv.h
+        include/smack/sesl/executor/VarFactory.h
+        include/smack/sesl/executor/StoreSplitter.h
+	      include/smack/sesl/mem_manage/MemoryManager.h
+        include/smack/sesl/cfg/CFGExecutor.h
+        include/smack/sesl/executor/ExecutionState.h
+        include/smack/sesl/witness/ViolationPathGen.h
+        include/smack/sesl/cfg/CFGUtils.h
+        include/smack/sesl/cfg/ProcManager.h
+        include/tinyxml/tinyxml2.h
   lib/smack/AddTiming.cpp
   lib/smack/BoogieAst.cpp
   lib/smack/BplFilePrinter.cpp
@@ -184,30 +184,27 @@ add_library(smackTranslator STATIC
   lib/smack/SplitAggregateValue.cpp
   lib/smack/Prelude.cpp
   lib/smack/SmackWarnings.cpp
-  lib/smack/BlockExecutor.cpp
   lib/smack/Solver.cpp
-        lib/smack/cfg/CFG.cpp
-        lib/smack/cfg/CFGState.cpp
-        lib/smack/cfg/CFGEdge.cpp
-  lib/smack/Lasso.cpp
-  lib/smack/MemSafeVerifier.cpp
-  lib/smack/VarEquiv.cpp
-  lib/smack/VarFactory.cpp
-  lib/smack/StoreSplitter.cpp
-	lib/smack/MemoryManager.cpp
-        lib/smack/cfg/CFGExecutor.cpp
-        lib/smack/cfg/ProcManager.cpp
-        include/smack/cfg/ProcManager.h
-        lib/smack/cfg/CFGUtils.cpp
-        include/smack/cfg/CFGUtils.h
   lib/smack/SVNaming.cpp
-  lib/smack/ViolationPathGen.cpp
-  lib/tinyxml/tinyxml2.cpp
+        lib/smack/sesl/executor/Translator.cpp
+        lib/smack/sesl/executor/BlockExecutor.cpp
+        lib/smack/sesl/verifier/MemSafeVerifier.cpp
+        lib/smack/sesl/executor/VarEquiv.cpp
+        lib/smack/sesl/executor/VarFactory.cpp
+        lib/smack/sesl/executor/StoreSplitter.cpp
+	      lib/smack/sesl/mem_manage/MemoryManager.cpp
+        lib/smack/sesl/cfg/CFG.cpp
+        lib/smack/sesl/cfg/CFGState.cpp
+        lib/smack/sesl/cfg/CFGEdge.cpp
+        lib/smack/sesl/cfg/CFGExecutor.cpp
+        lib/smack/sesl/cfg/ProcManager.cpp
+        lib/smack/sesl/cfg/CFGUtils.cpp
+        lib/smack/sesl/witness/ViolationPathGen.cpp
+        lib/tinyxml/tinyxml2.cpp
   )
 
 add_executable(llvm2bpl
-  tools/llvm2bpl/llvm2bpl.cpp
-        include/smack/memoryManager/memoryManager.h)
+  tools/llvm2bpl/llvm2bpl.cpp)
 
 # We need to include Boost header files at least for macOS
 # find_package (Boost 1.55)
@@ -256,8 +253,8 @@ INSTALL(TARGETS llvm2bpl
 )
 
 INSTALL(FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/bin/smack
-  ${CMAKE_CURRENT_SOURCE_DIR}/bin/smack-svcomp-wrapper.sh
+  ${CMAKE_CURRENT_SOURCE_DIR}/bin/sesl
+  ${CMAKE_CURRENT_SOURCE_DIR}/bin/sesl-svcomp.sh
   PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
   GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
   DESTINATION bin

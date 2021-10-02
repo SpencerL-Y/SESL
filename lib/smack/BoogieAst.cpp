@@ -9,9 +9,9 @@
 #include <typeinfo>
 #include <sstream>
 #include <cstring>
-#include "smack/cfg/CFG.h"
-#include "smack/BlockExecutor.h"
-#include "smack/VarFactory.h"
+#include "smack/sesl/cfg/CFG.h"
+#include "smack/sesl/executor/BlockExecutor.h"
+#include "smack/sesl/executor/VarFactory.h"
 #include "utils/CenterDebug.h"
 #include "utils/TranslatorUtil.h"
 

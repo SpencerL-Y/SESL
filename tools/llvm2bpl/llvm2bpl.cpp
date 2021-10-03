@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
     //pass_manager.add(new smack::RemoveDeadDefs());
   }
   
-  pass_manager.add(seadsa::createRemovePtrToIntPass());
+  //pass_manager.add(seadsa::createRemovePtrToIntPass());
   pass_manager.add(llvm::createLowerSwitchPass());
   // pass_manager.add(llvm::createCFGSimplificationPass());
   // Shaobo: sea-dsa is inconsistent with the pass below.

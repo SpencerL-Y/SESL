@@ -44,6 +44,7 @@ namespace smack{
             z3SpatialAtoms.push_back(slah_api::newEmp(*z3Ctx));
         }
         z3::expr exp = slah_api::newSep(z3SpatialAtoms);
+        CDEBUG(std::cout << "=====center test: final spatial expresssion=====" << std::endl;)
         CDEBUG(std::cout << exp.to_string() << std::endl; )
         spatial = exp;
     }

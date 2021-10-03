@@ -651,8 +651,9 @@ namespace smack {
 
  // TODOsh: implement and modify to make it compatible with bytewise
     class BytePt : public SpatialLiteral {
-        const Expr* from;
-        const Expr* to;
+        protected:
+            const Expr* from;
+            const Expr* to;
         public: 
             BytePt(const Expr* f, const Expr* t) : from(f), to(t) {}
             const Expr* getFrom() const { return from; }
@@ -665,6 +666,7 @@ namespace smack {
     };
 
     class PtLit : public SpatialLiteral {
+    protected:
         const Expr *from;
         const Expr *to;
         int stepSize;
@@ -719,6 +721,7 @@ namespace smack {
 
 
     class BlkLit : public SpatialLiteral {
+    protected:
         const Expr *from;
         const Expr *to;
         bool isEmptyBlk;
@@ -755,6 +758,7 @@ namespace smack {
     };
 
     class SizePtLit : public SpatialLiteral {
+    protected:
         const Expr *var;
         const Expr *size;
 
@@ -778,6 +782,7 @@ namespace smack {
     
 
     class ErrorLit : public SpatialLiteral {
+    protected:
         bool fresh;
         ErrType reason;
     public:

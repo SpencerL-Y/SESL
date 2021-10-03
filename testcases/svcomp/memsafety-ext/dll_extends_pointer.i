@@ -531,12 +531,15 @@ int main()
  y->prev = ((void *)0);
  y->pData = &y->data;
  list = y;
- while (__VERIFIER_nondet_int())
+//  while (__VERIFIER_nondet_int())
+int i = 0;
+while (i < 1)
  {
   y = malloc(sizeof(*y));
   y->next = list;
   list->prev = y;
-  if (__VERIFIER_nondet_int())
+//   if (__VERIFIER_nondet_int())
+if (1)
   {
    y->pData = malloc(sizeof(*y->pData));
   }
@@ -545,6 +548,7 @@ int main()
    y->pData = &y->data;
   }
   list = y;
+  i++;
  }
  while (((void *)0) != list)
  {

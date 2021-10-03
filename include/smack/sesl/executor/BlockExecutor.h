@@ -54,7 +54,7 @@ namespace smack{
         const VarExpr* createAndRegisterFreshDataVar(int size);
         void registerDataVar(const VarExpr* usedDataVar);
         const VarExpr* createAndRegisterFreshPtrVar(int stepSize, std::string mallocName, int offset);
-        const VarExpr* registerPtrVar(const VarExpr* usedPtrVar, std::string mallocName, int offset);
+        void registerPtrVar(const VarExpr* usedPtrVar, std::string mallocName, int offset);
         bool isPtrVar(std::string name);
         VarType getVarType(std::string varName);
         int getBitwidthOfDataVar(std::string varName);
@@ -132,6 +132,8 @@ namespace smack{
         std::pair<const VarExpr*, const Expr*> updateLoadBytifiedPtPredicatePartial(const PtLit* oldPt, int offset, int length, const Expr* oldPure);
         
         void updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs, int storedSize);
+        void updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs);
+
         void updateBindingsEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar);
         void updateBindingsEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal);
         void updateBindingsEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr, const Expr* storedExpr, bool isPtr);   
@@ -192,7 +194,7 @@ namespace smack{
 
         
 
-
+        CFGPtr getCfg(){return cfg;}
         Block* getBlock(){ return currentBlock; }
         void setBlock(StatePtr cb){ currentBlock = cb->getStateBlock(); }
         VarEquivPtr getVarEquiv() { return varEquiv;}

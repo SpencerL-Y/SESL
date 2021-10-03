@@ -39,8 +39,8 @@ namespace smack{
                 if(this->getVarType(globalVarName) == VarType::DATA){
                     this->registerDataVar(globalVar);
                 } else {
-                    CFDEBUG(std::cout << "ERROR: executeGlobal this situation should not happen since mallocName unknown" << std::endl;);
-                    return nullptr;
+                    //CFDEBUG(std::cout << "ERROR: executeGlobal this situation should not happen since mallocName unknown" << std::endl;);
+                    this->registerPtrVar(globalVar, globalVarName, 0);
                 }
             } else {
                 // treat the global ptr the same way as $alloc
@@ -146,10 +146,10 @@ namespace smack{
             CFDEBUG(std::cout << "ERROR: This should not happen.");
             assert(false);
         }
-        // TODOsh: refactor to make it more compatible with varFactory
-        if(lhsVarName.find("$M") != std::string::npos){
-            this->cfg->addVarType(lhsVarOrigName, "ref" + std::to_string(8 * PTR_BYTEWIDTH));
-        }
+        // // TODOsh: refactor to make it more compatible with varFactory
+        // if(lhsVarName.find("$M") != std::string::npos){
+        //     this->cfg->addVarType(lhsVarOrigName, "ref" + std::to_string(8 * PTR_BYTEWIDTH));
+        // }
 
         if(ExprType::FUNC == rhs->getType()){
             // rhs is a function expression, deal with the execution depending on the function met.
@@ -168,7 +168,7 @@ namespace smack{
                     std::string rhsVarName = rhsVar->name();
 
                     this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
-                    
+                    this->updateVarType(lhsVar, rhsVar, rhsVar);
                     const Expr* varEquality = Expr::eq(
                         lhsVar,
                         rhsVar
@@ -192,7 +192,7 @@ namespace smack{
                 const Expr* rhsExpr = parsedResult.first;
 
                 this->updateBindingsEqualVarAndRhsArithExpr(lhsVar, rhsFun, rhsExpr, true);
-
+                this->updateVarType(lhsVar, rhsFun, rhsExpr);
                 // if(ExprType::BIN == rhsExpr->getType()){
                 //     const BinExpr* arithExpr = (const BinExpr*) rhsExpr;
                 //     if(BinExpr::Binary::Plus == arithExpr->getOp()){
@@ -246,6 +246,7 @@ namespace smack{
                 
                 if(arg1->isValue()){
                     this->updateBindingsEqualVarAndRhsValue(lhsVar, arg1);
+                    this->updateVarType(lhsVar, arg1, arg1);
                     // this->varEquiv->addNewName(lhsVarName);
                     // if(ExprType::INT ==  arg1->getType()){
                     //     const IntLit* intValExpr =(const IntLit*)arg1;
@@ -265,7 +266,7 @@ namespace smack{
                     const VarExpr* rhsVar = this->getUsedVarAndName(rhsOrigVarName).first;
                     std::string rhsVarName = this->getUsedVarAndName(rhsOrigVarName).second;
                     this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
-
+                    this->updateVarType(lhsVar, rhsVar, rhsVar);
                     // varEquiv->linkName(lhsVarName, rhsVarName);
                     // // if the int value can be computed, update the link 
                     // if(this->varEquiv->getIntVal(rhsVar->name()).first){
@@ -383,22 +384,8 @@ namespace smack{
                 std::string rhsVarName = this->getUsedVarAndName(rhsOrigVarName).second;
 
                 this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
-                // auto computeIntResult = rhsVar->translateToInt(this->varEquiv);
-                // if(computeIntResult.first){
-                //     this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
-                // } else {
-                //     CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
-                // }
-                // const Expr* eq = Expr::eq(
-                //     lhsVar,
-                //     rhsVar
-                // );
-               
-                // this->varEquiv->linkName(lhsVarName, rhsVarName);
-                // if(this->isPtrVar(rhsOrigVarName) || this->isPtrVar(lhsVarOrigName)){
-                //     this->varEquiv->linkBlkName(lhsVarName, rhsVarName);
-                //     this->varEquiv->addNewOffset(lhsVarName, this->varEquiv->getOffset(rhsVarName));
-                // }
+                this->updateVarType(lhsVar, rhsVar, rhsVar);
+
                 const Expr* eq = Expr::eq(
                     lhsVar,
                     rhsVar
@@ -421,7 +408,10 @@ namespace smack{
                     this->varEquiv->addNewVal(lhsVarName, computeIntResult.second);
                 } else {
                     CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
+                    assert(false);
                 }
+                this->updateVarType(lhsVar, rhsExpr, rhsExpr);
+
                 const Expr* eq = Expr::eq(
                     lhsVar,
                     rhs
@@ -1082,6 +1072,7 @@ namespace smack{
             const VarExpr* callRhsVar = dstVar;
 
             this->updateBindingsEqualVarAndRhsVar(callRetVar, callRhsVar);
+            this->updateVarType(callRetVar, callRhsVar, callRhsVar);
             const Expr* eq = Expr::eq(
                 callRetVar,
                 callRhsVar
@@ -1521,6 +1512,7 @@ namespace smack{
             const VarExpr* callRhsVar = targetVar;
 
             this->updateBindingsEqualVarAndRhsVar(callRetVar, callRhsVar);
+            this->updateVarType(callRetVar, callRhsVar, callRhsVar);
             const Expr* eq = Expr::eq(
                 callRetVar,
                 callRhsVar
@@ -2644,6 +2636,7 @@ namespace smack{
                             if(loadedSize == this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
                                 // Situation B.1.(1)
                                 this->updateBindingsEqualVarAndRhsVar(lhsVar, toExprVar);
+                                this->updateVarType(lhsVar, toExprVar, toExprVar);
                                 const Expr* eq1 = Expr::eq(lhsVar, toExprVar);
                                 REGISTER_EXPRPTR(eq1);
                                 newPure = Expr::and_(newPure, eq1);
@@ -2657,6 +2650,7 @@ namespace smack{
                                 if(pt->isByteLevel()){
                                     std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
                                     this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                                    this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
                                     newPure =  newLoadedVarPurePair.second;
                                     const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
                                     REGISTER_EXPRPTR(eq);
@@ -2671,6 +2665,7 @@ namespace smack{
                                     std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(newPt, 0, loadedSize, newPure);
                                     this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
                                     newPure =  newLoadedVarPurePair.second;
+                                    this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
                                     const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
                                     REGISTER_EXPRPTR(eq);
                                     newPure = Expr::and_(newPure, eq);
@@ -2726,6 +2721,7 @@ namespace smack{
                                 if(pt->isByteLevel()){
                                     std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
                                     this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                                    this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
                                     newPure =  newLoadedVarPurePair.second;
                                     const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
                                     REGISTER_EXPRPTR(eq);
@@ -2738,6 +2734,7 @@ namespace smack{
                                     newPure = newPtPurePair.second;
                                     std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
                                     this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                                    this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
                                     newPure =  newLoadedVarPurePair.second;
                                     const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
                                     REGISTER_EXPRPTR(eq);
@@ -3172,6 +3169,7 @@ namespace smack{
         }
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
         std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(varOrigName);
+        CFDEBUG(std::cout << "getVartype: " << varName << " " << sizeInfo.first << std::endl);
         if(sizeInfo.first.find("ref") != std::string::npos){
             return VarType::PTR;
         } else {
@@ -3225,7 +3223,10 @@ namespace smack{
                     assert(storedSize > 0);
                     this->setPtrVarStepSize(lhsUsedVarName, storedSize);
                 }
-            } else {
+            } else if(VarType::DATA == this->getVarType(rhsUsedVarName)){
+                this->setDataVarBitwidth(lhsUsedVarName, this->getBitwidthOfDataVar(rhsUsedVarName));
+            } 
+            else {
                 assert(storedSize > 0);
                 this->setDataVarBitwidth(lhsUsedVarName, 8 * storedSize);
             }
@@ -3243,6 +3244,62 @@ namespace smack{
             if(nullptr == extractedRhsVar){
                 assert(storedSize > 0);
                 this->setDataVarBitwidth(lhsVar->name(), 8 * storedSize);
+            }
+            else if(VarType::PTR == this->getVarType(extractedRhsVar->name()) || 
+                    VarType::NIL == this->getVarType(extractedRhsVar->name())){
+                assert(extractedRhsVar != nullptr);
+
+                assert(VarType::PTR == this->getVarType(extractedRhsVar->name()) || 
+                       VarType::NIL == this->getVarType(extractedRhsVar->name()));
+                int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
+                int extractedRhsStepSize = this->getStepSizeOfPtrVar(extractedRhsVar->name());
+                if(extractedRhsStepSize == 0){
+                    int computedRhsStepSize = this->parsePtrArithmeticStepSize(rhs);
+                    this->setPtrVarStepSize(lhsVar->name(), computedRhsStepSize);
+                } else {
+                    this->setPtrVarStepSize(lhsVar->name(), extractedRhsStepSize);
+                }
+            } else {
+                // rhsExpr is used var data arithmetic
+                CFDEBUG(std::cout << "ERROR: this cannot happen, arith type update" << std::endl;)
+            }
+        }
+    }
+
+    void BlockExecutor::updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs){
+        // lhs and rhs are both used var
+        if(rhs->isVar()){
+            const VarExpr* rhsVar = (const VarExpr*) rhs;
+            std::string lhsUsedVarName = lhsVar->name();
+            std::string rhsUsedVarName = rhsVar->name();
+            std::string lhsOrigVarName = this->varFactory->getOrigVarName(lhsUsedVarName);
+            if(VarType::PTR == this->getVarType(rhsUsedVarName) || 
+               VarType::NIL == this->getVarType(rhsUsedVarName)){
+                if(this->getStepSizeOfPtrVar(rhsUsedVarName) != 0){
+                    this->setPtrVarStepSize(lhsUsedVarName, this->getStepSizeOfPtrVar(rhsUsedVarName));
+                } else {
+                    this->cfg->addVarType(lhsOrigVarName, "ref");
+                }
+            } else if(VarType::DATA == this->getVarType(rhsUsedVarName)){
+                this->setDataVarBitwidth(lhsUsedVarName, this->getBitwidthOfDataVar(rhsUsedVarName));
+            } else {
+                CFDEBUG(std::cout << "ERROR: update var type please check" << std::endl;);
+            }
+        } else if(rhs->isValue()){
+            const VarExpr* rhsVar = (const VarExpr*) rhs;
+            std::string lhsUsedVarName = lhsVar->name();
+            std::string rhsUsedVarName = rhsVar->name();
+            std::string lhsOrigVarName = this->varFactory->getOrigVarName(lhsUsedVarName);
+            this->cfg->addVarType(lhsOrigVarName, "i64");
+        } else {
+            // rhs is original arithmetic expression
+            assert(ExprType::FUNC == rhs->getType());
+            // rhsExpr is used var arithmetic
+            const Expr* storedExpr = usedRhs;
+            // extractedPtrVar is a used var
+            const VarExpr* extractedRhsVar = (const VarExpr*) (this->extractPtrArithmeticVar(storedExpr));
+            if(nullptr == extractedRhsVar){
+                CFDEBUG(std::cout << "ERROR: update var type please check" << std::endl;);
             }
             else if(VarType::PTR == this->getVarType(extractedRhsVar->name()) || 
                     VarType::NIL == this->getVarType(extractedRhsVar->name())){
@@ -3588,7 +3645,7 @@ namespace smack{
         assert(parsedUsedExpr.second);
 
         this->updateBindingsEqualVarAndRhsArithExpr(freshVar, arg, parsedUsedExpr.first, parsedUsedExpr.second);
-        this->updateVarType(freshVar, arg, parsedUsedExpr.first, -1);
+        this->updateVarType(freshVar, arg, parsedUsedExpr.first);
         CFDEBUG(std::cout << "INFO: extracted size: " << extractedStepSize << std::endl;)
         const Expr* eq = Expr::eq(freshVar, parsedUsedExpr.first);
         REGISTER_EXPRPTR(eq);
@@ -3634,10 +3691,10 @@ namespace smack{
         this->varEquiv->addNewName(usedDataVar->name());
     }
 
-
     const VarExpr* 
     BlockExecutor::createAndRegisterFreshPtrVar
     (int stepSize, std::string mallocName, int offset){
+        
         CFDEBUG(std::cout << "INFO: create fresh ptr var " << stepSize << " " <<  mallocName << " " << offset << std::endl;);
         const VarExpr* freshVar = this->varFactory->getFreshVar(PTR_BYTEWIDTH);
         this->cfg->addVarType(freshVar->name(), "ref" + std::to_string(8 * stepSize));
@@ -3648,7 +3705,7 @@ namespace smack{
     }
 
 
-    const VarExpr* 
+    void
     BlockExecutor::registerPtrVar
     (const VarExpr* usedPtrVar, std::string mallocName, int offset){
         assert(this->getVarType(usedPtrVar->name()) == VarType::PTR || 
@@ -3661,7 +3718,6 @@ namespace smack{
             this->varEquiv->addNewName(usedPtrVar->name());
             this->varEquiv->linkBlkName(usedPtrVar->name(), mallocName);
             this->varEquiv->addNewOffset(usedPtrVar->name(), offset);
-
         }
     }
 

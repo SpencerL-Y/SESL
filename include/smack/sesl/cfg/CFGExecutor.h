@@ -36,7 +36,7 @@ namespace smack {
         void DFSByStep(StatePtr& state, int remainStep);
         StatePtr getEntryState();
     public:
-        explicit CFGExecutor(CFGPtr cfgPtr, int bound = 3, int step = 20) : cfg(std::move(cfgPtr)), bound(bound), step(step) {exePathVec.clear();}
+        explicit CFGExecutor(CFGPtr cfgPtr, int bound = 5, int step = 50) : cfg(std::move(cfgPtr)), bound(bound), step(step) {exePathVec.clear();}
         void setUpperBound(int upperBound);
         void setStep(int step);
         void generatePathByUpperBound();

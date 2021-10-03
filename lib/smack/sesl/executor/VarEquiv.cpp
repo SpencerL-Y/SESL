@@ -8,7 +8,7 @@ namespace smack
             // if the name is not found, then we add the name to it
             varAllocEqualMap[name] = name;
         } else {
-            std::cout << "ERROR: VarEquiv new name exists." << std::endl;
+            CFDEBUG(std::cout << "ERROR: VarEquiv new name exists." << std::endl;);
         }
     }
 
@@ -17,7 +17,7 @@ namespace smack
            varAllocEqualMap.find(oldname) != varAllocEqualMap.end()){
             varAllocEqualMap[newname] = varAllocEqualMap[oldname];
         } else {
-            std::cout << "ERROR: VarEquiv new name exists "  << (varAllocEqualMap.find(newname) == varAllocEqualMap.end()) << " " << (varAllocEqualMap.find(oldname) != varAllocEqualMap.end()) << " " + newname + " " + oldname << std::endl;
+            CFDEBUG(std::cout << "ERROR: VarEquiv new name exists "  << (varAllocEqualMap.find(newname) == varAllocEqualMap.end()) << " " << (varAllocEqualMap.find(oldname) != varAllocEqualMap.end()) << " " + newname + " " + oldname << std::endl;);
         }
     }
 
@@ -74,7 +74,7 @@ namespace smack
         if(pointsToBlkMap.find(name) == pointsToBlkMap.end()){
             pointsToBlkMap[name] = name;
         } else {
-            std::cout << "ERROR: VarEquiv blk new blkvarname exists. " << std::endl;
+            CFDEBUG(std::cout << "ERROR: VarEquiv blk new blkvarname exists. " << std::endl;);
         }
     }
 

@@ -2028,7 +2028,13 @@ namespace smack{
         // compute the storedSize of the target pt predicate
         int storedSize = -1;
         // the lhs variable must be pointer variable representing the location
-        assert(VarType::PTR == this->getVarType(varArg1Name) || VarType::NIL == this->getVarType(varArg1Name));
+        if(VarType::PTR == this->getVarType(varArg1Name) || VarType::NIL == this->getVarType(varArg1Name)){
+
+        } else {
+            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+            CFDEBUG(std::cout << "INFO: store data to a data variable represented address, INVALID DEREF.." << std::endl;);
+            return newSH;
+        }
         // step size obtained from getVarDetailType
         storedSize = this->getStepSizeOfPtrVar(varArg1Name);
         if(storedSize == 0){
@@ -2567,6 +2573,14 @@ namespace smack{
         } else {
             CFDEBUG(std::cout << "ERROR: UNSOLVED loaded position type " << loadedPosition << std::endl;);
         }
+
+        if(VarType::PTR == this->getVarType(ldPtrName) || VarType::NIL == this->getVarType(ldPtrName)){
+
+        } else {
+            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+            CFDEBUG(std::cout << "INFO: load a unintialized memory, INVALID DEREF.." << std::endl;);
+            return newSH;
+        }
         int stepSize = this->getStepSizeOfPtrVar(ldPtrName);
         loadedSize = this->parseLoadFuncSize(rhsFun->name());
         
@@ -2764,7 +2778,7 @@ namespace smack{
             // compute the loaded byteSize
             const Expr* newPure = sh->getPure();
             std::list<const SpatialLiteral*> newSpatial;
-            int stepSize = this->getStepSizeOfPtrVar(lhsVarName);
+            
             if(stepSize == 0){
                 loadedSize = this->parseLoadFuncSize(rhsFun->name());
             } else {

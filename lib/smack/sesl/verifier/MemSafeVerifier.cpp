@@ -108,8 +108,9 @@ namespace smack {
             MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans, finalStmts, currSH);
             
             std::cout << std::endl;
-            bool memLeakSafeSat = checker->checkCurrentMemLeak(currExecState, mainGraph).first;
-            bool infErrorSafeSat = checker->checkInferenceError().first;
+            bool pathFeasible = checker->checkPathFeasibility();
+            bool memLeakSafeSat = checker->checkCurrentMemLeak(currExecState, mainGraph, pathFeasible).first;
+            bool infErrorSafeSat = checker->checkInferenceError(pathFeasible).first;
             if(!memLeakSafeSat || !infErrorSafeSat){
                 std::cout << "INFO: BUG FOUND, STOP EXCUTION" << std::endl;
                 this->violationPath = p;
@@ -117,7 +118,7 @@ namespace smack {
             }
             BlockExecutor::ExprMemoryManager->clearMemory();
             if(FULL_DEBUG && OPEN_EXECUTION_PATH){
-            std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE BLOCk" << std::endl;
+            std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE PATH" << std::endl;
             }
         }
 
@@ -130,6 +131,8 @@ namespace smack {
     MemSafeChecker::MemSafeChecker(std::shared_ptr<TransToZ3> trans, StatementList& stmtList, SHExprPtr fsh){
         this->trans = trans;
         this->finalSH = fsh;
+        this->trans->setSymbolicHeapHExpr(this->finalSH);
+        this->trans->translate();
         this->ctx = this->trans->getCtx();
         this->stmts = stmtList;
         this->trans->setSymbolicHeapHExpr(fsh);
@@ -143,17 +146,14 @@ namespace smack {
         this->trans->setSymbolicHeapHExpr(sh);
     }
 
-    std::pair<bool, int> MemSafeChecker::checkCurrentMemLeak(ExecutionStatePtr state, CFGPtr mainGraph){
-
-        
-        bool pathFeasible = this->checkPathFeasibility();
+    std::pair<bool, int> MemSafeChecker::checkCurrentMemLeak(ExecutionStatePtr state, CFGPtr mainGraph, bool pathFeasible){
         if(!pathFeasible){
             DEBUG_WITH_COLOR(std::cout << "CHECK: Satisfied, path condition false!" << std::endl, color::green);
             return {true, 0};
         } else {
-            //CFDEBUG(std::cout << trans->getFinalExpr() << std::endl;);
-            // this->trans->setSymbolicHeapHExpr(this->finalSH);
-            // this->trans->translate();
+            SHExprPtr heapSH = this->extractHeapSymbolicHeap(this->finalSH, state);
+            this->trans->setSymbolicHeapHExpr(heapSH);
+            this->trans->translate();
             z3::expr premise = this->trans->getFinalExpr();
             z3::expr consequent = 
             (this->ctx->bool_val(true) && slah_api::newEmp(*(this->ctx)));
@@ -201,9 +201,7 @@ namespace smack {
         }
     }
 
-    std::pair<bool, const Stmt*> MemSafeChecker::checkInferenceError(){
-
-        bool pathFeasible = this->checkPathFeasibility();
+    std::pair<bool, const Stmt*> MemSafeChecker::checkInferenceError(bool pathFeasible){
         if(!pathFeasible){
             DEBUG_WITH_COLOR(std::cout << "CHECK: Inference check pass! Path condition unsat..." << std::endl;, color::green);
             return std::pair<bool, const Stmt*>(true, nullptr);
@@ -238,36 +236,36 @@ namespace smack {
 
 
     bool MemSafeChecker::checkPathFeasibility(){
-        // const Stmt* previous = nullptr;
-        // const Stmt* current =  nullptr;
-        // for(const Stmt* s : this->stmts){
-        //     current = s;
-        //     if(previous != nullptr){
-        //         if(Stmt::Kind::CALL == current->getKind() &&
-        //            Stmt::Kind::SH == previous->getKind()){
-        //             const CallStmt* call = (const CallStmt*) current;
-        //             const SHStmt* shs = (const SHStmt*) previous;
-        //             if(!call->getProc().compare("free")){
-        //                 SHExprPtr currentSH = shs->getSymbHeap();
-        //                 this->trans->setSymbolicHeapHExpr(currentSH);
-        //                 this->trans->translate();
-        //                 z3::expr tempFormula = this->trans->getFinalExpr();
-        //                 z3::check_result pathCond = slah_api::checkSat(tempFormula);
-        //                 if(pathCond == z3::unsat){
-        //                     return false;
-        //                 }
-
-        //             }
-        //         }
-        //     }
-        //     previous = current;
-
-        // }
-        // this->trans->setSymbolicHeapHExpr(this->finalSH);
-        // this->trans->translate();
-
-        z3::expr tempFormula = this->trans->getFinalExpr();
-        z3::check_result finalPathCond = slah_api::checkSat(tempFormula);
+        CFDEBUG(std::cout << "BEGIN PATH FEASIBILITY CHECK ----------------------------" << std::endl;);
+        const SHStmt* previousSH = nullptr;
+        const Stmt* current =  nullptr;
+        for(const Stmt* s : this->stmts){
+            current = s;
+            if(s->getKind() == Stmt::Kind::SH){
+                previousSH = (const SHStmt*) s;
+            }
+            if(current->getKind() == Stmt::Kind::CALL){
+                const CallStmt* callStmt = (const CallStmt*) current;
+                if(!callStmt->getProc().compare("free_") || callStmt->getProc().find("free") != std::string::npos){
+                    this->trans->setSymbolicHeapHExpr(previousSH->getSymbHeap());
+                    //std::cout << previousSH->getSymbHeap() << std::endl;
+                    this->trans->translate();
+                    z3::expr tempFormula = this->trans->getFinalExpr();
+                    z3::check_result pathCond = slah_api::checkSat(tempFormula);
+                    if(pathCond == z3::unsat){
+                        CFDEBUG(std::cout << "END PATH FEASIBILITY CHECK ----------------------------" << std::endl;);
+                        return false;
+                    } else {
+                        //DEBUG_WITH_COLOR(std::cout << "path feasible, warning ------------------------------" << std::endl; , color::yellow);
+                    }
+                }
+            }
+        }
+        this->trans->setSymbolicHeapHExpr(this->finalSH);
+        this->trans->translate();
+        z3::expr finalFormula = this->trans->getFinalExpr();
+        z3::check_result finalPathCond = slah_api::checkSat(finalFormula);
+        CFDEBUG(std::cout << "END PATH FEASIBILITY CHECK ----------------------------" << std::endl;);
         if(finalPathCond == z3::unsat){
             return false;
         } else {
@@ -277,5 +275,19 @@ namespace smack {
     // Return value: checkResult, Error Stmt
     std::pair<bool, const Stmt*> MemSafeChecker::checkProperty(SHExprPtr property){
         return std::pair<bool, const Stmt*>(true, nullptr);
+    }
+
+
+    SHExprPtr MemSafeChecker::extractHeapSymbolicHeap(SHExprPtr originalSH, ExecutionStatePtr state){
+        std::list<const SpatialLiteral*> heapSpatial;
+        for(const SpatialLiteral* sp : originalSH->getSpatialExpr()){
+            if(state->getVarEquiv()->isStructArrayPtr(sp->getBlkName())){
+
+            } else {
+                heapSpatial.push_back(sp);
+            }
+        }
+        SHExprPtr heapSH = std::make_shared<SymbolicHeapExpr>(originalSH->getPure(), heapSpatial);
+        return heapSH;   
     }
 }

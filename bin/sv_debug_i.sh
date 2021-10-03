@@ -8,4 +8,4 @@ if [ ! -f "/usr/local/bin/libz3.so" ];then
 fi
 export LD_LIBRARY_PATH=/usr/local/lib:../lib:$LD_LIBRARY_PATH
 sudo ldconfig
-cd ../build && sudo ninja install && sesl ../testcases/svcomp/memsafety-ext/$1.i -ll ../testcases/svcomp/memsafety-ext/$1_IR.ll --bpl ../testcases/svcomp/memsafety-ext/$1.bpl -t --sh-mem-leak --add-line-info
+cd ../build && sudo ninja install && sesl ../testcases/svcomp/ldv-memsafety/$1.i -ll ../testcases/svcomp/ldv-memsafety/$1_IR.ll --bpl ../testcases/svcomp/ldv-memsafety/$1.bpl -t --sh-mem-leak --add-line-info

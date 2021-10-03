@@ -21,37 +21,26 @@ procedure {:entrypoint} main()
   var $p3: ref;
   var $p4: ref;
   var $p5: ref;
-  var $i6: i32;
-  var $i7: i1;
+  var $p6: ref8;
+  var $p7: ref;
+  var $p8: ref;
   var $p9: ref;
   var $p10: ref8;
   var $p11: ref;
   var $p12: ref;
-  var $p13: ref;
-  var $i14: i32;
-  var $i15: i1;
-  var $p16: ref8;
+  var $i13: i1;
+  var $p14: ref;
+  var $p15: ref;
+  var $p16: ref;
   var $p17: ref;
   var $p18: ref;
   var $p19: ref;
-  var $p20: ref;
-  var $i21: i32;
-  var $i22: i1;
-  var $p23: ref;
-  var $p8: ref;
-  var $i24: i1;
-  var $p25: ref;
-  var $p26: ref;
-  var $p27: ref;
-  var $p28: ref;
-  var $p29: ref;
-  var $p30: ref;
-  var $i31: i1;
-  var $p32: ref;
-  var $p33: ref;
-  var $p34: ref8;
-  var $p35: ref8;
-  var $i36: i1;
+  var $i20: i1;
+  var $p21: ref;
+  var $p22: ref;
+  var $p23: ref8;
+  var $p24: ref8;
+  var $i25: i1;
 $bb0:
   assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 529, 6} true;
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
@@ -73,155 +62,97 @@ $bb0:
   $p5 := $add.ref($add.ref($p1, $mul.ref(0, 32)), $mul.ref(16, 1));
   assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 532, 11} true;
   $M.2 := $store.ref($M.2, $p5, $p4);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 534, 9} true;
-  call $i6 := __VERIFIER_nondet_int();
-  call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i6);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 534, 2} true;
-  $i7 := $ne.i32($i6, 0);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 534, 2} true;
-  $p8 := $p0;
-  assume {:branchcond $i7} true;
-  goto $bb1, $bb2;
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 536, 1} true;
+  goto $bb1;
 $bb1:
-  assume ($i7 == 1);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 534, 2} true;
-  $p9 := $p0;
-  goto $bb4;
-$bb2:
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 534, 2} true;
-  assume !(($i7 == 1));
-  goto $bb3;
-$bb3:
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 0, 0} true;
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 549, 21} true;
-  $i24 := $ne.ref($0.ref, $p8);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 549, 2} true;
-  assume {:branchcond $i24} true;
-  goto $bb10, $bb11;
-$bb4:
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 536, 7} true;
-  call $p10 := malloc(32);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 536, 7} true;
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 538, 7} true;
+  call $p6 := malloc(32);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 538, 7} true;
+  $p7 := $bitcast.ref.ref($p6);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 539, 6} true;
+  $p8 := $add.ref($add.ref($p7, $mul.ref(0, 32)), $mul.ref(0, 1));
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 539, 11} true;
+  $M.0 := $store.ref($M.0, $p8, $p0);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 540, 9} true;
+  $p9 := $add.ref($add.ref($p1, $mul.ref(0, 32)), $mul.ref(8, 1));
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 540, 14} true;
+  $M.1 := $store.ref($M.1, $p9, $p6);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 544, 15} true;
+  call $p10 := malloc(1);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 544, 15} true;
   $p11 := $bitcast.ref.ref($p10);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 537, 6} true;
-  $p12 := $add.ref($add.ref($p11, $mul.ref(0, 32)), $mul.ref(0, 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 537, 11} true;
-  $M.0 := $store.ref($M.0, $p12, $p9);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 538, 9} true;
-  $p13 := $add.ref($add.ref($p9, $mul.ref(0, 32)), $mul.ref(8, 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 538, 14} true;
-  $M.1 := $store.ref($M.1, $p13, $p10);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 539, 7} true;
-  call $i14 := __VERIFIER_nondet_int();
-  call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i14);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 539, 7} true;
-  $i15 := $ne.i32($i14, 0);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 539, 7} true;
-  assume {:branchcond $i15} true;
-  goto $bb5, $bb6;
-$bb5:
-  assume ($i15 == 1);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 541, 15} true;
-  call $p16 := malloc(1);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 541, 15} true;
-  $p17 := $bitcast.ref.ref($p16);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 541, 7} true;
-  $p18 := $add.ref($add.ref($p11, $mul.ref(0, 32)), $mul.ref(16, 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 541, 13} true;
-  $M.2 := $store.ref($M.2, $p18, $p16);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 542, 3} true;
-  goto $bb7;
-$bb6:
-  assume !(($i15 == 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 545, 19} true;
-  $p19 := $add.ref($add.ref($p11, $mul.ref(0, 32)), $mul.ref(24, 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 545, 7} true;
-  $p20 := $add.ref($add.ref($p11, $mul.ref(0, 32)), $mul.ref(16, 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 545, 13} true;
-  $M.2 := $store.ref($M.2, $p20, $p19);
-  goto $bb7;
-$bb7:
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 534, 9} true;
-  call $i21 := __VERIFIER_nondet_int();
-  call {:cexpr "smack:ext:__VERIFIER_nondet_int"} boogie_si_record_i32($i21);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 534, 2} true;
-  $i22 := $ne.i32($i21, 0);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 534, 2} true;
-  $p23 := $p10;
-  assume {:branchcond $i22} true;
-  goto $bb8, $bb9;
-$bb8:
-  assume ($i22 == 1);
-  $p9 := $p10;
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 544, 7} true;
+  $p12 := $add.ref($add.ref($p7, $mul.ref(0, 32)), $mul.ref(16, 1));
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 544, 13} true;
+  $M.2 := $store.ref($M.2, $p12, $p10);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 21} true;
+  $i13 := $ne.ref($0.ref, $p7);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 2} true;
+  assume {:branchcond $i13} true;
+  goto $bb2, $bb3;
+$bb2:
+  assume ($i13 == 1);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 2} true;
+  $p14 := $p6;
+  goto $bb5;
+$bb3:
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 2} true;
+  assume !(($i13 == 1));
   goto $bb4;
-$bb9:
-  assume !(($i22 == 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 534, 2} true;
-  $p8 := $p23;
-  goto $bb3;
-$bb10:
-  assume ($i24 == 1);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 549, 2} true;
-  $p25 := $p8;
-  goto $bb13;
-$bb11:
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 549, 2} true;
-  assume !(($i24 == 1));
-  goto $bb12;
-$bb12:
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 559, 2} true;
+$bb4:
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 563, 2} true;
   $r := 0;
   return;
-$bb13:
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 552, 16} true;
-  $p26 := $add.ref($add.ref($p25, $mul.ref(0, 32)), $mul.ref(0, 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 552, 16} true;
-  $p27 := $load.ref($M.0, $p26);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 11} true;
-  $p28 := $add.ref($add.ref($p25, $mul.ref(0, 32)), $mul.ref(24, 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 22} true;
-  $p29 := $add.ref($add.ref($p25, $mul.ref(0, 32)), $mul.ref(16, 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 22} true;
-  $p30 := $load.ref($M.2, $p29);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 16} true;
-  $i31 := $ne.ref($p28, $p30);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 7} true;
-  assume {:branchcond $i31} true;
-  goto $bb14, $bb15;
-$bb14:
-  assume ($i31 == 1);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 555, 12} true;
-  $p32 := $add.ref($add.ref($p25, $mul.ref(0, 32)), $mul.ref(16, 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 555, 12} true;
-  $p33 := $load.ref($M.2, $p32);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 555, 9} true;
-  $p34 := $bitcast.ref.ref($p33);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 555, 4} true;
-  call free_($p34);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 556, 3} true;
-  goto $bb16;
-$bb15:
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 7} true;
-  assume !(($i31 == 1));
-  goto $bb16;
-$bb16:
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 557, 8} true;
-  $p35 := $bitcast.ref.ref($p25);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 557, 3} true;
-  call free_($p35);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 549, 21} true;
-  $i36 := $ne.ref($0.ref, $p27);
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 549, 2} true;
-  assume {:branchcond $i36} true;
-  goto $bb17, $bb18;
-$bb17:
-  assume ($i36 == 1);
-  $p25 := $p27;
-  goto $bb13;
-$bb18:
-  assume !(($i36 == 1));
-  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 549, 2} true;
-  goto $bb12;
+$bb5:
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 556, 16} true;
+  $p15 := $add.ref($add.ref($p14, $mul.ref(0, 32)), $mul.ref(0, 1));
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 556, 16} true;
+  $p16 := $load.ref($M.0, $p15);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 557, 11} true;
+  $p17 := $add.ref($add.ref($p14, $mul.ref(0, 32)), $mul.ref(24, 1));
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 557, 22} true;
+  $p18 := $add.ref($add.ref($p14, $mul.ref(0, 32)), $mul.ref(16, 1));
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 557, 22} true;
+  $p19 := $load.ref($M.2, $p18);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 557, 16} true;
+  $i20 := $ne.ref($p17, $p19);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 557, 7} true;
+  assume {:branchcond $i20} true;
+  goto $bb6, $bb7;
+$bb6:
+  assume ($i20 == 1);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 559, 12} true;
+  $p21 := $add.ref($add.ref($p14, $mul.ref(0, 32)), $mul.ref(16, 1));
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 559, 12} true;
+  $p22 := $load.ref($M.2, $p21);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 559, 9} true;
+  $p23 := $bitcast.ref.ref($p22);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 559, 4} true;
+  call free_($p23);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 560, 3} true;
+  goto $bb8;
+$bb7:
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 557, 7} true;
+  assume !(($i20 == 1));
+  goto $bb8;
+$bb8:
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 561, 8} true;
+  $p24 := $bitcast.ref.ref($p14);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 561, 3} true;
+  call free_($p24);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 21} true;
+  $i25 := $ne.ref($0.ref, $p16);
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 2} true;
+  assume {:branchcond $i25} true;
+  goto $bb9, $bb10;
+$bb9:
+  assume ($i25 == 1);
+  $p14 := $p16;
+  goto $bb5;
+$bb10:
+  assume !(($i25 == 1));
+  assume {:sourceloc "../testcases/svcomp/memsafety-ext/dll_extends_pointer.i", 553, 2} true;
+  goto $bb4;
 }
 const llvm.dbg.declare: ref;
 axiom (llvm.dbg.declare == $sub.ref(0, 3096));
@@ -233,27 +164,22 @@ procedure  malloc($i0: i32)
 {
   call $r := $malloc($zext.i32.i64($i0));
 }
-const __VERIFIER_nondet_int: ref;
-axiom (__VERIFIER_nondet_int == $sub.ref(0, 5160));
-procedure  __VERIFIER_nondet_int()
-  returns ($r: i32);
 const free_: ref;
-axiom (free_ == $sub.ref(0, 6192));
+axiom (free_ == $sub.ref(0, 5160));
 procedure  free_($p0: ref)
 {
   call $free($p0);
 }
 const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 7224));
+axiom (llvm.dbg.value == $sub.ref(0, 6192));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 8256));
+axiom (__SMACK_static_init == $sub.ref(0, 7224));
 procedure  __SMACK_static_init()
 {
 $bb0:
   return;
 }
-procedure  boogie_si_record_i32(x: i32);
 procedure  boogie_si_record_ref(x: ref);
 procedure  $initialize()
 {

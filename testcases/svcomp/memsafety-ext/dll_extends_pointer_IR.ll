@@ -1,4 +1,4 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/b-p7ab8aak.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SMACK/SmackBasedPrj/build/b-1_ucn7q1.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
@@ -15,7 +15,7 @@ define internal void @reach_error() #0 !dbg !9 {
 define dso_local i32 @main() #0 !dbg !14 {
   call void @llvm.dbg.value(metadata %struct.TNode* null, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
   call void @llvm.dbg.value(metadata %struct.TNode* null, metadata !35, metadata !DIExpression()), !dbg !34, !verifier.code !13
-  %1 = call noalias i8* @malloc(i32 32) #4, !dbg !36, !verifier.code !13
+  %1 = call noalias i8* @malloc(i32 32) #3, !dbg !36, !verifier.code !13
   %2 = bitcast i8* %1 to %struct.TNode*, !dbg !36, !verifier.code !13
   call void @llvm.dbg.value(metadata %struct.TNode* %2, metadata !35, metadata !DIExpression()), !dbg !34, !verifier.code !13
   %3 = getelementptr inbounds %struct.TNode, %struct.TNode* %2, i32 0, i32 0, !dbg !37, !verifier.code !13
@@ -26,97 +26,66 @@ define dso_local i32 @main() #0 !dbg !14 {
   %6 = getelementptr inbounds %struct.TNode, %struct.TNode* %2, i32 0, i32 2, !dbg !42, !verifier.code !13
   store %struct.TData* %5, %struct.TData** %6, align 8, !dbg !43, !verifier.code !13
   call void @llvm.dbg.value(metadata %struct.TNode* %2, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
-  %7 = call i32 @__VERIFIER_nondet_int(), !dbg !44, !verifier.code !45
-  %8 = icmp ne i32 %7, 0, !dbg !46, !verifier.code !13
-  br i1 %8, label %.lr.ph4, label %26, !dbg !46, !verifier.code !13
+  call void @llvm.dbg.value(metadata i32 0, metadata !44, metadata !DIExpression()), !dbg !34, !verifier.code !13
+  br label %7, !dbg !45, !verifier.code !13
 
-.lr.ph4:                                          ; preds = %0
-  br label %9, !dbg !46, !verifier.code !13
+7:                                                ; preds = %0
+  call void @llvm.dbg.value(metadata i32 0, metadata !44, metadata !DIExpression()), !dbg !34, !verifier.code !13
+  call void @llvm.dbg.value(metadata %struct.TNode* %2, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
+  %8 = call noalias i8* @malloc(i32 32) #3, !dbg !46, !verifier.code !13
+  %9 = bitcast i8* %8 to %struct.TNode*, !dbg !46, !verifier.code !13
+  call void @llvm.dbg.value(metadata %struct.TNode* %9, metadata !35, metadata !DIExpression()), !dbg !34, !verifier.code !13
+  %10 = getelementptr inbounds %struct.TNode, %struct.TNode* %9, i32 0, i32 0, !dbg !48, !verifier.code !13
+  store %struct.TNode* %2, %struct.TNode** %10, align 8, !dbg !49, !verifier.code !13
+  %11 = getelementptr inbounds %struct.TNode, %struct.TNode* %2, i32 0, i32 1, !dbg !50, !verifier.code !13
+  store %struct.TNode* %9, %struct.TNode** %11, align 8, !dbg !51, !verifier.code !13
+  %12 = call noalias i8* @malloc(i32 1) #3, !dbg !52, !verifier.code !13
+  %13 = bitcast i8* %12 to %struct.TData*, !dbg !52, !verifier.code !13
+  %14 = getelementptr inbounds %struct.TNode, %struct.TNode* %9, i32 0, i32 2, !dbg !55, !verifier.code !13
+  store %struct.TData* %13, %struct.TData** %14, align 8, !dbg !56, !verifier.code !13
+  call void @llvm.dbg.value(metadata %struct.TNode* %9, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
+  call void @llvm.dbg.value(metadata i32 1, metadata !44, metadata !DIExpression()), !dbg !34, !verifier.code !13
+  %15 = icmp ne %struct.TNode* null, %9, !dbg !57, !verifier.code !13
+  br i1 %15, label %.lr.ph, label %30, !dbg !58, !verifier.code !13
 
-9:                                                ; preds = %forwarder6, %.lr.ph4
-  %.02 = phi %struct.TNode* [ %2, %.lr.ph4 ], [ %11, %forwarder6 ], !verifier.code !13
-  call void @llvm.dbg.value(metadata %struct.TNode* %.02, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
-  %10 = call noalias i8* @malloc(i32 32) #4, !dbg !47, !verifier.code !13
-  %11 = bitcast i8* %10 to %struct.TNode*, !dbg !47, !verifier.code !13
-  call void @llvm.dbg.value(metadata %struct.TNode* %11, metadata !35, metadata !DIExpression()), !dbg !34, !verifier.code !13
-  %12 = getelementptr inbounds %struct.TNode, %struct.TNode* %11, i32 0, i32 0, !dbg !49, !verifier.code !13
-  store %struct.TNode* %.02, %struct.TNode** %12, align 8, !dbg !50, !verifier.code !13
-  %13 = getelementptr inbounds %struct.TNode, %struct.TNode* %.02, i32 0, i32 1, !dbg !51, !verifier.code !13
-  store %struct.TNode* %11, %struct.TNode** %13, align 8, !dbg !52, !verifier.code !13
-  %14 = call i32 @__VERIFIER_nondet_int(), !dbg !53, !verifier.code !45
-  %15 = icmp ne i32 %14, 0, !dbg !53, !verifier.code !13
-  br i1 %15, label %16, label %20, !dbg !55, !verifier.code !13
+.lr.ph:                                           ; preds = %7
+  br label %16, !dbg !58, !verifier.code !13
 
-16:                                               ; preds = %9
-  %17 = call noalias i8* @malloc(i32 1) #4, !dbg !56, !verifier.code !13
-  %18 = bitcast i8* %17 to %struct.TData*, !dbg !56, !verifier.code !13
-  %19 = getelementptr inbounds %struct.TNode, %struct.TNode* %11, i32 0, i32 2, !dbg !58, !verifier.code !13
-  store %struct.TData* %18, %struct.TData** %19, align 8, !dbg !59, !verifier.code !13
-  br label %23, !dbg !60, !verifier.code !13
+16:                                               ; preds = %forwarder, %.lr.ph
+  %.12 = phi %struct.TNode* [ %9, %.lr.ph ], [ %18, %forwarder ], !verifier.code !13
+  call void @llvm.dbg.value(metadata %struct.TNode* %.12, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
+  call void @llvm.dbg.value(metadata %struct.TNode* %.12, metadata !35, metadata !DIExpression()), !dbg !34, !verifier.code !13
+  %17 = getelementptr inbounds %struct.TNode, %struct.TNode* %.12, i32 0, i32 0, !dbg !59, !verifier.code !13
+  %18 = load %struct.TNode*, %struct.TNode** %17, align 8, !dbg !59, !verifier.code !13
+  call void @llvm.dbg.value(metadata %struct.TNode* %18, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
+  %19 = getelementptr inbounds %struct.TNode, %struct.TNode* %.12, i32 0, i32 3, !dbg !61, !verifier.code !13
+  %20 = getelementptr inbounds %struct.TNode, %struct.TNode* %.12, i32 0, i32 2, !dbg !63, !verifier.code !13
+  %21 = load %struct.TData*, %struct.TData** %20, align 8, !dbg !63, !verifier.code !13
+  %22 = icmp ne %struct.TData* %19, %21, !dbg !64, !verifier.code !13
+  br i1 %22, label %23, label %27, !dbg !65, !verifier.code !13
 
-20:                                               ; preds = %9
-  %21 = getelementptr inbounds %struct.TNode, %struct.TNode* %11, i32 0, i32 3, !dbg !61, !verifier.code !13
-  %22 = getelementptr inbounds %struct.TNode, %struct.TNode* %11, i32 0, i32 2, !dbg !63, !verifier.code !13
-  store %struct.TData* %21, %struct.TData** %22, align 8, !dbg !64, !verifier.code !13
-  br label %23, !verifier.code !13
+23:                                               ; preds = %16
+  %24 = getelementptr inbounds %struct.TNode, %struct.TNode* %.12, i32 0, i32 2, !dbg !66, !verifier.code !13
+  %25 = load %struct.TData*, %struct.TData** %24, align 8, !dbg !66, !verifier.code !13
+  %26 = bitcast %struct.TData* %25 to i8*, !dbg !68, !verifier.code !13
+  call void @free(i8* %26) #3, !dbg !69, !verifier.code !13
+  br label %27, !dbg !70, !verifier.code !13
 
-23:                                               ; preds = %20, %16
-  call void @llvm.dbg.value(metadata %struct.TNode* %11, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
-  %24 = call i32 @__VERIFIER_nondet_int(), !dbg !44, !verifier.code !45
-  %25 = icmp ne i32 %24, 0, !dbg !46, !verifier.code !13
-  br i1 %25, label %forwarder6, label %._crit_edge5, !dbg !46, !llvm.loop !65, !verifier.code !13
+27:                                               ; preds = %23, %16
+  %28 = bitcast %struct.TNode* %.12 to i8*, !dbg !71, !verifier.code !13
+  call void @free(i8* %28) #3, !dbg !72, !verifier.code !13
+  call void @llvm.dbg.value(metadata %struct.TNode* %18, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
+  %29 = icmp ne %struct.TNode* null, %18, !dbg !57, !verifier.code !13
+  br i1 %29, label %forwarder, label %._crit_edge, !dbg !58, !llvm.loop !73, !verifier.code !13
 
-._crit_edge5:                                     ; preds = %23
-  %split = phi %struct.TNode* [ %11, %23 ], !verifier.code !13
-  br label %26, !dbg !46, !verifier.code !13
+._crit_edge:                                      ; preds = %27
+  br label %30, !dbg !58, !verifier.code !13
 
-26:                                               ; preds = %._crit_edge5, %0
-  %.0.lcssa = phi %struct.TNode* [ %split, %._crit_edge5 ], [ %2, %0 ], !dbg !34, !verifier.code !13
-  call void @llvm.dbg.value(metadata %struct.TNode* %.0.lcssa, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
-  %27 = icmp ne %struct.TNode* null, %.0.lcssa, !dbg !67, !verifier.code !13
-  br i1 %27, label %.lr.ph, label %42, !dbg !68, !verifier.code !13
+30:                                               ; preds = %._crit_edge, %7
+  ret i32 0, !dbg !75, !verifier.code !13
 
-.lr.ph:                                           ; preds = %26
-  br label %28, !dbg !68, !verifier.code !13
-
-28:                                               ; preds = %forwarder, %.lr.ph
-  %.11 = phi %struct.TNode* [ %.0.lcssa, %.lr.ph ], [ %30, %forwarder ], !verifier.code !13
-  call void @llvm.dbg.value(metadata %struct.TNode* %.11, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
-  call void @llvm.dbg.value(metadata %struct.TNode* %.11, metadata !35, metadata !DIExpression()), !dbg !34, !verifier.code !13
-  %29 = getelementptr inbounds %struct.TNode, %struct.TNode* %.11, i32 0, i32 0, !dbg !69, !verifier.code !13
-  %30 = load %struct.TNode*, %struct.TNode** %29, align 8, !dbg !69, !verifier.code !13
-  call void @llvm.dbg.value(metadata %struct.TNode* %30, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
-  %31 = getelementptr inbounds %struct.TNode, %struct.TNode* %.11, i32 0, i32 3, !dbg !71, !verifier.code !13
-  %32 = getelementptr inbounds %struct.TNode, %struct.TNode* %.11, i32 0, i32 2, !dbg !73, !verifier.code !13
-  %33 = load %struct.TData*, %struct.TData** %32, align 8, !dbg !73, !verifier.code !13
-  %34 = icmp ne %struct.TData* %31, %33, !dbg !74, !verifier.code !13
-  br i1 %34, label %35, label %39, !dbg !75, !verifier.code !13
-
-35:                                               ; preds = %28
-  %36 = getelementptr inbounds %struct.TNode, %struct.TNode* %.11, i32 0, i32 2, !dbg !76, !verifier.code !13
-  %37 = load %struct.TData*, %struct.TData** %36, align 8, !dbg !76, !verifier.code !13
-  %38 = bitcast %struct.TData* %37 to i8*, !dbg !78, !verifier.code !13
-  call void @free(i8* %38) #4, !dbg !79, !verifier.code !13
-  br label %39, !dbg !80, !verifier.code !13
-
-39:                                               ; preds = %35, %28
-  %40 = bitcast %struct.TNode* %.11 to i8*, !dbg !81, !verifier.code !13
-  call void @free(i8* %40) #4, !dbg !82, !verifier.code !13
-  call void @llvm.dbg.value(metadata %struct.TNode* %30, metadata !18, metadata !DIExpression()), !dbg !34, !verifier.code !13
-  %41 = icmp ne %struct.TNode* null, %30, !dbg !67, !verifier.code !13
-  br i1 %41, label %forwarder, label %._crit_edge, !dbg !68, !llvm.loop !83, !verifier.code !13
-
-._crit_edge:                                      ; preds = %39
-  br label %42, !dbg !68, !verifier.code !13
-
-42:                                               ; preds = %._crit_edge, %26
-  ret i32 0, !dbg !85, !verifier.code !13
-
-forwarder:                                        ; preds = %39
-  br label %28, !verifier.code !13
-
-forwarder6:                                       ; preds = %23
-  br label %9, !verifier.code !13
+forwarder:                                        ; preds = %27
+  br label %16, !verifier.code !13
 }
 
 ; Function Attrs: nounwind readnone speculatable willreturn
@@ -124,8 +93,6 @@ declare void @llvm.dbg.declare(metadata, metadata, metadata) #1
 
 ; Function Attrs: nounwind
 declare dso_local noalias i8* @malloc(i32) #2
-
-declare dso_local i32 @__VERIFIER_nondet_int() #3
 
 ; Function Attrs: nounwind
 declare dso_local void @free(i8*) #2
@@ -141,8 +108,7 @@ entry:
 attributes #0 = { noinline nounwind uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "frame-pointer"="all" "less-precise-fpmad"="false" "min-legal-vector-width"="0" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
 attributes #1 = { nounwind readnone speculatable willreturn }
 attributes #2 = { nounwind "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "frame-pointer"="all" "less-precise-fpmad"="false" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
-attributes #3 = { "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "frame-pointer"="all" "less-precise-fpmad"="false" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
-attributes #4 = { nounwind }
+attributes #3 = { nounwind }
 
 !llvm.dbg.cu = !{!0}
 !llvm.ident = !{!5}
@@ -192,45 +158,35 @@ attributes #4 = { nounwind }
 !41 = !DILocation(line: 532, column: 17, scope: !14)
 !42 = !DILocation(line: 532, column: 5, scope: !14)
 !43 = !DILocation(line: 532, column: 11, scope: !14)
-!44 = !DILocation(line: 534, column: 9, scope: !14)
-!45 = !{i1 true}
-!46 = !DILocation(line: 534, column: 2, scope: !14)
-!47 = !DILocation(line: 536, column: 7, scope: !48)
-!48 = distinct !DILexicalBlock(scope: !14, file: !1, line: 535, column: 2)
-!49 = !DILocation(line: 537, column: 6, scope: !48)
-!50 = !DILocation(line: 537, column: 11, scope: !48)
-!51 = !DILocation(line: 538, column: 9, scope: !48)
-!52 = !DILocation(line: 538, column: 14, scope: !48)
-!53 = !DILocation(line: 539, column: 7, scope: !54)
-!54 = distinct !DILexicalBlock(scope: !48, file: !1, line: 539, column: 7)
-!55 = !DILocation(line: 539, column: 7, scope: !48)
-!56 = !DILocation(line: 541, column: 15, scope: !57)
-!57 = distinct !DILexicalBlock(scope: !54, file: !1, line: 540, column: 3)
-!58 = !DILocation(line: 541, column: 7, scope: !57)
-!59 = !DILocation(line: 541, column: 13, scope: !57)
-!60 = !DILocation(line: 542, column: 3, scope: !57)
-!61 = !DILocation(line: 545, column: 19, scope: !62)
-!62 = distinct !DILexicalBlock(scope: !54, file: !1, line: 544, column: 3)
-!63 = !DILocation(line: 545, column: 7, scope: !62)
-!64 = !DILocation(line: 545, column: 13, scope: !62)
-!65 = distinct !{!65, !46, !66}
-!66 = !DILocation(line: 548, column: 2, scope: !14)
-!67 = !DILocation(line: 549, column: 21, scope: !14)
-!68 = !DILocation(line: 549, column: 2, scope: !14)
-!69 = !DILocation(line: 552, column: 16, scope: !70)
-!70 = distinct !DILexicalBlock(scope: !14, file: !1, line: 550, column: 2)
-!71 = !DILocation(line: 553, column: 11, scope: !72)
-!72 = distinct !DILexicalBlock(scope: !70, file: !1, line: 553, column: 7)
-!73 = !DILocation(line: 553, column: 22, scope: !72)
-!74 = !DILocation(line: 553, column: 16, scope: !72)
-!75 = !DILocation(line: 553, column: 7, scope: !70)
-!76 = !DILocation(line: 555, column: 12, scope: !77)
-!77 = distinct !DILexicalBlock(scope: !72, file: !1, line: 554, column: 3)
-!78 = !DILocation(line: 555, column: 9, scope: !77)
-!79 = !DILocation(line: 555, column: 4, scope: !77)
-!80 = !DILocation(line: 556, column: 3, scope: !77)
-!81 = !DILocation(line: 557, column: 8, scope: !70)
-!82 = !DILocation(line: 557, column: 3, scope: !70)
-!83 = distinct !{!83, !68, !84}
-!84 = !DILocation(line: 558, column: 2, scope: !14)
-!85 = !DILocation(line: 559, column: 2, scope: !14)
+!44 = !DILocalVariable(name: "i", scope: !14, file: !1, line: 535, type: !17)
+!45 = !DILocation(line: 536, column: 1, scope: !14)
+!46 = !DILocation(line: 538, column: 7, scope: !47)
+!47 = distinct !DILexicalBlock(scope: !14, file: !1, line: 537, column: 2)
+!48 = !DILocation(line: 539, column: 6, scope: !47)
+!49 = !DILocation(line: 539, column: 11, scope: !47)
+!50 = !DILocation(line: 540, column: 9, scope: !47)
+!51 = !DILocation(line: 540, column: 14, scope: !47)
+!52 = !DILocation(line: 544, column: 15, scope: !53)
+!53 = distinct !DILexicalBlock(scope: !54, file: !1, line: 543, column: 3)
+!54 = distinct !DILexicalBlock(scope: !47, file: !1, line: 542, column: 5)
+!55 = !DILocation(line: 544, column: 7, scope: !53)
+!56 = !DILocation(line: 544, column: 13, scope: !53)
+!57 = !DILocation(line: 553, column: 21, scope: !14)
+!58 = !DILocation(line: 553, column: 2, scope: !14)
+!59 = !DILocation(line: 556, column: 16, scope: !60)
+!60 = distinct !DILexicalBlock(scope: !14, file: !1, line: 554, column: 2)
+!61 = !DILocation(line: 557, column: 11, scope: !62)
+!62 = distinct !DILexicalBlock(scope: !60, file: !1, line: 557, column: 7)
+!63 = !DILocation(line: 557, column: 22, scope: !62)
+!64 = !DILocation(line: 557, column: 16, scope: !62)
+!65 = !DILocation(line: 557, column: 7, scope: !60)
+!66 = !DILocation(line: 559, column: 12, scope: !67)
+!67 = distinct !DILexicalBlock(scope: !62, file: !1, line: 558, column: 3)
+!68 = !DILocation(line: 559, column: 9, scope: !67)
+!69 = !DILocation(line: 559, column: 4, scope: !67)
+!70 = !DILocation(line: 560, column: 3, scope: !67)
+!71 = !DILocation(line: 561, column: 8, scope: !60)
+!72 = !DILocation(line: 561, column: 3, scope: !60)
+!73 = distinct !{!73, !58, !74}
+!74 = !DILocation(line: 562, column: 2, scope: !14)
+!75 = !DILocation(line: 563, column: 2, scope: !14)

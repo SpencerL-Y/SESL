@@ -1278,8 +1278,52 @@ namespace smack {
     }
 
     z3::expr GCPtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
-        z3::expr res = slah_api::newEmp(z3Ctx);
-        return res;
+        // z3::expr res = slah_api::newEmp(z3Ctx);
+        // BUG FIXED: cannot simply use emp for memleak, since some constraint relies on the spatial formula
+        if(!this->isByteLevel()){
+            // if the pt predicate is not bytified, old logic as usual
+            assert(this->getFrom()->isVar() && this->getTo()->isVar());
+            const VarExpr *fromVar = (const VarExpr *) this->getFrom();
+            const VarExpr *toVar = (const VarExpr *) this->getTo();
+            std::string fromOrigVarName = varFac->getOrigVarName(fromVar->name());
+            // TODOsh: change to stepSize later
+            int stepWidth = cfg->getVarDetailType(fromOrigVarName).second / 8;
+            // e.g. a pointer $p with type int* points to a variable $fresh
+            // $p --> $fresh
+            // will be translated into
+            /*  ($fresh_0, $fresh_1, $fresh_2, $fresh_3) = i
+                | ($p_0, $p_1, $p_2, $p_3) --> $fresh_0 #
+                  ($p_0, $p_1, $p_2, $p_3) + 1 --> $fresh_1 #
+                  ($p_0, $p_1, $p_2, $p_3) + 2 --> $fresh_2 #
+                  ($p_0, $p_1, $p_2, $p_3) + 3 --> $fresh_3
+           */
+            z3::expr res = slah_api::newEmp(z3Ctx);
+            for (int i = 0; i < stepWidth; i++) {
+                res = slah_api::sep(
+                        res,
+                        slah_api::newPto(
+                                z3Ctx.int_const((fromVar->name() + "_" + std::to_string(i)).c_str()),
+                                z3Ctx.int_const((toVar->name() + "_" + std::to_string(i)).c_str())
+                        )
+                );
+            }
+            // z3::expr res = slah_api::newPto(
+            //   from->translateToZ3(z3Ctx, cfg, varFac),
+            //   to->translateToZ3(z3Ctx, cfg, varFac)
+            // );
+            CDEBUG(std::cout << "in ptlit!" << res.to_string() << std::endl;);
+            return res;
+        } else {
+            // use new logic
+            z3::expr res = slah_api::newEmp(z3Ctx);
+            for(int i = 0; i < this->stepSize; i++){
+                res = slah_api::sep(
+                    res,
+                    this->getByte(i)->translateToZ3(z3Ctx, cfg, varFac)
+                );
+            }
+            return res;
+        }
     }
 
 
@@ -1288,7 +1332,15 @@ namespace smack {
     }
 
     z3::expr GCBlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
-        z3::expr res = slah_api::newEmp(z3Ctx);
+        // z3::expr res = slah_api::newEmp(z3Ctx);
+        // BUG FIXED: cannot simply use emp for memleak, since some constraint relies on the spatial formula
+        if(this->isEmpty()){
+            return slah_api::newEmp(z3Ctx);
+        }
+        auto f = from->translateToZ3(z3Ctx, cfg, varFac);
+        auto t = to->translateToZ3(z3Ctx, cfg, varFac);
+        CDEBUG(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl;);
+        z3::expr res = slah_api::newBlk(f, t);
         return res;
     }
 
@@ -1298,7 +1350,6 @@ namespace smack {
         }
         auto f = from->translateToZ3(z3Ctx, cfg, varFac);
         auto t = to->translateToZ3(z3Ctx, cfg, varFac);
-        z3::expr ex = z3Ctx.bool_val(true);
         CDEBUG(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl;);
         z3::expr res = slah_api::newBlk(f, t);
         return res;

@@ -37,11 +37,12 @@ namespace smack
             MemSafeChecker(std::shared_ptr<TransToZ3> trans, StatementList& stmtList, SHExprPtr fsh);
             ~MemSafeChecker();
             void setSH(SHExprPtr sh);
-            std::pair<bool, int> checkCurrentMemLeak(ExecutionStatePtr state, CFGPtr mainGraph);
-            std::pair<bool, const Stmt*> checkInferenceError(); 
+            std::pair<bool, int> checkCurrentMemLeak(ExecutionStatePtr state, CFGPtr mainGraph, bool pathFeasible);
+            std::pair<bool, const Stmt*> checkInferenceError(bool pathFeasible); 
             bool checkPathFeasibility();
             // Return value: checkResult, Error Stmt
             std::pair<bool, const Stmt*> checkProperty(SHExprPtr property);
+            SHExprPtr extractHeapSymbolicHeap(SHExprPtr originalSH, ExecutionStatePtr state);
     };
     typedef std::shared_ptr<MemSafeChecker> MemSafeCheckerPtr;
 

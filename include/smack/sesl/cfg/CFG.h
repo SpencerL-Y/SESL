@@ -22,7 +22,8 @@ namespace smack
         /* data */
         std::vector<ProcDecl*> procVec;
         std::vector<ConstDecl*> constDecls;
-        std::unordered_map<std::string, std::string> varType;
+        std::unordered_map<std::string, std::string> varType; 
+        std::unordered_map<std::string, std::string> pathVarType;
         std::unordered_map<std::string, StatePtr> states;
         std::string entryBlockName;
         void printCFG(const std::string& start, bool fresh = true);
@@ -42,7 +43,9 @@ namespace smack
         explicit CFG(ProcDecl* procDecl = nullptr);
         explicit CFG(ProcDecl* procDecl, std::string entryBlock);
         std::string getVarType(std::string varName);
+        std::string getGlobalVarType(std::string varName);
         std::pair<std::string, int> getVarDetailType(std::string varName);
+        std::pair<std::string, int> getGlobalVarDetailType(std::string varName);
         void setProc(ProcDecl* procDecl);
         void setProc(std::vector<ProcDecl*>& procV);
         virtual void buildCFG();
@@ -56,7 +59,10 @@ namespace smack
         void printStateInfo();
         StatePtr getEntryState();
         std::string getEntryBlockName();
+        void addGlobalVarType(std::string varName, std::string type);
         void addVarType(std::string varName, std::string type);
+        void initPathVarType();
+        void clearPathVarType();
         ~CFG() = default;
     };
     typedef std::shared_ptr<CFG> CFGPtr;

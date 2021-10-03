@@ -162,6 +162,32 @@ namespace smack {
     }
 
     std::string CFG::getVarType(string varName) {
+        if(!varName.compare("$Null") || !varName.compare("$0.ref")){
+            return "ref";
+        }
+        if (pathVarType.find(varName) != pathVarType.end()) {
+            if(FULL_DEBUG && OPEN_VARTYPE){
+            for (const auto &i : pathVarType) {
+                //if(!i.first.compare(varName))
+                    std::cout << i.first << " " << i.second << " " << varName << std::endl;
+            }
+            }
+            
+            return pathVarType[varName];
+            
+        } else {
+            for (const auto &i : pathVarType) {
+                std::cout << i.first << " " << i.second << " " << varName << std::endl;
+            }
+            CFDEBUG(std::cout << "ERROR: vartype not found: " << varName << std::endl;);
+            return "";
+        }
+    }
+
+    std::string CFG::getGlobalVarType(string varName) {
+        if(!varName.compare("$Null") || !varName.compare("$0.ref")){
+            return "ref";
+        }
         if (varType.find(varName) != varType.end()) {
             if(FULL_DEBUG && OPEN_VARTYPE){
             for (const auto &i : varType) {
@@ -176,7 +202,7 @@ namespace smack {
             for (const auto &i : varType) {
                 std::cout << i.first << " " << i.second << " " << varName << std::endl;
             }
-            CFDEBUG(std::cout << "ERROR: vartype not found: " << varName << std::endl;);
+            CFDEBUG(std::cout << "ERROR: globalvartype not found: " << varName << std::endl;);
             return "";
         }
     }
@@ -201,6 +227,28 @@ namespace smack {
 
     std::pair<std::string, int> CFG::getVarDetailType(std::string varName) {
         auto type = getVarType(varName);
+        if (type[0] == 'i' || type[0] == 'M') {
+            // The variable is a data variable, ans represents the data size
+            int ans = 0;
+            for (int i = 1; i < type.length(); ++i) {
+                ans = ans * 10 + type[i] - '0';
+            }
+            return {type, ans};
+        } else if (type[0] == 'r') {
+            // The variable is a pointer variable, ans represents the stepWidth
+            int ans = 0;
+            for (int i = 3; i < type.length(); ++i) {
+                ans = ans * 10 + type[i] - '0';
+            }
+            return {type, ans};
+        } else {
+            return {"fresh", 0};
+        }
+        return {type, 0};
+    }
+
+    std::pair<std::string, int> CFG::getGlobalVarDetailType(std::string varName) {
+        auto type = getGlobalVarType(varName);
         if (type[0] == 'i' || type[0] == 'M') {
             // The variable is a data variable, ans represents the data size
             int ans = 0;
@@ -275,11 +323,32 @@ namespace smack {
     }
 
     void CFG::addVarType(std::string varName, std::string type) {
-        CFDEBUG(std::cout << "INFO: add var type: " << varName << type << std::endl;)
+        CFDEBUG(std::cout << "INFO: add var type: " << varName << " " << type << std::endl;)
+        if(this->pathVarType.find(varName) == this->pathVarType.end()){
+            this->pathVarType[varName] = type;
+        } else {
+            for (const auto &i : pathVarType) {
+                if(!i.first.compare(varName)){
+                    CFDEBUG(std::cout << i.first << " " << i.second << " " << varName << std::endl;);
+                }
+            }
+            CFDEBUG(std::cout << "WARNING: varName exists: " << varName << std::endl;);
+            
+        }
+    }
+
+    void CFG::addGlobalVarType(std::string varName, std::string type) {
+        CFDEBUG(std::cout << "INFO: add globalvar type: " << varName << " " << type << std::endl;)
         if(this->varType.find(varName) == this->varType.end()){
             this->varType[varName] = type;
         } else {
+            for (const auto &i : varType) {
+                if(!i.first.compare(varName)){
+                    CFDEBUG(std::cout << i.first << " " << i.second << " " << varName << std::endl;);
+                }
+            }
             CFDEBUG(std::cout << "WARNING: varName exists: " << varName << std::endl;);
+
         }
     }
 
@@ -352,6 +421,17 @@ namespace smack {
             cout << "Decls: "; decl->print(cout);cout <<endl;
             cout << "\tvariable: " << decl->getName() << endl;
         }
+    }
+
+
+    void CFG::initPathVarType(){
+        for(auto i : this->varType){
+            this->pathVarType[i.first] = i.second;
+        }
+    }
+
+    void CFG::clearPathVarType(){
+        this->pathVarType.clear();
     }
 
     std::vector<ConstDecl *> CFG::getConstDecls() {

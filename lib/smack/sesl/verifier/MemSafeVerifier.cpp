@@ -67,6 +67,8 @@ namespace smack {
                 }
             }
             }
+
+            mainGraph->initPathVarType();
             const Expr* boolTrue = Expr::lit(true);
             // initial list of spatial lits
             std::list<const SpatialLiteral*> splist;
@@ -107,7 +109,7 @@ namespace smack {
 
             MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans, finalStmts, currSH);
             
-            std::cout << std::endl;
+            //std::cout << std::endl;
             bool pathFeasible = checker->checkPathFeasibility();
             bool memLeakSafeSat = checker->checkCurrentMemLeak(currExecState, mainGraph, pathFeasible).first;
             bool infErrorSafeSat = checker->checkInferenceError(pathFeasible).first;
@@ -117,6 +119,7 @@ namespace smack {
                 break;
             }
             BlockExecutor::ExprMemoryManager->clearMemory();
+            mainGraph->clearPathVarType();
             if(FULL_DEBUG && OPEN_EXECUTION_PATH){
             std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE PATH" << std::endl;
             }
@@ -148,7 +151,7 @@ namespace smack {
 
     std::pair<bool, int> MemSafeChecker::checkCurrentMemLeak(ExecutionStatePtr state, CFGPtr mainGraph, bool pathFeasible){
         if(!pathFeasible){
-            DEBUG_WITH_COLOR(std::cout << "CHECK: Satisfied, path condition false!" << std::endl, color::green);
+            //DEBUG_WITH_COLOR(std::cout << "CHECK: Satisfied, path condition false!" << std::endl, color::green);
             return {true, 0};
         } else {
             SHExprPtr heapSH = this->extractHeapSymbolicHeap(this->finalSH, state);
@@ -166,7 +169,7 @@ namespace smack {
             CFDEBUG(std::cout << consequent << std::endl;);
             z3::check_result result = slah_api::checkEnt(premise, consequent);
             if(result == z3::unsat){
-                DEBUG_WITH_COLOR(std::cout << "CHECK: MemLeak Satisfied!" << std::endl, color::green);
+                //DEBUG_WITH_COLOR(std::cout << "CHECK: MemLeak Satisfied!" << std::endl, color::green);
                 return {true, 0};
             } else {
                 DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: MemLeak!!!" << std::endl;, color::red);
@@ -203,7 +206,7 @@ namespace smack {
 
     std::pair<bool, const Stmt*> MemSafeChecker::checkInferenceError(bool pathFeasible){
         if(!pathFeasible){
-            DEBUG_WITH_COLOR(std::cout << "CHECK: Inference check pass! Path condition unsat..." << std::endl;, color::green);
+            //DEBUG_WITH_COLOR(std::cout << "CHECK: Inference check pass! Path condition unsat..." << std::endl;, color::green);
             return std::pair<bool, const Stmt*>(true, nullptr);
         } else {
             const Stmt* previous = nullptr;

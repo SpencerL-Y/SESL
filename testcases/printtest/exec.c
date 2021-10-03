@@ -152,18 +152,56 @@
 #include <stdlib.h>
 
 typedef struct node{
-    int *p;
-    int d;
-} Node_t;
+    struct node* next;
+    struct node* prev;
+    int *pData;
+    int data;
+} Node;
 
 int main(){
     
-    Node_t* node = malloc(sizeof(Node_t));
-    node->p = malloc(1);
-    if(node->p == &node->d){
-        int *k = malloc(1123123);
-    }
-    free(node->p);
-    free(node);
-    return 0;
+//     Node_t* node = malloc(sizeof(Node_t));
+//     node->p = malloc(1);
+//     if(node->p == &node->d){
+//         int *k = malloc(1123123);
+//     }
+//     free(node->p);
+//     free(node);
+//     return 0;
+// }
+
+
+ Node* list = ((void *)0);
+ Node* y = ((void *)0);
+ y = malloc(sizeof(*y));
+ y->next = ((void *)0);
+ y->prev = ((void *)0);
+ y->pData = &y->data;
+ list = y;
+ y = malloc(sizeof(*y));
+ y->next = list;
+ list->prev = y;
+ y->pData = malloc(sizeof(*y->pData));
+ list = y;
+ y = malloc(sizeof(*y));
+ y->next = list;
+ list->prev = y;
+ y->pData = malloc(sizeof(*y->pData));
+ list = y;
+ y = malloc(sizeof(*y));
+ y->next = list;
+ list->prev = y;
+ y->pData = malloc(sizeof(*y->pData));
+ list = y;
+ while (((void *)0) != list)
+ {
+  y = list;
+  list = list->next;
+  if (&y->data != y->pData)
+  {
+   free(y->pData);
+  }
+  free(y);
+ }
+ return 0;
 }

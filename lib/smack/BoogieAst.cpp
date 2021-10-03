@@ -1030,12 +1030,12 @@ namespace smack {
     z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
         
 
-        CFDEBUG(std::cout << "translating var" << this->name() << std::endl;);
+        CDEBUG(std::cout << "translating var" << this->name() << std::endl;);
         // translating $Null
         std::pair<std::string, int> typeResult = cfg->getVarDetailType(varFac->getOrigVarName(this->name()));
         if (typeResult.second == 1) {
 
-            CFDEBUG(std::cout << "translating boolvar" << this->name() << std::endl;);
+            CDEBUG(std::cout << "translating boolvar" << this->name() << std::endl;);
             z3::expr result = z3Ctx.bool_const(this->name().c_str());
             return result;
         }

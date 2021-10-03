@@ -10,7 +10,8 @@ namespace smack {
         if (exePathVec.size() > 1000) return;
 //        cout << "Loop: " << state->getBlockName() << " " << (father == nullptr) << " " << visNum[father] << " " << state->isLoopExit() << endl;
         if (father && visNum[father] == bound && state->isLoopExit()) {
-            path.push_back(forceAssumeToBeTrue(state->copy()));
+            // path.push_back(forceAssumeToBeTrue(state->copy()));
+            path.push_back(state);
         } else {
             path.push_back(state);
         }

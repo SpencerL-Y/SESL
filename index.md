@@ -55,8 +55,8 @@ this will compile the tool and then run an example in folder ```testcases/printt
 
 ## Authors and Affliation
 Institute of Software, China Academy of Sciences
-- [Xie Li]()
-- [Yutian Zhu]()
-- [Zongxin Liu]() 
+- [Xie Li](https://github.com/SpencerL-Y)
+- [Yutian Zhu](https://github.com/zhuyutian57)
+- [Zongxin Liu](https://github.com/lzx-center) 
 ### Contact
 - EMAIL: lixie19[AT]ios[DOT]ac[DOT]cn

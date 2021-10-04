@@ -1,37 +1,62 @@
-## Welcome to GitHub Pages
+## Introduction
 
-You can use the [editor on GitHub](https://github.com/SpencerL-Y/SESL/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+SESL is a tool built for memory safety checking. The memory safety errors under consideration are **memory leak, invalid dereference** of a pointer, **invalid free**. SESL currently relies on a symbolic execution engine based on separation logic to check the above errors in ```C``` program. 
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+Separation logic is brought up by [John C. Reynolds](https://en.wikipedia.org/wiki/John_C._Reynolds) in [this paper](https://www.cs.cmu.edu/~jcr/seplogic.pdf) as an extension of Hoare's logic. Compared with the latter, separation logic provides a good support, in syntax and semantic, for dealing with configurations with heap and complex data structures. SESL use the separation logic library (compSPEN](https://link.springer.com/chapter/10.1007%2F978-3-319-40229-1_36) to check the entailments of speration logic formula.
 
-### Markdown
+SESL is constructed based on the state-of-the-art tool [SMACK](https://smackers.github.io/), which provides an extensible fronted for parsing programs into LLVM IR and then translates to Boogie IVL.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
-```markdown
-Syntax highlighted code block
+## Download and Installation
+### System and Compiling Requirements
+- Linux (Ubuntu 20.04 LTS)
+- Python 3.7 and above
+- CMake and Ninja build
 
-# Header 1
-## Header 2
-### Header 3
+### Dependencies
+Following libraries are required to successfully compile SESL to run:
+- **LLVM** and **Clang**:
+LLVM and clang can be installed using apt-get in the terminal:
+```
+sudo apt-get install llvm clang
+```
+- **Z3**: Installation of Z3-prover can be found [here](https://github.com/Z3Prover/z3/blob/master/README-CMake.md). (To compile from source, Z3 should be built using CMake).
+- **OpenSSL**:
+Openssl can be installed using apt-get from terminal:
+```
+sudo apt-get install openssl
+sudo apt-get install libssl-dev
+```
+- **compSPEN**: a separation logic library based on Z3, already been added to the folder ```./lib```.
 
-- Bulleted
-- List
 
-1. Numbered
-2. List
+### Install SESL
+In the root of this project:
+```
+mkdir build
+cd build
+cmake  -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug .. -G Ninja
+ninja build
+cd ..
 
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+### How to Run SESL
+Run from archived:
+```
+./sesl-svcomp.sh <SRC_FILE> -t --sh-mem-leak --add-line-info
+```
+Run with source: after building sesl from source file:
+```
+cd bin
+./test_debug.sh exec
+```
+this will compile the tool and then run an example in folder ```testcases/printtest/exec.c```
 
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/SpencerL-Y/SESL/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+## Authors and Affliation
+Institute of Software, China Academy of Sciences
+- [Xie Li]()
+- [Yutian Zhu]()
+- [Zongxin Liu]() 
+### Contact
+- EMAIL: lixie19[AT]ios[DOT]ac[DOT]cn

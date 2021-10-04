@@ -69,7 +69,7 @@ class TestRunner():
         self.walkDict()
 
     def run_single_file(self, name, ftype, prop):
-        command = 'smack {}/{} -ll {}/{}_IR.ll --bpl {}/{}.bpl -t --sh-mem-leak 2>1 1>>{}.log'.format(
+        command = 'sesl {}/{} -ll {}/{}_IR.ll --bpl {}/{}.bpl -t --sh-mem-leak 2>1 1>>{}.log'.format(
             self.path, name + '.' + ftype , self.path, name, self.path, name, self.path + '/' + name)
         # print(command, os.system(command))
         subprocess.run(command, shell = True, timeout = self.duration)

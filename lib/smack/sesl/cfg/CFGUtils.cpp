@@ -35,9 +35,9 @@ namespace smack {
         }
         mainProcManager = ProcManager::getNewManager("main");
         mainProcManager->doInline();
-        cout << "=====================CENTER NEW===================" << endl;
+        cout << "-------------------- PRINT RENAMED IR --------------------" << endl;
         mainProcManager->getRenamedProc()->print(cout); cout << endl;
-        cout << "=====================CENTER NEW===================" << endl;
+        cout << "-------------------- PRINT INTERPROC INLINE ORDER--------------------" << endl;
         auto ret = make_shared<CFG>(mainProcManager->getRenamedProc(), mainProcManager->getEntryBlockName());
         ret->setConstDecls(constDecls);
         return ret;

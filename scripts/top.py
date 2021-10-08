@@ -10,7 +10,7 @@ from enum import Flag, auto
 from .utils import temporary_file, try_command, remove_temp_files
 from .frontend import link_bc_files, frontends, languages
 
-VERSION = '2.6.3'
+VERSION = '1.0.0'
 
 
 class VResult(Flag):
@@ -288,7 +288,7 @@ def arguments():
         help='source file to be translated/verified')
 
     parser.add_argument('--version', action='version',
-                        version='SMACK version ' + VERSION)
+                        version='SESL version ' + VERSION)
 
     noise_group = parser.add_mutually_exclusive_group()
 

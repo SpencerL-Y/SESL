@@ -50,8 +50,8 @@ namespace smack
         char currentPath[100];
         getcwd(currentPath, sizeof(currentPath));
         std::string pathStr = currentPath;
-        FILE* fp = fopen((pathStr + "/testWitness.graphml").c_str(), "w");
-        std::cout << "INFO: witness output: " << pathStr + "/testWitness.graphml" << std::endl;
+        FILE* fp = fopen((pathStr + "/witness.graphml").c_str(), "w");
+        std::cout << "INFO: witness output: " << pathStr + "/witness.graphml" << std::endl;
         XMLDocument* doc = new XMLDocument();
         XMLDeclaration* docDecl = doc->NewDeclaration();
         doc->LinkEndChild(docDecl);
@@ -179,7 +179,7 @@ namespace smack
 
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "producer");
-            data->SetText("TOOL NAME");
+            data->SetText("SESL");
 
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "specification");
@@ -191,7 +191,7 @@ namespace smack
 
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "architecture");
-            data->SetText(std::to_string(PTR_BYTEWIDTH * 8).c_str());
+            data->SetText((std::to_string(PTR_BYTEWIDTH * 8)+"bit").c_str());
 
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "creationtime");
@@ -231,13 +231,15 @@ namespace smack
                 }
             }
         }
-        this->createEntryNodeForGraph(graph);
         for(int i = 0; i < locVec.size(); i++){
             if(i != 0 && i != locVec.size() - 1){
+
                 this->createEdgeForGraph(graph, "S" + std::to_string(i), "S" + std::to_string(i + 1), locVec[i]);
                 this->createNodeForGraph(graph, "S" + std::to_string(i + 1));
             } else if(i == 0){
-                this->createEdgeForGraph(graph, "entry", "S" + std::to_string(i), locVec[i]);
+                this->createEntryNodeForGraph(graph);
+                this->createEdgeForGraph(graph, "entry", "S" + std::to_string(i+1), locVec[i]);
+                this->createNodeForGraph(graph, "S" + std::to_string(i));
             } else {
                 this->createEdgeForGraph(graph, "S" + std::to_string(i), "sink", locVec[i]);
                 this->createSinkNodeForGraph(graph);
@@ -262,7 +264,8 @@ namespace smack
     }
 
     void ViolationPathGen::createNodeForGraph(XMLElement* graph, std::string nodeId){
-        graph->InsertNewChildElement("node")->SetAttribute("id", nodeId.c_str());
+        XMLElement* node = graph->InsertNewChildElement("node");
+        node->SetAttribute("id", nodeId.c_str());
     }
 
     void ViolationPathGen::createEdgeForGraph(XMLElement* graph, std::string fromNodeId, std::string toNodeId, int lineNum){

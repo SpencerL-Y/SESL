@@ -239,7 +239,7 @@ namespace smack
             } else if(i == 0){
                 this->createEntryNodeForGraph(graph);
                 this->createEdgeForGraph(graph, "entry", "S" + std::to_string(i+1), locVec[i]);
-                this->createNodeForGraph(graph, "S" + std::to_string(i));
+                this->createNodeForGraph(graph, "S" + std::to_string(i+1));
             } else {
                 this->createEdgeForGraph(graph, "S" + std::to_string(i), "sink", locVec[i]);
                 this->createSinkNodeForGraph(graph);

@@ -11,7 +11,7 @@ import json
 from smackgen import *
 from smackverify import *
 
-VERSION = '2.6.3'
+VERSION = '1.0.0'
 
 
 def reachParser():
@@ -139,7 +139,7 @@ def GetCodeCoverage(
     if(smackd):
         print((json.dumps(result)))
     else:
-        print('\nSMACK verifier version ' + VERSION + '\n\n')
+        print('\nSESL version ' + VERSION + '\n\n')
         print("Unreachable code:")
         pprint.pprint(result, width=100)
 

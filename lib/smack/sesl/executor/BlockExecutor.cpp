@@ -1089,7 +1089,7 @@ namespace smack{
         // if the copy is overlapping, report the error
 
         if(this->isMemcopyOverlapping(srcVar, dstVar, copySize)){
-            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::VALID_DEREF);
+            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
             CFDEBUG(std::cout << "INFO: memcopy overlapping.." << std::endl;);
             return newSH;
         }

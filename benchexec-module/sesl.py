@@ -10,6 +10,9 @@ import benchexec.tools.template
 
 
 class Tool(benchexec.tools.template.BaseTool2):
+    """
+    A Symbolic Executor based on Separation Logic
+    """
 
     def executable(self, tool_locator):
         return tool_locator.find_executable("sesl-svcomp.sh")
@@ -17,9 +20,14 @@ class Tool(benchexec.tools.template.BaseTool2):
     def name(self):
         return "SESL"
 
+    def version(self, executable):
+        return self._version_from_tool(executable, arg="--version")
+
     def cmdline(self, executable, options, task, rlimits):
         options += ["-t", "--sh-mem-leak", "--add-line-info"]
-        options += [task.single_input_file]
+        if task.property_file:
+            options += ["--svcomp-property", task.property_file]
+        options += list(task.input_files_or_identifier)
         return [executable] + options
 
     def determine_result(self, run):

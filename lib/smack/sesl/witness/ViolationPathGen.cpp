@@ -27,7 +27,7 @@ namespace smack
         MemSafeVerifier &verifier = getAnalysis<MemSafeVerifier>();
         ExecutionPath violationPath = verifier.getViolationPath();
         if(FULL_DEBUG && OPEN_VIOLATION_PATH){
-        std::cout << "------------ START GENERATING VIOLATION PATH -----------" << std::endl;
+        std::cout << "-------------------- GENERATING VIOLATION PATH --------------------" << std::endl;
         std::cout << "PRINT PATH: " << std::endl;
         for(StatePtr s : violationPath.getExePath()){
             for(const Stmt* stmt : s->getStateBlock()->getStatements()){
@@ -39,8 +39,8 @@ namespace smack
                 std::cout << std::endl;
             }
         }
-        std::cout << "------------ END GENERATIING VIOLATION PATH -----------" << std::endl;
         }
+        std::cout << "-------------------- WITNESS INFO --------------------" << std::endl;
         this->generateSVCOMPWitness(violationPath);
         return false;
     }

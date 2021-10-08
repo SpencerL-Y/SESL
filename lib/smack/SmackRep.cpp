@@ -1311,7 +1311,7 @@ namespace smack {
                 external = true;
             }
         }
-        SDEBUG(errs() << "-------INSERT: Global Variables " << name << "\n");
+        // SDEBUG(errs() << "-------INSERT: Global Variables " << name << "\n");
         decls.push_back(Decl::constant(name, Naming::PTR_TYPE, ax, false));
         if (!size)
             size = targetData->getPrefTypeAlignment(v->getType());

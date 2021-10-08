@@ -171,37 +171,6 @@ int main(){
 // }
 
 
- Node* list = ((void *)0);
- Node* y = ((void *)0);
- y = malloc(sizeof(*y));
- y->next = ((void *)0);
- y->prev = ((void *)0);
- y->pData = &y->data;
- list = y;
- y = malloc(sizeof(*y));
- y->next = list;
- list->prev = y;
- y->pData = malloc(sizeof(*y->pData));
- list = y;
- y = malloc(sizeof(*y));
- y->next = list;
- list->prev = y;
- y->pData = malloc(sizeof(*y->pData));
- list = y;
- y = malloc(sizeof(*y));
- y->next = list;
- list->prev = y;
- y->pData = malloc(sizeof(*y->pData));
- list = y;
- while (((void *)0) != list)
- {
-  y = list;
-  list = list->next;
-  if (&y->data != y->pData)
-  {
-   free(y->pData);
-  }
-  free(y);
- }
+ int *a = malloc(4*sizeof(int));
  return 0;
 }

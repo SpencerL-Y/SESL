@@ -53,10 +53,12 @@ namespace smack {
             cd->print(std::cout);
         }
         }
+        std::cout << "-------------------- EXECUTE AND CHECK --------------------" << std::endl;
+        int bugNotFound = true;
         for(ExecutionPath p : cfgExec.getExecPathVec()){
             if(FULL_DEBUG && OPEN_EXECUTION_PATH){
-            std::cout << "=========== DO SYMBOLIC EXECUTION FOR ONE PATH" << std::endl;
-            // initialization of the execution initial state
+            std::cout << "--------------------BEGIN SYMBOLIC EXECUTION FOR ONE PATH--------------------" << std::endl;
+            // initialization of the execution initial stat
             //---------------------- initializatio of SH
             // initial pure formula 
             std::cout << "PRINT PATH: " << std::endl;
@@ -116,13 +118,17 @@ namespace smack {
             if(!memLeakSafeSat || !infErrorSafeSat){
                 std::cout << "INFO: BUG FOUND, STOP EXCUTION" << std::endl;
                 this->violationPath = p;
+                bugNotFound = false;
                 break;
             }
             BlockExecutor::ExprMemoryManager->clearMemory();
             mainGraph->clearPathVarType();
             if(FULL_DEBUG && OPEN_EXECUTION_PATH){
-            std::cout << "=========== END SYMBOLIC EXECUTION FOR ONE PATH" << std::endl;
+            std::cout << "--------------------END SYMBOLIC EXECUTION FOR ONE PATH--------------------" << std::endl;
             }
+        }
+        if(bugNotFound){
+            DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: all path went through" << std::endl, color::yellow);
         }
 
         

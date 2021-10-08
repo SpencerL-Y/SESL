@@ -217,7 +217,7 @@ namespace smack
                             codeLine = attrVals.front();
                             attrVals.pop_front();
                         }
-                        int stateInt = ((const IntLit*) codeLine)->getVal();\
+                        int stateInt = ((const IntLit*) codeLine)->getVal();
                         if(locVec.size() > 0){
                             if(stateInt == locVec.back()){
 
@@ -231,20 +231,26 @@ namespace smack
                 }
             }
         }
-        for(int i = 0; i < locVec.size(); i++){
-            if(i != 0 && i != locVec.size() - 1){
+        if(locVec.size() > 0){
+            for(int i = 0; i < locVec.size(); i++){
+                if(i != 0 && i != locVec.size() - 1){
 
-                this->createEdgeForGraph(graph, "S" + std::to_string(i), "S" + std::to_string(i + 1), locVec[i]);
-                this->createNodeForGraph(graph, "S" + std::to_string(i + 1));
-            } else if(i == 0){
-                this->createEntryNodeForGraph(graph);
-                this->createEdgeForGraph(graph, "entry", "S" + std::to_string(i+1), locVec[i]);
-                this->createNodeForGraph(graph, "S" + std::to_string(i+1));
-            } else {
-                this->createEdgeForGraph(graph, "S" + std::to_string(i), "sink", locVec[i]);
-                this->createSinkNodeForGraph(graph);
+                    this->createEdgeForGraph(graph, "S" + std::to_string(i), "S" + std::to_string(i + 1), locVec[i]);
+                    this->createNodeForGraph(graph, "S" + std::to_string(i + 1));
+                } else if(i == 0){
+                    this->createEntryNodeForGraph(graph);
+                    this->createEdgeForGraph(graph, "entry", "S" + std::to_string(i+1), locVec[i]);
+                    this->createNodeForGraph(graph, "S" + std::to_string(i+1));
+                } else {
+                    this->createEdgeForGraph(graph, "S" + std::to_string(i), "sink", locVec[i]);
+                    this->createSinkNodeForGraph(graph);
+                }
             }
+        } else {
+            this->createEntryNodeForGraph(graph);
         }
+        
+
     }
 
     void ViolationPathGen::createEntryNodeForGraph(XMLElement* graph){

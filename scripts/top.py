@@ -10,15 +10,15 @@ from enum import Flag, auto
 from .utils import temporary_file, try_command, remove_temp_files
 from .frontend import link_bc_files, frontends, languages
 
-VERSION = '1.0.0'
+VERSION = "1.0.0"
 
 
 class VResult(Flag):
-    '''
+    """
     This class represents verification results.
     `MEMSAFETY_ERROR` and `ERROR` do not correspond to any results. They are
     used to group certain results.
-    '''
+    """
 
     VERIFIED = auto()
     ASSERTION_FAILURE = auto()
@@ -30,31 +30,37 @@ class VResult(Flag):
     TIMEOUT = auto()
     UNKNOWN = auto()
     MEMSAFETY_ERROR = INVALID_DEREF | INVALID_FREE | INVALID_MEMTRACK
-    ERROR = (ASSERTION_FAILURE | INVALID_DEREF | INVALID_FREE
-             | INVALID_MEMTRACK | OVERFLOW | RUST_PANIC)
+    ERROR = (
+        ASSERTION_FAILURE
+        | INVALID_DEREF
+        | INVALID_FREE
+        | INVALID_MEMTRACK
+        | OVERFLOW
+        | RUST_PANIC
+    )
 
     def __str__(self):
-        return self.name.lower().replace('_', '-')
+        return self.name.lower().replace("_", "-")
 
     def description(self):
-        '''Return the description for certain result.'''
+        """Return the description for certain result."""
 
         descriptions = {
-            VResult.ASSERTION_FAILURE: '',
-            VResult.INVALID_DEREF: 'invalid pointer dereference',
-            VResult.INVALID_FREE: 'invalid memory deallocation',
-            VResult.INVALID_MEMTRACK: 'memory leak',
-            VResult.OVERFLOW: 'integer overflow',
-            VResult.RUST_PANIC: 'Rust panic'}
+            VResult.ASSERTION_FAILURE: "",
+            VResult.INVALID_DEREF: "invalid pointer dereference",
+            VResult.INVALID_FREE: "invalid memory deallocation",
+            VResult.INVALID_MEMTRACK: "memory leak",
+            VResult.OVERFLOW: "integer overflow",
+            VResult.RUST_PANIC: "Rust panic",
+        }
 
         if self in descriptions:
             return descriptions[self]
         else:
-            raise RuntimeError('No description associated with result: %s'
-                               % self)
+            raise RuntimeError("No description associated with result: %s" % self)
 
     def return_code(self):
-        '''Return the exit code for each result.'''
+        """Return the exit code for each result."""
 
         return_codes = {
             VResult.VERIFIED: 0,
@@ -65,60 +71,67 @@ class VResult(Flag):
             VResult.OVERFLOW: 5,
             VResult.RUST_PANIC: 6,
             VResult.TIMEOUT: 126,
-            VResult.UNKNOWN: 127}
+            VResult.UNKNOWN: 127,
+        }
 
         if self in return_codes:
             return return_codes[self]
         else:
-            raise RuntimeError('No return code associated with result: %s'
-                               % self)
+            raise RuntimeError("No return code associated with result: %s" % self)
 
     def message(self, args):
-        '''Return SMACK's output for each result.'''
+        """Return SMACK's output for each result."""
 
         if self is VResult.VERIFIED:
-            return ('SMACK found no errors'
-                    + ('' if args.modular else ' with unroll bound %s'
-                        % args.unroll) + '.')
+            return (
+                "SMACK found no errors"
+                + ("" if args.modular else " with unroll bound %s" % args.unroll)
+                + "."
+            )
         elif self in VResult.ERROR:
             description = self.description()
-            return ('SMACK found an error'
-                    + (': %s' % description if description else '') + '.')
+            return (
+                "SMACK found an error"
+                + (": %s" % description if description else "")
+                + "."
+            )
         elif self is VResult.TIMEOUT:
-            return 'SMACK timed out.'
+            return "SMACK timed out."
         elif self is VResult.UNKNOWN:
-            return 'SMACK result is unknown.'
+            return "SMACK result is unknown."
         else:
-            raise RuntimeError('No message associated with result: %s' % self)
+            raise RuntimeError("No message associated with result: %s" % self)
 
 
 class PropertyAction(argparse.Action):
-    '''
+    """
     This class defines the argparse action when the arguments of the `--check`
     option are consumed.
-    '''
+    """
 
     def __init__(self, option_strings, dest, **kwargs):
         super(PropertyAction, self).__init__(option_strings, dest, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
-        '''
+        """
         Fold the provided arguments with bitwise or. This is equivalent to
         extending the property list with the arguments.
-        '''
+        """
 
-        setattr(namespace, self.dest,
-                functools.reduce(lambda x, y: x | y, values,
-                                 getattr(namespace, self.dest)))
+        setattr(
+            namespace,
+            self.dest,
+            functools.reduce(lambda x, y: x | y, values, getattr(namespace, self.dest)),
+        )
 
 
 # Shaobo: shamelessly borrowed it from https://stackoverflow.com/a/55500795
 class VProperty(Flag):
-    '''
+    """
     This class defines the properties that SMACK verifies. `NONE` is a special
     value that does not correspond to any property. It's used simply to get
     around the default value issue when the action similar to `extend`.
-    '''
+    """
 
     NONE = 0
     ASSERTIONS = auto()
@@ -134,7 +147,7 @@ class VProperty(Flag):
     SH_MEMORY_SAFETY = SH_DEREF | SH_FREE | SH_MEM_LEAK
 
     def __str__(self):
-        return self.name.lower().replace('_', '-')
+        return self.name.lower().replace("_", "-")
 
     def __repr__(self):
         return str(self)
@@ -142,7 +155,7 @@ class VProperty(Flag):
     @staticmethod
     def argparse(s):
         try:
-            return VProperty[s.upper().replace('-', '_')]
+            return VProperty[s.upper().replace("-", "_")]
         except KeyError:
             return s
 
@@ -155,22 +168,22 @@ class VProperty(Flag):
         return [VProperty.SH_MEM_LEAK, VProperty.SH_FREE, VProperty.SH_MEM_LEAK]
 
     def contains_mem_safe_props(self):
-        '''
+        """
         Test if a property is either memory-safety or any of its subproperties.
-        '''
+        """
 
         return bool(self & VProperty.MEMORY_SAFETY)
 
     def contains_sh_mem_safe_props(self):
-        '''
+        """
         Test if a property is either memory-safety or any of its subproperties.
-        '''
+        """
         return bool(self & VProperty.SH_MEMORY_SAFETY)
 
     def boogie_attr(self):
-        '''
+        """
         Return the attribute of Boogie assert command for certain property.
-        '''
+        """
 
         def get_attr_from_result(x):
             if x in VResult.MEMSAFETY_ERROR:
@@ -183,44 +196,46 @@ class VProperty(Flag):
             VProperty.VALID_FREE: get_attr_from_result(VResult.INVALID_FREE),
             VProperty.MEMLEAK: get_attr_from_result(VResult.INVALID_MEMTRACK),
             VProperty.INTEGER_OVERFLOW: get_attr_from_result(VResult.OVERFLOW),
-            VProperty.RUST_PANICS: get_attr_from_result(VResult.RUST_PANIC)}
+            VProperty.RUST_PANICS: get_attr_from_result(VResult.RUST_PANIC),
+        }
 
         if self in attrs:
             return attrs[self]
         else:
-            raise RuntimeError('No assertion Boogie attribute associated with'
-                               'property: %s' % self)
+            raise RuntimeError(
+                "No assertion Boogie attribute associated with" "property: %s" % self
+            )
 
     def result(self):
-        '''Link SMACK properties with results'''
+        """Link SMACK properties with results"""
 
         res = {
             VProperty.VALID_DEREF: VResult.INVALID_DEREF,
             VProperty.VALID_FREE: VResult.INVALID_FREE,
             VProperty.MEMLEAK: VResult.INVALID_MEMTRACK,
             VProperty.INTEGER_OVERFLOW: VResult.OVERFLOW,
-            VProperty.RUST_PANICS: VResult.RUST_PANIC}
+            VProperty.RUST_PANICS: VResult.RUST_PANIC,
+        }
 
         if self in res:
             return res[self]
         else:
-            raise RuntimeError(('No SMACK result associated with property: %s'
-                                % self))
+            raise RuntimeError(("No SMACK result associated with property: %s" % self))
 
 
 def inlined_procedures():
     return [
-        '$galloc',
-        '$alloc',
-        '$malloc',
-        '$free',
-        '$memset',
-        '$memcpy',
-        '__VERIFIER_',
-        '$initialize',
-        '__SMACK_static_init',
-        '__SMACK_init_func_memory_model',
-        '__SMACK_check_overflow'
+        "$galloc",
+        "$alloc",
+        "$malloc",
+        "$free",
+        "$memset",
+        "$memcpy",
+        "__VERIFIER_",
+        "$initialize",
+        "__SMACK_static_init",
+        "__SMACK_init_func_memory_model",
+        "__SMACK_check_overflow",
     ]
 
 
@@ -238,7 +253,7 @@ class FileAction(argparse.Action):
 
 
 def exit_with_error(error):
-    sys.exit('Error: %s.' % error)
+    sys.exit("Error: %s." % error)
 
 
 def validate_input_files(files):
@@ -255,9 +270,8 @@ def validate_input_files(files):
             exit_with_error("Cannot read file %s" % file)
 
         elif file_extension not in languages():
-            exit_with_error(
-                "Unexpected source file extension '%s'" %
-                file_extension)
+            exit_with_error("Unexpected source file extension '%s'" % file_extension)
+
     list(map(validate_input_file, files))
 
 
@@ -280,367 +294,415 @@ def arguments():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        'input_files',
-        metavar='input-files',
-        nargs='+',
+        "input_files",
+        metavar="input-files",
+        nargs="+",
         action=FileAction,
         type=str,
-        help='source file to be translated/verified')
+        help="source file to be translated/verified",
+    )
 
-    parser.add_argument('--version', action='version',
-                        version='SESL version ' + VERSION)
+    parser.add_argument(
+        "--version", action="version", version="version " + VERSION
+    )
 
     noise_group = parser.add_mutually_exclusive_group()
 
     noise_group.add_argument(
-        '-q',
-        '--quiet',
-        action='store_true',
-        default=False,
-        help='enable quiet output')
+        "-q", "--quiet", action="store_true", default=False, help="enable quiet output"
+    )
 
     noise_group.add_argument(
-        '-v',
-        '--verbose',
-        action='store_true',
-        default=False,
-        help='enable verbose output')
-
-    noise_group.add_argument(
-        '-d',
-        '--debug',
+        "-v",
+        "--verbose",
         action="store_true",
         default=False,
-        help='enable debugging output')
+        help="enable verbose output",
+    )
 
     noise_group.add_argument(
-        '--debug-only',
-        metavar='MODULES',
+        "-d",
+        "--debug",
+        action="store_true",
+        default=False,
+        help="enable debugging output",
+    )
+
+    noise_group.add_argument(
+        "--debug-only",
+        metavar="MODULES",
         default=None,
         type=str,
-        help='limit debugging output to given MODULES')
+        help="limit debugging output to given MODULES",
+    )
 
-    noise_group.add_argument('--warn', default="unsound",
-                             choices=['silent', 'unsound', 'info'],
-                             help='''enable certain type of warning messages
+    noise_group.add_argument(
+        "--warn",
+        default="unsound",
+        choices=["silent", "unsound", "info"],
+        help="""enable certain type of warning messages
             (silent: no warning messages;
             unsound: warnings about unsoundness;
             info: warnings about unsoundness and translation information)
-            [default: %(default)s]''')
+            [default: %(default)s]""",
+    )
 
     parser.add_argument(
-        '-t',
-        '--no-verify',
+        "-t",
+        "--no-verify",
         action="store_true",
         default=False,
-        help='perform only translation, without verification.')
+        help="perform only translation, without verification.",
+    )
 
-    parser.add_argument('-w', '--error-file', metavar='FILE', default=None,
-                        type=str, help='save error trace/witness to FILE')
+    parser.add_argument(
+        "-w",
+        "--error-file",
+        metavar="FILE",
+        default=None,
+        type=str,
+        help="save error trace/witness to FILE",
+    )
 
-    frontend_group = parser.add_argument_group('front-end options')
-
-    frontend_group.add_argument('-x', '--language', metavar='LANG',
-                                choices=list(frontends().keys()), default=None,
-                                help='Treat input files as having type LANG.')
+    frontend_group = parser.add_argument_group("front-end options")
 
     frontend_group.add_argument(
-        '-bc',
-        '--bc-file',
-        metavar='FILE',
+        "-x",
+        "--language",
+        metavar="LANG",
+        choices=list(frontends().keys()),
+        default=None,
+        help="Treat input files as having type LANG.",
+    )
+
+    frontend_group.add_argument(
+        "-bc",
+        "--bc-file",
+        metavar="FILE",
         default=None,
         action=FileAction,
         type=str,
-        help='save initial LLVM bitcode to FILE')
+        help="save initial LLVM bitcode to FILE",
+    )
 
     frontend_group.add_argument(
-        '--linked-bc-file',
-        metavar='FILE',
+        "--linked-bc-file",
+        metavar="FILE",
         default=None,
         type=str,
-        help=argparse.SUPPRESS)
+        help=argparse.SUPPRESS,
+    )
 
     frontend_group.add_argument(
-        '--replay-harness',
-        metavar='FILE',
-        default='replay-harness.c',
+        "--replay-harness",
+        metavar="FILE",
+        default="replay-harness.c",
         type=str,
-        help=argparse.SUPPRESS)
+        help=argparse.SUPPRESS,
+    )
 
     frontend_group.add_argument(
-        '--replay-exe-file',
-        metavar='FILE',
-        default='replay-exe',
+        "--replay-exe-file",
+        metavar="FILE",
+        default="replay-exe",
         type=str,
-        help=argparse.SUPPRESS)
+        help=argparse.SUPPRESS,
+    )
 
     frontend_group.add_argument(
-        '-ll',
-        '--ll-file',
-        metavar='FILE',
-        default=None,
-        action=FileAction,
-        type=str,
-        help='save final LLVM IR to FILE')
-
-    frontend_group.add_argument(
-        '--clang-options',
-        metavar='OPTIONS',
-        default='',
-        help='additional compiler arguments (e.g., --clang-options="-w -g")')
-
-    translate_group = parser.add_argument_group('translation options')
-
-    translate_group.add_argument(
-        '-bpl',
-        '--bpl-file',
-        metavar='FILE',
+        "-ll",
+        "--ll-file",
+        metavar="FILE",
         default=None,
         action=FileAction,
         type=str,
-        help='save (intermediate) Boogie code to FILE')
+        help="save final LLVM IR to FILE",
+    )
+
+    frontend_group.add_argument(
+        "--clang-options",
+        metavar="OPTIONS",
+        default="",
+        help='additional compiler arguments (e.g., --clang-options="-w -g")',
+    )
+
+    translate_group = parser.add_argument_group("translation options")
 
     translate_group.add_argument(
-        '--rewrite-bitwise-ops',
+        "-bpl",
+        "--bpl-file",
+        metavar="FILE",
+        default=None,
+        action=FileAction,
+        type=str,
+        help="save (intermediate) Boogie code to FILE",
+    )
+
+    translate_group.add_argument(
+        "--rewrite-bitwise-ops",
         action="store_true",
         default=False,
-        help='''attempts to provide models for bitwise operations
-                when integer encoding is used''')
+        help="""attempts to provide models for bitwise operations
+                when integer encoding is used""",
+    )
 
     translate_group.add_argument(
-        '--no-memory-splitting',
+        "--no-memory-splitting",
         action="store_true",
         default=False,
-        help='disable region-based memory splitting')
+        help="disable region-based memory splitting",
+    )
 
     translate_group.add_argument(
-        '--mem-mod',
-        choices=[
-            'no-reuse',
-            'no-reuse-impls',
-            'reuse'],
-        default='no-reuse-impls',
-        help='''select memory model
+        "--mem-mod",
+        choices=["no-reuse", "no-reuse-impls", "reuse"],
+        default="no-reuse-impls",
+        help="""select memory model
                 (no-reuse=never reallocate the same address,
-                reuse=reallocate freed addresses) [default: %(default)s]''')
+                reuse=reallocate freed addresses) [default: %(default)s]""",
+    )
 
     translate_group.add_argument(
-        '--static-unroll',
+        "--static-unroll",
         action="store_true",
         default=False,
-        help='enable static LLVM loop unrolling pass as a preprocessing step')
+        help="enable static LLVM loop unrolling pass as a preprocessing step",
+    )
 
     translate_group.add_argument(
-        '--pthread',
-        action='store_true',
+        "--pthread",
+        action="store_true",
         default=False,
-        help='enable support for pthread programs')
+        help="enable support for pthread programs",
+    )
 
     translate_group.add_argument(
-        '--max-threads',
-        default='32',
+        "--max-threads",
+        default="32",
         type=int,
-        help='bound on the number of threads [default: %(default)s]')
+        help="bound on the number of threads [default: %(default)s]",
+    )
 
     translate_group.add_argument(
-        '--integer-encoding',
-        choices=['bit-vector', 'unbounded-integer', 'wrapped-integer'],
-        default='unbounded-integer',
-        help='''machine integer encoding
+        "--integer-encoding",
+        choices=["bit-vector", "unbounded-integer", "wrapped-integer"],
+        default="unbounded-integer",
+        help="""machine integer encoding
                 (bit-vector=use SMT bit-vector theory,
                 unbounded-integer=use SMT integer theory,
                 wrapped-integer=use SMT integer theory but model wrap-around
-                behavior) [default: %(default)s]''')
+                behavior) [default: %(default)s]""",
+    )
 
     translate_group.add_argument(
-        '--timing-annotations',
+        "--timing-annotations",
         action="store_true",
         default=False,
-        help='enable timing annotations')
+        help="enable timing annotations",
+    )
 
     translate_group.add_argument(
-        '--pointer-encoding',
-        choices=['bit-vector', 'unbounded-integer'],
-        default='unbounded-integer',
-        help='''pointer encoding
+        "--pointer-encoding",
+        choices=["bit-vector", "unbounded-integer"],
+        default="unbounded-integer",
+        help="""pointer encoding
                 (bit-vector=use SMT bit-vector theory,
                 ubounded-integer=use SMT integer theory)
-                [default: %(default)s]''')
-
-    translate_group.add_argument(
-        '--sh-mem-leak',
-        action="store_true",
-        default=False,
-        help='''check memory leak use separation logic'''
+                [default: %(default)s]""",
     )
 
     translate_group.add_argument(
-        '--add-line-info',
+        "--sh-mem-leak",
         action="store_true",
         default=False,
-        help='''check memory leak use separation logic'''
+        help="""check memory leak use separation logic""",
     )
 
     translate_group.add_argument(
-        '--no-byte-access-inference',
+        "--add-line-info",
         action="store_true",
         default=False,
-        help='disable bit-precision-related optimizations with DSA')
+        help="""check memory leak use separation logic""",
+    )
 
     translate_group.add_argument(
-        '--entry-points',
-        metavar='PROC',
-        nargs='+',
-        default=['main'],
-        help='specify top-level procedures [default: %(default)s]')
+        "--no-byte-access-inference",
+        action="store_true",
+        default=False,
+        help="disable bit-precision-related optimizations with DSA",
+    )
 
     translate_group.add_argument(
-        '--check',
-        metavar='PROPERTY',
-        nargs='+',
+        "--entry-points",
+        metavar="PROC",
+        nargs="+",
+        default=["main"],
+        help="specify top-level procedures [default: %(default)s]",
+    )
+
+    translate_group.add_argument(
+        "--check",
+        metavar="PROPERTY",
+        nargs="+",
         choices=list(VProperty),
         default=VProperty.NONE,
         type=VProperty.argparse,
         action=PropertyAction,
-        help='''select properties to check
+        help="""select properties to check
                 [choices: %(choices)s; default: assertions]
                 (note that memory-safety is the union of valid-deref,
-                valid-free, memleak)''')
+                valid-free, memleak)""",
+    )
 
     translate_group.add_argument(
-        '--llvm-assumes',
-        choices=[
-            'none',
-            'use',
-            'check'],
-        default='none',
-        help='''optionally enable generation of Boogie assume statements from
+        "--llvm-assumes",
+        choices=["none", "use", "check"],
+        default="none",
+        help="""optionally enable generation of Boogie assume statements from
                 LLVM assume statements (none=no generation [default],
                 use=generate assume statements,
-                check=check assume statements)''')
+                check=check assume statements)""",
+    )
 
     translate_group.add_argument(
-        '--float',
+        "--float",
         action="store_true",
         default=False,
-        help='enable bit-precise floating-point functions')
+        help="enable bit-precise floating-point functions",
+    )
 
     translate_group.add_argument(
-        '--strings',
-        action='store_true',
-        default=False,
-        help='enable support for string')
-
-    verifier_group = parser.add_argument_group('verifier options')
-
-    verifier_group.add_argument(
-        '--verifier',
-        choices=[
-            'boogie',
-            'corral',
-            'symbooglix',
-            'svcomp'],
-        default='corral',
-        help='back-end verification engine')
-
-    verifier_group.add_argument('--solver',
-                                choices=['z3', 'cvc4', "yices2"], default='z3',
-                                help='back-end SMT solver')
-
-    verifier_group.add_argument(
-        '--unroll',
-        metavar='N',
-        default='1',
-        type=lambda x: (int(x) if int(x) > 0 else
-                        parser.error('Unroll bound has to be positive.')),
-        help='loop/recursion unroll bound [default: %(default)s]')
-
-    verifier_group.add_argument(
-        '--loop-limit',
-        metavar='N',
-        default='1',
-        type=int,
-        help='upper bound on minimum loop iterations [default: %(default)s]')
-
-    verifier_group.add_argument(
-        '--context-bound',
-        metavar='K',
-        default='1',
-        type=int,
-        help='''bound on the number of thread contexts in Corral
-                [default: %(default)s]''')
-
-    verifier_group.add_argument(
-        '--verifier-options',
-        metavar='OPTIONS',
-        default='',
-        help='''additional verifier arguments
-                (e.g., --verifier-options="/trackAllVars /staticInlining")''')
-
-    verifier_group.add_argument(
-        '--time-limit',
-        metavar='N',
-        default='1200',
-        type=int,
-        help='verifier time limit, in seconds [default: %(default)s]')
-
-    verifier_group.add_argument(
-        '--max-violations',
-        metavar='N',
-        default='1',
-        type=int,
-        help='maximum reported assertion violations [default: %(default)s]')
-
-    verifier_group.add_argument('--smackd', action="store_true", default=False,
-                                help='generate JSON-format output for SMACKd')
-
-    verifier_group.add_argument(
-        '--svcomp-property',
-        metavar='FILE',
-        default=None,
-        type=str,
-        help='load SVCOMP property to check from FILE')
-
-    verifier_group.add_argument(
-        '--modular',
+        "--strings",
         action="store_true",
         default=False,
-        help='''enable contracts-based modular deductive verification
-                (uses Boogie)''')
+        help="enable support for string",
+    )
+
+    verifier_group = parser.add_argument_group("verifier options")
 
     verifier_group.add_argument(
-        '--replay',
+        "--verifier",
+        choices=["boogie", "corral", "symbooglix", "svcomp"],
+        default="corral",
+        help="back-end verification engine",
+    )
+
+    verifier_group.add_argument(
+        "--solver",
+        choices=["z3", "cvc4", "yices2"],
+        default="z3",
+        help="back-end SMT solver",
+    )
+
+    verifier_group.add_argument(
+        "--unroll",
+        metavar="N",
+        default="1",
+        type=lambda x: (
+            int(x) if int(x) > 0 else parser.error("Unroll bound has to be positive.")
+        ),
+        help="loop/recursion unroll bound [default: %(default)s]",
+    )
+
+    verifier_group.add_argument(
+        "--loop-limit",
+        metavar="N",
+        default="1",
+        type=int,
+        help="upper bound on minimum loop iterations [default: %(default)s]",
+    )
+
+    verifier_group.add_argument(
+        "--context-bound",
+        metavar="K",
+        default="1",
+        type=int,
+        help="""bound on the number of thread contexts in Corral
+                [default: %(default)s]""",
+    )
+
+    verifier_group.add_argument(
+        "--verifier-options",
+        metavar="OPTIONS",
+        default="",
+        help="""additional verifier arguments
+                (e.g., --verifier-options="/trackAllVars /staticInlining")""",
+    )
+
+    verifier_group.add_argument(
+        "--time-limit",
+        metavar="N",
+        default="1200",
+        type=int,
+        help="verifier time limit, in seconds [default: %(default)s]",
+    )
+
+    verifier_group.add_argument(
+        "--max-violations",
+        metavar="N",
+        default="1",
+        type=int,
+        help="maximum reported assertion violations [default: %(default)s]",
+    )
+
+    verifier_group.add_argument(
+        "--smackd",
         action="store_true",
         default=False,
-        help='enable replay of error trace with test harness.')
+        help="generate JSON-format output for SMACKd",
+    )
 
-    plugins_group = parser.add_argument_group('plugins')
-
-    plugins_group.add_argument(
-        '--transform-bpl',
-        metavar='COMMAND',
+    verifier_group.add_argument(
+        "--svcomp-property",
+        metavar="FILE",
         default=None,
         type=str,
-        help='transform generated Boogie code via COMMAND')
+        help="load SVCOMP property to check from FILE",
+    )
+
+    verifier_group.add_argument(
+        "--modular",
+        action="store_true",
+        default=False,
+        help="""enable contracts-based modular deductive verification
+                (uses Boogie)""",
+    )
+
+    verifier_group.add_argument(
+        "--replay",
+        action="store_true",
+        default=False,
+        help="enable replay of error trace with test harness.",
+    )
+
+    plugins_group = parser.add_argument_group("plugins")
 
     plugins_group.add_argument(
-        '--transform-out',
-        metavar='COMMAND',
+        "--transform-bpl",
+        metavar="COMMAND",
         default=None,
         type=str,
-        help='transform verifier output via COMMAND')
+        help="transform generated Boogie code via COMMAND",
+    )
+
+    plugins_group.add_argument(
+        "--transform-out",
+        metavar="COMMAND",
+        default=None,
+        type=str,
+        help="transform verifier output via COMMAND",
+    )
 
     args = parser.parse_args()
 
     if not args.bc_file:
-        args.bc_file = temporary_file('a', '.bc', args)
+        args.bc_file = temporary_file("a", ".bc", args)
 
     if not args.linked_bc_file:
-        args.linked_bc_file = temporary_file('b', '.bc', args)
+        args.linked_bc_file = temporary_file("b", ".bc", args)
 
     if not args.bpl_file:
-        args.bpl_file = 'a.bpl' if args.no_verify else temporary_file(
-            'a', '.bpl', args)
+        args.bpl_file = "a.bpl" if args.no_verify else temporary_file("a", ".bpl", args)
 
     if args.check == VProperty.NONE:
         args.check = VProperty.ASSERTIONS
@@ -660,22 +722,18 @@ def arguments():
 def target_selection(args):
     """Determine the target architecture based on flags and source files."""
     # TODO more possible clang flags that determine the target?
-    if not re.search('-target', args.clang_options):
+    if not re.search("-target", args.clang_options):
         src = args.input_files[0]
-        if os.path.splitext(src)[1] == '.bc':
-            ll = temporary_file(
-                os.path.splitext(
-                    os.path.basename(src))[0],
-                '.ll',
-                args)
-            try_command(['llvm-dis', '-o', ll, src])
+        if os.path.splitext(src)[1] == ".bc":
+            ll = temporary_file(os.path.splitext(os.path.basename(src))[0], ".ll", args)
+            try_command(["llvm-dis", "-o", ll, src])
             src = ll
-        if os.path.splitext(src)[1] == '.ll':
-            with open(src, 'r') as f:
+        if os.path.splitext(src)[1] == ".ll":
+            with open(src, "r") as f:
                 for line in f:
                     triple = re.findall('^target triple = "(.*)"', line)
                     if len(triple) > 0:
-                        args.clang_options += (" -target %s" % triple[0])
+                        args.clang_options += " -target %s" % triple[0]
                         break
 
 
@@ -696,7 +754,7 @@ def frontend(args):
     else:
         for input_file in args.input_files:
             lang = languages()[os.path.splitext(input_file)[1][1:]]
-            if lang in ['boogie']:
+            if lang in ["boogie"]:
                 noreturning_frontend = True
             bitcode = frontends()[lang](input_file, args)
             if bitcode is not None:
@@ -709,56 +767,63 @@ def frontend(args):
 def llvm_to_bpl(args):
     """Translate the LLVM bitcode file to a Boogie source file."""
 
-    cmd = ['llvm2bpl', args.linked_bc_file, '-bpl', args.bpl_file, '-c', args.input_files[0]]
-    cmd += ['-warn-type', args.warn]
-    cmd += ['-sea-dsa=ci']
+    cmd = [
+        "llvm2bpl",
+        args.linked_bc_file,
+        "-bpl",
+        args.bpl_file,
+        "-c",
+        args.input_files[0]
+    ]
+    cmd += ["-warn-type", args.warn]
+    cmd += ["-sea-dsa=ci"]
     # This flag can lead to unsoundness in Rust regressions.
     # cmd += ['-sea-dsa-type-aware']
     if sys.stdout.isatty():
-        cmd += ['-colored-warnings']
-    cmd += ['-source-loc-syms']
+        cmd += ["-colored-warnings"]
+    cmd += ["-source-loc-syms"]
     for ep in args.entry_points:
-        cmd += ['-entry-points', ep]
+        cmd += ["-entry-points", ep]
     if args.debug:
-        cmd += ['-debug']
+        cmd += ["-debug"]
     if args.debug_only:
-        cmd += ['-debug-only', args.debug_only]
+        cmd += ["-debug-only", args.debug_only]
     if args.ll_file:
-        cmd += ['-ll', args.ll_file]
+        cmd += ["-ll", args.ll_file]
     if "impls" in args.mem_mod:
-        cmd += ['-mem-mod-impls']
+        cmd += ["-mem-mod-impls"]
     if args.static_unroll:
-        cmd += ['-static-unroll']
-    if args.integer_encoding == 'bit-vector':
-        cmd += ['-bit-precise']
-    if args.integer_encoding == 'wrapped-integer':
-        cmd += ['-wrapped-integer-encoding']
+        cmd += ["-static-unroll"]
+    if args.integer_encoding == "bit-vector":
+        cmd += ["-bit-precise"]
+    if args.integer_encoding == "wrapped-integer":
+        cmd += ["-wrapped-integer-encoding"]
     if args.timing_annotations:
-        cmd += ['-timing-annotations']
-    if args.pointer_encoding == 'bit-vector':
-        cmd += ['-bit-precise-pointers']
+        cmd += ["-timing-annotations"]
+    if args.pointer_encoding == "bit-vector":
+        cmd += ["-bit-precise-pointers"]
     if args.no_byte_access_inference:
-        cmd += ['-no-byte-access-inference']
+        cmd += ["-no-byte-access-inference"]
     if args.rewrite_bitwise_ops:
-        cmd += ['-rewrite-bitwise-ops']
+        cmd += ["-rewrite-bitwise-ops"]
     if args.no_memory_splitting:
-        cmd += ['-no-memory-splitting']
+        cmd += ["-no-memory-splitting"]
     if args.check.contains_mem_safe_props():
-        cmd += ['-memory-safety']
+        cmd += ["-memory-safety"]
     if VProperty.INTEGER_OVERFLOW in args.check:
-        cmd += ['-integer-overflow']
+        cmd += ["-integer-overflow"]
     if VProperty.RUST_PANICS in args.check:
-        cmd += ['-rust-panics']
+        cmd += ["-rust-panics"]
     if args.llvm_assumes:
-        cmd += ['-llvm-assumes=' + args.llvm_assumes]
+        cmd += ["-llvm-assumes=" + args.llvm_assumes]
     if args.float:
-        cmd += ['-float']
+        cmd += ["-float"]
     if args.modular:
-        cmd += ['-modular']
+        cmd += ["-modular"]
     if args.sh_mem_leak:
-        cmd += ['-sh-mem-leak']
+        cmd += ["-sh-mem-leak"]
     if args.add_line_info:
-        cmd += ['-add-line-info']
+        cmd += ["-add-line-info"]
     try_command(cmd, console=True)
     annotate_bpl(args)
     memsafety_subproperty_selection(args)
@@ -768,11 +833,12 @@ def llvm_to_bpl(args):
 def procedure_annotation(name, args):
     if name in args.entry_points:
         return "{:entrypoint}"
-    elif (args.modular and
-          re.match("|".join(inlined_procedures()).replace("$", r"\$"), name)):
+    elif args.modular and re.match(
+        "|".join(inlined_procedures()).replace("$", r"\$"), name
+    ):
         return "{:inline 1}"
-    elif (not args.modular) and args.verifier == 'boogie':
-        return ("{:inline %s}" % args.unroll)
+    elif (not args.modular) and args.verifier == "boogie":
+        return "{:inline %s}" % args.unroll
     else:
         return ""
 
@@ -780,16 +846,18 @@ def procedure_annotation(name, args):
 def annotate_bpl(args):
     """Annotate the Boogie source file with additional metadata."""
 
-    proc_decl = re.compile(r'procedure\s+([^\s(]*)\s*\(')
+    proc_decl = re.compile(r"procedure\s+([^\s(]*)\s*\(")
 
-    with open(args.bpl_file, 'r+') as f:
-        bpl = "// generated by SMACK version %s for %s\n" % (
-            VERSION, args.verifier)
+    with open(args.bpl_file, "r+") as f:
+        bpl = "// generated by SMACK version %s for %s\n" % (VERSION, args.verifier)
         bpl += "// via %s\n\n" % " ".join(sys.argv)
         bpl += proc_decl.sub(
-            lambda m: ("procedure %s %s(" %
-                       (procedure_annotation(m.group(1), args), m.group(1))),
-            f.read())
+            lambda m: (
+                "procedure %s %s("
+                % (procedure_annotation(m.group(1), args), m.group(1))
+            ),
+            f.read(),
+        )
         f.seek(0)
         f.truncate()
         f.write(bpl)
@@ -799,8 +867,9 @@ def memsafety_subproperty_selection(args):
     if VProperty.MEMORY_SAFETY in args.check:
         return
 
-    selected_props = [p.boogie_attr() for p in VProperty.mem_safe_subprops()
-                      if p in args.check]
+    selected_props = [
+        p.boogie_attr() for p in VProperty.mem_safe_subprops() if p in args.check
+    ]
 
     def replace_assertion(m):
         if len(selected_props) > 0:
@@ -808,68 +877,77 @@ def memsafety_subproperty_selection(args):
                 attrib = m.group(2)
                 expr = m.group(4)
             else:
-                attrib = ''
-                expr = 'true'
+                attrib = ""
+                expr = "true"
             return m.group(1) + attrib + expr + ";"
         else:
             return m.group(0)
 
-    with open(args.bpl_file, 'r+') as f:
+    with open(args.bpl_file, "r+") as f:
         lines = f.readlines()
         f.seek(0)
         f.truncate()
         for line in lines:
-            line = re.sub(
-                r'^(\s*assert\s*)({:(.+)})?(.+);',
-                replace_assertion,
-                line)
+            line = re.sub(r"^(\s*assert\s*)({:(.+)})?(.+);", replace_assertion, line)
             f.write(line)
 
 
 def transform_bpl(args):
     if args.transform_bpl:
-        with open(args.bpl_file, 'r+') as bpl:
+        with open(args.bpl_file, "r+") as bpl:
             old = bpl.read()
             bpl.seek(0)
             bpl.truncate()
             tx = subprocess.Popen(
-                shlex.split(
-                    args.transform_bpl),
+                shlex.split(args.transform_bpl),
                 stdin=subprocess.PIPE,
                 stdout=bpl,
-                universal_newlines=True)
+                universal_newlines=True,
+            )
             tx.communicate(input=old)
 
 
 def transform_out(args, old):
     out = old
     if args.transform_out:
-        tx = subprocess.Popen(shlex.split(args.transform_out),
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE, universal_newlines=True)
+        tx = subprocess.Popen(
+            shlex.split(args.transform_out),
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
         out, err = tx.communicate(input=old)
     return out
 
 
 def verification_result(verifier_output):
     if re.search(
-        r'[1-9]\d* time out|Z3 ran out of resources|timed out|ERRORS_TIMEOUT',
-            verifier_output):
+        r"[1-9]\d* time out|Z3 ran out of resources|timed out|ERRORS_TIMEOUT",
+        verifier_output,
+    ):
         return VResult.TIMEOUT
-    elif re.search((r'[1-9]\d* verified, 0 errors?|no bugs|'
-                    r'NO_ERRORS_NO_TIMEOUT'), verifier_output):
+    elif re.search(
+        (r"[1-9]\d* verified, 0 errors?|no bugs|" r"NO_ERRORS_NO_TIMEOUT"),
+        verifier_output,
+    ):
         return VResult.VERIFIED
-    elif re.search((r'\d* verified, [1-9]\d* errors?|can fail|'
-                    r'ERRORS_NO_TIMEOUT'), verifier_output):
-        for p in (VProperty.mem_safe_subprops() + [VProperty.INTEGER_OVERFLOW]
-                  + [VProperty.RUST_PANICS]):
-            if re.search(r'ASSERTION FAILS assert {:%s}' % p.boogie_attr(),
-                         verifier_output):
+    elif re.search(
+        (r"\d* verified, [1-9]\d* errors?|can fail|" r"ERRORS_NO_TIMEOUT"),
+        verifier_output,
+    ):
+        for p in (
+            VProperty.mem_safe_subprops()
+            + [VProperty.INTEGER_OVERFLOW]
+            + [VProperty.RUST_PANICS]
+        ):
+            if re.search(
+                r"ASSERTION FAILS assert {:%s}" % p.boogie_attr(), verifier_output
+            ):
                 return p.result()
 
-        listCall = re.findall(r'\(CALL .+\)', verifier_output)
-        if len(listCall) > 0 and re.search(
-                r'free_', listCall[len(listCall) - 1]):
+        listCall = re.findall(r"\(CALL .+\)", verifier_output)
+        if len(listCall) > 0 and re.search(r"free_", listCall[len(listCall) - 1]):
             return VResult.INVALID_FREE
         else:
             return VResult.ASSERTION_FAILURE
@@ -881,6 +959,7 @@ def clean_up_upon_sigterm(main):
     def handler(signum, frame):
         remove_temp_files()
         sys.exit(0)
+
     signal.signal(signal.SIGTERM, handler)
     return main
 
@@ -901,7 +980,6 @@ def main():
         if args.no_verify:
             if not args.quiet:
                 print("SMACK generated %s" % args.bpl_file)
-       
 
     except KeyboardInterrupt:
         sys.exit("SMACK aborted by keyboard interrupt.")

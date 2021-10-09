@@ -58,9 +58,10 @@ namespace smack
         XMLElement* graphElement = doc->NewElement("graphml");
         graphElement->SetAttribute("xmlns", "http://graphml.graphdrawing.org/xmlns");
         graphElement->SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        bool isViolation = (true);
         this->createKeysForGraphml(graphElement);
             XMLElement* graph = graphElement->InsertNewChildElement("graph");
-            this->createPreludeForGraph(graph);
+            this->createPreludeForGraph(graph, isViolation);
             this->createNodeAndEdgeForGraph(graph, violatedPath);
         doc->LinkEndChild(graphElement);
         XMLPrinter* printer = new XMLPrinter(fp);
@@ -168,10 +169,10 @@ namespace smack
     }
 
 
-    void ViolationPathGen::createPreludeForGraph(XMLElement* graph){
+    void ViolationPathGen::createPreludeForGraph(XMLElement* graph, bool isViolation){
         XMLElement* data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "witness-type");
-            data->SetText("violation_witness");
+            data->SetText(isViolation ? "violation_witness" : "correctness_witness");
     
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "sourcecodelang");
@@ -183,7 +184,7 @@ namespace smack
 
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "specification");
-            data->SetText("SPEC");
+            data->SetText("memsafety");
 
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "programfile");

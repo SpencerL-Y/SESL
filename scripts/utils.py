@@ -11,7 +11,7 @@ temporary_files = []
 
 
 def temporary_file(prefix, extension, args):
-    f, name = tempfile.mkstemp(extension, prefix + '-', os.getcwd(), True)
+    f, name = tempfile.mkstemp(extension, prefix + "-", os.getcwd(), True)
     os.close(f)
     if not args.debug:
         temporary_files.append(name)
@@ -19,7 +19,7 @@ def temporary_file(prefix, extension, args):
 
 
 def temporary_directory(prefix, extension, args):
-    name = tempfile.mkdtemp(extension, prefix + '-', os.getcwd())
+    name = tempfile.mkdtemp(extension, prefix + "-", os.getcwd())
     if not args.debug:
         temporary_files.append(name)
     return name
@@ -43,7 +43,7 @@ def try_command(cmd, cwd=None, console=False, timeout=None, env=None):
     args = top.args
     console = (console or args.verbose or args.debug) and not args.quiet
     filelog = args.debug
-    output = ''
+    output = ""
     proc = None
     timer = None
     if env is not None:
@@ -60,7 +60,8 @@ def try_command(cmd, cwd=None, console=False, timeout=None, env=None):
             preexec_fn=os.setsid,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            universal_newlines=True)
+            universal_newlines=True,
+        )
 
         if timeout:
             timed_out = [False]
@@ -72,7 +73,7 @@ def try_command(cmd, cwd=None, console=False, timeout=None, env=None):
                 line = proc.stdout.readline()
                 if line:
                     output += line
-                    print(line, end=' ')
+                    print(line, end=" ")
                 elif proc.poll() is not None:
                     break
             proc.wait
@@ -88,7 +89,7 @@ def try_command(cmd, cwd=None, console=False, timeout=None, env=None):
             return output + ("\n%s timed out." % cmd[0])
         elif rc == -signal.SIGSEGV:
             raise Exception("segmentation fault")
-        elif rc and args.verifier != 'symbooglix':
+        elif rc and args.verifier != "symbooglix":
             raise Exception(output)
         else:
             return output
@@ -103,5 +104,5 @@ def try_command(cmd, cwd=None, console=False, timeout=None, env=None):
         if proc:
             os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
         if filelog:
-            with open(temporary_file(cmd[0], '.log', args), 'w') as f:
+            with open(temporary_file(cmd[0], ".log", args), "w") as f:
                 f.write(output)

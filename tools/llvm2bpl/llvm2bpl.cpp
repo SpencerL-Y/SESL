@@ -60,6 +60,11 @@ static llvm::cl::opt<std::string>
     OriginFilePass("c", llvm::cl::desc("Input sourcecode file path"),
                     llvm::cl::init("FILE NAME"), llvm::cl::value_desc("filename"));
 
+// Currently not added for witness syntax checking
+// static llvm::cl::opt<std::string>
+//     PropertyStr("prop", llvm::cl::desc("Input property file path"),
+//                     llvm::cl::init("memsafety"), llvm::cl::value_desc("property string"));
+
 static llvm::cl::opt<std::string>
     OutputFilename("bpl", llvm::cl::desc("Output Boogie filename"),
                    llvm::cl::init(""), llvm::cl::value_desc("filename"));

@@ -23,7 +23,7 @@ namespace smack
         virtual void getAnalysisUsage(llvm::AnalysisUsage & AU) const;
         std::string generateSVCOMPWitness(ExecutionPath violatedPath);
         void createKeysForGraphml(XMLElement* graphElement);
-        void createPreludeForGraph(XMLElement* graph);
+        void createPreludeForGraph(XMLElement* graph, bool isViolation);
         void createEntryNodeForGraph(XMLElement* graph);
         void createSinkNodeForGraph(XMLElement* graph);
         void createNodeAndEdgeForGraph(XMLElement* graph, ExecutionPath violatedPath);

@@ -7,6 +7,7 @@
 #include "smack/sesl/cfg/CFG.h"
 #include "smack/sesl/executor/Translator.h"
 #include "smack/sesl/executor/StoreSplitter.h"
+#include "smack/SmackOptions.h"
 #include "smack/sesl/cfg/CFGExecutor.h"
 #include "smack/sesl/cfg/CFGUtils.h"
 #include <iostream>
@@ -15,7 +16,6 @@
 
 #define MEMTRACK 1
 #define MEMCLEAN 2
-
 namespace smack {
     using llvm::errs;
     char MemSafeVerifier::ID = 0;

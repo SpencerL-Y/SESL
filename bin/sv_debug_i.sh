@@ -13,5 +13,5 @@ sudo ldconfig
 
 # cd ../build && sudo ninja install && sesl ../testcases/svcomp/memsafety-ext/$1.i -ll ../testcases/svcomp/memsafety-ext/$1_IR.ll --bpl ../testcases/svcomp/memsafety-ext/$1.bpl -t --sh-mem-leak --add-line-info
 
-cd ../build && sudo ninja install && sesl ../testcases/svcomp/overall/$1.i -ll ../testcases/svcomp/overall/$1_IR.ll --bpl ../testcases/svcomp/overall/$1.bpl -t --sh-mem-leak --add-line-info
+cd ../build && sudo ninja install && sesl ../testcases/svcomp/overall/$1.i -ll ../testcases/svcomp/overall/$1_IR.ll --bpl ../testcases/svcomp/overall/$1.bpl -t --sh-mem-leak --add-line-info -bw 32
 

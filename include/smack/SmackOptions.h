@@ -37,6 +37,8 @@ public:
   static const llvm::cl::opt<bool> WrappedIntegerEncoding;
   static const llvm::cl::opt<bool> SymbolicHeapMemoryLeak;
   static const llvm::cl::opt<bool> AddLineInfo; //used to find corresponding source code from boogie
+  static const llvm::cl::opt<bool> bw64;
+  static const llvm::cl::opt<bool> bw32;
   static bool isEntryPoint(std::string);
 };
 } // namespace smack

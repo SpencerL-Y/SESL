@@ -1,5 +1,6 @@
 #include "smack/sesl/witness/ViolationPathGen.h"
 #include "smack/BoogieAst.h"
+#include "smack/SmackOptions.h"
 #include "smack/sesl/verifier/MemSafeVerifier.h"
 
 #include <iostream>
@@ -12,6 +13,7 @@
 #include <map>
 #include <dirent.h>
 #include "openssl/sha.h"
+
 
 using namespace tinyxml2;
 namespace smack
@@ -47,11 +49,8 @@ namespace smack
 
 
     std::string ViolationPathGen::generateSVCOMPWitness(ExecutionPath violatedPath){
-        char currentPath[100];
-        getcwd(currentPath, sizeof(currentPath));
-        std::string pathStr = currentPath;
-        FILE* fp = fopen((pathStr + "/witness.graphml").c_str(), "w");
-        std::cout << "INFO: witness output: " << pathStr + "/witness.graphml" << std::endl;
+        FILE* fp = fopen("./witness.graphml", "w");
+        std::cout << "INFO: witness output: " << "./witness.graphml" << std::endl;
         XMLDocument* doc = new XMLDocument();
         XMLDeclaration* docDecl = doc->NewDeclaration();
         doc->LinkEndChild(docDecl);
@@ -170,6 +169,9 @@ namespace smack
 
 
     void ViolationPathGen::createPreludeForGraph(XMLElement* graph, bool isViolation){
+
+
+        int byteSize = (SmackOptions::bw32)? 32 : 64;
         XMLElement* data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "witness-type");
             data->SetText(isViolation ? "violation_witness" : "correctness_witness");
@@ -192,7 +194,7 @@ namespace smack
 
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "architecture");
-            data->SetText((std::to_string(PTR_BYTEWIDTH * 8)+"bit").c_str());
+            data->SetText((std::to_string(byteSize)+"bit").c_str());
 
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "creationtime");
@@ -268,6 +270,9 @@ namespace smack
         XMLElement* sinkData = sink->InsertNewChildElement("data");
         sinkData->SetAttribute("key", "sink");
         sinkData->SetText("true");
+        XMLElement* violationData = sink->InsertNewChildElement("data");
+        violationData->SetAttribute("key", "violation");
+        violationData->SetText("true");
     }
 
     void ViolationPathGen::createNodeForGraph(XMLElement* graph, std::string nodeId){

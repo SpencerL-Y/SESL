@@ -58,5 +58,8 @@ Institute of Software, China Academy of Sciences
 - [Xie Li](https://github.com/SpencerL-Y)
 - [Yutian Zhu](https://github.com/zhuyutian57)
 - [Zongxin Liu](https://github.com/lzx-center) 
+- Zhilin Wu
+- Lijun Zhang
+
 ### Contact
 - EMAIL: lixie19[AT]ios[DOT]ac[DOT]cn

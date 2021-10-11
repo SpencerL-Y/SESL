@@ -15,9 +15,7 @@
 #include "utils/CenterDebug.h"
 #include "utils/TranslatorUtil.h"
 
-
 #include "slah_api.h"
-
 namespace smack {
 
     unsigned Decl::uniqueId = 0;

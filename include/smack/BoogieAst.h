@@ -19,7 +19,6 @@
 #define BOOL_BYTEWIDTH 1
 
 namespace smack {
-
     class VarEquiv;
 
     class CFG;

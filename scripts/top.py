@@ -10,7 +10,7 @@ from enum import Flag, auto
 from .utils import temporary_file, try_command, remove_temp_files
 from .frontend import link_bc_files, frontends, languages
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 
 class VResult(Flag):
@@ -408,6 +408,14 @@ def arguments():
         type=str,
         help=argparse.SUPPRESS,
     )
+    
+    frontend_group.add_argument(
+        "-bw",
+        "--bitwidth",
+        default=32,
+        type=int,
+        help="specify system bitwidth"
+    )
 
     frontend_group.add_argument(
         "-ll",
@@ -773,7 +781,7 @@ def llvm_to_bpl(args):
         "-bpl",
         args.bpl_file,
         "-c",
-        args.input_files[0]
+        args.input_files[0],
     ]
     cmd += ["-warn-type", args.warn]
     cmd += ["-sea-dsa=ci"]
@@ -824,6 +832,8 @@ def llvm_to_bpl(args):
         cmd += ["-sh-mem-leak"]
     if args.add_line_info:
         cmd += ["-add-line-info"]
+    if args.bitwidth:
+        cmd += ["-bw" + str(args.bitwidth)]
     try_command(cmd, console=True)
     annotate_bpl(args)
     memsafety_subproperty_selection(args)

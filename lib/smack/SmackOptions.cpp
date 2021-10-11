@@ -99,6 +99,14 @@ const llvm::cl::opt<bool> SmackOptions::AddLineInfo(
         "add-line-info",
         llvm::cl::desc("used to find corresponding source code from boogie."));
 
+const llvm::cl::opt<bool> SmackOptions::bw64(
+        "bw64",
+        llvm::cl::desc("used to specify bitwidth 64."));
+
+const llvm::cl::opt<bool> SmackOptions::bw32(
+        "bw32",
+        llvm::cl::desc("used to specify bitwidth 32."));
+
 bool SmackOptions::isEntryPoint(std::string name) {
   for (auto EP : EntryPoints)
     if (name == EP)

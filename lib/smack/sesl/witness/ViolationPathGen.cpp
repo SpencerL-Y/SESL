@@ -60,6 +60,7 @@ namespace smack
         bool isViolation = (true);
         this->createKeysForGraphml(graphElement);
             XMLElement* graph = graphElement->InsertNewChildElement("graph");
+            graph->SetAttribute("edgedefault", "directed");
             this->createPreludeForGraph(graph, isViolation);
             this->createNodeAndEdgeForGraph(graph, violatedPath);
         doc->LinkEndChild(graphElement);
@@ -196,9 +197,9 @@ namespace smack
         data->SetAttribute("key", "architecture");
             data->SetText((std::to_string(byteSize)+"bit").c_str());
 
-        data = graph->InsertNewChildElement("data");
-        data->SetAttribute("key", "creationtime");
-            data->SetText(this->getISO8601Time().c_str());
+        // data = graph->InsertNewChildElement("data");
+        // data->SetAttribute("key", "creationtime");
+        //     data->SetText(this->getISO8601Time().c_str());
 
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "programhash");

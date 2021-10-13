@@ -882,14 +882,37 @@ namespace smack{
     (SHExprPtr sh, const CallStmt* stmt){
         CFDEBUG(std::cout << "INFO: execute VERIFIER Call." << std::endl;);
         assert(stmt->getProc().find("__VERIFIER") != std::string::npos);
-        if(!stmt->getProc().compare(SVNaming::SV_NONDET_INT)){
+        if(!stmt->getProc().compare(SVNaming::SV_NONDET_CHAR)) {
             std::string retOrigVarName = stmt->getReturns().front();
             const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
             std::string retVarName = retVar->name();
 
             std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(retOrigVarName);
-            assert(sizeInfo.second/8 == 4);
+            assert(sizeInfo.second / 8 == 1);
 
+            int byteSize = CHAR_BYTEWIDTH;
+            const VarExpr* nondetCharVar = this->varFactory->getFreshVar(byteSize);
+            this->cfg->addVarType(nondetCharVar->name(), "i" + std::to_string(byteSize * 8));
+            this->varEquiv->addNewName(nondetCharVar->name());
+            this->varEquiv->linkName(retVarName, nondetCharVar->name());
+            const Expr* eq = Expr::eq(retVar, nondetCharVar);
+            REGISTER_EXPRPTR(eq);
+            const Expr* newPure = Expr::and_(
+                sh->getPure(),
+                eq
+            );
+            REGISTER_EXPRPTR(newPure);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            newSH->print(std::cout);
+            CFDEBUG(std::cout << std::endl;)
+            return newSH;
+        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_INT)){
+            std::string retOrigVarName = stmt->getReturns().front();
+            const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
+            std::string retVarName = retVar->name();
+
+            std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(retOrigVarName);
+            assert(sizeInfo.second / 8 == 4);
 
             int byteSize = INT_BYTEWIDTH;
             const VarExpr* nondetIntVar = this->varFactory->getFreshVar(byteSize);

@@ -14,6 +14,7 @@
 #include "utils/TranslatorUtil.h"
 #include "smack/sesl/executor/VarEquiv.h"
 
+#define CHAR_BYTEWIDTH 4
 #define PTR_BYTEWIDTH 8
 #define INT_BYTEWIDTH 4
 #define LONG_BYTEWIDTH 8

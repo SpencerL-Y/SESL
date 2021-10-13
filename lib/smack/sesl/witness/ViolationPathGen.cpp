@@ -197,9 +197,9 @@ namespace smack
         data->SetAttribute("key", "architecture");
             data->SetText((std::to_string(byteSize)+"bit").c_str());
 
-        // data = graph->InsertNewChildElement("data");
-        // data->SetAttribute("key", "creationtime");
-        //     data->SetText(this->getISO8601Time().c_str());
+        data = graph->InsertNewChildElement("data");
+        data->SetAttribute("key", "creationtime");
+            data->SetText(this->getISO8601Time().c_str());
 
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "programhash");
@@ -303,8 +303,28 @@ namespace smack
         auto now = std::chrono::system_clock::now();
         auto itt = std::chrono::system_clock::to_time_t(now);
         std::ostringstream ss;
-        ss << std::put_time(gmtime(&itt), "%FT%TZ");
-        return ss.str();
+        long offset = localtime(&itt)->tm_gmtoff/3600;
+        ss << std::put_time(localtime(&itt), "%FT%T%z");
+        std::string originStr = ss.str();
+        originStr.insert(originStr.length() - 2, ":");
+        std::cout << "INFO: creationtime: " << originStr << std::endl;
+        //ss << this->computeTimezoneStr(offset);
+        //std::cout << "INFO: creationtime: " << ss.str() << std::endl;
+        //return "2021-10-09T13:50:47+08:00";
+        return originStr;
+    }
+
+    std::string ViolationPathGen::computeTimezoneStr(long offset){
+        if(offset == 0){
+            return "Z";
+        } else if(offset > 0 && offset < 10){
+            return "+0" + std::to_string(offset) + ":00";
+        } else if(offset >= 10){
+            return "+" + std::to_string(offset) + ":00";
+        } else {
+            std::cout << "ERROR: timezone error, pleas check" << std::endl;
+            return "+02:00";
+        }
     }
 
 

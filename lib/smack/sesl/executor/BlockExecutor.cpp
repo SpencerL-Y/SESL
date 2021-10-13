@@ -907,6 +907,30 @@ namespace smack{
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
+        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_LONG)) {
+            std::string retOrigVarName = stmt->getReturns().front();
+            const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
+            std::string retVarName = retVar->name();
+            
+            std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(retOrigVarName);
+            assert(sizeInfo.second / 8 == 8);
+            
+            int byteSize = LONG_BYTEWIDTH;
+            const VarExpr* nondetLongVar = this->varFactory->getFreshVar(byteSize);
+            this->cfg->addVarType(nondetLongVar->name(), "i" + std::to_string(byteSize * 8));
+            this->varEquiv->addNewName(nondetLongVar->name());
+            this->varEquiv->linkName(retVarName, nondetLongVar->name());
+            const Expr* eq = Expr::eq(retVar, nondetLongVar);
+            REGISTER_EXPRPTR(eq);
+            const Expr* newPure = Expr::and_(
+                sh->getPure(),
+                eq
+            );
+            REGISTER_EXPRPTR(newPure);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            newSH->print(std::cout);
+            CFDEBUG(std::cout << std::endl;);
+            return newSH;
         } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_BOOL)){
             // here we assume that the lhs of __VERIFIER_nondet_bool is always int variable
             // TODOsh: check what bool variable is translated into

@@ -16,8 +16,8 @@ We build our tool based on
 
 System requirement: 
 - Linux (Ubuntu 20.04 LTS)
-- Python >=3.6
-- CMake
+- Python 3.6 and above
+- CMake and Ninja build
 
 
 Required libraries:
@@ -26,11 +26,12 @@ Required libraries:
 
     Installation of Z3 can be found [HERE](https://github.com/Z3Prover/z3/blob/master/README-CMake.md). 
 
-    Please notice since the tool is built using CMake, install Z3 by CMake is a must.
+    *Please notice since the tool is built using CMake, install Z3 by CMake is a must.*
     
-- **OpenSSL**
+- **LLVM**, **Clang** and **OpenSSL**
 
-    ```
+    ```sh
+    sudo apt-get install llvm clang
     sudo apt-get install openssl
     sudo apt-get install libssl-dev
     ```
@@ -66,7 +67,6 @@ After installation, you can run our tool globally. It is recommended to use the 
 sesl -bw 64 -t --sh-mem-leak --add-line-info <input_file>
 ```
 where `-t --sh-mem-leak --add-line-info` are musts, and `-bw 64` indicates the architecture considered for the checking is 64bit machine, one can also use `-bw 32` to identify 32bit architecture.
-
 
 ## Test Cases
 

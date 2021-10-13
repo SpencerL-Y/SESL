@@ -6,6 +6,7 @@
 #define SMACK_DEBUG_H
 
 #include "llvm/Support/raw_ostream.h"
+#include "utils/CenterDebug.h"
 
 namespace smack {
 
@@ -35,7 +36,10 @@ extern bool DebugFlag;
 
 llvm::raw_ostream &dbgs();
 
-#define SDEBUG(X) SMACK_DEBUG_WITH_TYPE(DEBUG_TYPE, X)
+#define SDEBUG(X) \
+  if(OPEN_SDEBUG) \
+    SMACK_DEBUG_WITH_TYPE(DEBUG_TYPE, X)
+
 } // namespace smack
 
 #endif

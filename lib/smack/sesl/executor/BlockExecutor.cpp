@@ -2033,6 +2033,10 @@ namespace smack{
             // get the offset of the position to be stored in a malloced blk
             offset = this->varEquiv->getOffset(varArg1->name());
             mallocName = this->varEquiv->getBlkName(varArg1->name());
+
+            // check whether it is freed
+            CHECK_VALID_DEREF_FOR_BLK(mallocName);
+
             mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
             if(varOrigArg1->name().find("$") == std::string::npos){
                 // if the stored position is represented by a non-global variable, step size later will use the type info obtained from cfg
@@ -2055,6 +2059,10 @@ namespace smack{
             varArg1Name = freshVar->name();
             offset = this->varEquiv->getOffset(varArg1->name());
             mallocName = this->varEquiv->getBlkName(varArg1->name());
+
+            // check whether it is freed
+            CHECK_VALID_DEREF_FOR_BLK(mallocName);
+
             mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
             // update the symbolic heap
             SHExprPtr oldSh = sh;
@@ -2564,6 +2572,7 @@ namespace smack{
         const VarExpr* ldPtr = nullptr;
         std::string ldPtrName;
         const VarExpr* lhsVar = this->getUsedVarAndName(lhsVarOrigName).first;
+        
         //std::string  lhsVarName = this->getUsedVarAndName(lhsVarOrigName).second;
         const Expr* loadedPosition = rhsFun->getArgs().back();
         std::string mallocName;
@@ -2579,6 +2588,10 @@ namespace smack{
             ldPtr = this->getUsedVarAndName(ldOrigPtrName).first;
             ldPtrName = this->getUsedVarAndName(ldOrigPtrName).second;
             mallocName = this->varEquiv->getBlkName(ldPtrName);
+            
+            // check whether it is freed
+            CHECK_VALID_DEREF_FOR_BLK(mallocName);
+            
             blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
             loadedOffset = this->varEquiv->getOffset(ldPtrName);
             CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
@@ -2601,6 +2614,10 @@ namespace smack{
                 ldOrigPtrName = freshLoadedVar->name();
                 ldPtrName = freshLoadedVar->name();
                 mallocName = this->varEquiv->getBlkName(ldPtrName);
+
+                // check whether it is freed
+                CHECK_VALID_DEREF_FOR_BLK(mallocName);
+
                 blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
                 loadedOffset = this->varEquiv->getOffset(ldPtrName);
                 CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);

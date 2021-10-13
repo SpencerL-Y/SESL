@@ -207,6 +207,14 @@ namespace smack{
 
     #define REGISTER_EXPRPTR(ptr) \
         BlockExecutor::ExprMemoryManager->registerPointer(ptr)
+
+    #define CHECK_VALID_DEREF_FOR_BLK(blk) \
+        if(this->varEquiv->isFreedName(blk)){ \
+            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF); \
+            std::cout << blk << " is freed! fuck!!!!\n"; \
+            CFDEBUG(std::cout << "INFO: INVALID DEREF " << std::endl;); \
+            return newSH; \
+        }
     
 }
 

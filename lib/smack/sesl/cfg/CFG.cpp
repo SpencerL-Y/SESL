@@ -176,8 +176,10 @@ namespace smack {
             return pathVarType[varName];
             
         } else {
+            if(FULL_DEBUG && OPEN_VARTYPE){
             for (const auto &i : pathVarType) {
                 std::cout << i.first << " " << i.second << " " << varName << std::endl;
+            }
             }
             CFDEBUG(std::cout << "ERROR: vartype not found: " << varName << std::endl;);
             return "";
@@ -199,8 +201,10 @@ namespace smack {
             return varType[varName];
             
         } else {
+            if(FULL_DEBUG && OPEN_VARTYPE){
             for (const auto &i : varType) {
                 std::cout << i.first << " " << i.second << " " << varName << std::endl;
+            }
             }
             CFDEBUG(std::cout << "ERROR: globalvartype not found: " << varName << std::endl;);
             return "";

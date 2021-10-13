@@ -12,8 +12,10 @@ namespace smack
     class SVNaming
     {
     public:
+        static const std::string SV_NONDET_CHAR;
         static const std::string SV_NONDET_INT;
         static const std::string SV_NONDET_BOOL;
+        static const std::string SV_NONDET_LONG;
     };
 
 } // namespace smack

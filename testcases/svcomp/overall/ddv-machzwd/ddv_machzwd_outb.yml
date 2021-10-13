@@ -1,0 +1,14 @@
+format_version: '2.0'
+
+# old file name: ddv_machzwd_outb_false-unreach-call_true-valid-memsafety.i
+input_files: 'ddv_machzwd_outb.i'
+
+properties:
+  - property_file: ../properties/unreach-call.prp
+    expected_verdict: false
+  - property_file: ../properties/valid-memsafety.prp
+    expected_verdict: true
+
+options:
+  language: C
+  data_model: ILP32

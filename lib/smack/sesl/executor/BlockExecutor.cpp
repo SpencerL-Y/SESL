@@ -882,14 +882,37 @@ namespace smack{
     (SHExprPtr sh, const CallStmt* stmt){
         CFDEBUG(std::cout << "INFO: execute VERIFIER Call." << std::endl;);
         assert(stmt->getProc().find("__VERIFIER") != std::string::npos);
-        if(!stmt->getProc().compare(SVNaming::SV_NONDET_INT)){
+        if(!stmt->getProc().compare(SVNaming::SV_NONDET_CHAR)) {
             std::string retOrigVarName = stmt->getReturns().front();
             const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
             std::string retVarName = retVar->name();
 
             std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(retOrigVarName);
-            assert(sizeInfo.second/8 == 4);
+            assert(sizeInfo.second / 8 == 1);
 
+            int byteSize = CHAR_BYTEWIDTH;
+            const VarExpr* nondetCharVar = this->varFactory->getFreshVar(byteSize);
+            this->cfg->addVarType(nondetCharVar->name(), "i" + std::to_string(byteSize * 8));
+            this->varEquiv->addNewName(nondetCharVar->name());
+            this->varEquiv->linkName(retVarName, nondetCharVar->name());
+            const Expr* eq = Expr::eq(retVar, nondetCharVar);
+            REGISTER_EXPRPTR(eq);
+            const Expr* newPure = Expr::and_(
+                sh->getPure(),
+                eq
+            );
+            REGISTER_EXPRPTR(newPure);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            newSH->print(std::cout);
+            CFDEBUG(std::cout << std::endl;)
+            return newSH;
+        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_INT)){
+            std::string retOrigVarName = stmt->getReturns().front();
+            const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
+            std::string retVarName = retVar->name();
+
+            std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(retOrigVarName);
+            assert(sizeInfo.second / 8 == 4);
 
             int byteSize = INT_BYTEWIDTH;
             const VarExpr* nondetIntVar = this->varFactory->getFreshVar(byteSize);
@@ -897,6 +920,30 @@ namespace smack{
             this->varEquiv->addNewName(nondetIntVar->name());
             this->varEquiv->linkName(retVarName, nondetIntVar->name());
             const Expr* eq = Expr::eq(retVar, nondetIntVar);
+            REGISTER_EXPRPTR(eq);
+            const Expr* newPure = Expr::and_(
+                sh->getPure(),
+                eq
+            );
+            REGISTER_EXPRPTR(newPure);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            newSH->print(std::cout);
+            CFDEBUG(std::cout << std::endl;);
+            return newSH;
+        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_LONG)) {
+            std::string retOrigVarName = stmt->getReturns().front();
+            const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
+            std::string retVarName = retVar->name();
+            
+            std::pair<std::string, int> sizeInfo = this->cfg->getVarDetailType(retOrigVarName);
+            assert(sizeInfo.second / 8 == 8);
+            
+            int byteSize = LONG_BYTEWIDTH;
+            const VarExpr* nondetLongVar = this->varFactory->getFreshVar(byteSize);
+            this->cfg->addVarType(nondetLongVar->name(), "i" + std::to_string(byteSize * 8));
+            this->varEquiv->addNewName(nondetLongVar->name());
+            this->varEquiv->linkName(retVarName, nondetLongVar->name());
+            const Expr* eq = Expr::eq(retVar, nondetLongVar);
             REGISTER_EXPRPTR(eq);
             const Expr* newPure = Expr::and_(
                 sh->getPure(),
@@ -1986,6 +2033,10 @@ namespace smack{
             // get the offset of the position to be stored in a malloced blk
             offset = this->varEquiv->getOffset(varArg1->name());
             mallocName = this->varEquiv->getBlkName(varArg1->name());
+
+            // check whether it is freed
+            CHECK_VALID_DEREF_FOR_BLK(mallocName);
+
             mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
             if(varOrigArg1->name().find("$") == std::string::npos){
                 // if the stored position is represented by a non-global variable, step size later will use the type info obtained from cfg
@@ -2008,6 +2059,10 @@ namespace smack{
             varArg1Name = freshVar->name();
             offset = this->varEquiv->getOffset(varArg1->name());
             mallocName = this->varEquiv->getBlkName(varArg1->name());
+
+            // check whether it is freed
+            CHECK_VALID_DEREF_FOR_BLK(mallocName);
+
             mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
             // update the symbolic heap
             SHExprPtr oldSh = sh;
@@ -2517,6 +2572,7 @@ namespace smack{
         const VarExpr* ldPtr = nullptr;
         std::string ldPtrName;
         const VarExpr* lhsVar = this->getUsedVarAndName(lhsVarOrigName).first;
+        
         //std::string  lhsVarName = this->getUsedVarAndName(lhsVarOrigName).second;
         const Expr* loadedPosition = rhsFun->getArgs().back();
         std::string mallocName;
@@ -2532,6 +2588,10 @@ namespace smack{
             ldPtr = this->getUsedVarAndName(ldOrigPtrName).first;
             ldPtrName = this->getUsedVarAndName(ldOrigPtrName).second;
             mallocName = this->varEquiv->getBlkName(ldPtrName);
+            
+            // check whether it is freed
+            CHECK_VALID_DEREF_FOR_BLK(mallocName);
+            
             blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
             loadedOffset = this->varEquiv->getOffset(ldPtrName);
             CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
@@ -2554,6 +2614,10 @@ namespace smack{
                 ldOrigPtrName = freshLoadedVar->name();
                 ldPtrName = freshLoadedVar->name();
                 mallocName = this->varEquiv->getBlkName(ldPtrName);
+
+                // check whether it is freed
+                CHECK_VALID_DEREF_FOR_BLK(mallocName);
+
                 blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
                 loadedOffset = this->varEquiv->getOffset(ldPtrName);
                 CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);

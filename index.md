@@ -10,20 +10,20 @@ SESL is constructed based on the state-of-the-art tool [SMACK](https://smackers.
 ## Download and Installation
 ### System and Compiling Requirements
 - Linux (Ubuntu 20.04 LTS)
-- Python 3.7 and above
+- Python 3.6 and above
 - CMake and Ninja build
 
 ### Dependencies
 Following libraries are required to successfully compile SESL to run:
 - **LLVM** and **Clang**:
 LLVM and clang can be installed using apt-get in the terminal:
-```
+```sh
 sudo apt-get install llvm clang
 ```
 - **Z3**: Installation of Z3-prover can be found [here](https://github.com/Z3Prover/z3/blob/master/README-CMake.md). (To compile from source, Z3 should be built using CMake).
 - **OpenSSL**:
 Openssl can be installed using apt-get from terminal:
-```
+```sh
 sudo apt-get install openssl
 sudo apt-get install libssl-dev
 ```
@@ -32,26 +32,28 @@ sudo apt-get install libssl-dev
 
 ### Install SESL
 In the root of this project:
-```
+```sh
 mkdir build
 cd build
 cmake  -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug .. -G Ninja
-ninja build
-cd ..
 
+# this command will install sesl for your system
+sudo ninja install
 ```
 
 ### How to Run SESL
+After installation, you can run our tool globally. It is recommended to use the following command to analyze one single file:
+```sh
+sesl -bw 64 -t --sh-mem-leak --add-line-info <input_file>
+```
+where `-t --sh-mem-leak --add-line-info` are musts, and `-bw 64` indicates the architecture considered for the checking is 64bit machine, one can also use `-bw 32` to identify 32bit architecture.
+
 Run from archived:
+```sh
+./sesl-svcomp.sh -bw 64 -t --sh-mem-leak --add-line-info <input_file>
 ```
-./sesl-svcomp.sh <SRC_FILE> -t --sh-mem-leak --add-line-info
-```
-Run with source: after building sesl from source file:
-```
-cd bin
-./test_debug.sh exec
-```
-this will compile the tool and then run an example in folder ```testcases/printtest/exec.c```
+
+Notice: `<input_file>` indicates source file(`.c` or `.i`).
 
 ## Authors and Affliation
 Institute of Software, China Academy of Sciences

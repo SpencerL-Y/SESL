@@ -30,6 +30,7 @@ namespace smack
         void createNodeForGraph(XMLElement* graph, std::string nodeId);
         void createEdgeForGraph(XMLElement* graph, std::string fromNodeId, std::string toNodeId, int lineNum);
         std::string getISO8601Time();
+        std::string computeTimezoneStr(long offset);
         std::string getHashForFile(std::string path);
     };
     

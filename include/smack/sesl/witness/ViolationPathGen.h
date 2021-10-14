@@ -24,10 +24,10 @@ namespace smack
         std::string generateSVCOMPWitness(ExecutionPath violatedPath);
         void createKeysForGraphml(XMLElement* graphElement);
         void createPreludeForGraph(XMLElement* graph, bool isViolation);
-        void createEntryNodeForGraph(XMLElement* graph);
-        void createSinkNodeForGraph(XMLElement* graph);
+        void createEntryNodeForGraph(XMLElement* graph, std::string nodeId);
+        void createViolationNodeForGraph(XMLElement* graph, std::string nodeId);
         void createNodeAndEdgeForGraph(XMLElement* graph, ExecutionPath violatedPath);
-        void createNodeForGraph(XMLElement* graph, std::string nodeId);
+        XMLElement* createNodeForGraph(XMLElement* graph, std::string nodeId);
         void createEdgeForGraph(XMLElement* graph, std::string fromNodeId, std::string toNodeId, int lineNum);
         std::string getISO8601Time();
         std::string computeTimezoneStr(long offset);

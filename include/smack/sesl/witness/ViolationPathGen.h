@@ -32,6 +32,8 @@ namespace smack
         std::string getISO8601Time();
         std::string computeTimezoneStr(long offset);
         std::string getHashForFile(std::string path);
+
+        XMLElement* setSpecifications(XMLElement* graph);
     };
     
 } // namespace smack

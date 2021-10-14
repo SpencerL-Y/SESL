@@ -107,6 +107,10 @@ const llvm::cl::opt<bool> SmackOptions::bw32(
         "bw32",
         llvm::cl::desc("used to specify bitwidth 32."));
 
+const llvm::cl::opt<std::string> SmackOptions::prp(
+    "svcomp-property",
+    llvm::cl::desc("used to get property file"));
+
 bool SmackOptions::isEntryPoint(std::string name) {
   for (auto EP : EntryPoints)
     if (name == EP)

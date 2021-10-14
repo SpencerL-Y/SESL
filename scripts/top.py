@@ -834,6 +834,8 @@ def llvm_to_bpl(args):
         cmd += ["-add-line-info"]
     if args.bitwidth:
         cmd += ["-bw" + str(args.bitwidth)]
+    if args.svcomp_property:
+        cmd += ["-svcomp-property", args.svcomp_property]
     try_command(cmd, console=True)
     annotate_bpl(args)
     memsafety_subproperty_selection(args)

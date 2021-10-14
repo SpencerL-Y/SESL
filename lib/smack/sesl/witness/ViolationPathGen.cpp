@@ -170,8 +170,6 @@ namespace smack
 
 
     void ViolationPathGen::createPreludeForGraph(XMLElement* graph, bool isViolation){
-
-
         int byteSize = (SmackOptions::bw32)? 32 : 64;
         XMLElement* data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "witness-type");
@@ -185,16 +183,8 @@ namespace smack
         data->SetAttribute("key", "producer");
             data->SetText("SESL");
 
-        data = graph->InsertNewChildElement("data");
-        data->SetAttribute("key", "specification");
-            data->SetText("CHECK( init(main()), LTL(G valid-memtrack) )");
-        data = graph->InsertNewChildElement("data");
-        data->SetAttribute("key", "specification");
-            data->SetText("CHECK( init(main()), LTL(G valid-free) )");
-        data = graph->InsertNewChildElement("data");
-        data->SetAttribute("key", "specification");
-            data->SetText("CHECK( init(main()), LTL(G valid-deref) )");
-
+        data = this->setSpecifications(graph);
+    
         data = graph->InsertNewChildElement("data");
         data->SetAttribute("key", "programfile");
             data->SetText(originFilePath.c_str());
@@ -348,6 +338,29 @@ namespace smack
         }
         std::cout << "HASH Result: " << resultStr  << std::endl;
         return resultStr;
+    }
+
+    XMLElement* ViolationPathGen::setSpecifications(XMLElement* graph) {
+        std::string prp = SmackOptions::prp.getValue();
+        XMLElement* data;
+        if(prp.find("valid-memsafety") != std::string::npos) {
+            data = graph->InsertNewChildElement("data");
+            data->SetAttribute("key", "specification");
+                data->SetText("CHECK( init(main()), LTL(G valid-memtrack) )");
+            data = graph->InsertNewChildElement("data");
+            data->SetAttribute("key", "specification");
+                data->SetText("CHECK( init(main()), LTL(G valid-free) )");
+            data = graph->InsertNewChildElement("data");
+            data->SetAttribute("key", "specification");
+                data->SetText("CHECK( init(main()), LTL(G valid-deref) )");
+        } else if(prp.find("valid-memcleanup") != std::string::npos) {
+            data = graph->InsertNewChildElement("data");
+            data->SetAttribute("key", "specification");
+                data->SetText("CHECK( init(main()), LTL(G valid-memcleanup) )");
+        } else {
+            std::cout << "The file can't be recognized!" << std::endl;
+        }
+        return data;
     }
 
     

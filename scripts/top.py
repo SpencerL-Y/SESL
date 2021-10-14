@@ -10,7 +10,7 @@ from enum import Flag, auto
 from .utils import temporary_file, try_command, remove_temp_files
 from .frontend import link_bc_files, frontends, languages
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 
 class VResult(Flag):

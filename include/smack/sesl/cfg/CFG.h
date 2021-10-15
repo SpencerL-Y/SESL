@@ -28,7 +28,6 @@ namespace smack
         std::string entryBlockName;
         bool containLoop = false;
         void topologicalSort();
-        bool hasLoop();
         void printCFG(const std::string& start, bool fresh = true);
         void generateTypeInfo();
         // SCC related
@@ -39,7 +38,7 @@ namespace smack
         void setConstDecls(vector<ConstDecl*> constDs);
         void printConstDeclsInfo();
         std::vector<ConstDecl*> getConstDecls();
-
+        bool hasLoop();
         void markSCC(std::string start);
         void markExit(const std::string& start, bool fresh = true);
         void printVarInfo();

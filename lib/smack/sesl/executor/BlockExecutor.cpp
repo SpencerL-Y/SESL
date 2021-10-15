@@ -2845,7 +2845,7 @@ namespace smack{
             } else {
                 loadedSize = stepSize;
             }
-            std::cout << "load size: " << loadedSize << std::endl;
+            CFDEBUG(std::cout << "load size: " << loadedSize << std::endl;);
             assert(loadedSize > 0);
 
             if(this->storeSplit->computeCoveredNumOfPts(mallocName, loadedOffset, loadedSize) == 0){

@@ -8,6 +8,9 @@ SESL is constructed based on the state-of-the-art tool [SMACK](https://smackers.
 
 
 ## Download and Installation
+### Download the executable package
+Currently we only give a release intended for SV-COMP [HERE](https://github.com/SpencerL-Y/SESL/releases/).
+
 ### System and Compiling Requirements
 - Linux (Ubuntu 20.04 LTS)
 - Python 3.6 and above

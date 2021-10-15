@@ -25,6 +25,7 @@ namespace smack
         std::unordered_map<std::string, std::string> varType;
         std::unordered_map<std::string, StatePtr> states;
         std::string entryBlockName;
+        bool containLoop = false;
         void printCFG(const std::string& start, bool fresh = true);
         void generateTypeInfo();
         // SCC related
@@ -46,6 +47,8 @@ namespace smack
         void setProc(ProcDecl* procDecl);
         void setProc(std::vector<ProcDecl*>& procV);
         virtual void buildCFG();
+        void topologicalSort();
+        bool hasLoop();
         void buildCFG(ProcDecl* procDecl);
         std::vector<StatePtr> getStates();
         StatePtr getState(const std::string& blockName, Block* block = nullptr);

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <unordered_set>
 #include <llvm/Support/Casting.h>
+#include <queue>
 
 using namespace std;
 namespace smack {
@@ -257,6 +258,7 @@ namespace smack {
     }
 
     void CFG::setProc(std::vector<ProcDecl *> &procV) {
+        containLoop = false;
         procVec.clear();
         procVec = procV;
         buildCFG();
@@ -270,6 +272,7 @@ namespace smack {
             markSCC(getEntryBlockName());
             markExit(getEntryBlockName(), true);
         }
+        topologicalSort();
     }
 
     CFG::CFG(ProcDecl *procDecl, std::string entryBlock) {
@@ -324,5 +327,40 @@ namespace smack {
 
     std::vector<ConstDecl *> CFG::getConstDecls() {
         return constDecls;
+    }
+
+    bool CFG::hasLoop() {
+        return containLoop;
+    }
+
+    void CFG::topologicalSort() {
+        unordered_map<string, int> nums;
+        int total = 0, count = 0;
+        //init
+        for (auto &[name, statePtr] : states) {
+            if (!nums.count(name)) nums[name] = 0;
+            total ++;
+            for (auto& to : statePtr->getSuccessors()) {
+                nums[to.lock()->getBlockName()] ++;
+            }
+        }
+        queue<string> q;
+        for (auto &[name, num] : nums) {
+            if (!num) q.push(name);
+        }
+        //sort
+        while (!q.empty()) {
+            auto t = q.front(); q.pop();
+            count ++;
+            for (auto& to : getState(t)->getSuccessors()) {
+                int n = -- nums[to.lock()->getBlockName()];
+                if (!n) q.push(to.lock()->getBlockName());
+            }
+        }
+        if (count != total) {
+            containLoop = true;
+        } else {
+            containLoop = false;
+        }
     }
 } // namespace name

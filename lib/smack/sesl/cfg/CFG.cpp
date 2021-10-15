@@ -2,6 +2,7 @@
 #include <iostream>
 #include <unordered_set>
 #include <llvm/Support/Casting.h>
+#include <queue>
 
 using namespace std;
 namespace smack {
@@ -102,7 +103,7 @@ namespace smack {
         buildCFG();
     }
 
-    // fengwz: 
+    // fengwz:
     // if no successor: print path and pop current bb state to find other path;
     // else: if no loop, increase path; else, print path with duplicate bb state and pop current bb state.
     //center Modify: use unorderd_set to mark if the block was visited
@@ -172,9 +173,9 @@ namespace smack {
                     std::cout << i.first << " " << i.second << " " << varName << std::endl;
             }
             }
-            
+
             return pathVarType[varName];
-            
+
         } else {
             if(FULL_DEBUG && OPEN_VARTYPE){
             for (const auto &i : pathVarType) {
@@ -197,9 +198,9 @@ namespace smack {
                     std::cout << i.first << " " << i.second << " " << varName << std::endl;
             }
             }
-            
+
             return varType[varName];
-            
+
         } else {
             if(FULL_DEBUG && OPEN_VARTYPE){
             for (const auto &i : varType) {
@@ -337,7 +338,7 @@ namespace smack {
                 }
             }
             CFDEBUG(std::cout << "WARNING: varName exists: " << varName << std::endl;);
-            
+
         }
     }
 
@@ -370,10 +371,12 @@ namespace smack {
         SCCNumber.clear();
         sccGroupNum.clear();
         sccNumber = step = 0;
+        containLoop = false;
         if (states.count(getEntryBlockName())) {
             markSCC(getEntryBlockName());
             markExit(getEntryBlockName(), true);
         }
+        topologicalSort();
     }
 
     CFG::CFG(ProcDecl *procDecl, std::string entryBlock) {
@@ -440,5 +443,40 @@ namespace smack {
 
     std::vector<ConstDecl *> CFG::getConstDecls() {
         return constDecls;
+    }
+
+    bool CFG::hasLoop() {
+        return containLoop;
+    }
+
+    void CFG::topologicalSort() {
+        unordered_map<string, int> nums;
+        int total = 0, count = 0;
+        //init
+        for (auto &[name, statePtr] : states) {
+            if (!nums.count(name)) nums[name] = 0;
+            total ++;
+            for (auto& to : statePtr->getSuccessors()) {
+                nums[to.lock()->getBlockName()] ++;
+            }
+        }
+        queue<string> q;
+        for (auto &[name, num] : nums) {
+            if (!num) q.push(name);
+        }
+        //sort
+        while (!q.empty()) {
+            auto t = q.front(); q.pop();
+            count ++;
+            for (auto& to : getState(t)->getSuccessors()) {
+                int n = -- nums[to.lock()->getBlockName()];
+                if (!n) q.push(to.lock()->getBlockName());
+            }
+        }
+        if (count != total) {
+            containLoop = true;
+        } else {
+            containLoop = false;
+        }
     }
 } // namespace name

@@ -22,10 +22,12 @@ namespace smack
         /* data */
         std::vector<ProcDecl*> procVec;
         std::vector<ConstDecl*> constDecls;
-        std::unordered_map<std::string, std::string> varType; 
+        std::unordered_map<std::string, std::string> varType;
         std::unordered_map<std::string, std::string> pathVarType;
         std::unordered_map<std::string, StatePtr> states;
         std::string entryBlockName;
+        bool containLoop = false;
+        void topologicalSort();
         void printCFG(const std::string& start, bool fresh = true);
         void generateTypeInfo();
         // SCC related
@@ -36,7 +38,7 @@ namespace smack
         void setConstDecls(vector<ConstDecl*> constDs);
         void printConstDeclsInfo();
         std::vector<ConstDecl*> getConstDecls();
-
+        bool hasLoop();
         void markSCC(std::string start);
         void markExit(const std::string& start, bool fresh = true);
         void printVarInfo();

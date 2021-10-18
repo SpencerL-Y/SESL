@@ -81,7 +81,7 @@ namespace smack{
         bool isStoreLoadFuncName(std::string name);
         bool isPtrArithFuncName(std::string name);
 
-        bool isDebugFuncName(std::string name);
+        bool isNoSideEffectFuncName(std::string name);
         // ---------------- Arithmetic Utilities
         // <<<HIGH LEVEL METHOD >>>
         // lhsVar is for linking of ptr arithmetic 
@@ -168,6 +168,8 @@ namespace smack{
         SHExprPtr executeMemset(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeUnintepreted(SHExprPtr sh, const CallStmt* stmt);
+
+        SHExprPtr executeTime(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
 

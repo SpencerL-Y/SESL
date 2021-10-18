@@ -778,13 +778,13 @@ namespace smack{
         }
     }
 
-    bool BlockExecutor::isDebugFuncName(std::string name){
-        if(name.find("boogie_si_record") != std::string::npos){
+    bool BlockExecutor::isNoSideEffectFuncName(std::string name){
+        if (name.find("boogie_si_record") != std::string::npos ||
+            name.find("abort") != std::string::npos ||
+            name.find("srand") != std::string::npos ||
+            name.find("print") != std::string::npos){
             return true;
-        } else if(!name.compare("abort")){
-            return true;
-        } 
-        else {
+        } else {
             return false;
         }
     }
@@ -862,11 +862,11 @@ namespace smack{
                 return this->executeMemcpy(sh, call);
             } else if(call->getProc().find("$memset") != std::string::npos || call->getProc().find("memset") != std::string::npos){
                 return this->executeMemset(sh, call);
-            } 
-            else if(this->isDebugFuncName(call->getProc())){
+            } else if(call->getProc().find("time") != std::string::npos) {
+                return this->executeTime(sh, call);
+            } else if(this->isNoSideEffectFuncName(call->getProc())) {
                 return sh;
-            }
-            else {
+            } else {
                 return this->executeUnintepreted(sh, call);
                 CFDEBUG(std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl);
             }
@@ -2904,6 +2904,24 @@ namespace smack{
             CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
             return sh;
         }
+    }
+
+    SHExprPtr BlockExecutor::executeTime(SHExprPtr sh, const CallStmt* stmt) {
+        CFDEBUG(std::cout << "INFO: execute Time func" << std::endl;);
+        std::string retOrigName = stmt->getReturns().front();
+        const VarExpr* retVar = this->varFactory->useVar(retOrigName);
+        std::string retVarName = retVar->name();
+        CFDEBUG(std::cout << "ASSIGN: lhs is " << retVarName << std::endl;);
+        this->varEquiv->addNewName(retVarName);
+
+        const Expr* arg1 = stmt->getParams().front();
+        const VarExpr* timeVar = this->createAndRegisterFreshDataVar(4);
+        const Expr* newPure = Expr::eq(retVar, timeVar);
+        REGISTER_EXPRPTR(newPure);
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+        newSH->print(std::cout);
+        CFDEBUG(std::cout << std::endl;);
+        return newSH;
     }
 
     // ---------------------- Utils for store execution

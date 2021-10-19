@@ -75,6 +75,7 @@ namespace smack{
         //  <<< LOW LEVEL METHODS >>> 
         bool isUnaryAssignFuncName(std::string name);
         bool isUnaryPtrCastFuncName(std::string name);
+        bool isPtr2DataFuncName(std::string name);
         bool isUnaryBooleanFuncName(std::string name);
         bool isBinaryBooleanFuncName(std::string name);
         bool isBinaryArithFuncName(std::string name);

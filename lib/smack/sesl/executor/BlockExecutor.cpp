@@ -2088,7 +2088,7 @@ namespace smack{
             if(useStoreFuncSize){
                 storedSize = storeFuncSize;
             } else {
-                // This means we cannot obtain any useful information and can only use ptr size as the stepSize
+                // This means we cannot obtain any useful information and can only use size function specified  as the stepSize
                 CFDEBUG(std::cout << "WARNING: parseStoreFuncSize is used, please check if correct!" << std::endl;);
                 storedSize = parseStoreFuncSize(rhsFun->name());
             }
@@ -2290,10 +2290,164 @@ namespace smack{
                         } else {
                             CFDEBUG(std::cout << "INFO: store situation A.1.(3)" << std::endl;);
                             // situation A.1.(3), currently not considered
-                            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
-                            CFDEBUG(std::cout << "INFO: situation A.1.(3), currently not considered" << std::endl;);
-                            return newSH;
+                            // SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                            // CFDEBUG(std::cout << "INFO: situation A.1.(3), currently not considered" << std::endl;);
+                            // TODOsh: refactor later, currently the original loop is broken for a new one
+                            const VarExpr* freshStoredVar = this->varFactory->getFreshVar(storedSize);
+                            if(arg2->isVar()){
+                                const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
+                                std::string VarOrigArg2Name = varOrigArg2->name();
+                                const VarExpr* varArg2 = this->getUsedVarAndName(VarOrigArg2Name).first;
+                                std::string varArg2Name = this->getUsedVarAndName(VarOrigArg2Name).second;
+                                this->updateBindingsEqualVarAndRhsVar(freshStoredVar, varArg2);
+                                this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
+                                const Expr* eq = Expr::eq(
+                                    freshStoredVar,
+                                    varArg2
+                                );
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
+                            } else if(arg2->isValue()){
+                                this->updateBindingsEqualVarAndRhsValue(freshStoredVar, arg2);
+                                this->updateVarType(freshStoredVar, arg2, arg2, storedSize);
+                                const Expr* eq = Expr::eq(freshStoredVar, arg2);
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
+                            } else {
+                                CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
+                                std::pair<const Expr*, bool> usedPair =  getUsedArithExprAndVar(freshStoredVar, arg2);
+                                const Expr* storedExpr = usedPair.first;
+                                assert(storedExpr != nullptr);
+                                bool isPtr = usedPair.second;
+                                this->updateBindingsEqualVarAndRhsArithExpr(freshStoredVar, arg2, storedExpr, isPtr);
+                                this->updateVarType(freshStoredVar, arg2, storedExpr, storedSize);
+                                const Expr* eq = Expr::eq(freshStoredVar, storedExpr);
+                                REGISTER_EXPRPTR(eq);
+                                newPure = Expr::and_(newPure, eq);
+                                REGISTER_EXPRPTR(newPure);
+                            }
+                            // The above operations transfer the data to store to freshStoredVar
+                            bool isDstTailPtSplitted = this->storeSplit->isInitialized(mallocName, offset + storedSize) && !(this->storeSplit->getOffsetPos(mallocName, offset + storedSize)).first;
+                            if(isDstTailPtSplitted){
+                                CFDEBUG(std::cout << "ERROR: Does not support over store that split existing pt predcate yet.." << std::endl;);
+                                SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                                return newSH;
+                            }
+                            bool isDstTailInitialized = this->storeSplit->isInitialized(mallocName, offset + storedSize - 1); 
+                            assert(this->storeSplit->getOffsetPos(mallocName, offset).first);
+                            int dstHeadPtIndex = this->storeSplit->getOffsetPos(mallocName, offset).second;
+                            int dstTailPtIndex = -1;
+                            int dstTailBlkIndex = -1;
+
+                            std::list<const SpatialLiteral*> tempSpatial;
+                            std::list<const SpatialLiteral*> specialNewSpatial;
+                            std::list<const SpatialLiteral*> specialLeftSpatial;
+                            std::list<const SpatialLiteral*> specialRightSpatial;
+                            if(isDstTailInitialized){
+                                assert(this->storeSplit->getInitializedPos(mallocName, offset + storedSize - 1).first);
+                                dstTailPtIndex = this->storeSplit->getInitializedPos(mallocName, offset + storedSize - 1).second;
+                            } else { 
+                                // bytify the tail blk to make it ends with pt predicate
+                                dstTailBlkIndex = this->storeSplit->getSplit(mallocName, offset + storedSize - 1);
+                                bool beginTempCounting = false;
+                                int tempCurrentBlkIndex = 1;
+                                for(const SpatialLiteral* tsl : sh->getSpatialExpr()){
+                                    if(SpatialLiteral::Kind::SPT == tsl->getId()){
+                                        if(!tsl->getBlkName().compare(mallocName)){
+                                            beginTempCounting = true;
+                                        } else {
+                                            beginTempCounting = false;
+                                        }
+                                    } 
+
+                                    if(beginTempCounting){
+                                        if(SpatialLiteral::Kind::BLK == tsl->getId()){
+                                            if(tempCurrentBlkIndex == dstTailBlkIndex){
+                                                std::pair<std::list<const SpatialLiteral*>, const Expr*> resultBytifiedPair = this->bytifyBlkPredicate(tsl, newPure);
+                                                newPure = resultBytifiedPair.second;
+                                                for(const SpatialLiteral* bytified : resultBytifiedPair.first){
+                                                    tempSpatial.push_back(bytified);
+                                                }
+                                            } else {
+                                                tempSpatial.push_back(tsl);
+                                            }
+                                            tempCurrentBlkIndex += 1;
+                                        } else {
+                                            tempSpatial.push_back(tsl);
+                                        }
+                                    } else {
+                                        tempSpatial.push_back(tsl);
+                                    }
+                                }
+                                assert(this->storeSplit->getInitializedPos(mallocName, offset + storedSize - 1).first);
+                                dstTailPtIndex = this->storeSplit->getInitializedPos(mallocName, offset + storedSize - 1).second;
+                            }
+                            bool dstBeginCounting = false;
+                            bool dstBeginReplacing = false;
+                            bool dstBeginRight = false;
+                            int dstCurrentPtIndex = 1;
                             
+                            for(const SpatialLiteral* ssl : sh->getSpatialExpr()){
+                                if(SpatialLiteral::Kind::SPT == ssl->getId()){
+                                    if(!ssl->getBlkName().compare(mallocName)){
+                                        dstBeginCounting = true;
+                                    } else {
+                                        dstBeginCounting = false;
+                                    }
+                                }
+                                if(dstCurrentPtIndex >= dstHeadPtIndex){
+                                    dstBeginReplacing = true;
+                                }
+                                if(dstCurrentPtIndex > dstTailPtIndex){
+                                    dstBeginReplacing = false;
+                                    dstBeginRight = true;
+                                }
+                                if(dstBeginCounting){
+                                    if(SpatialLiteral::Kind::PT == ssl->getId()){
+                                        if(dstBeginReplacing){
+                                            // do nothing
+                                        } else {
+                                            if(dstBeginRight){
+                                                specialRightSpatial.push_back(ssl);
+                                            } else {
+                                                specialLeftSpatial.push_back(ssl);
+                                            }
+                                        }
+                                        dstCurrentPtIndex += 1;
+                                    } else {
+                                        if(dstBeginRight){
+                                            specialRightSpatial.push_back(ssl);
+                                        } else {
+                                            specialLeftSpatial.push_back(ssl);
+                                        }
+                                    }
+                                } else {
+                                    if(dstBeginRight){
+                                        specialRightSpatial.push_back(ssl);
+                                    } else {
+                                        specialLeftSpatial.push_back(ssl);
+                                    }
+                                }
+                            }
+
+                            this->storeSplit->wipeInterval(mallocName, offset, offset + storedSize);
+                            for(const SpatialLiteral* slsl : specialLeftSpatial){
+                                specialNewSpatial.push_back(slsl);
+                            }
+                            const SpatialLiteral* newStoredPt = this->createPtAccordingToMallocName(mallocName, varArg1, freshStoredVar, storedSize);
+                            this->storeSplit->addSplit(mallocName, offset);
+                            this->storeSplit->addSplitLength(mallocName, offset, storedSize);
+                            specialNewSpatial.push_back(newStoredPt);
+                            REGISTER_EXPRPTR(newStoredPt);
+                            for(const SpatialLiteral* srsl : specialRightSpatial){
+                                specialNewSpatial.push_back(srsl);
+                            } 
+                            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, specialNewSpatial);
+                            newSH->print(std::cout);
+                            CFDEBUG(std::cout << std::endl;);
+                            return newSH;
                         }
                         currentIndex += 1;
                     } 

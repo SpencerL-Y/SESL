@@ -528,7 +528,7 @@ namespace smack{
                 );
                 return resultExpr;
             } else {
-                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function ptr!!!!" << std::endl;);
+                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function ptr!!!!" << funcExpr->name() << std::endl;);
                 return arithExpr;
             }
         } else {

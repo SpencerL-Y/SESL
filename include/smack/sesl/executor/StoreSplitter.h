@@ -70,6 +70,7 @@
 
             void setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap);
             StoreSplitterPtr clone();
+            void print();
         };
         typedef std::shared_ptr<StoreSplitter> StoreSplitterPtr;
         

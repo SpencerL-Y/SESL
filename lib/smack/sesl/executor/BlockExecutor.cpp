@@ -528,7 +528,7 @@ namespace smack{
                 );
                 return resultExpr;
             } else {
-                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function ptr!!!!" << std::endl;);
+                CFDEBUG(std::cout << "ERROR: UNSOLVED arithmetic function ptr!!!!" << funcExpr->name() << std::endl;);
                 return arithExpr;
             }
         } else {
@@ -2096,7 +2096,7 @@ namespace smack{
         assert(storedSize != 0);
         assert(storedSize > 0);
             
-        CFDEBUG(std::cout << "STORE: offset " << offset << " Blk size: " << mallocBlkSize << std::endl;);
+        CFDEBUG(std::cout << "STORE: offset " << offset << " Blk size: " << mallocBlkSize << " storedSize: " << storedSize << std::endl;);
         // if the stored ptr is a nullptr, set inference error
         if(!mallocName.compare("$Null")){
             // the symbolic heap is set to error
@@ -2810,7 +2810,7 @@ namespace smack{
         CFDEBUG(std::cout << "INFO: loadedOffset: " << loadedOffset << " blkSize " << blkSize << " loadedSize " << loadedSize << std::endl;);
         // B.1.(1): the loaded is an exact load
         // B.1.(2): the loaded position has an offset, but the loadedSize  <  the stepSize of pt predicate
-        // B.3.(2).1: the loaded position has an offset, but the loadedSize >  the steoSize of pt predicate
+        // B.3.(2).1: the loaded position has an offset, but the loadedSize >  the stepSize of pt predicate
         // B.2.(1): the loaded position is initialized, but not an offset. The loadedSize + loadedPos <= ptOffset + stepSize
         // B.3.(2).2: the loaded position is initialized, but not an offset. THe loadedSize + loadedPos > ptOffset + stepSize
         // B.3.(1): the loaded position is not initialized, [offset, offset + length) lies in some blk.
@@ -2907,7 +2907,9 @@ namespace smack{
                     return newSH;
                 } else {
                     // Situation B.3.(2).1
+                
                     CFDEBUG(std::cout << "INFO: Situation 3.(2).1 currently not support, to be added later" << std::endl;)
+                    CFDEBUG(std::cout << "INFO: Initialized length: " << this->storeSplit->getInitializedLength(mallocName, loadedOffset) << " loaded size: " << loadedSize << std::endl;);
                     SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
                     return newSH;
                 } 
@@ -3316,7 +3318,10 @@ namespace smack{
         stmt->print(std::cout);
         CFDEBUG(std::cout << std::endl);
         }
-        
+        if(FULL_DEBUG && OPEN_STORE_SPLIT){
+            this->storeSplit->print();
+        }
+
         if(currSH->isError()){
             const SpatialLiteral* sp = currSH->getSpatialExpr().front();
             assert(SpatialLiteral::Kind::ERR == sp->getId());
@@ -4048,6 +4053,9 @@ namespace smack{
             tempRhsBlk = (const BlkLit*) splittedTriplet.front(); splittedTriplet.pop_front();
         }
         resultPredicateList.push_back(tempRhsBlk);
+        if(FULL_DEBUG && OPEN_STORE_SPLIT){
+            this->storeSplit->print();
+        }
         return {resultPredicateList, resultPure};
     }
 

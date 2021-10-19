@@ -148,29 +148,17 @@
 //     test_6();
 //     return 0;
 // }
-
 #include <stdlib.h>
 
-typedef struct node{
-    struct node* next;
-    struct node* prev;
-    int *pData;
-    int data;
-} Node;
-
 int main(){
-    
-//     Node_t* node = malloc(sizeof(Node_t));
-//     node->p = malloc(1);
-//     if(node->p == &node->d){
-//         int *k = malloc(1123123);
-//     }
-//     free(node->p);
-//     free(node);
-//     return 0;
-// }
-
-
- int *a = malloc(4*sizeof(int));
- return 0;
+    int i;
+    while(i < 10){
+        int num = 5;
+        int *j = (int*)malloc(num*sizeof(int));
+        *(j+1) = num + (-1);
+        int nnum = *(j+1) + (-1); 
+        free(j);
+        i++;
+    }
+    return 0;
 }

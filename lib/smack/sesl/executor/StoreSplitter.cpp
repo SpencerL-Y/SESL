@@ -5,9 +5,15 @@ namespace smack
     
 
     void BlkSplitUtil::print(){
-        DEBUG_WITH_COLOR(std::cout << "Axis: ";, color::yellow);
+        DEBUG_WITH_COLOR(std::cout << " Axis: ";, color::yellow);
         for(auto i : this->splitAxis){
-            DEBUG_WITH_COLOR(std::cout << i << " ";,color::yellow);
+
+            DEBUG_WITH_COLOR(std::cout << " offset: " << i;,color::yellow);
+        }
+        DEBUG_WITH_COLOR(std::cout << std::endl;, color::yellow);
+        DEBUG_WITH_COLOR(std::cout << " Axis: ";, color::yellow);
+        for(auto i : this->offsetPosToSize){
+            DEBUG_WITH_COLOR(std::cout << "offset: " << i.first << " size:" << i.second << " ";,color::yellow);
         }
         DEBUG_WITH_COLOR(std::cout << std::endl;, color::yellow);
     }
@@ -189,21 +195,23 @@ namespace smack
                toOffset   >= 0 && toOffset   <= this->maxOffset);
         if(this->isInitialized(fromOffset) && this->getInitializedPrefixLength(fromOffset) != 0 ||
            this->isInitialized(toOffset)   && this->getInitializedPrefixLength(toOffset)   != 0){
-               CFDEBUG(std::cout << "ERROR: blk is splitted when wiping, please check" << std::endl;);
+               CFDEBUG(std::cout << "ERROR: pt is splitted when wiping, please check" << std::endl;);
                assert(false);
         }
-        for(int i = 0; i < this->splitAxis.size(); i++){
-            int val = this->splitAxis[i];
-            if(val >= fromOffset && val < toOffset){
-                this->splitAxis.erase(this->splitAxis.begin() + i);
-            } 
-
-            std::map<int, int>::iterator it;
-            for(it = this->offsetPosToSize.begin(); it != this->offsetPosToSize.end(); it++){
-                if(it->first == val){
-                    this->offsetPosToSize.erase(it);
-                    break;
-                }
+        std::vector<int>::iterator ita;
+        for(ita = this->splitAxis.begin(); ita != this->splitAxis.end();){
+            if(*ita >= fromOffset && *ita < toOffset){
+                ita = this->splitAxis.erase(ita);
+            }  else {
+                ita ++;
+            }
+        }
+        std::map<int, int>::iterator it;
+        for(it = this->offsetPosToSize.begin(); it != this->offsetPosToSize.end();){
+            if(it->first >= fromOffset && it->first < toOffset){
+                it = this->offsetPosToSize.erase(it);
+            } else {
+                it++;
             }
         }
     }
@@ -389,6 +397,14 @@ namespace smack
         StoreSplitterPtr newStoreSplit = std::make_shared<StoreSplitter>();
         newStoreSplit->setSplitMap(splitMap);
         return newStoreSplit;
+    }
+
+    void StoreSplitter::print(){
+       for(std::pair<std::string, BlkSplitterPtr>  i : this->splitMap){
+           DEBUG_WITH_COLOR(std::cout << i.first;, color::yellow);
+           i.second->print();
+           
+       }
     }
 
 } // namespace smack

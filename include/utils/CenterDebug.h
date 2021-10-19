@@ -22,6 +22,7 @@
 #define OPEN_MEMMANAGE 0
 #define OPEN_VIOLATION_PATH 1
 #define OPEN_EXECUTION_PATH 1
+#define OPEN_STORE_SPLIT 1
 
 const bool hasColor = true;
 

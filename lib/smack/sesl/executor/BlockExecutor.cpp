@@ -3063,20 +3063,24 @@ namespace smack{
     }
 
     SHExprPtr BlockExecutor::executeTime(SHExprPtr sh, const CallStmt* stmt) {
-        CFDEBUG(std::cout << "INFO: execute Time func" << std::endl;);
-        std::string retOrigName = stmt->getReturns().front();
-        const VarExpr* retVar = this->varFactory->useVar(retOrigName);
-        std::string retVarName = retVar->name();
-        CFDEBUG(std::cout << "ASSIGN: lhs is " << retVarName << std::endl;);
-        this->varEquiv->addNewName(retVarName);
+        // CFDEBUG(std::cout << "INFO: execute Time func" << std::endl;);
+        // std::string retOrigName = stmt->getReturns().front();
+        // const VarExpr* retVar = this->varFactory->useVar(retOrigName);
+        // std::string retVarName = retVar->name();
+        // CFDEBUG(std::cout << "ASSIGN: lhs is " << retVarName << std::endl;);
+        // this->varEquiv->addNewName(retVarName);
 
-        const Expr* arg1 = stmt->getParams().front();
-        const VarExpr* timeVar = this->createAndRegisterFreshDataVar(4);
-        const Expr* newPure = Expr::eq(retVar, timeVar);
-        REGISTER_EXPRPTR(newPure);
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
-        newSH->print(std::cout);
-        CFDEBUG(std::cout << std::endl;);
+        // const Expr* arg1 = stmt->getParams().front();
+        // const VarExpr* timeVar = this->createAndRegisterFreshDataVar(4);
+        // const Expr* newPure = Expr::eq(retVar, timeVar);
+        // REGISTER_EXPRPTR(newPure);
+        // SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+        // newSH->print(std::cout);
+        // CFDEBUG(std::cout << std::endl;);
+        // return newSH;
+        // CURRENTLY SHUT DOWN TIME FOR STABILITY
+        SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::UNKNOWN);
+        CFDEBUG(std::cout << "INFO: shutdown juliet to avoid incorrectness.." << std::endl);
         return newSH;
     }
 

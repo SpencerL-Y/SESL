@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <map>
 #include <string>
+#include <unordered_set>
 #include <algorithm>
 #include <unistd.h>
 #include "smack/BoogieAst.h"
@@ -16,6 +17,23 @@
 // Currently only support the intraprocedural conversion for main function.
 namespace smack
 {
+
+    class CallGraph {
+    private:
+        std::unordered_map<string , unordered_set<string>> graph;
+        std::vector<ProcDecl* > procs;
+        std::unordered_map<string , bool> isVisited;
+        std::unordered_map<string, ProcDecl* > string2Proc;
+        ProcDecl* entryFunction;
+        bool containLoop = false;
+        void DFS(string funcDecl);
+    public:
+        void build();
+        void addProcDecl(ProcDecl* procDecl);
+        bool hasLoop();
+        void printGraph();
+    };
+
     class CFG
     {
     private:
@@ -25,6 +43,7 @@ namespace smack
         std::unordered_map<std::string, std::string> varType;
         std::unordered_map<std::string, std::string> pathVarType;
         std::unordered_map<std::string, StatePtr> states;
+        std::shared_ptr<smack::CallGraph> callGraphPtr;
         std::string entryBlockName;
         bool containLoop = false;
         void topologicalSort();
@@ -39,6 +58,9 @@ namespace smack
         void printConstDeclsInfo();
         std::vector<ConstDecl*> getConstDecls();
         bool hasLoop();
+        void setCallGraph(shared_ptr<smack::CallGraph> callGraph) {
+            callGraphPtr = callGraph;
+        }
         void markSCC(std::string start);
         void markExit(const std::string& start, bool fresh = true);
         void printVarInfo();

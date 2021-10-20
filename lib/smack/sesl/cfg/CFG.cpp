@@ -446,7 +446,7 @@ namespace smack {
     }
 
     bool CFG::hasLoop() {
-        return containLoop;
+        return containLoop | callGraphPtr->hasLoop();
     }
 
     void CFG::topologicalSort() {
@@ -479,4 +479,56 @@ namespace smack {
             containLoop = false;
         }
     }
+
+
+    void CallGraph::build() {
+        for (auto &proc : procs) {
+            for (auto block : proc->getBlocks()) {
+                for (auto stmt : block->getStatements()) {
+                    if (auto call = llvm::dyn_cast<CallStmt>(stmt)) {
+                        graph[proc->getName()].insert(call->getProc());
+                    }
+                }
+            }
+        }
+    }
+
+    void CallGraph::addProcDecl(ProcDecl* procDecl) {
+        procs.push_back(procDecl);
+        string2Proc[procDecl->getName()] = procDecl;
+        if (procDecl->getName() == "main") {
+            entryFunction = procDecl;
+        }
+    }
+
+    bool CallGraph::hasLoop() {
+        isVisited.clear();
+        containLoop = false;
+        DFS(entryFunction->getName());
+        return containLoop;
+    }
+
+    void CallGraph::DFS(string funcName) {
+        if (containLoop) return;
+        isVisited[funcName] = true;
+        for (auto &to : graph[funcName]) {
+            if (!isVisited[to]) {
+                DFS(to);
+            } else {
+                containLoop = true;
+                return;
+            }
+        }
+    }
+
+    void CallGraph::printGraph() {
+        for (auto& [func, set] : graph) {
+            cout << func << " call: ";
+            for (auto &fun : set) {
+                cout << fun << " ";
+            }
+            cout << endl;
+        }
+    }
+
 } // namespace name

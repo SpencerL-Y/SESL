@@ -27,10 +27,12 @@ namespace smack {
 
         std::unordered_map<std::string, CFGPtr> CFGs;
         shared_ptr<ProcManager> mainProcManager;
+        auto callGraph = std::make_shared<CallGraph>();
         mainProcManager->setConstVarSet(constSet);
         for (auto &decl : program->getDeclarations()) {
             if (Decl::PROCEDURE != decl->getKind()) continue;
             auto proc_decl = (ProcDecl *) decl;
+            callGraph->addProcDecl(proc_decl);
             ProcManager::addProc(proc_decl);
         }
         mainProcManager = ProcManager::getNewManager("main");
@@ -40,6 +42,8 @@ namespace smack {
         cout << "-------------------- PRINT INTERPROC INLINE ORDER--------------------" << endl;
         auto ret = make_shared<CFG>(mainProcManager->getRenamedProc(), mainProcManager->getEntryBlockName());
         ret->setConstDecls(constDecls);
+        callGraph->build();
+        ret->setCallGraph(callGraph);
         return ret;
     }
 

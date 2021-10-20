@@ -81,6 +81,7 @@
         "locale": "cpp",
         "queue": "cpp",
         "stack": "cpp",
-        "cstdbool": "cpp"
+        "cstdbool": "cpp",
+        "*.ipp": "cpp"
     }
 }

@@ -30,6 +30,11 @@ namespace smack {
     class VarFactory;
 
     typedef std::shared_ptr<VarFactory> VarFactoryPtr;
+
+    class TransToZ3VarDealer;
+
+    typedef std::shared_ptr<TransToZ3VarDealer> TransToZ3VarDealerPtr;
+
     typedef std::pair<std::string, std::string> Binding;
 
     enum class RModeKind {
@@ -83,7 +88,7 @@ namespace smack {
 
         virtual std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const;
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const;
 
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const;
 
@@ -206,7 +211,7 @@ namespace smack {
 
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
         std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const override;
 
@@ -255,7 +260,7 @@ namespace smack {
 
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
         bool getVal() const { return val; }
 
@@ -310,7 +315,7 @@ namespace smack {
 
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
         std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const override;
 
@@ -413,7 +418,7 @@ namespace smack {
     public:
         NotExpr(const Expr *e) : expr(e) {}
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
@@ -508,7 +513,7 @@ namespace smack {
         VarExpr(std::string v, std::vector<const VarExpr*> bv) : var(v), isByteLevel(true), byteVars(bv) {}
         std::string name() const { return var; }
 
-        z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
@@ -536,7 +541,7 @@ namespace smack {
 
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
         ExprType getType() const { return ExprType::ITE; }
 
@@ -646,7 +651,7 @@ namespace smack {
 
         void print(std::ostream &os) const;
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
     };
 
 
@@ -662,7 +667,7 @@ namespace smack {
 
             void print(std::ostream &os) const;
 
-            virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+            virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
     };
 
@@ -706,7 +711,7 @@ namespace smack {
         const Expr* getByte(int i) const {return this->bytifiedPts[i];}
 
         // TODOsh: implement and modify to make it compatible with bytewise
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
     };
 
     
@@ -717,7 +722,7 @@ namespace smack {
         GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::vector<const BytePt*> bgcpts) : PtLit(f,t,blkName, ss, bgcpts) {};
 
         // TODOsh: implement and modify to make it compatible with bytewise
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
     };
 
 
@@ -744,7 +749,7 @@ namespace smack {
 
         int getBlkByteSize() const {return blkByteSize;}
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
         const Expr *getFrom() const { return from; }
 
@@ -755,7 +760,7 @@ namespace smack {
     public:
         GCBlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize) : BlkLit(f, t, blkName, byteSize) {};
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
     };
 
     class SizePtLit : public SpatialLiteral {
@@ -777,7 +782,7 @@ namespace smack {
 
         void print(std::ostream &os) const;
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
     };
 
     
@@ -803,7 +808,7 @@ namespace smack {
         
         void print(std::ostream &os) const;
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
     };
 
 

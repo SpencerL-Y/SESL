@@ -128,11 +128,12 @@ namespace smack {
             }
         }
         if(bugNotFound){
-            if(mainGraph->hasLoop()){
-                DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: all path went through" << std::endl, color::yellow);
-            } else {
-                DEBUG_WITH_COLOR(std::cout << "CHECK: TRUE" << std::endl, color::green);
-            }
+            DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: all path went through" << std::endl, color::yellow);
+            // if(mainGraph->hasLoop()){
+            //     DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: all path went through" << std::endl, color::yellow);
+            // } else {
+            //     DEBUG_WITH_COLOR(std::cout << "CHECK: TRUE" << std::endl, color::green);
+            // }
         }
 
         

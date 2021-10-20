@@ -24,20 +24,35 @@ namespace smack{
         virtual void translate() = 0;
     };
 
+    class TransToZ3VarDealer{
+        private:
+            std::set<std::string> varNameSet;
+        public:
+            TransToZ3VarDealer(){}
+            void resetNames(){varNameSet.clear();}
+            void addVarName(std::string varName);
+            z3::expr genVarBound(z3::context* z3Ctx);
+    };
+    typedef std::shared_ptr<TransToZ3VarDealer> TransToZ3VarDealerPtr;
+
     class TransToZ3 : Translator {
     private:
         std::shared_ptr<SymbolicHeapExpr> shExpr;
         z3::context* z3Ctx;
         CFGPtr cfg;
         VarFactoryPtr varFac;
-        std::unordered_map<std::string, z3::expr> z3VarMap;
+        TransToZ3VarDealerPtr varBounder;
         z3::expr pure;
         z3::expr spatial;
+        
     public:
         void setSymbolicHeapHExpr(const std::shared_ptr<SymbolicHeapExpr>& shExprPtr);
         explicit TransToZ3(z3::context& ctx, std::shared_ptr<SymbolicHeapExpr> shExprPtr,
         CFGPtr cfg, VarFactoryPtr varf) :
-        z3Ctx(&ctx), shExpr(std::move(shExprPtr)), pure(*z3Ctx), spatial(*z3Ctx), cfg(cfg), varFac(varf) {}
+        z3Ctx(&ctx), shExpr(std::move(shExprPtr)), pure(*z3Ctx), spatial(*z3Ctx), cfg(cfg), varFac(varf) {
+            varBounder = std::make_shared<TransToZ3VarDealer>(); 
+            varBounder->resetNames();
+        }
         z3::expr getPure();
         z3::expr getSpatial();
         z3::expr getFinalExpr();
@@ -46,6 +61,10 @@ namespace smack{
         void translateSpatial();
         void translate() override;
     };
+
+    
+
+    
 
     class TransToConstant : Translator {
     private:

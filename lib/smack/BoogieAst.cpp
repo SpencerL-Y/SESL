@@ -12,6 +12,7 @@
 #include "smack/sesl/cfg/CFG.h"
 #include "smack/sesl/executor/BlockExecutor.h"
 #include "smack/sesl/executor/VarFactory.h"
+#include "smack/sesl/executor/Translator.h"
 #include "utils/CenterDebug.h"
 #include "utils/TranslatorUtil.h"
 
@@ -168,7 +169,7 @@ namespace smack {
         return this;
     }
 
-    z3::expr Expr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr Expr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         auto res = z3Ctx.bool_val(true);
         return res;
     }
@@ -579,10 +580,10 @@ namespace smack {
         return nullptr;
     }
 
-    z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr BinExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         z3::expr res = z3Ctx.bool_val(true);
-        const z3::expr left = lhs->translateToZ3(z3Ctx, cfg, varFac);
-        const z3::expr right = rhs->translateToZ3(z3Ctx, cfg, varFac);
+        const z3::expr left = lhs->translateToZ3(z3Ctx, cfg, varFac, varBounder);
+        const z3::expr right = rhs->translateToZ3(z3Ctx, cfg, varFac, varBounder);
         CDEBUG(std::cout << "In binExpr function!" << std::endl);
         //CDEBUG(std::cout << "left: " << left.to_string() << " right: " << right.to_string() << " op: " << op
         //                 << std::endl);
@@ -683,6 +684,8 @@ namespace smack {
                                                z3Ctx.int_const((rhsVar->name() + "_" + std::to_string(index)).c_str())
                                               )
                             );
+                            varBounder->addVarName(lhsVar->name() + "_" + std::to_string(index));
+                            varBounder->addVarName(rhsVar->name() + "_" + std::to_string(index));
                         }
                     } else if (leftVarSize < rightVarSize) {
                         //CFDEBUG(std::cout << "leftVarSize < rightVarSize" << leftVarSize << " " << rightVarSize << std::endl;);
@@ -694,6 +697,8 @@ namespace smack {
                                                z3Ctx.int_const((rhsVar->name() + "_" + std::to_string(index)).c_str())
                                               )
                             );
+                            varBounder->addVarName(lhsVar->name() + "_" + std::to_string(index));
+                            varBounder->addVarName(rhsVar->name() + "_" + std::to_string(index));
                         }
                     } else if (leftVarSize > rightVarSize) {
                         //CFDEBUG(std::cout << "leftVarSize > rightVarSize: " << leftVarSize << " " << rightVarSize << std::endl;);
@@ -707,12 +712,15 @@ namespace smack {
                                                            (rhsVar->name() + "_" + std::to_string(index)).c_str())
                                                   )
                                 );
+                                varBounder->addVarName(lhsVar->name() + "_" + std::to_string(index));
+                                varBounder->addVarName(rhsVar->name() + "_" + std::to_string(index));
                             } else {
                                 resultEquality = (resultEquality &&
                                                   (z3Ctx.int_const(
                                                           (lhsVar->name() + "_" + std::to_string(index)).c_str()) ==
                                                    0)
                                 );
+                                varBounder->addVarName(lhsVar->name() + "_" + std::to_string(index));
                             }
                         }
                     }
@@ -875,7 +883,7 @@ namespace smack {
         return this;
     }
 
-    z3::expr IntLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr IntLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         CDEBUG(std::cout << "In intLint : " << val << std::endl;)
         return z3Ctx.int_val(val.c_str());
     }
@@ -927,8 +935,8 @@ namespace smack {
 
     void NotExpr::print(std::ostream &os) const { os << "!(" << expr << ")"; }
 
-    z3::expr NotExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
-        auto exp = expr->translateToZ3(z3Ctx, cfg, varFac);
+    z3::expr NotExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
+        auto exp = expr->translateToZ3(z3Ctx, cfg, varFac, varBounder);
         if(expr->isValue() && expr->getType() == ExprType::INT){
             const IntLit* intExpr = (const IntLit*) expr;
             if(intExpr->getVal() == 0){
@@ -1025,7 +1033,7 @@ namespace smack {
         return false;
     }
     
-    z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr VarExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         
 
         CDEBUG(std::cout << "translating var" << this->name() << std::endl;);
@@ -1063,6 +1071,7 @@ namespace smack {
                      TranslatorUtil::getBase(i, z3Ctx) *
                      z3Ctx.int_const((this->name() + "_" + std::to_string(i)).c_str())
                     );
+            varBounder->addVarName(this->name() + "_" + std::to_string(i));
         }
         // z3::expr res = //TranslatorUtil::getZ3Var(this->name(), z3VarMap, z3Ctx);
         // z3Ctx.int_const(var.c_str());
@@ -1103,9 +1112,9 @@ namespace smack {
         return clonedExpr;
     }
 
-    z3::expr IfThenElseExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
-        auto res = ((cond->translateToZ3(z3Ctx, cfg, varFac) and trueValue->translateToZ3(z3Ctx, cfg, varFac)) or
-                    (not cond->translateToZ3(z3Ctx, cfg, varFac) and falseValue->translateToZ3(z3Ctx, cfg, varFac)));
+    z3::expr IfThenElseExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
+        auto res = ((cond->translateToZ3(z3Ctx, cfg, varFac, varBounder) and trueValue->translateToZ3(z3Ctx, cfg, varFac, varBounder)) or
+                    (not cond->translateToZ3(z3Ctx, cfg, varFac, varBounder) and falseValue->translateToZ3(z3Ctx, cfg, varFac, varBounder)));
     }
 
     void BvExtract::print(std::ostream &os) const {
@@ -1195,7 +1204,7 @@ namespace smack {
         os << "emp";
     }
 
-    z3::expr EmpLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr EmpLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         z3::expr res = slah_api::newEmp(z3Ctx);
         CDEBUG(std::cout << "in emp! " << res.to_string() << std::endl;);
         return res;
@@ -1205,13 +1214,15 @@ namespace smack {
         os << "[" << this->from << " :--> " << this->to << "]";
     }
 
-    z3::expr BytePt::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr BytePt::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         const VarExpr *fromVar = (const VarExpr *) this->getFrom();
         const VarExpr *toVar = (const VarExpr *) this->getTo();
         z3::expr res = slah_api::newPto(
             z3Ctx.int_const(fromVar->name().c_str()),
             z3Ctx.int_const(toVar->name().c_str())
         );
+        varBounder->addVarName(fromVar->name());
+        varBounder->addVarName(toVar->name());
         return res;
     }
 
@@ -1227,7 +1238,7 @@ namespace smack {
         }
     }
 
-    z3::expr PtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr PtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         if(!this->isByteLevel()){
             // if the pt predicate is not bytified, old logic as usual
             assert(this->getFrom()->isVar() && this->getTo()->isVar());
@@ -1254,10 +1265,12 @@ namespace smack {
                                 z3Ctx.int_const((toVar->name() + "_" + std::to_string(i)).c_str())
                         )
                 );
+                varBounder->addVarName(fromVar->name() + "_" + std::to_string(i));
+                varBounder->addVarName(toVar->name() + "_" + std::to_string(i));
             }
             // z3::expr res = slah_api::newPto(
-            //   from->translateToZ3(z3Ctx, cfg, varFac),
-            //   to->translateToZ3(z3Ctx, cfg, varFac)
+            //   from->translateToZ3(z3Ctx, cfg, varFac, varBounder),
+            //   to->translateToZ3(z3Ctx, cfg, varFac, varBounder)
             // );
             CDEBUG(std::cout << "in ptlit!" << res.to_string() << std::endl;);
             return res;
@@ -1267,7 +1280,7 @@ namespace smack {
             for(int i = 0; i < this->stepSize; i++){
                 res = slah_api::sep(
                     res,
-                    this->getByte(i)->translateToZ3(z3Ctx, cfg, varFac)
+                    this->getByte(i)->translateToZ3(z3Ctx, cfg, varFac, varBounder)
                 );
             }
             return res;
@@ -1275,7 +1288,7 @@ namespace smack {
         
     }
 
-    z3::expr GCPtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr GCPtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         // z3::expr res = slah_api::newEmp(z3Ctx);
         // BUG FIXED: cannot simply use emp for memleak, since some constraint relies on the spatial formula
         if(!this->isByteLevel()){
@@ -1306,8 +1319,8 @@ namespace smack {
                 );
             }
             // z3::expr res = slah_api::newPto(
-            //   from->translateToZ3(z3Ctx, cfg, varFac),
-            //   to->translateToZ3(z3Ctx, cfg, varFac)
+            //   from->translateToZ3(z3Ctx, cfg, varFac, varBounder),
+            //   to->translateToZ3(z3Ctx, cfg, varFac, varBounder)
             // );
             CDEBUG(std::cout << "in ptlit!" << res.to_string() << std::endl;);
             return res;
@@ -1317,7 +1330,7 @@ namespace smack {
             for(int i = 0; i < this->stepSize; i++){
                 res = slah_api::sep(
                     res,
-                    this->getByte(i)->translateToZ3(z3Ctx, cfg, varFac)
+                    this->getByte(i)->translateToZ3(z3Ctx, cfg, varFac, varBounder)
                 );
             }
             return res;
@@ -1329,25 +1342,25 @@ namespace smack {
         os << "Blk(" << from << ", " << to << ")";
     }
 
-    z3::expr GCBlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr GCBlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         // z3::expr res = slah_api::newEmp(z3Ctx);
         // BUG FIXED: cannot simply use emp for memleak, since some constraint relies on the spatial formula
         if(this->isEmpty()){
             return slah_api::newEmp(z3Ctx);
         }
-        auto f = from->translateToZ3(z3Ctx, cfg, varFac);
-        auto t = to->translateToZ3(z3Ctx, cfg, varFac);
+        auto f = from->translateToZ3(z3Ctx, cfg, varFac, varBounder);
+        auto t = to->translateToZ3(z3Ctx, cfg, varFac, varBounder);
         CDEBUG(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl;);
         z3::expr res = slah_api::newBlk(f, t);
         return res;
     }
 
-    z3::expr BlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr BlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         if (this->isEmpty()) {
             return slah_api::newEmp(z3Ctx);
         }
-        auto f = from->translateToZ3(z3Ctx, cfg, varFac);
-        auto t = to->translateToZ3(z3Ctx, cfg, varFac);
+        auto f = from->translateToZ3(z3Ctx, cfg, varFac, varBounder);
+        auto t = to->translateToZ3(z3Ctx, cfg, varFac, varBounder);
         CDEBUG(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl;);
         z3::expr res = slah_api::newBlk(f, t);
         return res;
@@ -1357,7 +1370,7 @@ namespace smack {
         os << var << " >-s-> " << size;
     }
 
-    z3::expr SizePtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr SizePtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         //CDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
         // TODOsh: later changed to above one
         CDEBUG(std::cout << "sizeptlit" << std::endl;);
@@ -1394,13 +1407,13 @@ namespace smack {
         os << " XXXXXXX( isFresh: " << fresh << ", ErrorType: " << this->reason << ")XXXXXXX";
     }
 
-    z3::expr ErrorLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr ErrorLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         CDEBUG(std::cout << "errorLit" << std::endl;);
         // Since error occurs, we set the pure constraint pure to false
         return (slah_api::newEmp(z3Ctx));
     }
 
-    z3::expr BoolLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac) const {
+    z3::expr BoolLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         return z3Ctx.bool_val(val);
     }
 

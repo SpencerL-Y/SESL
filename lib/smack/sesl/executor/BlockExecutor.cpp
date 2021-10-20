@@ -3072,7 +3072,9 @@ namespace smack{
 
         const Expr* arg1 = stmt->getParams().front();
         const VarExpr* timeVar = this->createAndRegisterFreshDataVar(4);
-        const Expr* newPure = Expr::eq(retVar, timeVar);
+        const Expr* eq = Expr::eq(retVar, timeVar);
+        REGISTER_EXPRPTR(eq);
+        const Expr* newPure = Expr::and_(sh->getPure(), eq);
         REGISTER_EXPRPTR(newPure);
         SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
         newSH->print(std::cout);

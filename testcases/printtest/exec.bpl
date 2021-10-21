@@ -6,80 +6,51 @@ axiom (main == $sub.ref(0, 1032));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
-  var $i0: i32;
+  var $i0: i64;
   var $i1: i64;
-  var $i2: i64;
-  var $p3: ref8;
-  var $p4: ref32;
-  var $i5: i32;
+  var $p2: ref8;
+  var $p3: ref32;
+  var $i4: i32;
+  var $p5: ref32;
   var $p6: ref32;
-  var $p7: ref32;
+  var $i7: i32;
   var $i8: i32;
-  var $i9: i32;
-  var $p10: ref8;
-  var $i11: i32;
-  var $i12: i1;
+  var $p9: ref8;
+  var $i10: i32;
 $bb0:
-  assume {:sourceloc "../testcases/printtest/exec.c", 155, 5} true;
+  assume {:sourceloc "../testcases/printtest/exec.c", 157, 31} true;
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  assume {:sourceloc "../testcases/printtest/exec.c", 155, 5} true;
-  assume {:branchcond 0} true;
-  goto $bb1, $bb2;
-$bb1:
-  assume (0 == 1);
-  assume {:sourceloc "../testcases/printtest/exec.c", 155, 5} true;
-  $i0 := $u0;
-  goto $bb4;
-$bb2:
-  assume {:sourceloc "../testcases/printtest/exec.c", 155, 5} true;
-  assume !((0 == 1));
-  goto $bb3;
-$bb3:
+  assume {:sourceloc "../testcases/printtest/exec.c", 157, 31} true;
+  $i0 := $sext.i32.i64(5);
+  assume {:sourceloc "../testcases/printtest/exec.c", 157, 34} true;
+  $i1 := $mul.i64($i0, 4);
+  assume {:sourceloc "../testcases/printtest/exec.c", 157, 24} true;
+  call $p2 := malloc($i1);
+  assume {:sourceloc "../testcases/printtest/exec.c", 157, 18} true;
+  $p3 := $bitcast.ref.ref($p2);
+  assume {:sourceloc "../testcases/printtest/exec.c", 158, 22} true;
+  $i4 := $add.i32(5, $sub.i32(0, 1));
+  assume {:sourceloc "../testcases/printtest/exec.c", 158, 12} true;
+  $p5 := $add.ref($p3, $mul.ref(1, 4));
+  assume {:sourceloc "../testcases/printtest/exec.c", 158, 16} true;
+  $M.0 := $store.i32($M.0, $p5, $i4);
+  assume {:sourceloc "../testcases/printtest/exec.c", 159, 23} true;
+  $p6 := $add.ref($p3, $mul.ref(1, 4));
+  assume {:sourceloc "../testcases/printtest/exec.c", 159, 20} true;
+  $i7 := $load.i32($M.0, $p6);
+  assume {:sourceloc "../testcases/printtest/exec.c", 159, 27} true;
+  $i8 := $add.i32($i7, $sub.i32(0, 1));
+  call {:cexpr "nnum"} boogie_si_record_i32($i8);
+  assume {:sourceloc "../testcases/printtest/exec.c", 160, 14} true;
+  $p9 := $bitcast.ref.ref($p3);
+  assume {:sourceloc "../testcases/printtest/exec.c", 160, 9} true;
+  call free_($p9);
+  assume {:sourceloc "../testcases/printtest/exec.c", 161, 10} true;
+  $i10 := $add.i32($u0, 1);
+  call {:cexpr "i"} boogie_si_record_i32($i10);
   assume {:sourceloc "../testcases/printtest/exec.c", 163, 5} true;
   $r := 0;
   return;
-$bb4:
-  assume {:sourceloc "../testcases/printtest/exec.c", 157, 31} true;
-  $i1 := $sext.i32.i64(5);
-  assume {:sourceloc "../testcases/printtest/exec.c", 157, 34} true;
-  $i2 := $mul.i64($i1, 4);
-  assume {:sourceloc "../testcases/printtest/exec.c", 157, 24} true;
-  call $p3 := malloc($i2);
-  assume {:sourceloc "../testcases/printtest/exec.c", 157, 18} true;
-  $p4 := $bitcast.ref.ref($p3);
-  assume {:sourceloc "../testcases/printtest/exec.c", 158, 22} true;
-  $i5 := $add.i32(5, $sub.i32(0, 1));
-  assume {:sourceloc "../testcases/printtest/exec.c", 158, 12} true;
-  $p6 := $add.ref($p4, $mul.ref(1, 4));
-  assume {:sourceloc "../testcases/printtest/exec.c", 158, 16} true;
-  $M.0 := $store.i32($M.0, $p6, $i5);
-  assume {:sourceloc "../testcases/printtest/exec.c", 159, 23} true;
-  $p7 := $add.ref($p4, $mul.ref(1, 4));
-  assume {:sourceloc "../testcases/printtest/exec.c", 159, 20} true;
-  $i8 := $load.i32($M.0, $p7);
-  assume {:sourceloc "../testcases/printtest/exec.c", 159, 27} true;
-  $i9 := $add.i32($i8, $sub.i32(0, 1));
-  call {:cexpr "nnum"} boogie_si_record_i32($i9);
-  assume {:sourceloc "../testcases/printtest/exec.c", 160, 14} true;
-  $p10 := $bitcast.ref.ref($p4);
-  assume {:sourceloc "../testcases/printtest/exec.c", 160, 9} true;
-  call free_($p10);
-  assume {:sourceloc "../testcases/printtest/exec.c", 161, 10} true;
-  $i11 := $add.i32($i0, 1);
-  call {:cexpr "i"} boogie_si_record_i32($i11);
-  assume {:sourceloc "../testcases/printtest/exec.c", 155, 13} true;
-  $i12 := $slt.i32($i11, 10);
-  assume {:sourceloc "../testcases/printtest/exec.c", 155, 5} true;
-  assume {:branchcond $i12} true;
-  goto $bb5, $bb6;
-$bb5:
-  assume ($i12 == 1);
-  $i0 := $i11;
-  goto $bb4;
-$bb6:
-  assume !(($i12 == 1));
-  assume {:sourceloc "../testcases/printtest/exec.c", 155, 5} true;
-  goto $bb3;
 }
 const llvm.dbg.declare: ref;
 axiom (llvm.dbg.declare == $sub.ref(0, 2064));

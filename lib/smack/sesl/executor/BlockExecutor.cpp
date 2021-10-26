@@ -856,6 +856,8 @@ namespace smack{
                 return this->executeFree(sh, call);
             } else if(!call->getProc().compare("$alloc")){
                 return this->executeAlloc(sh, call);
+            } else if(!call->getProc().compare("calloc")) {
+                return this->executeCalloc(sh, call);
             } else if(call->getProc().find("__VERIFIER") != std::string::npos){
                 return this->executeVeriCall(sh, call);
             } else if(call->getProc().find("$memcpy") != std::string::npos || call->getProc().find("memcpy") != std::string::npos ){
@@ -3295,7 +3297,78 @@ namespace smack{
         return sh;
     }
 
+    // ---------------------- Execution for Calloc stmt
 
+    SHExprPtr
+    BlockExecutor::executeCalloc
+    (SHExprPtr sh, const CallStmt* stmt) {
+        // call $p = calloc(n, s)
+        // allocate a memory for an array of n objects of s size
+        // and initializes it to all zero
+        assert(!stmt->getProc().compare("calloc"));
+        const std::string retOrigVarName = stmt->getReturns().front();
+        const Expr* num = stmt->getParams().front();
+        const Expr* size = stmt->getParams().back();
+        // get number of object
+        if(num->isValue()) {
+            
+        } else {
+            CFDEBUG(std::cout<< "WARNING: Unsupported num type" << std::endl;);
+            return nullptr;
+        }
+        // get size of each object
+        if(size->isValue()) {
+            
+        } else {
+            CFDEBUG(std::cout<< "WARNING: Unsupported size type" << std::endl;);
+            return nullptr;
+        }
+        CFDEBUG(std::cout << "INFO: allocate an array to " << retOrigVarName << std::endl;);
+        CFDEBUG(std::cout << "ARRAY: " << num << " objects of " << size << " size for each one" << std::endl;);
+        const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
+        const std::string retVarName = retVar->name();
+        this->varEquiv->addNewName(retVarName);
+        this->varEquiv->addNewBlkName(retVarName);
+        this->varEquiv->addNewOffset(retVarName, 0);
+        this->varEquiv->setStructArrayPtr(retVarName, false);
+        this->storeSplit->createAxis(retVarName);
+        const Expr* lengthExpr = Expr::multiply(num, size);
+        REGISTER_EXPRPTR(lengthExpr);
+        this->storeSplit->setMaxOffset(
+            retVarName,
+            lengthExpr->translateToInt(this->varEquiv).second);
+        const SpatialLiteral* sizePt = SpatialLiteral::spt(
+            retVar,
+            lengthExpr,
+            retVarName
+        );
+        REGISTER_EXPRPTR(sizePt);
+        const Expr* add = Expr::add(retVar, lengthExpr);
+        REGISTER_EXPRPTR(add);
+        int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
+        const SpatialLiteral* blk = SpatialLiteral::blk(
+            retVar,
+            add,
+            retVarName,
+            allocSize
+        );
+        REGISTER_EXPRPTR(blk);
+        std::pair<std::list<const SpatialLiteral*>, const Expr*>
+        newSplAndPure = this->bytifyForCalloc(blk, sh->getPure());
+        std::list<const SpatialLiteral*> newSpatial = sh->getSpatialExpr();
+        const Expr* newPure = newSplAndPure.second;
+        REGISTER_EXPRPTR(newPure);
+        newSpatial.push_back(sizePt);
+        std::cout << sizePt << std::endl;
+        for(auto nsp : newSplAndPure.first) {
+            newSpatial.push_back(nsp);
+            std::cout << nsp << std::endl;
+        }
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+        newSH->print(std::cout);
+        CFDEBUG(std::cout << std::endl)
+        return newSH;
+    }
 
     // ---------------------- Execution for Casting stmt -----------------
     SHExprPtr 
@@ -4109,6 +4182,41 @@ namespace smack{
         CFDEBUG(std::cout << std::endl;)
         CFDEBUG(std::cout << "INFERROR: type " << errType << std::endl;);
         return newSH;
+    }
+
+    std::pair<std::list<const SpatialLiteral*>, const Expr*> BlockExecutor::bytifyForCalloc(const SpatialLiteral* oldBlk, const Expr* oldPure) {
+        assert(oldBlk->getId() == SpatialLiteral::Kind::BLK);
+        std::list<const SpatialLiteral*> resultPredicateList;
+        std::list<const SpatialLiteral*> splittedTriplet;
+        const Expr* resultPure = oldPure;
+        std::string mallocName = oldBlk->getBlkName();
+        const BlkLit* tempRhsBlk = (const BlkLit*) oldBlk;
+        while(tempRhsBlk->getBlkByteSize() != 0){
+            const Expr* tempFrom = tempRhsBlk->getFrom();
+            int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom);
+            const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, mallocName, fromVarOffset);
+            const Expr* eq = Expr::eq(tempFrom, fromVar);
+            REGISTER_EXPRPTR(eq);
+            resultPure = Expr::and_(resultPure, eq);
+            REGISTER_EXPRPTR(resultPure);
+            const VarExpr* toVar = this->createAndRegisterFreshDataVar(1);
+            const Expr* zero = Expr::lit((long long)0);
+            REGISTER_EXPRPTR(zero);
+            const Expr* eq0 = Expr::eq(toVar, zero);
+            REGISTER_EXPRPTR(eq0);
+            resultPure = Expr::and_(resultPure, eq0);
+            REGISTER_EXPRPTR(resultPure);
+            splittedTriplet = this->splitBlkByCreatingPt(mallocName, fromVar, toVar, 1, tempRhsBlk);
+            assert(3 == splittedTriplet.size());
+            resultPredicateList.push_back(splittedTriplet.front()); splittedTriplet.pop_front();
+            resultPredicateList.push_back(splittedTriplet.front()); splittedTriplet.pop_front();
+            tempRhsBlk = (const BlkLit*) splittedTriplet.front(); splittedTriplet.pop_front();
+        }
+        resultPredicateList.push_back(tempRhsBlk);
+        if(FULL_DEBUG && OPEN_STORE_SPLIT){
+            this->storeSplit->print();
+        }
+        return {resultPredicateList, resultPure};
     }
 
 }

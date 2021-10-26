@@ -3359,11 +3359,8 @@ namespace smack{
         const Expr* newPure = newSplAndPure.second;
         REGISTER_EXPRPTR(newPure);
         newSpatial.push_back(sizePt);
-        std::cout << sizePt << std::endl;
-        for(auto nsp : newSplAndPure.first) {
+        for(auto nsp : newSplAndPure.first)
             newSpatial.push_back(nsp);
-            std::cout << nsp << std::endl;
-        }
         SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
         newSH->print(std::cout);
         CFDEBUG(std::cout << std::endl)

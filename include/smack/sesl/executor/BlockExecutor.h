@@ -110,6 +110,7 @@ namespace smack{
         const SpatialLiteral* createBlkAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int byteSize);
         std::list<const SpatialLiteral*> splitBlkByCreatingPt(std::string mallocName, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
         std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyBlkPredicate(const SpatialLiteral* oldBlk, const Expr* oldPure);
+        std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyForCalloc(const SpatialLiteral* oldBlk, const Expr* oldPure);
         // special cases
         int getMaxRegionLength(SHExprPtr sh);
 
@@ -159,6 +160,8 @@ namespace smack{
         SHExprPtr executeMalloc(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeAlloc(SHExprPtr sh, const CallStmt* stmt);
+
+        SHExprPtr executeCalloc(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeFree(SHExprPtr sh, const CallStmt* stmt);
 

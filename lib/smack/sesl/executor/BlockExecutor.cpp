@@ -191,6 +191,12 @@ namespace smack{
                 assert(parsedResult.second);
                 const Expr* rhsExpr = parsedResult.first;
 
+                if(this->extractPtrArithmeticVar(rhsExpr) == nullptr) {
+                    SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+                    CFDEBUG(std::cout << "WRONG: nullptr for pointer arithmetic" << std::endl;);
+                    return newSH;
+                }
+
                 this->updateBindingsEqualVarAndRhsArithExpr(lhsVar, rhsFun, rhsExpr, true);
                 this->updateVarType(lhsVar, rhsFun, rhsExpr);
                 // if(ExprType::BIN == rhsExpr->getType()){

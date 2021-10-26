@@ -1060,6 +1060,7 @@ namespace smack{
             srcVar = this->getUsedVarAndName(srcOrigVarName).first;
             srcVarName = this->getUsedVarAndName(srcOrigVarName).second;
             srcMallocName = this->varEquiv->getBlkName(srcVarName);
+            CHECK_VALID_DEREF_FOR_BLK(srcMallocName);
             srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv).second;
             srcOffset = this->varEquiv->getOffset(srcVarName);;
         } else if(sourceLocation->getType() == ExprType::FUNC){
@@ -1094,6 +1095,7 @@ namespace smack{
             dstVar = this->getUsedVarAndName(dstOrigVarName).first;
             dstVarName = this->getUsedVarAndName(dstOrigVarName).second;
             dstMallocName = this->varEquiv->getBlkName(dstVarName);
+            CHECK_VALID_DEREF_FOR_BLK(dstMallocName);
             dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv).second;
             dstOffset = this->varEquiv->getOffset(dstVarName);
         } else if(dstLocation->getType() == ExprType::FUNC){
@@ -1183,6 +1185,12 @@ namespace smack{
             CFDEBUG(std::cout << "ERROR: dst pt splitted situation currently not considered" << std::endl;);
             assert(false);
             return nullptr;
+        }
+
+        if(srcMallocName == "$Null" || dstMallocName == "$Null") {
+            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::VALID_DEREF);
+            CFDEBUG(std::cout << "INFO: invalid pointer.." << std::endl;);
+            return newSH;
         }
 
         CFDEBUG(std::cout << "INFO:--------------- BEGIN COPY --------------- " << std::endl;);

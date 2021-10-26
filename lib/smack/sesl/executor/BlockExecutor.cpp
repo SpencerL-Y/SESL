@@ -2399,7 +2399,7 @@ namespace smack{
                                         dstBeginCounting = false;
                                     }
                                 }
-                                if(dstCurrentPtIndex >= dstHeadPtIndex){
+                                if(dstCurrentPtIndex >= dstHeadPtIndex && SpatialLiteral::Kind::PT == ssl->getId()){
                                     dstBeginReplacing = true;
                                 }
                                 if(dstCurrentPtIndex > dstTailPtIndex){
@@ -2407,17 +2407,8 @@ namespace smack{
                                     dstBeginRight = true;
                                 }
                                 if(dstBeginCounting){
-                                    if(SpatialLiteral::Kind::PT == ssl->getId()){
-                                        if(dstBeginReplacing){
-                                            // do nothing
-                                        } else {
-                                            if(dstBeginRight){
-                                                specialRightSpatial.push_back(ssl);
-                                            } else {
-                                                specialLeftSpatial.push_back(ssl);
-                                            }
-                                        }
-                                        dstCurrentPtIndex += 1;
+                                    if(dstBeginReplacing){
+                                    // do nothing
                                     } else {
                                         if(dstBeginRight){
                                             specialRightSpatial.push_back(ssl);
@@ -2425,6 +2416,9 @@ namespace smack{
                                             specialLeftSpatial.push_back(ssl);
                                         }
                                     }
+                                    if(SpatialLiteral::Kind::PT == ssl->getId()){
+                                        dstCurrentPtIndex += 1;
+                                    } 
                                 } else {
                                     if(dstBeginRight){
                                         specialRightSpatial.push_back(ssl);

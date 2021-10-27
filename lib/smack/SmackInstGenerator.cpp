@@ -886,10 +886,10 @@ void SmackInstGenerator::visitDbgValueInst(llvm::DbgValueInst &dvi) {
   if (SmackOptions::SourceLocSymbols) {
     const llvm::Value *V = dvi.getValue();
     const llvm::DILocalVariable *var = dvi.getVariable();
-    errs() << "Var name: " << var->getName()  << "\n";  
-    if (naming->hasName(*V)) {
-        errs() << "Has Name: " << naming->get(*V) << "\n";
-    }
+    // errs() << "Var name: " << var->getName()  << "\n";  
+    // if (naming->hasName(*V)) {
+    //     errs() << "Has Name: " << naming->get(*V) << "\n";
+    // }
     // if (V && !V->getType()->isPointerTy() && !llvm::isa<ConstantInt>(V)) {
     if (V && !V->getType()->isPointerTy()) {
       // if (currBlock->begin() != currBlock->end()

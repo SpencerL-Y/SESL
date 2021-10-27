@@ -8,18 +8,14 @@ procedure {:entrypoint} main()
 {
   var $p0: ref8;
   var $p1: ref32;
-  var $i2: i32;
 $bb0:
-  assume {:sourceloc "../testcases/printtest/exec.c", 5, 16} true;
+  assume {:sourceloc "../testcases/printtest/exec.c", 5, 14} true;
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  assume {:sourceloc "../testcases/printtest/exec.c", 5, 16} true;
+  assume {:sourceloc "../testcases/printtest/exec.c", 5, 14} true;
   call $p0 := malloc(4);
-  assume {:sourceloc "../testcases/printtest/exec.c", 5, 9} true;
+  assume {:sourceloc "../testcases/printtest/exec.c", 5, 14} true;
   $p1 := $bitcast.ref.ref($p0);
-  assume {:sourceloc "../testcases/printtest/exec.c", 8, 9} true;
-  $i2 := $load.i32($M.0, $0.ref);
-  call {:cexpr "j"} boogie_si_record_i32($i2);
-  assume {:sourceloc "../testcases/printtest/exec.c", 10, 5} true;
+  assume {:sourceloc "../testcases/printtest/exec.c", 7, 5} true;
   $r := 0;
   return;
 }
@@ -43,7 +39,6 @@ procedure  __SMACK_static_init()
 $bb0:
   return;
 }
-procedure  boogie_si_record_i32(x: i32);
 procedure  boogie_si_record_ref(x: ref);
 procedure  $initialize()
 {

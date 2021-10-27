@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <smack/Naming.h>
 
+#define UNKNWN 0
 #define MEMTRACK 1
 #define MEMCLEAN 2
 namespace smack {
@@ -204,13 +205,25 @@ namespace smack {
                            blknamesRemained.find(unusedBlkName) != blknamesRemained.end()){
                             continue;
                         } else {
-                            DEBUG_WITH_COLOR(std::cout << "LEAK: Memtrack!!!" << std::endl;, color::red);
-                            return {false, MEMTRACK};
+                            std::string prp = SmackOptions::prp.getValue();
+                            if(prp.find("memcleanup") != std::string::npos){
+                                DEBUG_WITH_COLOR(std::cout << "LEAK: CHECKUNKNOWN!!!" << std::endl;, color::yellow);
+                                return {false, UNKNWN};
+                            } else {
+                                DEBUG_WITH_COLOR(std::cout << "LEAK: Memtrack!!!" << std::endl;, color::red);
+                                return {false, MEMTRACK};
+                            }
                         }
                     }
                 }
-                DEBUG_WITH_COLOR(std::cout << "LEAK: Memclean!!!" << std::endl;, color::red);
-                return {false, MEMCLEAN};
+                std::string prp = SmackOptions::prp.getValue();
+                if(prp.find("memcleanup") != std::string::npos){
+                    DEBUG_WITH_COLOR(std::cout << "LEAK: CHECKUNKNOWN!!!" << std::endl;, color::yellow);
+                    return {false, UNKNWN};
+                } else {
+                    DEBUG_WITH_COLOR(std::cout << "LEAK: Memcleanup!!!" << std::endl;, color::red);
+                    return {false, MEMCLEAN};
+                }
             }   
         }
     }

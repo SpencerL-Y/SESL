@@ -87,9 +87,18 @@ namespace smack {
                     SDEBUG(errs() << "Generating body for " << naming.get(F) << "\n");
                     igen.visit(F);
                     SDEBUG(errs() << "\n");
-                    SDEBUG(errs() << "Mapping boogie var name to src var name" << "\n");
-                    SmackSrcNamesMapper nameMapper(&naming);
-                    nameMapper.visit(F);
+                    
+                    if(!naming.get(F).compare("main")){
+                        SDEBUG(errs() << "Mapping boogie var name to src var name for main" << "\n");
+                        SmackSrcNamesMapper nameMapper(&naming);
+                        nameMapper.visit(F);
+                        this->boogieVar2SrcVarMap = nameMapper.getSourceNames();
+                        SDEBUG(errs() << "-------------- Printing the map --------------" << "\n");
+                        for(auto i : this->boogieVar2SrcVarMap){
+                            SDEBUG(errs() << i.first << " " << (i.second) << "\n");
+                        }
+                    }
+                    
                     // First execute static initializers, in the main procedure.
                     if (F.hasName() && SmackOptions::isEntryPoint(F.getName())) {
                         //P->insert(Stmt::call(Naming::INITIALIZE_PROC));

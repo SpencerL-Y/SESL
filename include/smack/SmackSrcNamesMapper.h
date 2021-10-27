@@ -8,6 +8,7 @@
 #include "llvm/IR/InstVisitor.h"
 #include <set>
 #include <unordered_set>
+#include <map>
 namespace smack {
 
 class Naming;
@@ -18,8 +19,7 @@ private:
   Naming *naming;
 
   llvm::BasicBlock::const_iterator nextInst;
-  std::map<const llvm::Value *, std::string> mappedNames;
-  std::map<std::string, const llvm::Value*> sourceNames;
+  std::map<std::string, std::string> sourceNames;
 
 public:
   SmackSrcNamesMapper(Naming *N)
@@ -29,6 +29,8 @@ public:
   void visitInstruction(llvm::Instruction &i);
 
   void visitDbgValueInst(llvm::DbgValueInst &i);
+
+  std::map<std::string, std::string> getSourceNames(){return this->sourceNames;}
 };
 } // namespace smack
 

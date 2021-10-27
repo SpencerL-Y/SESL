@@ -5,7 +5,8 @@
 #define SMACKMODULEGENERATOR_H
 
 #include "llvm/Pass.h"
-
+#include "llvm/IR/Value.h"
+#include <map>
 namespace smack {
 
 class Program;
@@ -13,6 +14,7 @@ class Program;
 class SmackModuleGenerator : public llvm::ModulePass {
 private:
   Program *program;
+  std::map<std::string, std::string> boogieVar2SrcVarMap;
 
 public:
   static char ID; // Pass identification, replacement for typeid

@@ -10,6 +10,7 @@
 #include "smack/Prelude.h"
 #include "smack/Regions.h"
 #include "smack/SmackInstGenerator.h"
+#include "smack/SmackSrcNamesMapper.h"
 #include "smack/SmackOptions.h"
 #include "smack/SmackRep.h"
 #include "smack/sesl/cfg/CFG.h"
@@ -86,7 +87,9 @@ namespace smack {
                     SDEBUG(errs() << "Generating body for " << naming.get(F) << "\n");
                     igen.visit(F);
                     SDEBUG(errs() << "\n");
-
+                    SDEBUG(errs() << "Mapping boogie var name to src var name" << "\n");
+                    SmackSrcNamesMapper nameMapper(&naming);
+                    nameMapper.visit(F);
                     // First execute static initializers, in the main procedure.
                     if (F.hasName() && SmackOptions::isEntryPoint(F.getName())) {
                         //P->insert(Stmt::call(Naming::INITIALIZE_PROC));

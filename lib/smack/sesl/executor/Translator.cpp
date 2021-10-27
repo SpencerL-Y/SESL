@@ -73,8 +73,9 @@ namespace smack{
         for(std::string varName : this->varNameSet){
             result = (
                 result &&
-                (z3Ctx->int_const(varName.c_str()) >= 0) &&
-                (z3Ctx->int_const(varName.c_str()) <= 65535)
+                (z3Ctx->int_const(varName.c_str()) >= 0) 
+                // &&
+                // (z3Ctx->int_const(varName.c_str()) <= 65535)
             );
         }
         return result;

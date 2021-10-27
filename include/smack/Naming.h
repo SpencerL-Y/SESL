@@ -118,6 +118,8 @@ public:
   std::string freshVarName(const Value &V);
   static std::string getIntWrapFunc(bool isUnsigned);
 
+  bool hasName(const Value &V);
+
   static bool isBplKeyword(std::string s);
   static bool isSmackName(std::string s);
   static bool isSmackGeneratedName(std::string s);

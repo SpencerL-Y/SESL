@@ -11,17 +11,17 @@
 #include <unordered_map>
 #define FULL_DEBUG 1
 #define OPEN_CDEBUG 0
-#define OPEN_CFDEBUG 1
-#define OPEN_SDEBUG 0
+#define OPEN_CFDEBUG 0
+#define OPEN_SDEBUG 1
 
 #define OPEN_COLOR_DEBUG 1
 
 #define OPEN_VAREQUIV_PRINT 0
 #define OPEN_VARTYPE 0
-#define OPEN_SH 1
+#define OPEN_SH 0
 #define OPEN_MEMMANAGE 0
 #define OPEN_VIOLATION_PATH 1
-#define OPEN_EXECUTION_PATH 1
+#define OPEN_EXECUTION_PATH 0
 #define OPEN_STORE_SPLIT 0
 
 const bool hasColor = true;

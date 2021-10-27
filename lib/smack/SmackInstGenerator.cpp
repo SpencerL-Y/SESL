@@ -9,6 +9,7 @@
 #include "smack/SmackOptions.h"
 #include "smack/SmackRep.h"
 #include "smack/VectorOperations.h"
+#include "llvm/IR/Value.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/GetElementPtrTypeIterator.h"
@@ -883,14 +884,19 @@ void SmackInstGenerator::visitDbgValueInst(llvm::DbgValueInst &dvi) {
   processInstruction(dvi);
 
   if (SmackOptions::SourceLocSymbols) {
-    Value *V = dvi.getValue();
+    const llvm::Value *V = dvi.getValue();
     const llvm::DILocalVariable *var = dvi.getVariable();
+    errs() << "Var name: " << var->getName()  << "\n";  
+    if (naming->hasName(*V)) {
+        errs() << "Has Name: " << naming->get(*V) << "\n";
+    }
     // if (V && !V->getType()->isPointerTy() && !llvm::isa<ConstantInt>(V)) {
     if (V && !V->getType()->isPointerTy()) {
       // if (currBlock->begin() != currBlock->end()
       //&& currBlock->getStatements().back()->getKind() == Stmt::ASSUME) {
       //    && isSourceLoc(currBlock->getStatements().back())) {
       // assert(&*currInst == &dvi && "Current Instruction mismatch!");
+      
       auto currInst = std::prev(nextInst);
       if (currInst != dvi.getParent()->begin()) {
         const Instruction &pi = *std::prev(currInst);

@@ -241,6 +241,14 @@ std::string Naming::get(const Value &V) {
   return name;
 }
 
+bool Naming::hasName(const Value &V){
+  if(names.count(&V)){
+    return true;
+  } else {
+    return false;
+  }
+}
+
 std::string Naming::freshGlobalName() {
   std::stringstream s;
   s << GLOBAL_VAR << globalNum++;

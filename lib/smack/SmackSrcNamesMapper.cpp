@@ -69,14 +69,10 @@ void SmackSrcNamesMapper::visitDbgValueInst(llvm::DbgValueInst &dvi) {
   if (SmackOptions::SourceLocSymbols) {
     const llvm::Value *V = dvi.getValue();
     const llvm::DILocalVariable *var = dvi.getVariable();
-    errs() << "Var name: " << var->getName()  << "\n";  
     if (naming->hasName(*V)) {
-        errs() << "Has Name: " << naming->get(*V) << "\n";
-        if(this->mappedNames.find(V) != this->mappedNames.end()){
-            errs() << "Repeated: " << *V << "\n";
-        }
-        this->mappedNames[V] = naming->get(*V);
-        this->sourceNames[naming->get(*V)] = V;
+        errs() << "Boogie name: " << naming->get(*V) + "_main0" << "\n";  
+        errs() << "Src Name: " << var->getName() << "\n";
+        this->sourceNames[naming->get(*V) + "_main0"] = var->getName();
     }
     // if (V && !V->getType()->isPointerTy() && !llvm::isa<ConstantInt>(V)) {
     if (V && !V->getType()->isPointerTy()) {

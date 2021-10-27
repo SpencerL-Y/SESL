@@ -1,19 +1,15 @@
-; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SESL/SESL/build/b-8xp6myxi.bc'
+; ModuleID = '/home/clexma/Desktop/Disk_D/Tools/SESL/SESL/build/b-j4gjreea.bc'
 source_filename = "llvm-link"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
 ; Function Attrs: noinline nounwind uwtable
-define dso_local i32 @main() #0 !dbg !10 {
-  call void @llvm.dbg.value(metadata i32* null, metadata !13, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  %1 = call noalias i8* @malloc(i64 4) #3, !dbg !16, !verifier.code !15
-  %2 = bitcast i8* %1 to i32*, !dbg !17, !verifier.code !15
-  call void @llvm.dbg.value(metadata i32* %2, metadata !13, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  call void @llvm.dbg.value(metadata i32* null, metadata !13, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  call void @llvm.dbg.value(metadata i32 10, metadata !18, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  %3 = load i32, i32* null, align 4, !dbg !19, !verifier.code !15
-  call void @llvm.dbg.value(metadata i32 %3, metadata !18, metadata !DIExpression()), !dbg !14, !verifier.code !15
-  ret i32 0, !dbg !20, !verifier.code !15
+define dso_local i32 @main() #0 !dbg !7 {
+  %1 = call noalias i8* @malloc(i64 4) #3, !dbg !11, !verifier.code !12
+  %2 = bitcast i8* %1 to i32*, !dbg !11, !verifier.code !12
+  call void @llvm.dbg.value(metadata i32* %2, metadata !13, metadata !DIExpression()), !dbg !15, !verifier.code !12
+  call void @llvm.dbg.value(metadata i32* null, metadata !13, metadata !DIExpression()), !dbg !15, !verifier.code !12
+  ret i32 0, !dbg !16, !verifier.code !12
 }
 
 ; Function Attrs: nounwind readnone speculatable willreturn
@@ -36,27 +32,23 @@ attributes #2 = { nounwind "correctly-rounded-divide-sqrt-fp-math"="false" "disa
 attributes #3 = { nounwind }
 
 !llvm.dbg.cu = !{!0}
-!llvm.ident = !{!6}
-!llvm.module.flags = !{!7, !8, !9}
+!llvm.ident = !{!3}
+!llvm.module.flags = !{!4, !5, !6}
 
-!0 = distinct !DICompileUnit(language: DW_LANG_C99, file: !1, producer: "clang version 10.0.0-4ubuntu1 ", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, enums: !2, retainedTypes: !3, splitDebugInlining: false, nameTableKind: None)
+!0 = distinct !DICompileUnit(language: DW_LANG_C99, file: !1, producer: "clang version 10.0.0-4ubuntu1 ", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, enums: !2, splitDebugInlining: false, nameTableKind: None)
 !1 = !DIFile(filename: "../testcases/printtest/exec.c", directory: "/home/clexma/Desktop/Disk_D/Tools/SESL/SESL/build")
 !2 = !{}
-!3 = !{!4}
-!4 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !5, size: 64)
-!5 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
-!6 = !{!"clang version 10.0.0-4ubuntu1 "}
-!7 = !{i32 7, !"Dwarf Version", i32 4}
-!8 = !{i32 2, !"Debug Info Version", i32 3}
-!9 = !{i32 1, !"wchar_size", i32 4}
-!10 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 3, type: !11, scopeLine: 3, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
-!11 = !DISubroutineType(types: !12)
-!12 = !{!5}
-!13 = !DILocalVariable(name: "i", scope: !10, file: !1, line: 4, type: !4)
-!14 = !DILocation(line: 0, scope: !10)
-!15 = !{i1 false}
-!16 = !DILocation(line: 5, column: 16, scope: !10)
-!17 = !DILocation(line: 5, column: 9, scope: !10)
-!18 = !DILocalVariable(name: "j", scope: !10, file: !1, line: 7, type: !5)
-!19 = !DILocation(line: 8, column: 9, scope: !10)
-!20 = !DILocation(line: 10, column: 5, scope: !10)
+!3 = !{!"clang version 10.0.0-4ubuntu1 "}
+!4 = !{i32 7, !"Dwarf Version", i32 4}
+!5 = !{i32 2, !"Debug Info Version", i32 3}
+!6 = !{i32 1, !"wchar_size", i32 4}
+!7 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 3, type: !8, scopeLine: 3, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
+!8 = !DISubroutineType(types: !9)
+!9 = !{!10}
+!10 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
+!11 = !DILocation(line: 5, column: 14, scope: !7)
+!12 = !{i1 false}
+!13 = !DILocalVariable(name: "q", scope: !7, file: !1, line: 5, type: !14)
+!14 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !10, size: 64)
+!15 = !DILocation(line: 0, scope: !7)
+!16 = !DILocation(line: 7, column: 5, scope: !7)

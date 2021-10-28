@@ -88,7 +88,7 @@ namespace smack{
         // lhsVar is for linking of ptr arithmetic 
         std::pair<const Expr*, bool> getUsedArithExprAndVar(const VarExpr* lhsVar, const Expr* originExpr);
         int parsePtrArithmeticStepSize(const Expr* expression);
-        int computeArithmeticOffsetValue(const Expr* expression);
+        std::pair<bool, int> computeArithmeticOffsetValue(const Expr* expression);
         //  <<< LOW LEVEL METHODS >>> 
         const Expr* parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName);
         const Expr* parseVarArithmeticExpr(const Expr* arithExpr);

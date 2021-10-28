@@ -1,0 +1,14 @@
+
+p1_main    p2    p3   [p4]
+           m2    m3    blk(p4, p4+2);
+
+                 p5
+                 null
+p1_main = p2
+p3 in m2
+p5 in m2
+p4 in m3
+
+
+p4      m1      
+        m2      

@@ -555,11 +555,11 @@ namespace smack{
         }
     }
 
-    int BlockExecutor::computeArithmeticOffsetValue(const Expr* expression){
+    std::pair<bool, int> BlockExecutor::computeArithmeticOffsetValue(const Expr* expression){
         // input expression is already renamed form
         if(expression->isValue()){
             const IntLit* intValExpr = (const IntLit*) expression;
-            return intValExpr->getVal();
+            return {true, intValExpr->getVal()};
         } else if(expression->isVar()){
             // if there is var in the expression
             // 1. if it is a pointer variable, we use the offset of the pointer varible
@@ -568,47 +568,51 @@ namespace smack{
             if(this->isPtrVar(varExpr->name()) || 
                varExpr->name().find("$fresh") != std::string::npos ||
                varExpr->name().find("$M") != std::string::npos ){
-                return this->varEquiv->getOffset(varExpr->name());
+                   // TODOsh: EMERGENT may need to adjust according to value of offset
+                return {true, this->varEquiv->getOffset(varExpr->name())};
             } else if (varExpr->name().find("$i") != std::string::npos) {
-                //assert(varExpr->translateToInt(this->varEquiv).first);
                 //TODOsh: EMERGENT
-                if(varExpr->translateToInt(this->varEquiv).first){
-                    return varExpr->translateToInt(this->varEquiv).second;
-                } else {
-                    return -100000;
-                }
+                // SOLVED
+                return varExpr->translateToInt(this->varEquiv);
+                
             } else {
                 CFDEBUG(std::cout << "ERROR: UNSOLVED Arithmetic offset computation " << expression << std::endl;);
-                return 0;
+                return {false, 0};
             }
         } else if(ExprType::BIN == expression->getType()){  
             const BinExpr* binExpr = (const BinExpr*) expression;
             if(BinExpr::Binary::Plus == binExpr->getOp()){
                 const Expr* lhsExpr =  binExpr->getLhs();
                 const Expr* rhsExpr = binExpr->getRhs();
-                int lhsVal = this->computeArithmeticOffsetValue(lhsExpr);
-                int rhsVal = this->computeArithmeticOffsetValue(rhsExpr);
-                return lhsVal + rhsVal;
+                bool lhsValValid = this->computeArithmeticOffsetValue(lhsExpr).first;
+                int lhsVal = this->computeArithmeticOffsetValue(lhsExpr).second;
+                bool rhsValValid = this->computeArithmeticOffsetValue(rhsExpr).first;
+                int rhsVal = this->computeArithmeticOffsetValue(rhsExpr).second;
+                return {lhsValValid && rhsValValid, lhsVal + rhsVal};
             } else if(BinExpr::Binary::Times == binExpr->getOp()){
                 const Expr* lhsExpr =  binExpr->getLhs();
                 const Expr* rhsExpr = binExpr->getRhs();
-                int lhsVal = this->computeArithmeticOffsetValue(lhsExpr);
-                int rhsVal = this->computeArithmeticOffsetValue(rhsExpr);
-                return lhsVal * rhsVal;
+                bool lhsValValid = this->computeArithmeticOffsetValue(lhsExpr).first;
+                int lhsVal = this->computeArithmeticOffsetValue(lhsExpr).second;
+                bool rhsValValid = this->computeArithmeticOffsetValue(rhsExpr).first;
+                int rhsVal = this->computeArithmeticOffsetValue(rhsExpr).second;
+                return {lhsValValid && rhsValValid, lhsVal * rhsVal};
             } else if(BinExpr::Binary::Minus == binExpr->getOp()){
                 const Expr* lhsExpr =  binExpr->getLhs();
                 const Expr* rhsExpr = binExpr->getRhs();
-                int lhsVal = this->computeArithmeticOffsetValue(lhsExpr);
-                int rhsVal = this->computeArithmeticOffsetValue(rhsExpr);
-                return lhsVal - rhsVal;
+                bool lhsValValid = this->computeArithmeticOffsetValue(lhsExpr).first;
+                int lhsVal = this->computeArithmeticOffsetValue(lhsExpr).second;
+                bool rhsValValid = this->computeArithmeticOffsetValue(rhsExpr).first;
+                int rhsVal = this->computeArithmeticOffsetValue(rhsExpr).second;
+                return {lhsValValid && rhsValValid, lhsVal - rhsVal};
             }
             else {
                 CFDEBUG(std::cout << "ERROR: this should not happen " << expression << std::endl;);
-                return -1;
+                return {false, -1};
             }
         } else {
             CFDEBUG(std::cout << "ERROR: compute offset value error: " << expression << std::endl;);
-            return -1;
+            return {false, -1};
         }
     }
 
@@ -2674,7 +2678,12 @@ namespace smack{
                     
                     // compute whether the left blk is empty after breaking the blk
                     // bool leftEmpty = (this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
-                    int leftBlkSize = this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom());
+                    if(!(this->computeArithmeticOffsetValue(varArg1).first && this->computeArithmeticOffsetValue(breakBlk->getFrom()).first)){
+                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        CFDEBUG(std::cout << "INFERUNKNOWN: Ptr arithmetic with variable.." << std::endl;);
+                        return newSH;
+                    }
+                    int leftBlkSize = this->computeArithmeticOffsetValue(varArg1).second - this->computeArithmeticOffsetValue(breakBlk->getFrom()).second;
                     const SpatialLiteral* leftBlk = SpatialLiteral::gcBlk(
                         breakBlk->getFrom(),
                         varArg1,
@@ -2691,7 +2700,12 @@ namespace smack{
                     REGISTER_EXPRPTR(lit1);
                     const Expr* add1 = Expr::add(varArg1, lit1);
                     REGISTER_EXPRPTR(add1);
-                    int rightBlkSize = this->computeArithmeticOffsetValue(breakBlk->getTo())- this->computeArithmeticOffsetValue(add1);
+                    if(!(this->computeArithmeticOffsetValue(breakBlk->getTo()).first && this->computeArithmeticOffsetValue(add1).first)){
+                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        CFDEBUG(std::cout << "INFERUNKNOWN: Ptr arithmetic with variable.." << std::endl;);
+                        return newSH;
+                    }
+                    int rightBlkSize = this->computeArithmeticOffsetValue(breakBlk->getTo()).second - this->computeArithmeticOffsetValue(add1).second;
                     CFDEBUG(std::cout << "INFO: rightBlkSize " << rightBlkSize << std::endl;);
 
                     const Expr* lit2 = Expr::lit(size);
@@ -3572,7 +3586,8 @@ namespace smack{
 
                 assert(VarType::PTR == this->getVarType(extractedRhsVar->name()) || 
                        VarType::NIL == this->getVarType(extractedRhsVar->name()));
-                int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
+                assert(this->computeArithmeticOffsetValue(storedExpr).first);
+                int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr).second;
                 int extractedRhsStepSize = this->getStepSizeOfPtrVar(extractedRhsVar->name());
                 if(extractedRhsStepSize == 0){
                     int computedRhsStepSize = this->parsePtrArithmeticStepSize(rhs);
@@ -3628,7 +3643,8 @@ namespace smack{
 
                 assert(VarType::PTR == this->getVarType(extractedRhsVar->name()) || 
                        VarType::NIL == this->getVarType(extractedRhsVar->name()));
-                int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
+                assert(this->computeArithmeticOffsetValue(storedExpr).first);
+                int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr).second;
                 int extractedRhsStepSize = this->getStepSizeOfPtrVar(extractedRhsVar->name());
                 if(extractedRhsStepSize == 0){
                     int computedRhsStepSize = this->parsePtrArithmeticStepSize(rhs);
@@ -3692,7 +3708,8 @@ namespace smack{
             assert(VarType::PTR == this->getVarType(extractedRhsVar->name()) ||
                    VarType::NIL == this->getVarType(extractedRhsVar->name())
             );
-            int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr);
+            assert(this->computeArithmeticOffsetValue(storedExpr).first);
+            int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr).second;
 
             int extractedRhsPtrArithStepSize = this->parsePtrArithmeticStepSize(rhsExpr);
             this->varEquiv->addNewName(lhsVar->name());
@@ -4084,9 +4101,11 @@ namespace smack{
         assert(oldBlk->getId() == SpatialLiteral::Kind::BLK);
         const BlkLit* oldBlkLit = (const BlkLit*) oldBlk;
         const Expr* oldBlkFrom = oldBlkLit->getFrom();
-        int oldBlkFromOffset = this->computeArithmeticOffsetValue(oldBlkFrom);
+        assert(this->computeArithmeticOffsetValue(oldBlkFrom).first);
+        int oldBlkFromOffset = this->computeArithmeticOffsetValue(oldBlkFrom).second;
         const Expr* oldBlkTo = oldBlkLit->getTo();
-        int oldBlkToOffset = this->computeArithmeticOffsetValue(oldBlkTo);
+        assert(this->computeArithmeticOffsetValue(oldBlkTo).first);
+        int oldBlkToOffset = this->computeArithmeticOffsetValue(oldBlkTo).second;
         assert(from->isVar());
         assert(this->getVarType(from->name()) == VarType::PTR ||
                this->getVarType(from->name()) == VarType::NIL);
@@ -4119,7 +4138,8 @@ namespace smack{
         const BlkLit* tempRhsBlk = (const BlkLit*) oldBlk;
         while(tempRhsBlk->getBlkByteSize() != 0){
             const Expr* tempFrom = tempRhsBlk->getFrom();
-            int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom);
+            assert(!this->computeArithmeticOffsetValue(tempFrom).first);
+            int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom).second;
             const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, mallocName, fromVarOffset);
             const Expr* eq = Expr::eq(tempFrom, fromVar);
             REGISTER_EXPRPTR(eq);
@@ -4166,8 +4186,10 @@ namespace smack{
         if(srcVarMallocName.compare(dstvarMallocName)){
             return false;
         }
-        int srcVarOffset = this->computeArithmeticOffsetValue(srcVar);
-        int dstVarOffset = this->computeArithmeticOffsetValue(dstVar);
+        assert(this->computeArithmeticOffsetValue(srcVar).first);
+        int srcVarOffset = this->computeArithmeticOffsetValue(srcVar).second;
+        assert(this->computeArithmeticOffsetValue(dstVar).first);
+        int dstVarOffset = this->computeArithmeticOffsetValue(dstVar).second;
         if(dstVarOffset + copySize > srcVarOffset && srcVarOffset >= dstVarOffset ||
            srcVarOffset + copySize > dstVarOffset && dstVarOffset >= srcVarOffset){
             return true;
@@ -4198,7 +4220,8 @@ namespace smack{
         const BlkLit* tempRhsBlk = (const BlkLit*) oldBlk;
         while(tempRhsBlk->getBlkByteSize() != 0){
             const Expr* tempFrom = tempRhsBlk->getFrom();
-            int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom);
+            assert(!this->computeArithmeticOffsetValue(tempFrom).first);
+            int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom).second;
             const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, mallocName, fromVarOffset);
             const Expr* eq = Expr::eq(tempFrom, fromVar);
             REGISTER_EXPRPTR(eq);

@@ -57,6 +57,9 @@ namespace smack {
         void copyProcedure(ProcDecl *procDecl);
 
     public:
+
+        string getRenamedProcedureName();
+
         explicit ProcManager(ProcDecl *old);
 
         explicit ProcManager(pair<ProcDecl *, int> param);

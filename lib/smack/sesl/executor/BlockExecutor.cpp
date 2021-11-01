@@ -791,8 +791,7 @@ namespace smack{
     }
 
     bool BlockExecutor::isNoSideEffectFuncName(std::string name){
-        if (name.find("boogie_si_record") != std::string::npos ||
-            name.find("abort") != std::string::npos ||
+        if (name.find("abort") != std::string::npos ||
             name.find("srand") != std::string::npos ||
             name.find("print") != std::string::npos){
             return true;
@@ -859,6 +858,8 @@ namespace smack{
 
 
     // ---------------------- Execution for Call stmts -----------------
+    
+
     SHExprPtr BlockExecutor::executeCall(SHExprPtr sh, const Stmt* callstmt){
         if(Stmt::CALL == callstmt->getKind()){
             const CallStmt* call = (const CallStmt*) callstmt;
@@ -886,6 +887,34 @@ namespace smack{
             }
         } else {
             CFDEBUG(std::cout << "ERROR: execute call stmt kind error" << std::endl);
+        }
+        return sh;
+    }
+
+    SHExprPtr BlockExecutor::executeFuncCallStack(SHExprPtr sh, const CallStmt* callstmt){
+        assert(callstmt->getProc().find("boogie_si_record") != std::string::npos);
+        int i = 0;
+        const Attr* startEndAttr = callstmt->getAttrs().front();
+        const Attr* funcNameAttr = nullptr;
+        if(startEndAttr->getName().compare("call_start") && startEndAttr->getName().compare("call_end")){
+            return sh;
+        }
+        for(const Attr* attr : callstmt->getAttrs()){
+            if(i == 1){
+                funcNameAttr = attr;
+                break;
+            }
+            i += 1;
+        }
+        if(!startEndAttr->getName().compare("call_start")){
+            std::string funcName = funcNameAttr->getName();
+            CFDEBUG(std::cout << "INFO: enterFunc " << funcName << std::endl;);
+            // TODOSTACK: add path feasibility check
+            this->callStack.push(funcName);
+        } else if(!startEndAttr->getName().compare("call_end")){
+
+        } else {
+            assert(false);
         }
         return sh;
     }

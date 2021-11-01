@@ -159,6 +159,8 @@ namespace smack{
 
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
 
+        SHExprPtr executeFuncCallStack(SHExprPtr sh, const CallStmt* callstmt);
+
         SHExprPtr executeMalloc(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeAlloc(SHExprPtr sh, const CallStmt* stmt);
@@ -184,6 +186,10 @@ namespace smack{
         SHExprPtr executeStore(SHExprPtr sh, const FunExpr* rhsFun);
 
         SHExprPtr executeOther(SHExprPtr sh, const Stmt* stmt);
+
+        SHExprPtr executeFuncEnter(SHExprPtr sh, const CallStmt* stmt);
+
+        SHExprPtr executeFuncExit(SHExprPtr sh, const CallStmt* stmt);
 
         //----------------------- Execution for library functions
 

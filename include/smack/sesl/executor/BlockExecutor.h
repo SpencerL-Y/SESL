@@ -6,6 +6,7 @@
 
 #include <utility>
 #include <regex>
+#include <stack>
 #include <string>
 #include "smack/BoogieAst.h"
 #include "llvm/IR/DebugInfo.h"
@@ -47,6 +48,7 @@ namespace smack{
         VarEquivPtr varEquiv;
         VarFactoryPtr varFactory;
         StoreSplitterPtr storeSplit;
+        std::stack<std::string> callStack;
         CFGPtr cfg;
 
         // ------------------ Variable Utilities
@@ -206,6 +208,7 @@ namespace smack{
         VarEquivPtr getVarEquiv() { return varEquiv;}
         VarFactoryPtr getVarFactory() { return varFactory;}
         StoreSplitterPtr getStoreSplit() { return storeSplit;}
+        std::stack<std::string> getCallStack() { return callStack;}
 
 
     };

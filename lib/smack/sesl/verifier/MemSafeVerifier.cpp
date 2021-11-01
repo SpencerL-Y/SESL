@@ -88,8 +88,10 @@ namespace smack {
             VarFactoryPtr varFac = std::make_shared<VarFactory>();
             // Initialize store splitter
             StoreSplitterPtr storeSplit = std::make_shared<StoreSplitter>();
+            // Initialize call Stack
+            std::stack<std::string> callStack;
 
-            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, storeSplit);
+            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, storeSplit, callStack);
             // initialization of the execution initial state over
             // Initialize a CFGExecutor
             SHExprPtr currSH = initSH;

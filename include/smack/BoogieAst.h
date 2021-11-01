@@ -607,21 +607,23 @@ namespace smack {
 
         static const SpatialLiteral *emp();
 
-        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize);
+        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::stack<std::string> callStack);
 
         // TODOsh: implement and modify to make it compatible with bytewise
-        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts);
+        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts, std::stack<std::string> callStack);
 
-        static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, int byteSize);
+        static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::stack<std::string> callStack);
 
-        static const SpatialLiteral *gcPt(const Expr *fcallStackSetrom, const Expr *to, std::string blkName, int stepSize);
+        static const SpatialLiteral *gcPt(const Expr *fcallStackSetrom, const Expr *to, std::string blkName, int stepSize, std::stack<std::string> callStack);
 
         // TODOsh: implement and modify to make it compatible with bytewise
-        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts);
+        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts, std::stack<std::string> callStack);
 
-        static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize);
+        static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::stack<std::string> callStack);
 
-        static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName);
+        static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName, std::stack<std::string> callStack);
+
+        static const SpatialLiteral *gcSpt(const Expr *var, const Expr *size, std::string blkName, std::stack<std::string> callStack);
 
         static const BytePt *bytePt(const Expr* from, const Expr* to);
 
@@ -656,7 +658,7 @@ namespace smack {
     class EmpLit : public SpatialLiteral {
 
     public:
-        EmpLit(std::string blkName) {
+        EmpLit(std::string blkName, std::set<std::string> stackMems) {
             setId(SpatialLiteral::Kind::EMP);
             setBlkName(blkName);
         }
@@ -695,17 +697,19 @@ namespace smack {
         
 
     public:
-        PtLit(const Expr *f, const Expr *t, std::string blkName, int ss) : from(f), to(t), stepSize(ss), 
+        PtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::set<std::string> stackMems) : from(f), to(t), stepSize(ss), 
         isBytewise(false)  {
             setId(SpatialLiteral::Kind::PT);
             setBlkName(blkName);
+            setStackMembers(stackMems);
         }
 
-        PtLit(const Expr *f, const Expr* t, std::string blkName, int ss, std::vector<const BytePt*> bpts) :
+        PtLit(const Expr *f, const Expr* t, std::string blkName, int ss, std::vector<const BytePt*> bpts, std::set<std::string> stackMems) :
         from(f), to(t), stepSize(ss), isBytewise(true), bytifiedPts(bpts)
         {
             setId(SpatialLiteral::Kind::PT);
             setBlkName(blkName);
+            setStackMembers(stackMems);
         }
 
         void print(std::ostream &os) const;
@@ -733,8 +737,8 @@ namespace smack {
 
     class GCPtLit : public PtLit {
     public:
-        GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss) : PtLit(f, t, blkName, ss) {};
-        GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::vector<const BytePt*> bgcpts) : PtLit(f,t,blkName, ss, bgcpts) {};
+        GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::set<std::string> stackMems) : PtLit(f, t, blkName, ss, stackMems) {};
+        GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::vector<const BytePt*> bgcpts, std::set<std::string> stackMems) : PtLit(f,t,blkName, ss, bgcpts, stackMems) {};
 
         // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
@@ -749,9 +753,10 @@ namespace smack {
         bool isEmptyBlk;
         int blkByteSize;
     public:
-        BlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize) : from(f), to(t), blkByteSize(byteSize) {
+        BlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize, std::set<std::string> stackMems) : from(f), to(t), blkByteSize(byteSize) {
             setId(SpatialLiteral::Kind::BLK);
             setBlkName(blkName);
+            setStackMembers(stackMems);
             if(byteSize == 0){
                 isEmptyBlk = true;
             } else {
@@ -775,7 +780,7 @@ namespace smack {
 
     class GCBlkLit : public BlkLit {
     public:
-        GCBlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize) : BlkLit(f, t, blkName, byteSize) {};
+        GCBlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize, std::set<std::string> stackMems) : BlkLit(f, t, blkName, byteSize, stackMems) {};
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
         bool isGc() const;
@@ -787,9 +792,10 @@ namespace smack {
         const Expr *size;
 
     public:
-        SizePtLit(const Expr *v, const Expr *s, std::string blkName) : var(v), size(s) {
+        SizePtLit(const Expr *v, const Expr *s, std::string blkName, std::set<std::string> stackMems) : var(v), size(s) {
             setId(SpatialLiteral::Kind::SPT);
             setBlkName(blkName);
+            setStackMembers(stackMems);
         }
 
         std::string getVarName() const;
@@ -806,7 +812,7 @@ namespace smack {
 
     class GCSizePtLit : public SizePtLit{
     public:
-        GCSizePtLit(const Expr *v, const Expr *s, std::string blkName): SizePtLit(v, s, blkName) {};
+        GCSizePtLit(const Expr *v, const Expr *s, std::string blkName, std::set<std::string> stackMems): SizePtLit(v, s, blkName, stackMems) {};
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
         bool isGc() const;

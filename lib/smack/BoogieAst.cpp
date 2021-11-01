@@ -1144,35 +1144,72 @@ namespace smack {
     }
 
     const SpatialLiteral *SpatialLiteral::emp() {
-        return new EmpLit("");
+        std::set<std::string> emptyStackMems;
+        return new EmpLit("", emptyStackMems);
     }
 
-    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize) {
+    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::stack<std::string> callStack) {
         assert(stepSize > 0);
         if(stepSize != 1){
-            return new PtLit(from, to, blkName, stepSize);
+            std::set<std::string> stackMems;
+            while(!callStack.empty()){
+                stackMems.insert(callStack.top());
+                callStack.pop();
+            }
+            const SpatialLiteral* newPt = new PtLit(from, to, blkName, stepSize, stackMems);
+            REGISTER_EXPRPTR(newPt);
+            return newPt;
         } else {
+            std::set<std::string> stackMems;
+            while(!callStack.empty()){
+                stackMems.insert(callStack.top());
+                callStack.pop();
+            }
             const BytePt* bpt = new BytePt(from, to);
             REGISTER_EXPRPTR(bpt);
             std::vector<const BytePt*> bytifiedVec;
             bytifiedVec.push_back(bpt);
-            return new PtLit(from, to, blkName, stepSize, bytifiedVec);
+            return new PtLit(from, to, blkName, stepSize, bytifiedVec, stackMems);
         }
     }
 
-    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts){
+    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts, std::stack<std::string> callStack){
         assert(stepSize > 0);
         assert(stepSize == bpts.size());
-        return new PtLit(from, to, blkName, stepSize, bpts);
+        std::set<std::string> stackMems;
+        while(!callStack.empty()){
+            stackMems.insert(callStack.top());
+            callStack.pop();
+        }
+        return new PtLit(from, to, blkName, stepSize, bpts, stackMems);
     }
 
-    const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, std::string blkName, int byteSize) {
+    const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::stack<std::string> callStack) {
         assert(byteSize >= 0);
-        return new BlkLit(from, to, blkName, byteSize);
+        std::set<std::string> stackMems;
+        while(!callStack.empty()){
+            stackMems.insert(callStack.top());
+            callStack.pop();
+        }
+        return new BlkLit(from, to, blkName, byteSize, stackMems);
     }
 
-    const SpatialLiteral *SpatialLiteral::spt(const Expr *var, const Expr *size, std::string blkName) {
-        return new SizePtLit(var, size, blkName);
+    const SpatialLiteral *SpatialLiteral::spt(const Expr *var, const Expr *size, std::string blkName, std::stack<std::string> callStack) {
+        std::set<std::string> stackMems;
+        while(!callStack.empty()){
+            stackMems.insert(callStack.top());
+            callStack.pop();
+        }
+        return new SizePtLit(var, size, blkName, stackMems);
+    }
+
+    const SpatialLiteral *gcSpt(const Expr *var, const Expr *size, std::string blkName, std::stack<std::string> callStack){
+        std::set<std::string> stackMems;
+        while(!callStack.empty()){
+            stackMems.insert(callStack.top());
+            callStack.pop();
+        }
+        return new GCSizePtLit(var, size, blkName, stackMems);
     }
 
     const BytePt *SpatialLiteral::bytePt(const Expr* from, const Expr* to) {
@@ -1180,20 +1217,35 @@ namespace smack {
         return new BytePt(from, to);
     }
 
-    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize) {
+    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::stack<std::string> callStack) {
         assert(stepSize > 0);
-        return new GCPtLit(from, to, blkName, stepSize);
+        std::set<std::string> stackMems;
+        while(!callStack.empty()){
+            stackMems.insert(callStack.top());
+            callStack.pop();
+        }
+        return new GCPtLit(from, to, blkName, stepSize, stackMems);
     }
 
-    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts){
+    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts, std::stack<std::string> callStack){
         assert(stepSize > 0);
         assert(bgcpts.size() == stepSize);
-        return new GCPtLit(from, to, blkName, stepSize, bgcpts);
+        std::set<std::string> stackMems;
+        while(!callStack.empty()){
+            stackMems.insert(callStack.top());
+            callStack.pop();
+        }
+        return new GCPtLit(from, to, blkName, stepSize, bgcpts, stackMems);
     }
 
-    const SpatialLiteral *SpatialLiteral::gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize) {
+    const SpatialLiteral *SpatialLiteral::gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::stack<std::string> callStack) {
         assert(byteSize >= 0);
-        return new GCBlkLit(from, to, blkName, byteSize);
+        std::set<std::string> stackMems;
+        while(!callStack.empty()){
+            stackMems.insert(callStack.top());
+            callStack.pop();
+        }
+        return new GCBlkLit(from, to, blkName, byteSize, stackMems);
     }
 
     const SpatialLiteral *SpatialLiteral::errlit(bool f, ErrType reason) {

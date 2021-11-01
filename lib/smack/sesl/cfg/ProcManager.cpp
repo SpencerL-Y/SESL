@@ -11,6 +11,10 @@ namespace smack {
     unordered_map<string, pair<ProcDecl *, int>> ProcManager::originProcedures = {};
     set<string> ProcManager::constVarSet = {};
 
+    string ProcManager::getRenamedProcedureName() {
+        return procName + "_" + to_string(renameCounter);
+    }
+
     ProcManager::ProcManager(ProcDecl *old) : oldProc(old), newProc(nullptr), nameCounter(0) {
         copyOldProcInfo(old);
         renameProc();
@@ -39,7 +43,7 @@ namespace smack {
 
     void ProcManager::copyBlocks() {
         auto &blocks = oldProc->getBlocks();
-        for (auto &block : blocks) {
+        for (auto &block: blocks) {
             copyBlock(block);
         }
     }
@@ -55,14 +59,14 @@ namespace smack {
                 newStmts.push_back(Stmt::call("__SMACK_static_init"));
             }
         }
-        for (auto &stmt : stmts) {
+        for (auto &stmt: stmts) {
             if (stmt->getKind() == Stmt::CALL) { hasFunctionCall = true; }
             if (stmt->getKind() == Stmt::RETURN) { hasReturn = true; }
             if (stmt->getKind() == Stmt::GOTO) {
                 auto gotoStmt = (GotoStmt *) stmt;
                 auto targets = gotoStmt->getTargets();
                 list<string> newTargets;
-                for (auto &target : targets) {
+                for (auto &target: targets) {
                     newTargets.push_back(reNames[target]);
                 }
                 newStmts.push_back(Stmt::goto_(newTargets));
@@ -77,7 +81,7 @@ namespace smack {
     }
 
     void ProcManager::renameBlocks() {
-        for (auto &blk : oldProc->getBlocks()) {
+        for (auto &blk: oldProc->getBlocks()) {
             auto oldName = blk->getName();
             auto newName = createNewName();
             reNames[oldName] = newName;
@@ -112,7 +116,7 @@ namespace smack {
         {
             auto &stmts = blockPtr->getStatements();
             StatementList statementList;
-            for (auto &stmt : stmts) {
+            for (auto &stmt: stmts) {
                 if (Stmt::CALL == stmt->getKind()) {
                     auto callStmt = (CallStmt *) stmt;
                     if (originProcedures.count(callStmt->getProc())) {
@@ -194,7 +198,7 @@ namespace smack {
                 //generate return block
                 StatementList returnBlockStmts;
                 auto &returnBlockVec = targetProcManagerPtr->getReturnBlockVec();
-                for (auto &retBlock : returnBlockVec) {
+                for (auto &retBlock: returnBlockVec) {
                     cout << "processing return block " << retBlock->getName() << endl;
                     auto &returns = targetProc->getReturns();
                     auto lReturns = callStmt->getReturns();
@@ -216,8 +220,10 @@ namespace smack {
                     auto index = lReturns.begin();
 
                     StatementList retProcessBlockStmt;
-                    retProcessBlockStmt.push_back(Stmt::call("boogie_si_record_ref",{},{}, {Attr::attr("call end"),Attr::attr(targetProc->getName())}));
-                    for (auto &[name, type] : returns) {
+                    retProcessBlockStmt.push_back(Stmt::call("boogie_si_record_ref", {}, {},
+                                                     {Attr::attr("call end"),
+                                                      Attr::attr(targetProcManagerPtr->getRenamedProcedureName())}));
+                    for (auto &[name, type]: returns) {
                         auto stmt = Stmt::assign(Expr::id(*index++), Expr::id(name));
                         cout << "Add assign statement: ";
                         stmt->print(cout);
@@ -250,9 +256,11 @@ namespace smack {
             //generate pass block statements
             StatementList passBlockStmts;
             {
-                passBlockStmts.push_back(Stmt::call("boogie_si_record_ref",{},{}, {Attr::attr("call start"),Attr::attr(targetProc->getName())}));
+                passBlockStmts.push_back(Stmt::call("boogie_si_record_ref", {}, {},
+                                                    {Attr::attr("call start"),
+                                                     Attr::attr(targetProcManagerPtr->getRenamedProcedureName())}));
                 auto it = augmentList.begin();
-                for (auto&[name, type] : parameterList) {
+                for (auto&[name, type]: parameterList) {
                     auto stmt = Stmt::assign(Expr::id(name), *(it++));
                     cout << "\tadd statement: ";
                     stmt->print(cout);
@@ -286,7 +294,7 @@ namespace smack {
         }
 
         // change if it is return block
-        for (auto &i : returnBlock) {
+        for (auto &i: returnBlock) {
             if (i == blockPtr) {
                 cout << "Splitting return block" << endl;
                 i = newBlocks.back();
@@ -296,7 +304,7 @@ namespace smack {
 
     void ProcManager::recursiveInline(ProcManager *curManager, int depth) {
         cout << "inlining procedure: " << curManager->getRenamedProc()->getName() << endl;
-        for (auto &callBlock : funcCallBlock) {
+        for (auto &callBlock: funcCallBlock) {
             splitBlock(callBlock, depth);
         }
         blockList.insert(blockList.end(), toBeMerged.begin(), toBeMerged.end());
@@ -338,19 +346,19 @@ namespace smack {
         params.clear();
         declarationList.clear();
         // copy var info
-        for (auto&[name, type] : procDecl->getParameters()) {
+        for (auto&[name, type]: procDecl->getParameters()) {
             string newName = name + "_" + procName + to_string(renameCounter);
             params.push_back({newName, type == "ref" ? "ref" /*+ to_string(8 * PTR_BYTEWIDTH)*/ : type});
             declarationList.push_back(
                     Decl::variable(newName, type == "ref" ? "ref" /*+ to_string(8 * PTR_BYTEWIDTH)*/ : type));
         }
         // copy declarations
-        for (auto &decl : procDecl->getDeclarations()) {
+        for (auto &decl: procDecl->getDeclarations()) {
             Decl *p = const_cast<Decl *>(decl->renameClone(procName, renameCounter, ProcManager::constVarSet));
             declarationList.push_back(p);
         }
         // copy returns
-        for (auto&[name, type] : procDecl->getReturns()) {
+        for (auto&[name, type]: procDecl->getReturns()) {
             string newName = name + "_" + procName + to_string(renameCounter);
             rets.push_back({newName, type == "ref" ? "ref" /*+ to_string(8 * PTR_BYTEWIDTH)*/ : type});
             declarationList.push_back(
@@ -372,7 +380,7 @@ namespace smack {
             cout << "Empty blocks of proc " << proc->getName() << endl;
             return;
         }
-        for (auto &block : proc->getBlocks()) {
+        for (auto &block: proc->getBlocks()) {
             cout << "Empty block name founded in proc " << proc->getName() << endl;
             if (block->getName().empty()) return;
         }

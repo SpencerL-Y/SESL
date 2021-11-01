@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <stack>
 #include <memory>
 #include "z3++.h"
 #include "utils/TranslatorUtil.h"
@@ -601,6 +602,7 @@ namespace smack {
         };
         Kind id;
         std::string blkName;
+        std::set<std::string> callStackSet;
 
 
         static const SpatialLiteral *emp();
@@ -612,7 +614,7 @@ namespace smack {
 
         static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, int byteSize);
 
-        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize);
+        static const SpatialLiteral *gcPt(const Expr *fcallStackSetrom, const Expr *to, std::string blkName, int stepSize);
 
         // TODOsh: implement and modify to make it compatible with bytewise
         static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts);
@@ -635,9 +637,19 @@ namespace smack {
 
         void setBlkName(std::string blkName) { this->blkName = blkName; }
 
+        std::set<std::string> getStackMembers() const { return this->callStackSet;}
+
+        void setStackMembers(std::set<std::string> stackSet){ this->callStackSet = stackSet;}
+
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        bool isGc() const {return false; }
+
+        bool isStackEliminated(std::string exitFuncName) const;
+
+        
 
     };
 
@@ -652,6 +664,7 @@ namespace smack {
         void print(std::ostream &os) const;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+        bool isGc() const;
     };
 
 
@@ -668,6 +681,7 @@ namespace smack {
             void print(std::ostream &os) const;
 
             virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+            bool isGc() const;
 
     };
 
@@ -712,6 +726,7 @@ namespace smack {
 
         // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+        bool isGc() const;
     };
 
     
@@ -723,6 +738,7 @@ namespace smack {
 
         // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+        bool isGc() const;
     };
 
 
@@ -750,6 +766,7 @@ namespace smack {
         int getBlkByteSize() const {return blkByteSize;}
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+        bool isGc() const;
 
         const Expr *getFrom() const { return from; }
 
@@ -761,6 +778,7 @@ namespace smack {
         GCBlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize) : BlkLit(f, t, blkName, byteSize) {};
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+        bool isGc() const;
     };
 
     class SizePtLit : public SpatialLiteral {
@@ -783,6 +801,15 @@ namespace smack {
         void print(std::ostream &os) const;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+        bool isGc() const;
+    };
+
+    class GCSizePtLit : public SizePtLit{
+    public:
+        GCSizePtLit(const Expr *v, const Expr *s, std::string blkName): SizePtLit(v, s, blkName) {};
+
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+        bool isGc() const;
     };
 
     
@@ -809,6 +836,7 @@ namespace smack {
         void print(std::ostream &os) const;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+        bool isGc() const;
     };
 
 

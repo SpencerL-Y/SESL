@@ -6,63 +6,75 @@ axiom (main == $sub.ref(0, 1032));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
-  var $p0: ref;
+  var $p0: ref8;
+  var $p1: ref32;
+  var $p2: ref8;
+  var $p3: ref32;
+  var $p4: ref32;
+  var $i5: i32;
+  var $i6: i32;
+  var $i7: i32;
+  var $i8: i32;
 $bb0:
-  assume {:sourceloc "../testcases/printtest/exec.c", 25, 5} true;
+  assume {:sourceloc "../testcases/printtest/exec.c", 4, 14} true;
   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  call $p0 := $alloc($mul.ref(16, $zext.i32.i64(1)));
-  assume true;
-  assume {:sourceloc "../testcases/printtest/exec.c", 25, 5} true;
-  goto $bb1;
-$bb1:
-  assume {:sourceloc "../testcases/printtest/exec.c", 26, 9} true;
-  call main0_bb($p0);
-  assume {:sourceloc "../testcases/printtest/exec.c", 27, 5} true;
-  goto $bb2;
-$bb2:
-  assume {:sourceloc "../testcases/printtest/exec.c", 26, 9} true;
-  call main0_bb($p0);
-  assume {:sourceloc "../testcases/printtest/exec.c", 27, 5} true;
-  goto $bb3;
-$bb3:
-  assume {:sourceloc "../testcases/printtest/exec.c", 26, 9} true;
-  call main0_bb($p0);
-  assume {:sourceloc "../testcases/printtest/exec.c", 27, 5} true;
-  goto $bb4;
-$bb4:
-  assume {:sourceloc "../testcases/printtest/exec.c", 26, 9} true;
-  call main0_bb($p0);
-  assume {:sourceloc "../testcases/printtest/exec.c", 27, 5} true;
-  goto $bb5;
-$bb5:
-  assume {:sourceloc "../testcases/printtest/exec.c", 28, 5} true;
+  assume {:sourceloc "../testcases/printtest/exec.c", 4, 14} true;
+  call $p0 := malloc(4);
+  assume {:sourceloc "../testcases/printtest/exec.c", 4, 14} true;
+  $p1 := $bitcast.ref.ref($p0);
+  assume {:sourceloc "../testcases/printtest/exec.c", 5, 8} true;
+  $M.0 := $store.i32($M.0, $p1, 0);
+  assume {:sourceloc "../testcases/printtest/exec.c", 6, 9} true;
+  call $p2 := malloc(8);
+  assume {:sourceloc "../testcases/printtest/exec.c", 6, 9} true;
+  $p3 := $bitcast.ref.ref($p2);
+  assume {:sourceloc "../testcases/printtest/exec.c", 7, 9} true;
+  $p4 := $add.ref($p3, $mul.ref(1, 4));
+  assume {:sourceloc "../testcases/printtest/exec.c", 7, 14} true;
+  $M.1 := $store.i32($M.1, $p4, 0);
+  assume {:sourceloc "../testcases/printtest/exec.c", 9, 5} true;
+  call $i5 := foo();
+  assume {:sourceloc "../testcases/printtest/exec.c", 10, 5} true;
+  call $i6 := foo();
+  assume {:sourceloc "../testcases/printtest/exec.c", 11, 5} true;
+  call $i7 := foo();
+  assume {:sourceloc "../testcases/printtest/exec.c", 12, 5} true;
+  call $i8 := foo();
+  assume {:sourceloc "../testcases/printtest/exec.c", 13, 5} true;
   $r := 0;
   return;
 }
 const llvm.dbg.declare: ref;
 axiom (llvm.dbg.declare == $sub.ref(0, 2064));
 procedure  llvm.dbg.declare($p0: ref, $p1: ref, $p2: ref);
-const main0_bb: ref;
-axiom (main0_bb == $sub.ref(0, 3096));
-procedure  main0_bb($p0: ref)
-{
-  var $p1: ref8;
-  var $p2: ref32;
-$bb0:
-  assume {:sourceloc "../testcases/printtest/exec.c", 9, 14} true;
-  assume {:sourceloc "../testcases/printtest/exec.c", 9, 14} true;
-  call $p1 := malloc(4);
-  assume {:sourceloc "../testcases/printtest/exec.c", 9, 14} true;
-  $p2 := $bitcast.ref.ref($p1);
-  assume {:sourceloc "../testcases/printtest/exec.c", 10, 1} true;
-  return;
-}
 const malloc: ref;
-axiom (malloc == $sub.ref(0, 4128));
+axiom (malloc == $sub.ref(0, 3096));
 procedure  malloc($i0: i64)
   returns ($r: ref)
 {
   call $r := $malloc($i0);
+}
+const foo: ref;
+axiom (foo == $sub.ref(0, 4128));
+procedure  foo()
+  returns ($r: i32)
+{
+  var $p0: ref8;
+  var $p1: ref32;
+  var $i2: i32;
+$bb0:
+  assume {:sourceloc "../testcases/printtest/exec.c", 16, 14} true;
+  assume {:sourceloc "../testcases/printtest/exec.c", 16, 14} true;
+  call $p0 := malloc(4);
+  assume {:sourceloc "../testcases/printtest/exec.c", 16, 14} true;
+  $p1 := $bitcast.ref.ref($p0);
+  assume {:sourceloc "../testcases/printtest/exec.c", 17, 8} true;
+  $M.2 := $store.i32($M.2, $p1, 0);
+  assume {:sourceloc "../testcases/printtest/exec.c", 19, 12} true;
+  $i2 := $p2i.ref.i32($0.ref);
+  assume {:sourceloc "../testcases/printtest/exec.c", 19, 5} true;
+  $r := $i2;
+  return;
 }
 const llvm.dbg.value: ref;
 axiom (llvm.dbg.value == $sub.ref(0, 5160));

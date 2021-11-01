@@ -1200,6 +1200,18 @@ namespace smack {
         return new ErrorLit(f, reason);
     }
 
+    bool SpatialLiteral::isStackEliminated(std::string exitFuncName) const {
+        if(this->isGc()){   
+            if(this->callStackSet.find(exitFuncName) != this->callStackSet.end()){
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
     void EmpLit::print(std::ostream &os) const {
         os << "emp";
     }
@@ -1208,6 +1220,10 @@ namespace smack {
         z3::expr res = slah_api::newEmp(z3Ctx);
         CDEBUG(std::cout << "in emp! " << res.to_string() << std::endl;);
         return res;
+    }
+
+    bool EmpLit::isGc() const {
+        return false;
     }
 
     void BytePt::print(std::ostream &os) const {
@@ -1224,6 +1240,10 @@ namespace smack {
         varBounder->addVarName(fromVar->name());
         varBounder->addVarName(toVar->name());
         return res;
+    }
+
+    bool BytePt::isGc() const {
+        return false;
     }
 
     void PtLit::print(std::ostream &os) const {
@@ -1288,6 +1308,10 @@ namespace smack {
         
     }
 
+    bool PtLit::isGc() const {
+        return false;
+    }
+
     z3::expr GCPtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         // z3::expr res = slah_api::newEmp(z3Ctx);
         // BUG FIXED: cannot simply use emp for memleak, since some constraint relies on the spatial formula
@@ -1337,6 +1361,10 @@ namespace smack {
         }
     }
 
+    bool GCPtLit::isGc() const {
+        return true;
+    }
+
 
     void BlkLit::print(std::ostream &os) const {
         os << "Blk(" << from << ", " << to << ")";
@@ -1355,6 +1383,10 @@ namespace smack {
         return res;
     }
 
+    bool GCBlkLit::isGc() const {
+        return true;
+    }
+
     z3::expr BlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         if (this->isEmpty()) {
             return slah_api::newEmp(z3Ctx);
@@ -1366,6 +1398,10 @@ namespace smack {
         return res;
     }
 
+    bool BlkLit::isGc() const {
+        return false;
+    }
+
     void SizePtLit::print(std::ostream &os) const {
         os << var << " >-s-> " << size;
     }
@@ -1375,6 +1411,21 @@ namespace smack {
         // TODOsh: later changed to above one
         CDEBUG(std::cout << "sizeptlit" << std::endl;);
         return slah_api::newEmp(z3Ctx);
+    }
+
+    bool SizePtLit::isGc() const {
+        return false;
+    }
+
+    z3::expr GCSizePtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
+        //CDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
+        // TODOsh: later changed to above one
+        CDEBUG(std::cout << "gc sizeptlit" << std::endl;);
+        return slah_api::newEmp(z3Ctx);
+    }
+
+    bool GCSizePtLit::isGc() const {
+        return true; 
     }
 
     std::string SizePtLit::getVarName() const {
@@ -1411,6 +1462,10 @@ namespace smack {
         CDEBUG(std::cout << "errorLit" << std::endl;);
         // Since error occurs, we set the pure constraint pure to false
         return (slah_api::newEmp(z3Ctx));
+    }
+
+    bool ErrorLit::isGc() const {
+        return false;
     }
 
     z3::expr BoolLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {

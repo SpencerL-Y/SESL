@@ -2922,8 +2922,8 @@ namespace smack{
                 // Situation B.1
                 if(this->storeSplit->getInitializedLength(mallocName, loadedOffset) >= loadedSize ){
                     int ptLength = this->storeSplit->getInitializedPos(mallocName, loadedOffset).second;
-                    int loadIndex = 2*posResult.second + 1;
-                    // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
+                    int loadIndex = posResult.second;
+                    // start counting pt when we enter the blk & pts that created by the correct malloc function
                     bool startCounting = false;
                     // increase index by 1 when counting is started 
                     int countIndex = 1;
@@ -2932,73 +2932,79 @@ namespace smack{
                             const SizePtLit* sizePt = (const SizePtLit*) spl;
                             if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
                                 startCounting = true;
+                            } else {
+                                startCounting = false;
                             }
                         }
-                        if(countIndex == loadIndex){
-                            assert(SpatialLiteral::Kind::PT == spl->getId());
-                            // find the correct index and load the content out
-                            const PtLit* pt = (const PtLit*) spl;
-                            // toExpr should be a variable
-                            const Expr* toExprOrig = pt->getTo();
-                            const VarExpr* toExprOrigVar = (const VarExpr*)toExprOrig;
-                            const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
-                            CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
-                            if(loadedSize == this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
-                                // Situation B.1.(1)
-                                this->updateBindingsEqualVarAndRhsVar(lhsVar, toExprVar);
-                                this->updateVarType(lhsVar, toExprVar, toExprVar);
-                                const Expr* eq1 = Expr::eq(lhsVar, toExprVar);
-                                REGISTER_EXPRPTR(eq1);
-                                newPure = Expr::and_(newPure, eq1);
-                                REGISTER_EXPRPTR(newPure);
-                                const Expr* eq2 =  Expr::eq(lhsVar, toExprVar);
-                                REGISTER_EXPRPTR(eq2);
-                                const Expr* newPure = Expr::and_(sh->getPure(), eq2);
-                                newSpatial.push_back(spl);
-                            } else if(loadedSize < this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
-                                // Situation B.1.(2)
-                                if(pt->isByteLevel()){
-                                    std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
-                                    this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                    this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                    newPure =  newLoadedVarPurePair.second;
-                                    const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                    REGISTER_EXPRPTR(eq);
-                                    newPure = Expr::and_(newPure, eq);
-                                    REGISTER_EXPRPTR(newPure);
-                                    newSpatial.push_back(spl);  
+                        if(startCounting) {
+                            if(SpatialLiteral::Kind::PT == spl->getId()){
+                                if(countIndex == loadIndex){
+                                    // find the correct index and load the content out
+                                    const PtLit* pt = (const PtLit*) spl;
+                                    // toExpr should be a variable
+                                    const Expr* toExprOrig = pt->getTo();
+                                    const VarExpr* toExprOrigVar = (const VarExpr*) toExprOrig;
+                                    const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
+                                    CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
+                                    if(loadedSize == this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
+                                        // Situation B.1.(1)
+                                        this->updateBindingsEqualVarAndRhsVar(lhsVar, toExprVar);
+                                        this->updateVarType(lhsVar, toExprVar, toExprVar);
+                                        const Expr* eq1 = Expr::eq(lhsVar, toExprVar);
+                                        REGISTER_EXPRPTR(eq1);
+                                        newPure = Expr::and_(newPure, eq1);
+                                        REGISTER_EXPRPTR(newPure);
+                                        const Expr* eq2 =  Expr::eq(lhsVar, toExprVar);
+                                        REGISTER_EXPRPTR(eq2);
+                                        const Expr* newPure = Expr::and_(sh->getPure(), eq2);
+                                        newSpatial.push_back(spl);
+                                    } else if(loadedSize < this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
+                                        // Situation B.1.(2)
+                                        if(pt->isByteLevel()){
+                                            std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
+                                            this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                                            this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+                                            newPure =  newLoadedVarPurePair.second;
+                                            const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                                            REGISTER_EXPRPTR(eq);
+                                            newPure = Expr::and_(newPure, eq);
+                                            REGISTER_EXPRPTR(newPure);
+                                            newSpatial.push_back(spl);  
+                                        } else {
+                                            std::pair<const PtLit*, const Expr*> newPtPurePair =    this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
+                                            const PtLit* newPt = newPtPurePair.first;
+                                            newSpatial.push_back(newPt);
+                                            newPure = newPtPurePair.second;
+                                            std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(newPt, 0, loadedSize, newPure);
+                                            this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                                            newPure =  newLoadedVarPurePair.second;
+                                            this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+                                            const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                                            REGISTER_EXPRPTR(eq);
+                                            newPure = Expr::and_(newPure, eq);
+                                            REGISTER_EXPRPTR(newPure);
+                                        }
+                                    } else {
+                                        CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
+                                        newSpatial.push_back(spl);
+                                    }
                                 } else {
-                                    std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
-                                    const PtLit* newPt = newPtPurePair.first;
-                                    newSpatial.push_back(newPt);
-                                    newPure = newPtPurePair.second;
-                                    std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(newPt, 0, loadedSize, newPure);
-                                    this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                    newPure =  newLoadedVarPurePair.second;
-                                    this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                    const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                    REGISTER_EXPRPTR(eq);
-                                    newPure = Expr::and_(newPure, eq);
-                                    REGISTER_EXPRPTR(newPure);
+                                    newSpatial.push_back(spl);
                                 }
+                                countIndex += 1;
                             } else {
-                                CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
                                 newSpatial.push_back(spl);
                             }
                         } else {
                             newSpatial.push_back(spl);
                         }
-
-                        if(startCounting){
-                            countIndex ++;
-                        }
                     }
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl;);
                     return newSH;
                 } else {
-                    // Situation B.3.(2).1
+                    // Situation B.3.(2).1sh->getSpatialExpr()
                 
                     CFDEBUG(std::cout << "INFO: Situation 3.(2).1 currently not support, to be added later" << std::endl;)
                     CFDEBUG(std::cout << "INFO: Initialized length: " << this->storeSplit->getInitializedLength(mallocName, loadedOffset) << " loaded size: " << loadedSize << std::endl;);
@@ -3011,7 +3017,7 @@ namespace smack{
                     // Situation B.2.(1)
                     // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
                     int prefixLength = this->storeSplit->getInitializedPrefixLength(mallocName, loadedOffset);
-                    int loadIndex = 2*posResult.second + 1;
+                    int loadIndex = posResult.second;
                     bool startCounting = false;
                     // increase index by 1 when counting is started 
                     int countIndex = 1;
@@ -3020,53 +3026,54 @@ namespace smack{
                             const SizePtLit* sizePt = (const SizePtLit*) spl;
                             if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
                                 startCounting = true;
+                            } else {
+                                startCounting = false;
                             }
                         }
-                        if(countIndex == loadIndex){
-                            // find the correct index and load the content out
+                        if(startCounting){
                             if(SpatialLiteral::Kind::PT == spl->getId()){
-                                const PtLit* pt = (const PtLit*) spl;
-                                assert(pt->getTo()->isVar());
-                                const VarExpr* toExprOrigVar = (const VarExpr*)pt->getTo();
-                                const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
-                                CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
-                                if(pt->isByteLevel()){
-                                    std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                    this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                    this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                    newPure =  newLoadedVarPurePair.second;
-                                    const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                    REGISTER_EXPRPTR(eq);
-                                    newPure = Expr::and_(newPure, eq);
-                                    REGISTER_EXPRPTR(newPure);
-                                    newSpatial.push_back(spl);
+                                if(countIndex == loadIndex){
+                                    // find the correct index and load the content out
+                                    const PtLit* pt = (const PtLit*) spl;
+                                    assert(pt->getTo()->isVar());
+                                    const VarExpr* toExprOrigVar = (const VarExpr*)pt->getTo();
+                                    const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
+                                    CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
+                                    if(pt->isByteLevel()){
+                                        std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
+                                        this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                                        this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+                                        newPure =  newLoadedVarPurePair.second;
+                                        const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                                        REGISTER_EXPRPTR(eq);
+                                        newPure = Expr::and_(newPure, eq);
+                                        REGISTER_EXPRPTR(newPure);
+                                        newSpatial.push_back(spl);
+                                    } else {
+                                        std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
+                                        newSpatial.push_back(newPtPurePair.first);
+                                        newPure = newPtPurePair.second;
+                                        std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
+                                        this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                                        this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+                                        newPure =  newLoadedVarPurePair.second;
+                                        const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                                        REGISTER_EXPRPTR(eq);
+                                        newPure = Expr::and_(newPure, eq);
+                                        REGISTER_EXPRPTR(newPure);
+                                    }
                                 } else {
-                                    std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
-                                    newSpatial.push_back(newPtPurePair.first);
-                                    newPure = newPtPurePair.second;
-                                    std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                    this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                    this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                    newPure =  newLoadedVarPurePair.second;
-                                    const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                    REGISTER_EXPRPTR(eq);
-                                    newPure = Expr::and_(newPure, eq);
-                                    REGISTER_EXPRPTR(newPure);
+                                    newSpatial.push_back(spl);
                                 }
+                                countIndex += 1;
                             } else {
-                                CFDEBUG(std::cout << "ERROR: load error, this should be a PT predicate." <<  std::endl;);
-                                spl->print(std::cout);
-                                CFDEBUG(std::cout << std::endl;);
-                                return sh;
+                                newSpatial.push_back(spl);
                             }
                         } else {
                             newSpatial.push_back(spl);
                         }
-                        if(startCounting){
-                            countIndex ++;
-                        }
                     }
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl;);
                     return newSH;
@@ -3074,12 +3081,11 @@ namespace smack{
                     // Situation B.3.(2).2
 
                 }
-                
             } else {
                 CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);
+                assert(false);
             }
             CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
-            
         } else if(!this->storeSplit->isInitialized(mallocName, loadedOffset)) {
             //  Use fresh variable for the nondeterministic value
             //  and modify the value of the original one 

@@ -858,6 +858,8 @@ namespace smack {
 
         const Expr *getBlkSize(std::string blkName) const;
 
+        const SizePtLit* getRegionSpt(std::string mallocName) const;
+
         void print(std::ostream &os) const;
 
         void addSpatialLit(const SpatialLiteral *spatialLit);

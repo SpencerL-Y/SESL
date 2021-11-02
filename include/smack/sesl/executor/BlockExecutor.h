@@ -107,9 +107,9 @@ namespace smack{
         // ------------------ Symbolic Heap Utilities
         SHExprPtr createErrLitSH(const Expr* newPure, ErrType errType);
 
-        const SpatialLiteral* createPtAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize);
-        const SpatialLiteral* createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts);
-        const SpatialLiteral* createBlkAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int byteSize);
+        const SpatialLiteral* createPtAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::list<std::string> tempCallStack);
+        const SpatialLiteral* createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts, std::list<std::string> tempCallStack);
+        const SpatialLiteral* createBlkAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int byteSize, std::list<std::string> tempCallStack);
         std::list<const SpatialLiteral*> splitBlkByCreatingPt(std::string mallocName, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
         std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyBlkPredicate(const SpatialLiteral* oldBlk, const Expr* oldPure);
         std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyForCalloc(const SpatialLiteral* oldBlk, const Expr* oldPure);

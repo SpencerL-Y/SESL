@@ -1597,6 +1597,18 @@ namespace smack {
         return nullptr;
     }
 
+    const SizePtLit* SymbolicHeapExpr::getRegionSpt(std::string mallocName) const{
+        for(const SpatialLiteral* sp : this->spatialExpr){
+            if (SpatialLiteral::Kind::SPT == sp->getId() &&
+                !sp->getBlkName().compare(mallocName)) {
+                const SizePtLit *st = (const SizePtLit *) sp;
+                return st;
+            }
+        }
+        CFDEBUG(std::cout << "ERROR: region spt not found!! " << mallocName << std::endl;);
+        return nullptr;
+    }
+
     void SymbolicHeapExpr::print(std::ostream &os) const {
         if(FULL_DEBUG && OPEN_SH){
         os << "SymbHeap(" << pure << "|";

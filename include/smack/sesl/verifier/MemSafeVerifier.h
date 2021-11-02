@@ -1,6 +1,8 @@
 #ifndef MEMSAFEVERIFIER_H
 #define MEMSAFEVERIFIER_H
 
+#include <queue>
+
 #include "llvm/Pass.h"
 #include "smack/sesl/executor/BlockExecutor.h"
 #include "utils/CenterDebug.h"
@@ -32,7 +34,11 @@ namespace smack
             z3::context* ctx;
             StatementList stmts;
             SHExprPtr finalSH;
-            // basic check oracle
+            // check for memory tracked
+            bool isValidPtrInMain(std::string ptrName);
+            std::queue<std::string> getValidPtrInMain(ExecutionStatePtr state, CFGPtr cfg);
+            std::vector<std::string> getSuccessors(ExecutionStatePtr state, std::string u);
+            bool checkMemTrack(ExecutionStatePtr state, CFGPtr cfg);
         public:
             MemSafeChecker(std::shared_ptr<TransToZ3> trans, StatementList& stmtList, SHExprPtr fsh);
             ~MemSafeChecker();

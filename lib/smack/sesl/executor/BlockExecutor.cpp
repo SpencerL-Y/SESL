@@ -896,6 +896,7 @@ namespace smack{
     }
 
     SHExprPtr BlockExecutor::executeFuncCallStack(SHExprPtr sh, const CallStmt* callstmt){
+        return sh;
         assert(callstmt->getProc().find("boogie_si_record") != std::string::npos);
         int i = 0;
         const Attr* startEndAttr = callstmt->getAttrs().front();
@@ -1096,6 +1097,8 @@ namespace smack{
         int dstBlkSize = -1;
         int dstOffset = -1;
 
+        std::list<std::string> dstCallStack;
+
         assert(stmt->getProc().find("memcpy") != std::string::npos);
         std::list<const Expr*> params =  stmt->getParams();
         std::vector<const Expr*> paramsVec;
@@ -1186,6 +1189,7 @@ namespace smack{
             return sh;
         }
 
+
         if(stmt->getProc().find("$memcpy") == std::string::npos){
             assert(stmt->getReturns().size() == 1);
             std::string callRetOrigVarName= stmt->getReturns().front();
@@ -1257,6 +1261,12 @@ namespace smack{
             SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: invalid pointer.." << std::endl;);
             return newSH;
+        }
+
+
+        const SpatialLiteral* dstSpt = sh->getRegionSpt(dstMallocName);
+        for(std::string s : dstSpt->getStackMembers()){
+            dstCallStack.push_back(s);
         }
 
         CFDEBUG(std::cout << "INFO:--------------- BEGIN COPY --------------- " << std::endl;);
@@ -1543,12 +1553,12 @@ namespace smack{
             const VarExpr* freshFromVar = this->createAndRegisterFreshPtrVar(fromStepSize, dstMallocName, cumulatedOffset);
             
 
-            const SpatialLiteral* newSetPt = this->createPtAccordingToMallocName(dstMallocName, freshFromVar, toVar, ptStepSize);
+            const SpatialLiteral* newSetPt = this->createPtAccordingToMallocName(dstMallocName, freshFromVar, toVar, ptStepSize, dstCallStack);
             const Expr* lit = Expr::lit((long long) ptStepSize);
             REGISTER_EXPRPTR(lit);
             const Expr* empBlkExpr = Expr::add(freshFromVar, lit);
             REGISTER_EXPRPTR(empBlkExpr);
-            const SpatialLiteral* emptyBlk = this->createBlkAccordingToMallocName(dstMallocName, empBlkExpr, empBlkExpr, 0);
+            const SpatialLiteral* emptyBlk = this->createBlkAccordingToMallocName(dstMallocName, empBlkExpr, empBlkExpr, 0, dstCallStack);
             this->storeSplit->addSplit(dstMallocName, cumulatedOffset);
             this->storeSplit->addSplitLength(dstMallocName, cumulatedOffset, ptStepSize);
             newSpatial.push_back(newSetPt);
@@ -1566,6 +1576,9 @@ namespace smack{
         CFDEBUG(std::cout << std::endl;)
         return newSH;
     }
+
+
+
     SHExprPtr BlockExecutor::executeMemset(SHExprPtr sh, const CallStmt* stmt){
         const Expr* newPure = sh->getPure();
         std::list<const SpatialLiteral*> newSpatial;
@@ -1600,6 +1613,8 @@ namespace smack{
         int targetOffset = -1;
         int targetBlkSize = -1;
 
+        std::list<std::string> targetCallStack;
+
         if(arg1Target->isVar()){
             targetOrigVar = (const VarExpr*) arg1Target;
             targetOrigVarName = targetOrigVar->name();
@@ -1630,6 +1645,18 @@ namespace smack{
             CFDEBUG(std::cout << "ERROR: memset wrong target expr type, check" << std::endl;);
             assert(false);
             return sh;
+        }
+
+        if(!targetMallocName.compare("$Null")){
+            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::VALID_DEREF);
+            CFDEBUG(std::cout << "INFERROR: memset to null region" << std::endl;);
+            return newSH;
+        }
+
+
+        const SpatialLiteral* targetSpt = sh->getRegionSpt(targetMallocName);
+        for(std::string s : targetSpt->getStackMembers()){
+            targetCallStack.push_back(s);
         }
 
         if(stmt->getProc().find("$memset") == std::string::npos){
@@ -1835,13 +1862,13 @@ namespace smack{
             REGISTER_EXPRPTR(lit2);
             const Expr* empBlkExpr = Expr::add(newFromVar, lit2);
             REGISTER_EXPRPTR(empBlkExpr);
-            const SpatialLiteral* newPt = this->createPtAccordingToMallocName(targetMallocName, newFromVar, newToVar, 1);
+            const SpatialLiteral* newPt = this->createPtAccordingToMallocName(targetMallocName, newFromVar, newToVar, 1, targetCallStack);
             
             this->storeSplit->addSplit(targetMallocName, targetOffset + i);
             this->storeSplit->addSplitLength(targetMallocName, targetOffset + i, 1);
             newSpatial.push_back(newPt);
             if(i < memsetLength - 1){
-                const SpatialLiteral* newBlk = this->createBlkAccordingToMallocName(targetMallocName, empBlkExpr, empBlkExpr, 0);
+                const SpatialLiteral* newBlk = this->createBlkAccordingToMallocName(targetMallocName, empBlkExpr, empBlkExpr, 0, targetCallStack);
                 newSpatial.push_back(newBlk);
             }
         }
@@ -2107,6 +2134,8 @@ namespace smack{
         std::string varArg1Name;
         bool useStoreFuncSize = false;
         int storeFuncSize = -1;
+
+        std::list<std::string> storeDstCallStack;
         // following code will give initialization of varArg1 accodring to the information of arg1
         if(arg1->isVar()){
             CFDEBUG(std::cout << "INFO: arg1 is variable" << std::endl;);
@@ -2158,6 +2187,7 @@ namespace smack{
             return sh;
         }
 
+
         // compute the storedSize of the target pt predicate
         int storedSize = -1;
         // the lhs variable must be pointer variable representing the location
@@ -2196,6 +2226,11 @@ namespace smack{
             SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: out of range" << std::endl;);
             return newSH;
+        }
+
+        const SpatialLiteral* storeDstSpt = sh->getRegionSpt(mallocName);
+        for(std::string s : storeDstSpt->getStackMembers()){
+            storeDstCallStack.push_back(s);
         }
         // A. the position is initialized before: three situations 
         // 1. the store position is exactly some allocated offset:
@@ -2294,7 +2329,7 @@ namespace smack{
 
                             if(!ptLiteral->isByteLevel()){
                                 // Situation A.1.(1).a
-                                const SpatialLiteral* newPt = this->createPtAccordingToMallocName(mallocName, ptLiteral->getFrom(), freshVar, ptLiteral->getStepSize());
+                                const SpatialLiteral* newPt = this->createPtAccordingToMallocName(mallocName, ptLiteral->getFrom(), freshVar, ptLiteral->getStepSize(), storeDstCallStack);
                                 newSpatial.push_back(newPt);
                                 
                             } else {
@@ -2516,7 +2551,7 @@ namespace smack{
                             for(const SpatialLiteral* slsl : specialLeftSpatial){
                                 specialNewSpatial.push_back(slsl);
                             }
-                            const SpatialLiteral* newStoredPt = this->createPtAccordingToMallocName(mallocName, varArg1, freshStoredVar, storedSize);
+                            const SpatialLiteral* newStoredPt = this->createPtAccordingToMallocName(mallocName, varArg1, freshStoredVar, storedSize, storeDstCallStack);
                             this->storeSplit->addSplit(mallocName, offset);
                             this->storeSplit->addSplitLength(mallocName, offset, storedSize);
                             specialNewSpatial.push_back(newStoredPt);
@@ -2755,10 +2790,10 @@ namespace smack{
                         varArg1,
                         breakBlk->getBlkName(),
                         leftBlkSize,
-                        this->callStack
+                        storeDstCallStack
                     );
                     REGISTER_EXPRPTR(leftBlk);
-                    const SpatialLiteral* storedPt = this->createPtAccordingToMallocName(mallocName, varArg1, freshVar, storedSize);
+                    const SpatialLiteral* storedPt = this->createPtAccordingToMallocName(mallocName, varArg1, freshVar, storedSize, storeDstCallStack);
 
                     CFDEBUG(std::cout << "Store type: " << arg2TypeStr << " Store stepsize: " << storedSize << std::endl;);
                     long long size = storedSize;
@@ -2784,7 +2819,7 @@ namespace smack{
                         breakBlk->getTo(),
                         breakBlk->getBlkName(),
                         rightBlkSize,
-                        this->callStack
+                        storeDstCallStack
                     );
                     REGISTER_EXPRPTR(rightBlk);
                     newSpatial.push_back(leftBlk);
@@ -2825,6 +2860,8 @@ namespace smack{
         int blkSize = -1;
         int loadedOffset = -1;
         int loadedSize = -1;
+
+        std::list<std::string> loadSrcCallStack;
 
         if(loadedPosition->isVar()){
             // if the loaded position is a variable
@@ -2899,6 +2936,13 @@ namespace smack{
             CFDEBUG(std::cout << "INFO: loadedOffset out of range" << std::endl;);
             return newSH;
         }
+
+
+        const SpatialLiteral* loadSrcSpt = sh->getRegionSpt(mallocName);
+        for(std::string s : loadSrcSpt->getStackMembers()){
+            loadSrcCallStack.push_back(s);
+        }
+
         CFDEBUG(std::cout << "INFO: loadedOffset: " << loadedOffset << " blkSize " << blkSize << " loadedSize " << loadedSize << std::endl;);
         // B.1.(1): the loaded is an exact load
         // B.1.(2): the loaded position has an offset, but the loadedSize  <  the stepSize of pt predicate
@@ -3004,7 +3048,7 @@ namespace smack{
                     CFDEBUG(std::cout << std::endl;);
                     return newSH;
                 } else {
-                    // Situation B.3.(2).1sh->getSpatialExpr()
+                    // Situation B.3.(2).1
                 
                     CFDEBUG(std::cout << "INFO: Situation 3.(2).1 currently not support, to be added later" << std::endl;)
                     CFDEBUG(std::cout << "INFO: Initialized length: " << this->storeSplit->getInitializedLength(mallocName, loadedOffset) << " loaded size: " << loadedSize << std::endl;);
@@ -3126,7 +3170,7 @@ namespace smack{
                         //     return newSH;
                         // }
 
-                        std::list<const SpatialLiteral*> splittedResult = this->splitBlkByCreatingPt    (mallocName, ldPtr, freshPtVar, loadedSize, breakBlk);
+                        std::list<const SpatialLiteral*> splittedResult = this->splitBlkByCreatingPt(mallocName, ldPtr, freshPtVar, loadedSize, breakBlk);
                         for(const SpatialLiteral* splsp : splittedResult){
                             newSpatial.push_back(splsp);
                         }
@@ -3845,10 +3889,14 @@ namespace smack{
             equalConstraint
         );
         REGISTER_EXPRPTR(resultPure);
+        std::list<std::string> tempCallStack;
+        for(std::string s : oldPt->getStackMembers()){
+            tempCallStack.push_back(s);
+        }
         std::string mallocName = oldPt->getBlkName();
         
         const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName
-                                         (mallocName, oldPt->getFrom(), oldPt->getTo(), oldPt->getStepSize(), bytifiedPts));
+                                         (mallocName, oldPt->getFrom(), oldPt->getTo(), oldPt->getStepSize(), bytifiedPts, tempCallStack));
         return {resultPt, resultPure};
     }
 
@@ -3874,7 +3922,11 @@ namespace smack{
             equalConstraint
         );
         REGISTER_EXPRPTR(resultPure);
-        const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts));
+        std::list<std::string> tempCallStack;
+        for(std::string s : oldPt->getStackMembers()){
+            tempCallStack.push_back(s);
+        }
+        const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts, tempCallStack));
         return {resultPt, resultPure};
     }
 
@@ -3915,7 +3967,12 @@ namespace smack{
             equalConstraint
         );
         REGISTER_EXPRPTR(resultPure);
-        const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts));
+
+        std::list<std::string> tempCallStack;
+        for(std::string s : oldPt->getStackMembers()){
+            tempCallStack.push_back(s);
+        }
+        const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts, tempCallStack));
         return {resultPt, resultPure};
     }
 
@@ -3940,7 +3997,11 @@ namespace smack{
             equalConstraint
         );
         REGISTER_EXPRPTR(resultPure);
-        const PtLit* resultPt = (const PtLit*)(this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts));
+        std::list<std::string> tempCallStack;
+        for(std::string s : oldPt->getStackMembers()){
+            tempCallStack.push_back(s);
+        }
+        const PtLit* resultPt = (const PtLit*)(this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts, tempCallStack));
         return {resultPt, resultPure};
     }
 
@@ -3981,7 +4042,11 @@ namespace smack{
             modifyEqualConstraint
         );
         REGISTER_EXPRPTR(resultPure);
-        const PtLit* resultPt = (const PtLit* ) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts));
+        std::list<std::string> tempCallStack;
+        for(std::string s : oldPt->getStackMembers()){
+            tempCallStack.push_back(s);
+        }
+        const PtLit* resultPt = (const PtLit* ) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts, tempCallStack));
         return {resultPt, resultPure};
     }
 
@@ -4150,21 +4215,21 @@ namespace smack{
 
     const SpatialLiteral* 
     BlockExecutor::createPtAccordingToMallocName
-    (std::string mallocName, const Expr* from, const Expr* to, int stepSize){
+    (std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::list<std::string> tempStack){
         if(this->varEquiv->isStructArrayPtr(mallocName)){
-            return SpatialLiteral::gcPt(from, to, mallocName, stepSize, this->callStack);
+            return SpatialLiteral::gcPt(from, to, mallocName, stepSize, tempStack);
         } else {
-            return SpatialLiteral::pt(from, to, mallocName, stepSize, this->callStack);
+            return SpatialLiteral::pt(from, to, mallocName, stepSize, tempStack);
         }
     }
 
     const SpatialLiteral* 
-    BlockExecutor::createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize,std::vector<const BytePt*> bytifiedPts){
+    BlockExecutor::createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize,std::vector<const BytePt*> bytifiedPts, std::list<std::string> tempStack){
         const SpatialLiteral* sp = nullptr;
         if(this->varEquiv->isStructArrayPtr(mallocName)){
-            sp = SpatialLiteral::gcPt(from, to, mallocName, stepSize, bytifiedPts, this->callStack);
+            sp = SpatialLiteral::gcPt(from, to, mallocName, stepSize, bytifiedPts, tempStack);
         } else {
-            sp = SpatialLiteral::pt(from, to, mallocName, stepSize, bytifiedPts, this->callStack);
+            sp = SpatialLiteral::pt(from, to, mallocName, stepSize, bytifiedPts, tempStack);
         }
         REGISTER_EXPRPTR(sp);
         return sp;
@@ -4172,12 +4237,12 @@ namespace smack{
 
     const SpatialLiteral* 
     BlockExecutor::createBlkAccordingToMallocName
-    (std::string mallocName, const Expr* from, const Expr* to, int byteSize){
+    (std::string mallocName, const Expr* from, const Expr* to, int byteSize, std::list<std::string> tempStack){
         const SpatialLiteral* sp = nullptr;
         if(this->varEquiv->isStructArrayPtr(mallocName)){
-            sp = SpatialLiteral::gcBlk(from, to, mallocName, byteSize, this->callStack);
+            sp = SpatialLiteral::gcBlk(from, to, mallocName, byteSize, tempStack);
         } else {
-            sp = SpatialLiteral::blk(from, to, mallocName, byteSize, this->callStack);
+            sp = SpatialLiteral::blk(from, to, mallocName, byteSize, tempStack);
         }
         REGISTER_EXPRPTR(sp);
         return sp;
@@ -4200,15 +4265,18 @@ namespace smack{
         assert(ptFromOffset >= oldBlkFromOffset && ptFromOffset < oldBlkToOffset);
         this->storeSplit->addSplit(mallocName, ptFromOffset);
         this->storeSplit->addSplitLength(mallocName, ptFromOffset, stepSize);
-
+        std::list<std::string> splitCallStack;
+        for(std::string s : oldBlk->getStackMembers()){
+            splitCallStack.push_back(s);
+        }
         std::list<const SpatialLiteral*> resultList;
-        const SpatialLiteral* leftBlk = this->createBlkAccordingToMallocName(mallocName, oldBlkFrom, from, ptFromOffset - oldBlkFromOffset);
-        const SpatialLiteral* createdPt = this->createPtAccordingToMallocName(mallocName, from, to, stepSize);
+        const SpatialLiteral* leftBlk = this->createBlkAccordingToMallocName(mallocName, oldBlkFrom, from, ptFromOffset - oldBlkFromOffset, splitCallStack);
+        const SpatialLiteral* createdPt = this->createPtAccordingToMallocName(mallocName, from, to, stepSize, splitCallStack);
         const Expr* lit = Expr::lit((long long) stepSize);
         REGISTER_EXPRPTR(lit);
         const Expr* add = Expr::add(from, lit);
         REGISTER_EXPRPTR(add);
-        const SpatialLiteral* rightBlk = this->createBlkAccordingToMallocName(mallocName, add, oldBlkTo, oldBlkToOffset - ptFromOffset - stepSize);
+        const SpatialLiteral* rightBlk = this->createBlkAccordingToMallocName(mallocName, add, oldBlkTo, oldBlkToOffset - ptFromOffset - stepSize, splitCallStack);
         resultList.push_back(leftBlk);
         resultList.push_back(createdPt);
         resultList.push_back(rightBlk);

@@ -88,8 +88,10 @@ namespace smack {
             VarFactoryPtr varFac = std::make_shared<VarFactory>();
             // Initialize store splitter
             StoreSplitterPtr storeSplit = std::make_shared<StoreSplitter>();
+            // Initialize call Stack
+            std::list<std::string> callStack;
 
-            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, storeSplit);
+            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, storeSplit, callStack);
             // initialization of the execution initial state over
             // Initialize a CFGExecutor
             SHExprPtr currSH = initSH;
@@ -273,7 +275,9 @@ namespace smack {
             }
             if(current->getKind() == Stmt::Kind::CALL){
                 const CallStmt* callStmt = (const CallStmt*) current;
-                if(!callStmt->getProc().compare("free_") || callStmt->getProc().find("free") != std::string::npos){
+                if(!callStmt->getProc().compare("free_") || 
+                    callStmt->getProc().find("free") != std::string::npos || 
+                    callStmt->getProc().find("boogie_si_record") != std::string::npos && callStmt->getAttrs().size() > 0 && !callStmt->getAttrs().front()->getName().compare("call_end")){
                     this->trans->setSymbolicHeapHExpr(previousSH->getSymbHeap());
                     //std::cout << previousSH->getSymbHeap() << std::endl;
                     this->trans->translate();

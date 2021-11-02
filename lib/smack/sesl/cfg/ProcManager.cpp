@@ -221,7 +221,7 @@ namespace smack {
 
                     StatementList retProcessBlockStmt;
                     retProcessBlockStmt.push_back(Stmt::call("boogie_si_record_ref", {}, {},
-                                                     {Attr::attr("call end"),
+                                                     {Attr::attr("call_end"),
                                                       Attr::attr(targetProcManagerPtr->getRenamedProcedureName())}));
                     for (auto &[name, type]: returns) {
                         auto stmt = Stmt::assign(Expr::id(*index++), Expr::id(name));
@@ -257,7 +257,7 @@ namespace smack {
             StatementList passBlockStmts;
             {
                 passBlockStmts.push_back(Stmt::call("boogie_si_record_ref", {}, {},
-                                                    {Attr::attr("call start"),
+                                                    {Attr::attr("call_start"),
                                                      Attr::attr(targetProcManagerPtr->getRenamedProcedureName())}));
                 auto it = augmentList.begin();
                 for (auto&[name, type]: parameterList) {

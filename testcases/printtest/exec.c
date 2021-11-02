@@ -1,29 +1,43 @@
 #include <stdlib.h>
 
-typedef struct {
-    void *lo;
-    void *hi;
-} TData;
-static void main0_bb(TData *pdata)
-{
-    int *i = malloc(4);
-}
-static void free_data(TData *data)
-{
-    void *lo = data->lo;
-    void *hi = data->hi;
-    if (lo == hi) {
-        free(lo);
-        free(hi);
-    }
-    data->lo = (void *) 0;
-    data->hi = (void *) 0;
-}
-int main() {
-    TData data;
-    int j = 4;
-    for(int i = 0; i < j; i++){
-        main0_bb(&data);
-    }
+typedef struct node {
+    int a;
+    int b;
+} node_t;
+
+int main(){
+    foo();
     return 0;
 }
+void none(int a){
+
+}
+
+int foo(){
+    int* j = malloc(sizeof(int));
+    j = NULL;
+    node_t node;
+    node.a = 10;
+    none(node.a);
+    return 0;
+}
+// typedef struct node {
+//     int a;
+//     int b;
+// } node_t;
+
+// int main(){
+//     // static int* j;
+//     // char* test = &j;
+//     // int a = &j;
+//     // assert(a);
+//     // j = malloc(4);
+//     // *j = 10;
+//     // *test = 'a';
+//     // assert(j);
+
+//     node_t tt;
+//     tt.a = 100;
+//     assert(tt.a);
+
+// }

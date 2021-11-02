@@ -6,6 +6,7 @@
 
 #include <utility>
 #include <regex>
+#include <stack>
 #include <string>
 #include "smack/BoogieAst.h"
 #include "llvm/IR/DebugInfo.h"
@@ -47,6 +48,7 @@ namespace smack{
         VarEquivPtr varEquiv;
         VarFactoryPtr varFactory;
         StoreSplitterPtr storeSplit;
+        std::list<std::string> callStack;
         CFGPtr cfg;
 
         // ------------------ Variable Utilities
@@ -157,6 +159,8 @@ namespace smack{
 
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
 
+        SHExprPtr executeFuncCallStack(SHExprPtr sh, const CallStmt* callstmt);
+
         SHExprPtr executeMalloc(SHExprPtr sh, const CallStmt* stmt);
 
         SHExprPtr executeAlloc(SHExprPtr sh, const CallStmt* stmt);
@@ -206,8 +210,15 @@ namespace smack{
         VarEquivPtr getVarEquiv() { return varEquiv;}
         VarFactoryPtr getVarFactory() { return varFactory;}
         StoreSplitterPtr getStoreSplit() { return storeSplit;}
+        std::list<std::string> getCallStack() { return callStack;}
 
-
+        void printCallStack(){ 
+            CFDEBUG(std::cout << "INFO: callstack: ");
+            for(std::string i : this->callStack){
+                CFDEBUG(std::cout << i << " | ");
+            }
+            CFDEBUG(std::cout << std::endl;);
+        }
     };
     typedef std::shared_ptr<BlockExecutor> BlockExecutorPtr;
 

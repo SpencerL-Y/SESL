@@ -16,15 +16,17 @@ namespace smack
         VarEquivPtr varEquiv;
         VarFactoryPtr varFactory;
         StoreSplitterPtr storeSplit;
+        std::list<std::string> callStack;
 
 
     public:
-        ExecutionState(SHExprPtr sh, VarEquivPtr veq, VarFactoryPtr varFac, StoreSplitterPtr stsplit) : sh(sh), varEquiv(veq), varFactory(varFac), storeSplit(stsplit){};
+        ExecutionState(SHExprPtr sh, VarEquivPtr veq, VarFactoryPtr varFac, StoreSplitterPtr stsplit, std::list<std::string> stack) : sh(sh), varEquiv(veq), varFactory(varFac), storeSplit(stsplit), callStack(stack){};
         
         SHExprPtr getSH(){return this->sh;}
         VarEquivPtr getVarEquiv(){return this->varEquiv;}
         VarFactoryPtr getVarFactory(){return this->varFactory;}
         StoreSplitterPtr getStoreSplit(){return this->storeSplit;}
+        std::list<std::string> getCallStack(){return this->callStack;}
 
         ~ExecutionState(){};
     };

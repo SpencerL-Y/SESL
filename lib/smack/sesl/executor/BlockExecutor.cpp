@@ -1,4 +1,4 @@
-// Author: Xie Li
+// Author: Xie Li, Yutian Zhu
 // Institute: ISCAS
 // 2021/8/18
 #include "smack/sesl/executor/BlockExecutor.h"
@@ -71,7 +71,8 @@ namespace smack{
                 const SpatialLiteral* sSizePt = SpatialLiteral::spt(
                     staticVar,
                     blkSize,
-                    staticVarName
+                    staticVarName,
+                    this->callStack
                 );
                 REGISTER_EXPRPTR(sSizePt);
 
@@ -81,7 +82,8 @@ namespace smack{
                     staticVar,
                     add,
                     staticVarName,
-                    allocSize
+                    allocSize, 
+                    this->callStack
                 );
                 REGISTER_EXPRPTR(sAllocBlk);
 
@@ -789,8 +791,7 @@ namespace smack{
     }
 
     bool BlockExecutor::isNoSideEffectFuncName(std::string name){
-        if (name.find("boogie_si_record") != std::string::npos ||
-            name.find("abort") != std::string::npos ||
+        if (name.find("abort") != std::string::npos ||
             name.find("srand") != std::string::npos ||
             name.find("print") != std::string::npos){
             return true;
@@ -857,6 +858,8 @@ namespace smack{
 
 
     // ---------------------- Execution for Call stmts -----------------
+    
+
     SHExprPtr BlockExecutor::executeCall(SHExprPtr sh, const Stmt* callstmt){
         if(Stmt::CALL == callstmt->getKind()){
             const CallStmt* call = (const CallStmt*) callstmt;
@@ -876,14 +879,73 @@ namespace smack{
                 return this->executeMemset(sh, call);
             } else if(call->getProc().find("time") != std::string::npos) {
                 return this->executeTime(sh, call);
-            } else if(this->isNoSideEffectFuncName(call->getProc())) {
+            } else if(call->getProc().find("boogie_si_record") != std::string::npos){
+                return this->executeFuncCallStack(sh, call);
+            } 
+            else if(this->isNoSideEffectFuncName(call->getProc())) {
                 return sh;
-            } else {
+            } 
+            else {
                 return this->executeUnintepreted(sh, call);
                 CFDEBUG(std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl);
             }
         } else {
             CFDEBUG(std::cout << "ERROR: execute call stmt kind error" << std::endl);
+        }
+        return sh;
+    }
+
+    SHExprPtr BlockExecutor::executeFuncCallStack(SHExprPtr sh, const CallStmt* callstmt){
+        assert(callstmt->getProc().find("boogie_si_record") != std::string::npos);
+        int i = 0;
+        const Attr* startEndAttr = callstmt->getAttrs().front();
+        const Attr* funcNameAttr = nullptr;
+        if(callstmt->getAttrs().size() == 0){
+            return sh;
+        }
+        if(startEndAttr->getName().compare("call_start") && startEndAttr->getName().compare("call_end")){
+            return sh;
+        }
+        for(const Attr* attr : callstmt->getAttrs()){
+            if(i == 1){
+                funcNameAttr = attr;
+                break;
+            }
+            i += 1;
+        }
+        if(!startEndAttr->getName().compare("call_start")){
+            std::string funcName = funcNameAttr->getName();
+            CFDEBUG(std::cout << "INFO: enterFunc " << funcName << std::endl;);
+            this->callStack.push_back(funcName);
+            return sh;
+        } else if(!startEndAttr->getName().compare("call_end")){
+            // TODOSTACK: add path feasibility check
+            std::string funcName = funcNameAttr->getName();
+            std::string topFuncName = this->callStack.back();
+            CFDEBUG(std::cout << "INFO: exitFunc " << funcName << " " << topFuncName << std::endl;);
+            assert(!topFuncName.compare(funcName));
+            if(this->callStack.empty()){
+                // should not be empty when encounter this statement
+                assert(false);
+            }
+            this->callStack.pop_back();
+            const Expr* newPure = sh->getPure();
+            std::list<const SpatialLiteral*> newSpatial;
+            for(const SpatialLiteral* spl : sh->getSpatialExpr()){
+                if(!spl->isStackEliminated(funcName)){
+                    newSpatial.push_back(spl);
+                    std::cout << spl << std::endl;
+                    for(std::string mem : spl->getStackMembers()){
+                        std::cout << mem << std::endl;
+                    }
+                }
+            }
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+            newSH->print(std::cout);
+            CFDEBUG(std::cout << std::endl;);
+            return newSH;
+        } else {
+            assert(false);
         }
         return sh;
     }
@@ -1868,7 +1930,8 @@ namespace smack{
                 const SpatialLiteral* sizePt = SpatialLiteral::spt(
                     retVar,
                     paramVar,
-                    retVarName
+                    retVarName,
+                    this->callStack
                 );
                 REGISTER_EXPRPTR(sizePt);
                 int blkSize = paramVar->translateToInt(this->varEquiv).second;
@@ -1885,7 +1948,8 @@ namespace smack{
                     retVar,
                     add,
                     retVarName,
-                    blkSize
+                    blkSize,
+                    this->callStack
                 );
                 REGISTER_EXPRPTR(allocBlk);
                 newSpatialExpr.push_back(sizePt);
@@ -1912,7 +1976,8 @@ namespace smack{
                 const SpatialLiteral* sizePt = SpatialLiteral::spt(
                     this->varFactory->getVar(retOrigVarName),
                     sizeExpr,
-                    retVarName
+                    retVarName,
+                    this->callStack
                 );
                 REGISTER_EXPRPTR(sizePt);
 
@@ -1928,7 +1993,8 @@ namespace smack{
                     this->varFactory->getVar(retOrigVarName),
                     add,
                     retVarName,
-                    blkSize
+                    blkSize,
+                    this->callStack
                 );
                 REGISTER_EXPRPTR(allocBlk);
                 newSpatialExpr.push_back(sizePt);
@@ -2688,7 +2754,8 @@ namespace smack{
                         breakBlk->getFrom(),
                         varArg1,
                         breakBlk->getBlkName(),
-                        leftBlkSize
+                        leftBlkSize,
+                        this->callStack
                     );
                     REGISTER_EXPRPTR(leftBlk);
                     const SpatialLiteral* storedPt = this->createPtAccordingToMallocName(mallocName, varArg1, freshVar, storedSize);
@@ -2716,7 +2783,8 @@ namespace smack{
                         add2,
                         breakBlk->getTo(),
                         breakBlk->getBlkName(),
-                        rightBlkSize
+                        rightBlkSize,
+                        this->callStack
                     );
                     REGISTER_EXPRPTR(rightBlk);
                     newSpatial.push_back(leftBlk);
@@ -3186,10 +3254,11 @@ namespace smack{
                     for(const SpatialLiteral* sp : sh->getSpatialExpr()){
                         newSpatialExpr.push_back(sp);
                     }
-                    const SpatialLiteral* sizePt = SpatialLiteral::spt(
+                    const SpatialLiteral* sizePt = SpatialLiteral::gcSpt(
                         retVar,
                         lengthExpr,
-                        retVarName
+                        retVarName,
+                        this->callStack
                     );
                     REGISTER_EXPRPTR(sizePt);
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
@@ -3205,7 +3274,8 @@ namespace smack{
                         retVar,
                         add,
                         retVarName,
-                        allocSize
+                        allocSize,
+                        this->callStack
                     );
                     REGISTER_EXPRPTR(allocBlk);
 
@@ -3234,10 +3304,11 @@ namespace smack{
                     for(const SpatialLiteral* sp : sh->getSpatialExpr()){
                         newSpatialExpr.push_back(sp);
                     }
-                    const SpatialLiteral* sizePt = SpatialLiteral::spt(
+                    const SpatialLiteral* sizePt = SpatialLiteral::gcSpt(
                         retVar,
                         lengthExpr,
-                        retVarName
+                        retVarName,
+                        this->callStack
                     ); 
                     REGISTER_EXPRPTR(sizePt);
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
@@ -3252,7 +3323,8 @@ namespace smack{
                         retVar,
                         add,
                         retVarName,
-                        allocSize
+                        allocSize,
+                        this->callStack
                     );
                     REGISTER_EXPRPTR(allocBlk);
 
@@ -3278,10 +3350,11 @@ namespace smack{
                     for(const SpatialLiteral* sp : sh->getSpatialExpr()){
                         newSpatialExpr.push_back(sp);
                     }
-                    const SpatialLiteral* sizePt = SpatialLiteral::spt(
+                    const SpatialLiteral* sizePt = SpatialLiteral::gcSpt(
                         retVar,
                         lengthExpr,
-                        retVarName
+                        retVarName,
+                        this->callStack
                     ); 
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
                     if(!lengthExpr->translateToInt(this->varEquiv).first){
@@ -3291,11 +3364,12 @@ namespace smack{
                     }
                     const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
-                    const SpatialLiteral* allocBlk = SpatialLiteral::blk(
+                    const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
                         retVar,
                         add,
                         retVarName,
-                        allocSize
+                        allocSize,
+                        this->callStack
                     );
                     REGISTER_EXPRPTR(allocBlk);
 
@@ -3362,7 +3436,8 @@ namespace smack{
         const SpatialLiteral* sizePt = SpatialLiteral::spt(
             retVar,
             lengthExpr,
-            retVarName
+            retVarName,
+            this->callStack
         );
         REGISTER_EXPRPTR(sizePt);
         const Expr* add = Expr::add(retVar, lengthExpr);
@@ -3372,7 +3447,8 @@ namespace smack{
             retVar,
             add,
             retVarName,
-            allocSize
+            allocSize,
+            this->callStack
         );
         REGISTER_EXPRPTR(blk);
         std::pair<std::list<const SpatialLiteral*>, const Expr*>
@@ -3415,6 +3491,7 @@ namespace smack{
         if(FULL_DEBUG && OPEN_STORE_SPLIT){
             this->storeSplit->print();
         }
+        this->printCallStack();
 
         if(currSH->isError()){
             const SpatialLiteral* sp = currSH->getSpatialExpr().front();
@@ -3463,6 +3540,8 @@ namespace smack{
         this->varFactory = previousExecState->getVarFactory();
         // Initialize store splitter
         this->storeSplit = previousExecState->getStoreSplit();
+        // Initialize callStack
+        this->callStack = previousExecState->getCallStack();
         
         StatementList newStmts;
         newStmts.push_back(Stmt::symbheap(previousSH));
@@ -3476,7 +3555,7 @@ namespace smack{
             currSH = newSH;
         }
 
-        ExecutionStatePtr resultExecState = std::make_shared<ExecutionState>(currSH, this->varEquiv, this->varFactory, this->storeSplit);
+        ExecutionStatePtr resultExecState = std::make_shared<ExecutionState>(currSH, this->varEquiv, this->varFactory, this->storeSplit, this->callStack);
         return std::pair<ExecutionStatePtr, StatementList>(resultExecState, newStmts);
     }
 
@@ -3489,10 +3568,12 @@ namespace smack{
         this->varFactory = initialExecState->getVarFactory();
         // Initialize store splitter
         this->storeSplit = initialExecState->getStoreSplit();
+        // Initialize stack
+        this->callStack = initialExecState->getCallStack();
 
         SHExprPtr newSH = this->executeGlobal(previousSH);
 
-        ExecutionStatePtr resultExecState =  std::make_shared<ExecutionState>(newSH, this->varEquiv, this->varFactory, this->storeSplit);
+        ExecutionStatePtr resultExecState =  std::make_shared<ExecutionState>(newSH, this->varEquiv, this->varFactory, this->storeSplit, this->callStack);
         return  resultExecState;
     }
 
@@ -4065,9 +4146,9 @@ namespace smack{
     BlockExecutor::createPtAccordingToMallocName
     (std::string mallocName, const Expr* from, const Expr* to, int stepSize){
         if(this->varEquiv->isStructArrayPtr(mallocName)){
-            return SpatialLiteral::gcPt(from, to, mallocName, stepSize);
+            return SpatialLiteral::gcPt(from, to, mallocName, stepSize, this->callStack);
         } else {
-            return SpatialLiteral::pt(from, to, mallocName, stepSize);
+            return SpatialLiteral::pt(from, to, mallocName, stepSize, this->callStack);
         }
     }
 
@@ -4075,9 +4156,9 @@ namespace smack{
     BlockExecutor::createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize,std::vector<const BytePt*> bytifiedPts){
         const SpatialLiteral* sp = nullptr;
         if(this->varEquiv->isStructArrayPtr(mallocName)){
-            sp = SpatialLiteral::gcPt(from, to, mallocName, stepSize, bytifiedPts);
+            sp = SpatialLiteral::gcPt(from, to, mallocName, stepSize, bytifiedPts, this->callStack);
         } else {
-            sp = SpatialLiteral::pt(from, to, mallocName, stepSize, bytifiedPts);
+            sp = SpatialLiteral::pt(from, to, mallocName, stepSize, bytifiedPts, this->callStack);
         }
         REGISTER_EXPRPTR(sp);
         return sp;
@@ -4088,9 +4169,9 @@ namespace smack{
     (std::string mallocName, const Expr* from, const Expr* to, int byteSize){
         const SpatialLiteral* sp = nullptr;
         if(this->varEquiv->isStructArrayPtr(mallocName)){
-            sp = SpatialLiteral::gcBlk(from, to, mallocName, byteSize);
+            sp = SpatialLiteral::gcBlk(from, to, mallocName, byteSize, this->callStack);
         } else {
-            sp = SpatialLiteral::blk(from, to, mallocName, byteSize);
+            sp = SpatialLiteral::blk(from, to, mallocName, byteSize, this->callStack);
         }
         REGISTER_EXPRPTR(sp);
         return sp;

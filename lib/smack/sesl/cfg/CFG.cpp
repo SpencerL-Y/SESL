@@ -1,3 +1,7 @@
+// Author: Zongxin Liu
+// Institute: ISCAS
+// 2021/8/18
+
 #include "smack/sesl/cfg/CFG.h"
 #include <iostream>
 #include <unordered_set>

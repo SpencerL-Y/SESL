@@ -6,86 +6,80 @@ axiom (main == $sub.ref(0, 1032));
 procedure {:entrypoint} main()
   returns ($r: i32)
 {
-  var $p0: ref8;
-  var $p1: ref32;
-  var $p2: ref8;
+  var $i0: i32;
+$bb0:
+  assume {:sourceloc "../testcases/printtest/exec.c", 9, 5} true;
+  call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
+  assume {:sourceloc "../testcases/printtest/exec.c", 9, 5} true;
+  call $i0 := foo();
+  assume {:sourceloc "../testcases/printtest/exec.c", 10, 5} true;
+  $r := 0;
+  return;
+}
+const foo: ref;
+axiom (foo == $sub.ref(0, 2064));
+procedure  foo()
+  returns ($r: i32)
+{
+  var $p0: ref;
+  var $p1: ref8;
+  var $p2: ref32;
   var $p3: ref32;
   var $p4: ref32;
   var $i5: i32;
-  var $i6: i32;
-  var $i7: i32;
-  var $i8: i32;
 $bb0:
-  assume {:sourceloc "../testcases/printtest/exec.c", 4, 14} true;
-  call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
-  assume {:sourceloc "../testcases/printtest/exec.c", 4, 14} true;
-  call $p0 := malloc(4);
-  assume {:sourceloc "../testcases/printtest/exec.c", 4, 14} true;
-  $p1 := $bitcast.ref.ref($p0);
-  assume {:sourceloc "../testcases/printtest/exec.c", 5, 8} true;
-  $M.0 := $store.i32($M.0, $p1, 0);
-  assume {:sourceloc "../testcases/printtest/exec.c", 6, 9} true;
-  call $p2 := malloc(8);
-  assume {:sourceloc "../testcases/printtest/exec.c", 6, 9} true;
-  $p3 := $bitcast.ref.ref($p2);
-  assume {:sourceloc "../testcases/printtest/exec.c", 7, 9} true;
-  $p4 := $add.ref($p3, $mul.ref(1, 4));
-  assume {:sourceloc "../testcases/printtest/exec.c", 7, 14} true;
-  $M.1 := $store.i32($M.1, $p4, 0);
-  assume {:sourceloc "../testcases/printtest/exec.c", 9, 5} true;
-  call $i5 := foo();
-  assume {:sourceloc "../testcases/printtest/exec.c", 10, 5} true;
-  call $i6 := foo();
-  assume {:sourceloc "../testcases/printtest/exec.c", 11, 5} true;
-  call $i7 := foo();
-  assume {:sourceloc "../testcases/printtest/exec.c", 12, 5} true;
-  call $i8 := foo();
-  assume {:sourceloc "../testcases/printtest/exec.c", 13, 5} true;
+  assume {:sourceloc "../testcases/printtest/exec.c", 17, 14} true;
+  call $p0 := $alloc($mul.ref(8, $zext.i32.i64(1)));
+  assume {:sourceloc "../testcases/printtest/exec.c", 17, 14} true;
+  call $p1 := malloc(4);
+  assume {:sourceloc "../testcases/printtest/exec.c", 17, 14} true;
+  $p2 := $bitcast.ref.ref($p1);
+  assume true;
+  assume {:sourceloc "../testcases/printtest/exec.c", 20, 10} true;
+  $p3 := $add.ref($add.ref($p0, $mul.ref(0, 8)), $mul.ref(0, 1));
+  assume {:sourceloc "../testcases/printtest/exec.c", 20, 12} true;
+  $M.0 := $store.i32($M.0, $p3, 10);
+  assume {:sourceloc "../testcases/printtest/exec.c", 21, 15} true;
+  $p4 := $add.ref($add.ref($p0, $mul.ref(0, 8)), $mul.ref(0, 1));
+  assume {:sourceloc "../testcases/printtest/exec.c", 21, 15} true;
+  $i5 := $load.i32($M.0, $p4);
+  assume {:sourceloc "../testcases/printtest/exec.c", 21, 5} true;
+  call none($i5);
+  assume {:sourceloc "../testcases/printtest/exec.c", 22, 5} true;
   $r := 0;
   return;
 }
 const llvm.dbg.declare: ref;
-axiom (llvm.dbg.declare == $sub.ref(0, 2064));
+axiom (llvm.dbg.declare == $sub.ref(0, 3096));
 procedure  llvm.dbg.declare($p0: ref, $p1: ref, $p2: ref);
 const malloc: ref;
-axiom (malloc == $sub.ref(0, 3096));
+axiom (malloc == $sub.ref(0, 4128));
 procedure  malloc($i0: i64)
   returns ($r: ref)
 {
   call $r := $malloc($i0);
 }
-const foo: ref;
-axiom (foo == $sub.ref(0, 4128));
-procedure  foo()
-  returns ($r: i32)
+const none: ref;
+axiom (none == $sub.ref(0, 5160));
+procedure  none($i0: i32)
 {
-  var $p0: ref8;
-  var $p1: ref32;
-  var $i2: i32;
 $bb0:
-  assume {:sourceloc "../testcases/printtest/exec.c", 16, 14} true;
-  assume {:sourceloc "../testcases/printtest/exec.c", 16, 14} true;
-  call $p0 := malloc(4);
-  assume {:sourceloc "../testcases/printtest/exec.c", 16, 14} true;
-  $p1 := $bitcast.ref.ref($p0);
-  assume {:sourceloc "../testcases/printtest/exec.c", 17, 8} true;
-  $M.2 := $store.i32($M.2, $p1, 0);
-  assume {:sourceloc "../testcases/printtest/exec.c", 19, 12} true;
-  $i2 := $p2i.ref.i32($0.ref);
-  assume {:sourceloc "../testcases/printtest/exec.c", 19, 5} true;
-  $r := $i2;
+  assume {:sourceloc "../testcases/printtest/exec.c", 14, 1} true;
+  call {:cexpr "none:arg:a"} boogie_si_record_i32($i0);
+  assume {:sourceloc "../testcases/printtest/exec.c", 14, 1} true;
   return;
 }
 const llvm.dbg.value: ref;
-axiom (llvm.dbg.value == $sub.ref(0, 5160));
+axiom (llvm.dbg.value == $sub.ref(0, 6192));
 procedure  llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
 const __SMACK_static_init: ref;
-axiom (__SMACK_static_init == $sub.ref(0, 6192));
+axiom (__SMACK_static_init == $sub.ref(0, 7224));
 procedure  __SMACK_static_init()
 {
 $bb0:
   return;
 }
+procedure  boogie_si_record_i32(x: i32);
 procedure  boogie_si_record_ref(x: ref);
 procedure  $initialize()
 {

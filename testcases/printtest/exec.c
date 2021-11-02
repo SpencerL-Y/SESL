@@ -1,20 +1,43 @@
 #include <stdlib.h>
 
+typedef struct node {
+    int a;
+    int b;
+} node_t;
+
 int main(){
-    int* x = malloc(sizeof(int));
-    *x = 0;
-    x = malloc(sizeof(int) * 2);
-    *(x + 1) = 0;
-    x = NULL;
-    foo();
-    foo();
-    foo();
     foo();
     return 0;
 }
+void none(int a){
+
+}
+
 int foo(){
     int* j = malloc(sizeof(int));
-    *j = 0;
     j = NULL;
-    return j;
+    node_t node;
+    node.a = 10;
+    none(node.a);
+    return 0;
 }
+// typedef struct node {
+//     int a;
+//     int b;
+// } node_t;
+
+// int main(){
+//     // static int* j;
+//     // char* test = &j;
+//     // int a = &j;
+//     // assert(a);
+//     // j = malloc(4);
+//     // *j = 10;
+//     // *test = 'a';
+//     // assert(j);
+
+//     node_t tt;
+//     tt.a = 100;
+//     assert(tt.a);
+
+// }

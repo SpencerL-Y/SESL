@@ -607,23 +607,23 @@ namespace smack {
 
         static const SpatialLiteral *emp();
 
-        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::stack<std::string> callStack);
+        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::list<std::string> callStack);
 
         // TODOsh: implement and modify to make it compatible with bytewise
-        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts, std::stack<std::string> callStack);
+        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts, std::list<std::string> callStack);
 
-        static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::stack<std::string> callStack);
+        static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::list<std::string> callStack);
 
-        static const SpatialLiteral *gcPt(const Expr *fcallStackSetrom, const Expr *to, std::string blkName, int stepSize, std::stack<std::string> callStack);
+        static const SpatialLiteral *gcPt(const Expr *fcallStackSetrom, const Expr *to, std::string blkName, int stepSize, std::list<std::string> callStack);
 
         // TODOsh: implement and modify to make it compatible with bytewise
-        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts, std::stack<std::string> callStack);
+        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts, std::list<std::string> callStack);
 
-        static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::stack<std::string> callStack);
+        static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::list<std::string> callStack);
 
-        static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName, std::stack<std::string> callStack);
+        static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack);
 
-        static const SpatialLiteral *gcSpt(const Expr *var, const Expr *size, std::string blkName, std::stack<std::string> callStack);
+        static const SpatialLiteral *gcSpt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack);
 
         static const BytePt *bytePt(const Expr* from, const Expr* to);
 
@@ -647,9 +647,7 @@ namespace smack {
 
         bool isValue() const { return false; }
 
-        bool isGc() const {return false; }
-
-        bool isStackEliminated(std::string exitFuncName) const;
+        virtual bool isStackEliminated(std::string exitFuncName) const=0;
 
         
 
@@ -666,7 +664,7 @@ namespace smack {
         void print(std::ostream &os) const;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isGc() const;
+        bool isStackEliminated(std::string exitFuncName) const;
     };
 
 
@@ -683,7 +681,7 @@ namespace smack {
             void print(std::ostream &os) const;
 
             virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-            bool isGc() const;
+            bool isStackEliminated(std::string exitFuncName) const;
 
     };
 
@@ -730,7 +728,7 @@ namespace smack {
 
         // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isGc() const;
+        bool isStackEliminated(std::string exitFuncName) const;
     };
 
     
@@ -742,7 +740,7 @@ namespace smack {
 
         // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isGc() const;
+        bool isStackEliminated(std::string exitFuncName) const;
     };
 
 
@@ -771,7 +769,7 @@ namespace smack {
         int getBlkByteSize() const {return blkByteSize;}
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isGc() const;
+        bool isStackEliminated(std::string exitFuncName) const;
 
         const Expr *getFrom() const { return from; }
 
@@ -783,7 +781,7 @@ namespace smack {
         GCBlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize, std::set<std::string> stackMems) : BlkLit(f, t, blkName, byteSize, stackMems) {};
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isGc() const;
+        bool isStackEliminated(std::string exitFuncName) const;
     };
 
     class SizePtLit : public SpatialLiteral {
@@ -807,7 +805,7 @@ namespace smack {
         void print(std::ostream &os) const;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isGc() const;
+        bool isStackEliminated(std::string exitFuncName) const;
     };
 
     class GCSizePtLit : public SizePtLit{
@@ -815,7 +813,7 @@ namespace smack {
         GCSizePtLit(const Expr *v, const Expr *s, std::string blkName, std::set<std::string> stackMems): SizePtLit(v, s, blkName, stackMems) {};
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isGc() const;
+        bool isStackEliminated(std::string exitFuncName) const;
     };
 
     
@@ -842,7 +840,7 @@ namespace smack {
         void print(std::ostream &os) const;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isGc() const;
+        bool isStackEliminated(std::string exitFuncName) const;
     };
 
 

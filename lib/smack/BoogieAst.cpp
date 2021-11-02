@@ -1148,22 +1148,20 @@ namespace smack {
         return new EmpLit("", emptyStackMems);
     }
 
-    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::stack<std::string> callStack) {
+    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::list<std::string> callStack) {
         assert(stepSize > 0);
         if(stepSize != 1){
             std::set<std::string> stackMems;
-            while(!callStack.empty()){
-                stackMems.insert(callStack.top());
-                callStack.pop();
+            for(std::string f : callStack){
+                stackMems.insert(f);
             }
             const SpatialLiteral* newPt = new PtLit(from, to, blkName, stepSize, stackMems);
             REGISTER_EXPRPTR(newPt);
             return newPt;
         } else {
             std::set<std::string> stackMems;
-            while(!callStack.empty()){
-                stackMems.insert(callStack.top());
-                callStack.pop();
+            for(std::string f : callStack){
+                stackMems.insert(f);
             }
             const BytePt* bpt = new BytePt(from, to);
             REGISTER_EXPRPTR(bpt);
@@ -1173,41 +1171,37 @@ namespace smack {
         }
     }
 
-    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts, std::stack<std::string> callStack){
+    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts, std::list<std::string> callStack){
         assert(stepSize > 0);
         assert(stepSize == bpts.size());
         std::set<std::string> stackMems;
-        while(!callStack.empty()){
-            stackMems.insert(callStack.top());
-            callStack.pop();
+        for(std::string f : callStack){
+            stackMems.insert(f);
         }
         return new PtLit(from, to, blkName, stepSize, bpts, stackMems);
     }
 
-    const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::stack<std::string> callStack) {
+    const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::list<std::string> callStack) {
         assert(byteSize >= 0);
         std::set<std::string> stackMems;
-        while(!callStack.empty()){
-            stackMems.insert(callStack.top());
-            callStack.pop();
+        for(std::string f : callStack){
+            stackMems.insert(f);
         }
         return new BlkLit(from, to, blkName, byteSize, stackMems);
     }
 
-    const SpatialLiteral *SpatialLiteral::spt(const Expr *var, const Expr *size, std::string blkName, std::stack<std::string> callStack) {
+    const SpatialLiteral *SpatialLiteral::spt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack) {
         std::set<std::string> stackMems;
-        while(!callStack.empty()){
-            stackMems.insert(callStack.top());
-            callStack.pop();
+        for(std::string f : callStack){
+            stackMems.insert(f);
         }
         return new SizePtLit(var, size, blkName, stackMems);
     }
 
-    const SpatialLiteral *gcSpt(const Expr *var, const Expr *size, std::string blkName, std::stack<std::string> callStack){
+    const SpatialLiteral *SpatialLiteral::gcSpt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack){
         std::set<std::string> stackMems;
-        while(!callStack.empty()){
-            stackMems.insert(callStack.top());
-            callStack.pop();
+        for(std::string f : callStack){
+            stackMems.insert(f);
         }
         return new GCSizePtLit(var, size, blkName, stackMems);
     }
@@ -1217,51 +1211,36 @@ namespace smack {
         return new BytePt(from, to);
     }
 
-    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::stack<std::string> callStack) {
+    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::list<std::string> callStack) {
         assert(stepSize > 0);
         std::set<std::string> stackMems;
-        while(!callStack.empty()){
-            stackMems.insert(callStack.top());
-            callStack.pop();
+        for(std::string f : callStack){
+            stackMems.insert(f);
         }
         return new GCPtLit(from, to, blkName, stepSize, stackMems);
     }
 
-    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts, std::stack<std::string> callStack){
+    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts, std::list<std::string> callStack){
         assert(stepSize > 0);
         assert(bgcpts.size() == stepSize);
         std::set<std::string> stackMems;
-        while(!callStack.empty()){
-            stackMems.insert(callStack.top());
-            callStack.pop();
+        for(std::string f : callStack){
+            stackMems.insert(f);
         }
         return new GCPtLit(from, to, blkName, stepSize, bgcpts, stackMems);
     }
 
-    const SpatialLiteral *SpatialLiteral::gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::stack<std::string> callStack) {
+    const SpatialLiteral *SpatialLiteral::gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::list<std::string> callStack) {
         assert(byteSize >= 0);
         std::set<std::string> stackMems;
-        while(!callStack.empty()){
-            stackMems.insert(callStack.top());
-            callStack.pop();
+        for(std::string f : callStack){
+            stackMems.insert(f);
         }
         return new GCBlkLit(from, to, blkName, byteSize, stackMems);
     }
 
     const SpatialLiteral *SpatialLiteral::errlit(bool f, ErrType reason) {
         return new ErrorLit(f, reason);
-    }
-
-    bool SpatialLiteral::isStackEliminated(std::string exitFuncName) const {
-        if(this->isGc()){   
-            if(this->callStackSet.find(exitFuncName) != this->callStackSet.end()){
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
     }
 
     void EmpLit::print(std::ostream &os) const {
@@ -1274,7 +1253,7 @@ namespace smack {
         return res;
     }
 
-    bool EmpLit::isGc() const {
+    bool EmpLit::isStackEliminated(std::string exitFuncName) const {
         return false;
     }
 
@@ -1294,7 +1273,7 @@ namespace smack {
         return res;
     }
 
-    bool BytePt::isGc() const {
+    bool BytePt::isStackEliminated(std::string exitFuncName) const {
         return false;
     }
 
@@ -1360,7 +1339,7 @@ namespace smack {
         
     }
 
-    bool PtLit::isGc() const {
+    bool PtLit::isStackEliminated(std::string exitFuncName) const {
         return false;
     }
 
@@ -1413,8 +1392,13 @@ namespace smack {
         }
     }
 
-    bool GCPtLit::isGc() const {
-        return true;
+    bool GCPtLit::isStackEliminated(std::string exitFuncName) const {
+        for(std::string e : this->callStackSet){
+            if(!e.compare(exitFuncName)){
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -1435,8 +1419,13 @@ namespace smack {
         return res;
     }
 
-    bool GCBlkLit::isGc() const {
-        return true;
+    bool GCBlkLit::isStackEliminated(std::string exitFuncName) const {
+        for(std::string e : this->callStackSet){
+            if(!e.compare(exitFuncName)){
+                return true;
+            }
+        }
+        return false;
     }
 
     z3::expr BlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
@@ -1450,7 +1439,7 @@ namespace smack {
         return res;
     }
 
-    bool BlkLit::isGc() const {
+    bool BlkLit::isStackEliminated(std::string exitFuncName) const {
         return false;
     }
 
@@ -1465,7 +1454,7 @@ namespace smack {
         return slah_api::newEmp(z3Ctx);
     }
 
-    bool SizePtLit::isGc() const {
+    bool SizePtLit::isStackEliminated(std::string exitFuncName) const {
         return false;
     }
 
@@ -1476,8 +1465,13 @@ namespace smack {
         return slah_api::newEmp(z3Ctx);
     }
 
-    bool GCSizePtLit::isGc() const {
-        return true; 
+    bool GCSizePtLit::isStackEliminated(std::string exitFuncName) const {
+        for(std::string e : this->callStackSet){
+            if(!e.compare(exitFuncName)){
+                return true;
+            }
+        }
+        return false;
     }
 
     std::string SizePtLit::getVarName() const {
@@ -1516,7 +1510,7 @@ namespace smack {
         return (slah_api::newEmp(z3Ctx));
     }
 
-    bool ErrorLit::isGc() const {
+    bool ErrorLit::isStackEliminated(std::string exitFuncName) const {
         return false;
     }
 

@@ -48,7 +48,7 @@ namespace smack{
         VarEquivPtr varEquiv;
         VarFactoryPtr varFactory;
         StoreSplitterPtr storeSplit;
-        std::stack<std::string> callStack;
+        std::list<std::string> callStack;
         CFGPtr cfg;
 
         // ------------------ Variable Utilities
@@ -187,10 +187,6 @@ namespace smack{
 
         SHExprPtr executeOther(SHExprPtr sh, const Stmt* stmt);
 
-        SHExprPtr executeFuncEnter(SHExprPtr sh, const CallStmt* stmt);
-
-        SHExprPtr executeFuncExit(SHExprPtr sh, const CallStmt* stmt);
-
         //----------------------- Execution for library functions
 
 
@@ -214,9 +210,15 @@ namespace smack{
         VarEquivPtr getVarEquiv() { return varEquiv;}
         VarFactoryPtr getVarFactory() { return varFactory;}
         StoreSplitterPtr getStoreSplit() { return storeSplit;}
-        std::stack<std::string> getCallStack() { return callStack;}
+        std::list<std::string> getCallStack() { return callStack;}
 
-
+        void printCallStack(){ 
+            CFDEBUG(std::cout << "INFO: callstack: ");
+            for(std::string i : this->callStack){
+                CFDEBUG(std::cout << i << " | ");
+            }
+            CFDEBUG(std::cout << std::endl;);
+        }
     };
     typedef std::shared_ptr<BlockExecutor> BlockExecutorPtr;
 

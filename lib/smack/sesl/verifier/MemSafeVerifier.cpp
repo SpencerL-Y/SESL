@@ -163,6 +163,98 @@ namespace smack {
         this->trans->setSymbolicHeapHExpr(sh);
     }
 
+    bool MemSafeChecker::isValidPtrInMain(std::string ptrName) {
+        int l, r = ptrName.length();
+        for(l = 1; ptrName[l - 1] != '_'; l++);
+        if(r - l < 5) return false;
+        std::string funcName = ptrName.substr(l, 4);
+        std::string reaptedTime = ptrName.substr(l + 4, r - l - 4);
+        // std::cout << funcName << ' ' << reaptedTime << std::endl;
+        if(funcName != "main") return false;
+        for(auto ch : reaptedTime)
+            if(ch < '0' || ch > '9')
+                return false;
+        // std::cout << ptrName << " is valid in main\n";
+        return true;
+    }
+
+    std::queue<std::string> MemSafeChecker::getValidPtrInMain(ExecutionStatePtr state, CFGPtr cfg) {
+        std::queue<std::string> Q;
+        std::map<std::string, bool> isGlobal;
+        for(auto gv : cfg->getConstDecls()) {
+            // std::cout << gv->getName() << std::endl;
+            isGlobal[gv->getName()] = true;
+        }
+        for(auto spl : state->getSH()->getSpatialExpr()) {
+            if(spl->getId() != SpatialLiteral::Kind::SPT) continue;
+            // std::cout << spl << std::endl;
+            std::string blkName = spl->getBlkName();
+            std::string origName = state->getVarFactory()->getOrigVarName(blkName);
+            if(this->isValidPtrInMain(origName) || isGlobal[origName]) {
+                Q.push(blkName);
+                // std::cout << blkName << std::endl;
+            }
+        }
+        return Q;
+    }
+
+    std::vector<std::string> MemSafeChecker::getSuccessors(ExecutionStatePtr state, std::string u) {
+        std::vector<std::string> successors;
+        int u_offset = state->getVarEquiv()->getOffset(u);
+        std::string u_blk = state->getVarEquiv()->getBlkName(u);
+        // std::cout << u << " " << u_blk << " " << u_offset << std::endl;
+        bool inRegion = false;
+        for(auto spl : state->getSH()->getSpatialExpr()) {
+            if(spl->getId() == SpatialLiteral::Kind::SPT &&
+               spl->getBlkName() == u_blk) inRegion = true;
+            if(inRegion && spl->getId() == SpatialLiteral::Kind::PT) {
+                const PtLit* pt = (const PtLit*) spl;
+                const Expr* from = pt->getFrom();
+                const Expr* to = pt->getTo();
+                int index = state->getVarEquiv()
+                    ->getOffset(((const VarExpr*)from)->name());
+                if(to->isVar() && (u_offset == 0 || index == u_offset)) {
+                    const VarExpr* var = (const VarExpr*)to;
+                    successors.push_back(
+                        state->getVarEquiv()->getAllocName(var->name()));
+                }
+            }
+            if(spl->getId() == SpatialLiteral::Kind::SPT &&
+               spl->getBlkName() != u_blk) inRegion = false;
+        }
+        return successors;
+    }
+
+    bool MemSafeChecker::checkMemTrack(ExecutionStatePtr state, CFGPtr cfg) {
+        std::queue<std::string> workList;
+        std::map<std::string, bool> hasVisited;
+        std::map<std::string, bool> tracked;
+        workList = this->getValidPtrInMain(state, cfg);
+        while(!workList.empty()) {
+            std::string u = workList.front();
+            // std::cout << "\n=============================\n";
+            // std::cout << "src: " << u << std::endl;
+            workList.pop();
+            if(hasVisited[u]) continue;
+            hasVisited[u] = true;
+            if(state->getVarEquiv()->getOffset(u) == 0) {
+                // std::cout << u << " is tracked" << std::endl;
+                tracked[u] = true;
+            }
+            for(auto v : this->getSuccessors(state, u)) {
+                // std::cout << state->getVarEquiv()->getAllocName(v) << ' ';
+                if(hasVisited[v]) continue;
+                workList.push(v);
+            }
+            // std::cout << "\n=============================\n";
+        }
+        for(auto spl : state->getSH()->getSpatialExpr())
+            if(spl->getId() == SpatialLiteral::Kind::SPT &&
+                !tracked[spl->getBlkName()])
+                return false;
+        return true;
+    }
+
     std::pair<bool, int> MemSafeChecker::checkCurrentMemLeak(ExecutionStatePtr state, CFGPtr mainGraph, bool pathFeasible){
         if(!pathFeasible){
             //DEBUG_WITH_COLOR(std::cout << "CHECK: Satisfied, path condition false!" << std::endl, color::green);
@@ -198,34 +290,43 @@ namespace smack {
                         }
                     }
                 }
-                for(std::string unusedName : state->getVarFactory()->getUnusedNames()){
-                    std::string unusedOrigName = state->getVarFactory()->getOrigVarName(unusedName);
-                    std::pair<std::string, int> sizeInfo = mainGraph->getVarDetailType(unusedOrigName);
-                    if(!sizeInfo.first.compare("ref")){
-                        std::string unusedBlkName = state->getVarEquiv()->getBlkName(unusedName);
-                        if(state->getVarEquiv()->getOffset(unusedName) == 0 &&
-                           blknamesRemained.find(unusedBlkName) != blknamesRemained.end()){
-                            continue;
-                        } else {
-                            std::string prp = SmackOptions::prp.getValue();
-                            if(prp.find("memcleanup") != std::string::npos){
-                                DEBUG_WITH_COLOR(std::cout << "LEAK: CHECKUNKNOWN!!!" << std::endl;, color::yellow);
-                                return {false, UNKNWN};
-                            } else {
-                                DEBUG_WITH_COLOR(std::cout << "LEAK: Memtrack!!!" << std::endl;, color::red);
-                                return {false, MEMTRACK};
-                            }
-                        }
-                    }
-                }
-                std::string prp = SmackOptions::prp.getValue();
-                if(prp.find("memcleanup") != std::string::npos){
-                    DEBUG_WITH_COLOR(std::cout << "LEAK: CHECKUNKNOWN!!!" << std::endl;, color::yellow);
-                    return {false, UNKNWN};
+                int errType;
+                if(!checkMemTrack(state, mainGraph)) {
+                    DEBUG_WITH_COLOR(std::cout << "LEAK: Memtrack!!!" << std::endl;, color::red);
+                    errType = MEMTRACK;
                 } else {
                     DEBUG_WITH_COLOR(std::cout << "LEAK: Memcleanup!!!" << std::endl;, color::red);
-                    return {false, MEMCLEAN};
+                    errType = MEMCLEAN;
                 }
+                return {false, errType};
+                // for(std::string unusedName : state->getVarFactory()->getUnusedNames()){
+                //     std::string unusedOrigName = state->getVarFactory()->getOrigVarName(unusedName);
+                //     std::pair<std::string, int> sizeInfo = mainGraph->getVarDetailType(unusedOrigName);
+                //     if(!sizeInfo.first.compare("ref")){
+                //         std::string unusedBlkName = state->getVarEquiv()->getBlkName(unusedName);
+                //         if(state->getVarEquiv()->getOffset(unusedName) == 0 &&
+                //            blknamesRemained.find(unusedBlkName) != blknamesRemained.end()){
+                //             continue;
+                //         } else {
+                //             std::string prp = SmackOptions::prp.getValue();
+                //             if(prp.find("memcleanup") != std::string::npos){
+                //                 DEBUG_WITH_COLOR(std::cout << "LEAK: CHECKUNKNOWN!!!" << std::endl;, color::yellow);
+                //                 return {false, UNKNWN};
+                //             } else {
+                //                 DEBUG_WITH_COLOR(std::cout << "LEAK: Memtrack!!!" << std::endl;, color::red);
+                //                 return {false, MEMTRACK};
+                //             }
+                //         }
+                //     }
+                // }
+                // std::string prp = SmackOptions::prp.getValue();
+                // if(prp.find("memcleanup") != std::string::npos){
+                //     DEBUG_WITH_COLOR(std::cout << "LEAK: CHECKUNKNOWN!!!" << std::endl;, color::yellow);
+                //     return {false, UNKNWN};
+                // } else {
+                //     DEBUG_WITH_COLOR(std::cout << "LEAK: Memcleanup!!!" << std::endl;, color::red);
+                //     return {false, MEMCLEAN};
+                // }
             }   
         }
     }

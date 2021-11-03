@@ -34,6 +34,7 @@ namespace smack{
                 CFDEBUG(std::cout << "INFO: register global variable: " << globalVarOrigName << " : " << typeStr <<  std::endl;);
                 this->cfg->addVarType(globalVarOrigName, typeStr);
                 std::pair<const VarExpr*, std::string> usedVarNamePair = this->useVarAndName(globalVarOrigName);
+                // this->globalStaticVars.insert(globalVarOrigName);
                 const VarExpr* globalVar = usedVarNamePair.first;
                 std::string globalVarName = usedVarNamePair.second;
                 if(this->getVarType(globalVarName) == VarType::DATA){
@@ -51,6 +52,7 @@ namespace smack{
                 CFDEBUG(std::cout << "INFO: useVar " << staticVarOrigName << std::endl;);
                 this->cfg->addVarType(staticVarOrigName, typeStr);
                 std::pair<const VarExpr*, std::string> usedVarNamePair = this->useVarAndName(staticVarOrigName);
+                // this->globalStaticVars.insert(staticVarOrigName);
                 const VarExpr* staticVar = usedVarNamePair.first;
                 std::string staticVarName = usedVarNamePair.second; 
 
@@ -147,6 +149,22 @@ namespace smack{
         } else {
             CFDEBUG(std::cout << "ERROR: This should not happen.");
             assert(false);
+        }
+
+        // update with memtrack utils
+        
+        if(this->IROrigVar2Src.find(lhsVarOrigName) != this->IROrigVar2Src.end()){
+            // there is a main src variable corresponds to lhsVar
+            // update the srcVar  to the usedVarName
+            this->src2IRVar[this->IROrigVar2Src[lhsVarOrigName]] = lhsVarName;
+        }
+        if(lhsVarOrigName.find("$M.") != std::string::npos){
+            this->globalStaticVars.insert(lhsVarOrigName);
+        }
+
+        CFDEBUG(std::cout << "INFO: update src mapping" << std::endl;);
+        for(auto i : this->src2IRVar){
+            CFDEBUG(std::cout << "SrcVar: " << i.first << " IRVar: " << i.second << std::endl;)
         }
         // // TODOsh: refactor to make it more compatible with varFactory
         // if(lhsVarName.find("$M") != std::string::npos){
@@ -3592,7 +3610,10 @@ namespace smack{
         this->storeSplit = previousExecState->getStoreSplit();
         // Initialize callStack
         this->callStack = previousExecState->getCallStack();
-        
+        // Initialize memtrack utils
+        this->src2IRVar = previousExecState->getSrc2IRVar();
+        this->globalStaticVars = previousExecState->getGlobalStaticVars();
+
         StatementList newStmts;
         newStmts.push_back(Stmt::symbheap(previousSH));
         SHExprPtr currSH = previousSH;
@@ -3605,7 +3626,7 @@ namespace smack{
             currSH = newSH;
         }
 
-        ExecutionStatePtr resultExecState = std::make_shared<ExecutionState>(currSH, this->varEquiv, this->varFactory, this->storeSplit, this->callStack);
+        ExecutionStatePtr resultExecState = std::make_shared<ExecutionState>(currSH, this->varEquiv, this->varFactory, this->storeSplit, this->callStack, this->src2IRVar, this->globalStaticVars);
         return std::pair<ExecutionStatePtr, StatementList>(resultExecState, newStmts);
     }
 
@@ -3620,10 +3641,13 @@ namespace smack{
         this->storeSplit = initialExecState->getStoreSplit();
         // Initialize stack
         this->callStack = initialExecState->getCallStack();
+        // Initialize memtrack utils
+        this->src2IRVar = initialExecState->getSrc2IRVar();
+        this->globalStaticVars = initialExecState->getGlobalStaticVars();
 
         SHExprPtr newSH = this->executeGlobal(previousSH);
 
-        ExecutionStatePtr resultExecState =  std::make_shared<ExecutionState>(newSH, this->varEquiv, this->varFactory, this->storeSplit, this->callStack);
+        ExecutionStatePtr resultExecState =  std::make_shared<ExecutionState>(newSH, this->varEquiv, this->varFactory, this->storeSplit, this->callStack, this->src2IRVar, this->globalStaticVars);
         return  resultExecState;
     }
 

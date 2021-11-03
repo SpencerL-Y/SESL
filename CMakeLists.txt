@@ -190,6 +190,7 @@ add_library(smackTranslator STATIC
   lib/smack/SVNaming.cpp
         lib/smack/sesl/executor/Translator.cpp
         lib/smack/sesl/executor/BlockExecutor.cpp
+        lib/smack/sesl/executor/ExecutionState.cpp
         lib/smack/sesl/verifier/MemSafeVerifier.cpp
         lib/smack/sesl/executor/VarEquiv.cpp
         lib/smack/sesl/executor/VarFactory.cpp

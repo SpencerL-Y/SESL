@@ -676,7 +676,7 @@ namespace smack {
 
                     z3::expr resultEquality = z3Ctx.bool_val(true);
                     if (leftVarSize == rightVarSize) {
-                        CFDEBUG(std::cout << "leftVarSize == rightVarSize" << leftVarSize << " " << rightVarSize << std::endl;);
+                        //CFDEBUG(std::cout << "leftVarSize == rightVarSize" << leftVarSize << " " << rightVarSize << std::endl;);
                         for (int index = 0; index < leftVarSize; index++) {
                             resultEquality = (resultEquality &&
                                               (z3Ctx.int_const(
@@ -740,7 +740,7 @@ namespace smack {
                         }
                         return res;
                     } else {
-                        CFDEBUG(std::cout << "WARNING: directly let lhs == rhs ..." << std::endl;)
+                        // CFDEBUG(std::cout << "WARNING: directly let lhs == rhs ..." << std::endl;)
                         res = (left == right);
                         return res;
                     }

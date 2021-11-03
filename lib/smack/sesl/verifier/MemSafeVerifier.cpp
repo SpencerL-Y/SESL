@@ -29,6 +29,7 @@ namespace smack {
         std::cout << "-----------------START MEMSAFE ANALYSIS---------------" << std::endl;
         SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
         Program* program = smackGen.getProgram();
+        std::map<std::string, std::string> IROrigVar2Src = smackGen.getIRVar2Source();
         // TODO: add the checking here.
         std::cout << "Begin verifying" << std::endl;
         CFGUtil cfgUtil(program);
@@ -90,14 +91,17 @@ namespace smack {
             StoreSplitterPtr storeSplit = std::make_shared<StoreSplitter>();
             // Initialize call Stack
             std::list<std::string> callStack;
+            // Initialize memtrack utils
+            std::map<std::string, std::string> src2IRVar;
+            std::set<std::string> globalStaticVars;
 
-            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, storeSplit, callStack);
+            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, storeSplit, callStack, src2IRVar, globalStaticVars);
             // initialization of the execution initial state over
             // Initialize a CFGExecutor
             SHExprPtr currSH = initSH;
             ExecutionStatePtr  currExecState = initialExecState;
             StatementList finalStmts;
-            BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, mainGraph, state);
+            BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, mainGraph, state, IROrigVar2Src);
             currExecState = be->initializeExec(currExecState);
             for(StatePtr s : p.getExePath()){
                 be->setBlock(s);
@@ -291,6 +295,7 @@ namespace smack {
                     }
                 }
                 int errType;
+                std::set<std::string> memtrackRoots = state->obtainMemtrackRootSet();
                 if(!checkMemTrack(state, mainGraph)) {
                     DEBUG_WITH_COLOR(std::cout << "LEAK: Memtrack!!!" << std::endl;, color::red);
                     errType = MEMTRACK;

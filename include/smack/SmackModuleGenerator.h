@@ -24,6 +24,7 @@ public:
   virtual bool runOnModule(llvm::Module &m);
   void generateProgram(llvm::Module &m);
   Program *getProgram() { return program; }
+  std::map<std::string, std::string> getIRVar2Source() {return boogieVar2SrcVarMap; }
 };
 } // namespace smack
 

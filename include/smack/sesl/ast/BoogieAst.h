@@ -604,18 +604,17 @@ namespace smack {
             ERR
         };
         Kind id;
-        std::string blkName;
-        std::set<std::string> callStackSet;
+        std::string regionName;
 
 
         static const SpatialLiteral *emp();
 
-        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::list<std::string> callStack);
+        static const SpatialLiteral *pt(const Expr *from, const Expr *to, int stepSize);
 
         // TODOsh: implement and modify to make it compatible with bytewise
-        static const SpatialLiteral *pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts, std::list<std::string> callStack);
+        static const SpatialLiteral *pt(const Expr *from, const Expr *to, int stepSize, std::vector<const BytePt*> bpts);
 
-        static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::list<std::string> callStack);
+        static const SpatialLiteral *blk(const Expr *from, const Expr *to, int byteSize);
 
         // static const SpatialLiteral *gcPt(const Expr *fcallStackSetrom, const Expr *to, std::string blkName, int stepSize, std::list<std::string> callStack);
 
@@ -638,33 +637,21 @@ namespace smack {
 
         ExprType getType() const { return ExprType::SpatialLit; }
 
-        std::string getBlkName() const { return blkName; }
-
-        void setBlkName(std::string blkName) { this->blkName = blkName; }
-
-        std::set<std::string> getStackMembers() const { return this->callStackSet;}
-
-        void setStackMembers(std::set<std::string> stackSet){ this->callStackSet = stackSet;}
-
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
-
-        virtual bool isStackEliminated(std::string exitFuncName) const=0;
     };
 
     class EmpLit : public SpatialLiteral {
 
     public:
-        EmpLit(std::string blkName, std::set<std::string> stackMems) {
+        EmpLit() {
             setId(SpatialLiteral::Kind::EMP);
-            setBlkName(blkName);
         }
 
         void print(std::ostream &os) const;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isStackEliminated(std::string exitFuncName) const;
     };
 
 
@@ -681,7 +668,6 @@ namespace smack {
             void print(std::ostream &os) const;
 
             virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-            // bool isStackEliminated(std::string exitFuncName) const;
 
     };
 
@@ -695,19 +681,15 @@ namespace smack {
         
 
     public:
-        PtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::set<std::string> stackMems) : from(f), to(t), stepSize(ss), 
+        PtLit(const Expr *f, const Expr *t, int ss) : from(f), to(t), stepSize(ss), 
         isBytewise(false)  {
             setId(SpatialLiteral::Kind::PT);
-            setBlkName(blkName);
-            setStackMembers(stackMems);
         }
 
-        PtLit(const Expr *f, const Expr* t, std::string blkName, int ss, std::vector<const BytePt*> bpts/*, std::set<std::string> stackMems*/) :
+        PtLit(const Expr *f, const Expr* t, int ss, std::vector<const BytePt*> bpts) :
         from(f), to(t), stepSize(ss), isBytewise(true), bytifiedPts(bpts)
         {
             setId(SpatialLiteral::Kind::PT);
-            setBlkName(blkName);
-            // setStackMembers(stackMems);
         }
 
         void print(std::ostream &os) const;
@@ -728,7 +710,6 @@ namespace smack {
 
         // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        // bool isStackEliminated(std::string exitFuncName) const;
     };
 
     
@@ -751,10 +732,8 @@ namespace smack {
         bool isEmptyBlk;
         int blkByteSize;
     public:
-        BlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize, std::set<std::string> stackMems) : from(f), to(t), blkByteSize(byteSize) {
+        BlkLit(const Expr *f, const Expr *t, int byteSize) : from(f), to(t), blkByteSize(byteSize) {
             setId(SpatialLiteral::Kind::BLK);
-            setBlkName(blkName);
-            setStackMembers(stackMems);
             if(byteSize == 0){
                 isEmptyBlk = true;
             } else {
@@ -840,7 +819,6 @@ namespace smack {
         void print(std::ostream &os) const;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        // bool isStackEliminated(std::string exitFuncName) const;
     };
 
     // -------------------------- Spatial Clauses 
@@ -854,7 +832,6 @@ namespace smack {
         virtual bool isErrorClause()=0;
         virtual bool isRegionClause()=0;
     };
-    typedef std::shared_ptr<SpatialClause> SpatialClausePtr;
 
 
     class RegionClause : public SpatialClause {

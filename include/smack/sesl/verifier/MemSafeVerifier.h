@@ -35,9 +35,8 @@ namespace smack
             StatementList stmts;
             SHExprPtr finalSH;
             // check for memory tracked
-            bool isValidPtrInMain(std::string ptrName);
-            std::queue<std::string> getValidPtrInMain(ExecutionStatePtr state, CFGPtr cfg);
-            std::vector<std::string> getSuccessors(ExecutionStatePtr state, std::string u);
+            std::set<std::string> getRootVarsForMemtrackAnalysis(ExecutionStatePtr state, CFGPtr cfg);
+            std::vector<std::string> getSuccessorsForMemtrackAnalysis(ExecutionStatePtr state, std::string u);
             bool checkMemTrack(ExecutionStatePtr state, CFGPtr cfg);
         public:
             MemSafeChecker(std::shared_ptr<TransToZ3> trans, StatementList& stmtList, SHExprPtr fsh);

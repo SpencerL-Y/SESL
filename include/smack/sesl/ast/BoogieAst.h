@@ -603,7 +603,7 @@ namespace smack {
             // SPT,
             ERR
         };
-        Kind id;
+        Kind id;gc
 
         static const SpatialLiteral *emp();
 

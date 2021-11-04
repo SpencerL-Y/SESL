@@ -21,26 +21,26 @@ namespace smack
     private:
     // varAllocEqualMap: equivalent class of equality between variables
         std::map<std::string, std::string> varAllocEqualMap;
-    // pointsToBlkMap: 
+    // pointsToRegionMap: 
         // find the pointed allocated blk of a ptr (use the initially allocated ptr to represent)
         // or itself if none is found
-        std::map<std::string, std::string> pointsToBlkMap;
+        std::map<std::string, std::string> pointsToRegionMap;
     // points to blk offset: used to store the offset bytenum of a ptr (used in store and load for ptr arithmetic)
-        std::map<std::string, int> pointsToBlkOffset;
+        std::map<std::string, int> pointsToRegionOffset;
     // varToIntVal: cache the calculated value of integer variables (used in store and load)
         std::map<std::string, int> varToIntVal;
-    // structArrayPtr: remember the ptr created by alloc, which is used when struct and array are used
-        std::map<std::string, bool> structArrayPtr;
+    // structArrayRegion: remember the ptr created by alloc, which is used when struct and array are used
+        std::map<std::string, bool> structArrayRegion;
     
-    // freedBlkName: a set used to store the blkNames freed, used to find double free
-        std::set<std::string> freedBlkName;
+    // freedRegionName: a set used to store the blkNames freed, used to find double free
+        std::set<std::string> freedRegionName;
     
         typedef std::shared_ptr<VarEquiv> VarEquivPtr;
     public:
         VarEquiv(/* args */){
             this->addNewName("$Null"); 
             this->addNewVal("$Null", 0);
-            this->addNewBlkName("$Null");
+            this->addNewRegionName("$Null");
             this->addNewOffset("$Null", 0);
             
         };
@@ -51,14 +51,14 @@ namespace smack
         std::string getAllocName(std::string name);
         bool hasName(std::string name);
 
-        // pointsToBlkMap operations
-        void addNewBlkName(std::string name);
-        void linkBlkName(std::string newname, std::string blkname);
-        std::string getBlkName(std::string name);
-        void modifyBlkName(std::string name, std::string newBlkname);
-        bool hasBlkName(std::string name);
+        // pointsToRegionMap operations
+        void addNewRegionName(std::string name);
+        void linkRegionName(std::string newname, std::string regionName);
+        std::string getRegionName(std::string name);
+        void modifyRegionName(std::string name, std::string newRegionName);
+        bool hasRegionName(std::string name);
 
-        // pointsToBlkOffset operations
+        // pointsToRegionOffset operations
         void addNewOffset(std::string name, int offset);
         void modifyOffset(std::string name, int newOffset);
         int getOffset(std::string name);
@@ -69,31 +69,29 @@ namespace smack
         std::pair<bool, int> getIntVal(std::string name);
 
         // alloc ptr operations
-        void setStructArrayPtr(std::string name, bool val);
-        bool isStructArrayPtr(std::string name);
+        void setStructArrayRegion(std::string regionName, bool val);
+        bool isStructArrayRegion(std::string regionName);
 
 
-        // freedBlkName operations
-        void addNewFreedName(std::string name);
-        bool isFreedName(std::string name);
+        // freedRegionName operations
+        void addNewFreedRegionName(std::string name);
+        bool isFreedRegionName(std::string name);
 
         VarEquivPtr clone();
 
         // getters and setters
         std::map<std::string, std::string> getVarAllocEqualMap();
-        std::map<std::string, std::string> getPointsToBlkMap();
-        std::map<std::string, int> getPointsToBlkOffset();
+        std::map<std::string, std::string> getPointsToRegionMap();
+        std::map<std::string, int> getPointsToRegionOffset();
         std::map<std::string, int> getVarToIntVal();
-        std::map<std::string, bool> getStructArrayPtr();
-        std::set<std::string> getUnusedNames();
-        std::set<std::string> getFreedBlkName();
+        std::map<std::string, bool> getStructArrayRegion();
+        std::set<std::string> getFreedRegionName();
         void setVarAllocEqualMap(std::map<std::string, std::string> i);
-        void setPointsToBlkMap(std::map<std::string, std::string> i);
-        void setPointsToBlkOffset(std::map<std::string, int> i);
+        void setPointsToRegionMap(std::map<std::string, std::string> i);
+        void setPointsToRegionOffset(std::map<std::string, int> i);
         void setVarToIntVal(std::map<std::string, int> i);
-        void setStructArrayPtr(std::map<std::string, bool> i);
-        void setUnusedNames(std::set<std::string> i);
-        void setFreedBlkName(std::set<std::string> i);
+        void setStructArrayRegion(std::map<std::string, bool> i);
+        void setFreedRegionName(std::set<std::string> i);
 
 
         void debugPrint();

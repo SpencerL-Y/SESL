@@ -11,17 +11,14 @@ namespace smack{
     SHExprPtr BlockExecutor::executeGlobal(SHExprPtr sh){
         CFDEBUG(std::cout << "INFO: static initialization" << std::endl;);
         std::vector<ConstDecl*> globalDecls = this->cfg->getConstDecls();
-        const Expr* newPure = sh->getPure();
-        std::list<const SpatialLiteral*> newSpatialExpr;
-        for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-            newSpatialExpr.push_back(sp);
-        }
+        std::list<const Expr*> newPures = sh->getPures();
+        std::list<const RegionClause*> newSpatialExpr = sh->getRegions();
+
+
         for(const ConstDecl* cd : globalDecls){
-            
             bool sizeAttrFound = false;
             const Expr* allocSizeExpr = nullptr;
             std::string typeStr = cd->getType();
-
             for(const Attr* a : cd->getAttrs()){
                 if(!a->getName().compare("pointer_to_size")){
                     sizeAttrFound = true;
@@ -29,7 +26,6 @@ namespace smack{
                 }
             }
             if(!sizeAttrFound){
-                
                 std::string globalVarOrigName = cd->getName();
                 CFDEBUG(std::cout << "INFO: register global variable: " << globalVarOrigName << " : " << typeStr <<  std::endl;);
                 this->cfg->addVarType(globalVarOrigName, typeStr);
@@ -47,7 +43,7 @@ namespace smack{
                 // treat the global ptr the same way as $alloc
                 std::string staticVarOrigName = cd->getName();
                 
-                CFDEBUG(std::cout << "INFO: register region variable: " << staticVarOrigName << " : " << typeStr << std::endl;);
+                CFDEBUG(std::cout << "INFO: register global region: " << staticVarOrigName << " : " << typeStr << std::endl;);
                 // The var should only be used once since it is global
                 CFDEBUG(std::cout << "INFO: useVar " << staticVarOrigName << std::endl;);
                 this->cfg->addVarType(staticVarOrigName, typeStr);
@@ -63,9 +59,13 @@ namespace smack{
                 const Expr* blkSize = new IntLit((long long)allocSize);
                 REGISTER_EXPRPTR(blkSize);
                 this->varEquiv->addNewName(staticVarName);
-                this->varEquiv->addNewBlkName(staticVarName);
+                this->varEquiv->addNewRegionName(staticVarName);
                 this->varEquiv->addNewOffset(staticVarName, 0);
-                this->varEquiv->setStructArrayPtr(staticVarName, true);
+                this->varEquiv->setStructArrayRegion(staticVarName, true);
+
+
+
+                
                 this->storeSplit->createAxis(staticVarName);
                 this->storeSplit->setMaxOffset(staticVarName, allocSize);
 
@@ -566,7 +566,7 @@ namespace smack{
                 if(this->isPtrVar(varGet->name())){
                     // link if it is a pointer variable
                     CFDEBUG(std::cout << "Link arithmetic operation: " <<  lhsName << " " << varGet->name() << std::endl;);
-                    this->varEquiv->linkBlkName(lhsName, varGet->name());  
+                    this->varEquiv->linkRegionName(lhsName, varGet->name());  
                 }
                 return varGet;
             } else {
@@ -1146,7 +1146,7 @@ namespace smack{
             srcOrigVarName = srcOrigVar->name();
             srcVar = this->getUsedVarAndName(srcOrigVarName).first;
             srcVarName = this->getUsedVarAndName(srcOrigVarName).second;
-            srcMallocName = this->varEquiv->getBlkName(srcVarName);
+            srcMallocName = this->varEquiv->getRegionName(srcVarName);
             CHECK_VALID_DEREF_FOR_BLK(srcMallocName);
             srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv).second;
             srcOffset = this->varEquiv->getOffset(srcVarName);;
@@ -1162,7 +1162,7 @@ namespace smack{
             srcVar = freshSrcVar;
             srcOrigVarName = srcOrigVar->name();
             srcVarName = srcVar->name();
-            srcMallocName = this->varEquiv->getBlkName(srcOrigVarName);
+            srcMallocName = this->varEquiv->getRegionName(srcOrigVarName);
             srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv).second;
             srcOffset = this->varEquiv->getOffset(srcVarName);
 
@@ -1181,7 +1181,7 @@ namespace smack{
             dstOrigVarName = dstOrigVar->name();
             dstVar = this->getUsedVarAndName(dstOrigVarName).first;
             dstVarName = this->getUsedVarAndName(dstOrigVarName).second;
-            dstMallocName = this->varEquiv->getBlkName(dstVarName);
+            dstMallocName = this->varEquiv->getRegionName(dstVarName);
             CHECK_VALID_DEREF_FOR_BLK(dstMallocName);
             dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv).second;
             dstOffset = this->varEquiv->getOffset(dstVarName);
@@ -1197,7 +1197,7 @@ namespace smack{
             dstVar = freshDstVar;
             dstOrigVarName = freshDstVar->name();
             dstVarName = freshDstVar->name();
-            dstMallocName = this->varEquiv->getBlkName(dstOrigVarName);
+            dstMallocName = this->varEquiv->getRegionName(dstOrigVarName);
             dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv).second;
             dstOffset = this->varEquiv->getOffset(dstVarName);
              
@@ -1640,7 +1640,7 @@ namespace smack{
             targetVarName = this->getUsedVarAndName(targetOrigVarName).second;
             assert(this->getVarType(targetVarName) == VarType::PTR || 
                    this->getVarType(targetVarName) == VarType::NIL);
-            targetMallocName = this->varEquiv->getBlkName(targetVarName);
+            targetMallocName = this->varEquiv->getRegionName(targetVarName);
             targetOffset = this->varEquiv->getOffset(targetVarName);
             targetBlkSize = sh->getBlkSize(targetMallocName)->translateToInt(this->varEquiv).second;
         } else if(ExprType::FUNC == arg1Target->getType()){
@@ -1656,7 +1656,7 @@ namespace smack{
             targetVarName = freshTargetVar->name();
             assert(this->getVarType(targetVarName) == VarType::PTR || 
                    this->getVarType(targetVarName) == VarType::NIL);
-            targetMallocName = this->varEquiv->getBlkName(targetVarName);
+            targetMallocName = this->varEquiv->getRegionName(targetVarName);
 
             
         } else {
@@ -1962,9 +1962,9 @@ namespace smack{
                 const VarExpr* paramVar = this->varFactory->getVar(paramOrigVarName);
                 std::string paramVarName = paramVar->name();
                 this->varEquiv->addNewName(retVarName);
-                this->varEquiv->addNewBlkName(retVarName);
+                this->varEquiv->addNewRegionName(retVarName);
                 this->varEquiv->addNewOffset(retVarName, 0);
-                this->varEquiv->setStructArrayPtr(retVarName, false);
+                this->varEquiv->setStructArrayRegion(retVarName, false);
                 this->storeSplit->createAxis(retVarName);
                 this->storeSplit->setMaxOffset(retVarName, paramVar->translateToInt(this->varEquiv).second);
                 
@@ -2007,9 +2007,9 @@ namespace smack{
                 // the sizeExpr here must be a value expression containing no variables
                 const Expr* sizeExpr = param;
                 this->varEquiv->addNewName(retVarName);
-                this->varEquiv->addNewBlkName(retVarName);
+                this->varEquiv->addNewRegionName(retVarName);
                 this->varEquiv->addNewOffset(retVarName, 0);
-                this->varEquiv->setStructArrayPtr(retVarName, false);
+                this->varEquiv->setStructArrayRegion(retVarName, false);
                 this->storeSplit->createAxis(retVarName);
                 this->storeSplit->setMaxOffset(retVarName, sizeExpr->translateToInt(this->varEquiv).second);
 
@@ -2071,13 +2071,13 @@ namespace smack{
                 const VarExpr* freedVar = this->varFactory->getVarConsume(freedOrigVarName);
 
                 std::string allocVarName = this->varEquiv->getAllocName(freedVar->name());
-                std::string linkVarName = this->varEquiv->getBlkName(freedVar->name());
+                std::string linkVarName = this->varEquiv->getRegionName(freedVar->name());
                 CFDEBUG(std::cout << "Freed varname: " << freedVar->name() << std::endl);
                 CFDEBUG(std::cout << "Alloced varname: " << allocVarName << std::endl);
                 CFDEBUG(std::cout << "Linked Name: " << linkVarName << std::endl;);
 
 
-                if(this->varEquiv->isFreedName(linkVarName)){
+                if(this->varEquiv->isFreedRegionName(linkVarName)){
                     SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_FREE);
                     CFDEBUG(std:: cout << "INFO: INVALID FREE" << std::endl;);
                     return newSH;
@@ -2092,7 +2092,7 @@ namespace smack{
                         allocVarName = linkVarName;
                     }
                 }
-                if(this->varEquiv->isStructArrayPtr(linkVarName)){
+                if(this->varEquiv->isStructArrayRegion(linkVarName)){
                     CFDEBUG(std::cout << "INFO: FREE GLOBAL PTR, UNKNOWN" << std::endl;);
                     SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::UNKNOWN);
                     return newSH;
@@ -2107,7 +2107,7 @@ namespace smack{
                         newSpatial.push_back(sp);
                     }
                 }
-                this->varEquiv->addNewFreedName(allocVarName);
+                this->varEquiv->addNewFreedRegionName(allocVarName);
 
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
 
@@ -2165,7 +2165,7 @@ namespace smack{
 
             // get the offset of the position to be stored in a malloced blk
             offset = this->varEquiv->getOffset(varArg1->name());
-            mallocName = this->varEquiv->getBlkName(varArg1->name());
+            mallocName = this->varEquiv->getRegionName(varArg1->name());
 
             // check whether it is freed
             CHECK_VALID_DEREF_FOR_BLK(mallocName);
@@ -2191,7 +2191,7 @@ namespace smack{
             varOrigiArg1Name = freshVar->name();
             varArg1Name = freshVar->name();
             offset = this->varEquiv->getOffset(varArg1->name());
-            mallocName = this->varEquiv->getBlkName(varArg1->name());
+            mallocName = this->varEquiv->getRegionName(varArg1->name());
 
             // check whether it is freed
             CHECK_VALID_DEREF_FOR_BLK(mallocName);
@@ -2888,7 +2888,7 @@ namespace smack{
             ldOrigPtrName = ldOrigPtr->name();
             ldPtr = this->getUsedVarAndName(ldOrigPtrName).first;
             ldPtrName = this->getUsedVarAndName(ldOrigPtrName).second;
-            mallocName = this->varEquiv->getBlkName(ldPtrName);
+            mallocName = this->varEquiv->getRegionName(ldPtrName);
             
             // check whether it is freed
             CHECK_VALID_DEREF_FOR_BLK(mallocName);
@@ -2914,7 +2914,7 @@ namespace smack{
                 ldPtr = freshLoadedVar;
                 ldOrigPtrName = freshLoadedVar->name();
                 ldPtrName = freshLoadedVar->name();
-                mallocName = this->varEquiv->getBlkName(ldPtrName);
+                mallocName = this->varEquiv->getRegionName(ldPtrName);
 
                 // check whether it is freed
                 CHECK_VALID_DEREF_FOR_BLK(mallocName);
@@ -2992,7 +2992,7 @@ namespace smack{
                     for(const SpatialLiteral* spl : sh->getSpatialExpr()){
                         if(SpatialLiteral::Kind::SPT == spl->getId()){
                             const SizePtLit* sizePt = (const SizePtLit*) spl;
-                            if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
+                            if(!sizePt->getBlkName().compare(this->varEquiv->getRegionName(ldPtrName))){
                                 startCounting = true;
                             } else {
                                 startCounting = false;
@@ -3086,7 +3086,7 @@ namespace smack{
                     for(const SpatialLiteral* spl : sh->getSpatialExpr()){
                         if(SpatialLiteral::Kind::SPT == spl->getId()){
                             const SizePtLit* sizePt = (const SizePtLit*) spl;
-                            if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
+                            if(!sizePt->getBlkName().compare(this->varEquiv->getRegionName(ldPtrName))){
                                 startCounting = true;
                             } else {
                                 startCounting = false;
@@ -3312,9 +3312,9 @@ namespace smack{
                     const Expr* lengthExpr = Expr::multiply(multiArg1, multiArg2);
                     REGISTER_EXPRPTR(lengthExpr);
                     this->varEquiv->addNewName(retVarName);
-                    this->varEquiv->addNewBlkName(retVarName);
+                    this->varEquiv->addNewRegionName(retVarName);
                     this->varEquiv->addNewOffset(retVarName, 0);
-                    this->varEquiv->setStructArrayPtr(retVarName, true);
+                    this->varEquiv->setStructArrayRegion(retVarName, true);
                     this->storeSplit->createAxis(retVarName);
                     this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
                     const Expr* newPure = sh->getPure();
@@ -3362,9 +3362,9 @@ namespace smack{
                     const Expr* lengthExpr = Expr::multiply(multiArg1, multiArg2Var);
                     REGISTER_EXPRPTR(lengthExpr);
                     this->varEquiv->addNewName(retVarName);
-                    this->varEquiv->addNewBlkName(retVarName);
+                    this->varEquiv->addNewRegionName(retVarName);
                     this->varEquiv->addNewOffset(retVarName, 0);
-                    this->varEquiv->setStructArrayPtr(retVarName, true);
+                    this->varEquiv->setStructArrayRegion(retVarName, true);
                     this->storeSplit->createAxis(retVarName);
                     this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
                     const Expr* newPure = sh->getPure();
@@ -3408,9 +3408,9 @@ namespace smack{
                     assert(multiArg2FunExpr->getArgs().back()->translateToInt(this->varEquiv).second == 1);
                     const Expr* lengthExpr = multiArg1;
                     this->varEquiv->addNewName(retVarName);
-                    this->varEquiv->addNewBlkName(retVarName);
+                    this->varEquiv->addNewRegionName(retVarName);
                     this->varEquiv->addNewOffset(retVarName, 0);
-                    this->varEquiv->setStructArrayPtr(retVarName, true);
+                    this->varEquiv->setStructArrayRegion(retVarName, true);
                     this->storeSplit->createAxis(retVarName);
                     this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
                     const Expr* newPure = sh->getPure();
@@ -3492,9 +3492,9 @@ namespace smack{
         const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
         const std::string retVarName = retVar->name();
         this->varEquiv->addNewName(retVarName);
-        this->varEquiv->addNewBlkName(retVarName);
+        this->varEquiv->addNewRegionName(retVarName);
         this->varEquiv->addNewOffset(retVarName, 0);
-        this->varEquiv->setStructArrayPtr(retVarName, false);
+        this->varEquiv->setStructArrayRegion(retVarName, false);
         this->storeSplit->createAxis(retVarName);
         const Expr* lengthExpr = Expr::multiply(num, size);
         REGISTER_EXPRPTR(lengthExpr);
@@ -3826,9 +3826,9 @@ namespace smack{
 
         // update the equivalent classes
         this->varEquiv->linkName(lhsUsedVarName, rhsUsedVarName);
-        if( this->varEquiv->hasBlkName(rhsUsedVarName)){
+        if( this->varEquiv->hasRegionName(rhsUsedVarName)){
             assert(VarType::PTR == this->getVarType(rhsUsedVarName) || VarType::NIL == this->getVarType(rhsUsedVarName));
-            this->varEquiv->linkBlkName(lhsUsedVarName, rhsUsedVarName);
+            this->varEquiv->linkRegionName(lhsUsedVarName, rhsUsedVarName);
         }
         if(this->varEquiv->getOffset(rhsUsedVarName) >= 0){
             assert(VarType::PTR == this->getVarType(rhsUsedVarName) || VarType::NIL == this->getVarType(rhsUsedVarName));
@@ -3868,8 +3868,8 @@ namespace smack{
 
             int extractedRhsPtrArithStepSize = this->parsePtrArithmeticStepSize(rhsExpr);
             this->varEquiv->addNewName(lhsVar->name());
-            if(this->varEquiv->hasBlkName(extractedRhsVar->name())){
-                this->varEquiv->linkBlkName(lhsVar->name(), extractedRhsVar->name());
+            if(this->varEquiv->hasRegionName(extractedRhsVar->name())){
+                this->varEquiv->linkRegionName(lhsVar->name(), extractedRhsVar->name());
             }
             if(this->varEquiv->getOffset(extractedRhsVar->name()) >= 0){
                 this->varEquiv->addNewOffset(lhsVar->name(), rhsPtrArithmeticOffset);
@@ -4213,7 +4213,7 @@ namespace smack{
         const VarExpr* freshVar = this->varFactory->getFreshVar(PTR_BYTEWIDTH);
         this->cfg->addVarType(freshVar->name(), "ref" + std::to_string(8 * stepSize));
         this->varEquiv->addNewName(freshVar->name());
-        this->varEquiv->linkBlkName(freshVar->name(), mallocName);
+        this->varEquiv->linkRegionName(freshVar->name(), mallocName);
         this->varEquiv->addNewOffset(freshVar->name(), offset);
         return freshVar;
     }
@@ -4226,11 +4226,11 @@ namespace smack{
                this->getVarType(usedPtrVar->name()) == VarType::NIL);
         if(this->getVarType(usedPtrVar->name()) == VarType::NIL){
             this->varEquiv->addNewName(usedPtrVar->name());
-            this->varEquiv->linkBlkName(usedPtrVar->name(), this->varFactory->getNullVar()->name());
+            this->varEquiv->linkRegionName(usedPtrVar->name(), this->varFactory->getNullVar()->name());
             this->varEquiv->addNewOffset(usedPtrVar->name(), this->varEquiv->getOffset(this->varFactory->getNullVar()->name()));
         } else {
             this->varEquiv->addNewName(usedPtrVar->name());
-            this->varEquiv->linkBlkName(usedPtrVar->name(), mallocName);
+            this->varEquiv->linkRegionName(usedPtrVar->name(), mallocName);
             this->varEquiv->addNewOffset(usedPtrVar->name(), offset);
         }
     }
@@ -4240,7 +4240,7 @@ namespace smack{
     const SpatialLiteral* 
     BlockExecutor::createPtAccordingToMallocName
     (std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::list<std::string> tempStack){
-        if(this->varEquiv->isStructArrayPtr(mallocName)){
+        if(this->varEquiv->isStructArrayRegion(mallocName)){
             return SpatialLiteral::gcPt(from, to, mallocName, stepSize, tempStack);
         } else {
             return SpatialLiteral::pt(from, to, mallocName, stepSize, tempStack);
@@ -4250,7 +4250,7 @@ namespace smack{
     const SpatialLiteral* 
     BlockExecutor::createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize,std::vector<const BytePt*> bytifiedPts, std::list<std::string> tempStack){
         const SpatialLiteral* sp = nullptr;
-        if(this->varEquiv->isStructArrayPtr(mallocName)){
+        if(this->varEquiv->isStructArrayRegion(mallocName)){
             sp = SpatialLiteral::gcPt(from, to, mallocName, stepSize, bytifiedPts, tempStack);
         } else {
             sp = SpatialLiteral::pt(from, to, mallocName, stepSize, bytifiedPts, tempStack);
@@ -4263,7 +4263,7 @@ namespace smack{
     BlockExecutor::createBlkAccordingToMallocName
     (std::string mallocName, const Expr* from, const Expr* to, int byteSize, std::list<std::string> tempStack){
         const SpatialLiteral* sp = nullptr;
-        if(this->varEquiv->isStructArrayPtr(mallocName)){
+        if(this->varEquiv->isStructArrayRegion(mallocName)){
             sp = SpatialLiteral::gcBlk(from, to, mallocName, byteSize, tempStack);
         } else {
             sp = SpatialLiteral::blk(from, to, mallocName, byteSize, tempStack);
@@ -4360,8 +4360,8 @@ namespace smack{
         assert(copySize >= 0);
         assert(VarType::PTR == this->getVarType(srcVar->name()) ||
                VarType::PTR == this->getVarType(dstVar->name()));
-        std::string srcVarMallocName = this->varEquiv->getBlkName(srcVar->name());
-        std::string dstvarMallocName = this->varEquiv->getBlkName(dstVar->name());
+        std::string srcVarMallocName = this->varEquiv->getRegionName(srcVar->name());
+        std::string dstvarMallocName = this->varEquiv->getRegionName(dstVar->name());
         if(srcVarMallocName.compare(dstvarMallocName)){
             return false;
         }

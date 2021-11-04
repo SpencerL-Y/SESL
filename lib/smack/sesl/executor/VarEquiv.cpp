@@ -44,12 +44,12 @@ namespace smack
         for(auto i : this->varAllocEqualMap){
             DEBUG_WITH_COLOR(std::cout << "Key: " << i.first << "| Var: " << i.second << std::endl, color::green);
         }
-        DEBUG_WITH_COLOR(std::cout << "Debug BlkLinkName: " << std::endl, color::green);
-        for(auto i : this->pointsToBlkMap){
-            DEBUG_WITH_COLOR(std::cout << "PtrName: " << i.first << "| AllocName: " << i.second << std::endl, color::green);
+        DEBUG_WITH_COLOR(std::cout << "Debug RegionLinkName: " << std::endl, color::green);
+        for(auto i : this->pointsToRegionMap){
+            DEBUG_WITH_COLOR(std::cout << "PtrName: " << i.first << "| RegionName: " << i.second << std::endl, color::green);
         }
         DEBUG_WITH_COLOR(std::cout << "Debug Offset:" << std::endl, color::green);
-        for(auto i : this->pointsToBlkOffset) {
+        for(auto i : this->pointsToRegionOffset) {
             DEBUG_WITH_COLOR(std::cout << "PtrName: " << i.first << "| Offset: " << i.second << std::endl, color::green);
         }
         DEBUG_WITH_COLOR(std::cout << "Debug IntVal: " << std::endl, color::green);
@@ -60,55 +60,55 @@ namespace smack
         for(auto i : this->varToIntVal){
             DEBUG_WITH_COLOR(std::cout << "DataName: " << i.first << "| PtrName: " << i.second << std::endl, color::green);
         }
-        DEBUG_WITH_COLOR(std::cout << "Debug freedBlkName: " << std::endl, color::green);
-        for(auto i : this->getFreedBlkName()){
+        DEBUG_WITH_COLOR(std::cout << "Debug freedRegionName: " << std::endl, color::green);
+        for(auto i : this->getFreedRegionName()){
             DEBUG_WITH_COLOR(std::cout << i << " ";, color::green);
         }
         DEBUG_WITH_COLOR(std::cout << std::endl;, color::green);
         }
     }
-    // name2blk operations
+    // name2region operations
 
 
-    void VarEquiv::addNewBlkName(std::string name){
-        if(pointsToBlkMap.find(name) == pointsToBlkMap.end()){
-            pointsToBlkMap[name] = name;
+    void VarEquiv::addNewRegionName(std::string name){
+        if(pointsToRegionMap.find(name) == pointsToRegionMap.end()){
+            pointsToRegionMap[name] = name;
         } else {
-            CFDEBUG(std::cout << "ERROR: VarEquiv blk new blkvarname exists. " << std::endl;);
+            CFDEBUG(std::cout << "ERROR: VarEquiv region new regionname exists. " << std::endl;);
         }
     }
 
-    void VarEquiv::linkBlkName(std::string newname, std::string blkname){
-        if(pointsToBlkMap.find(newname) == pointsToBlkMap.end() && 
-           pointsToBlkMap.find(blkname) != pointsToBlkMap.end()){
-            pointsToBlkMap[newname] = pointsToBlkMap[blkname];
+    void VarEquiv::linkRegionName(std::string newname, std::string regionName){
+        if(pointsToRegionMap.find(newname) == pointsToRegionMap.end() && 
+           pointsToRegionMap.find(regionName) != pointsToRegionMap.end()){
+            pointsToRegionMap[newname] = pointsToRegionMap[regionName];
         } else {
-            CFDEBUG(std::cout << "WARNING: VarEquiv new blk name exists " <<  newname << " " << blkname << " "  << (pointsToBlkMap.find(newname) == pointsToBlkMap.end()) << " " << (pointsToBlkMap.find(blkname) != pointsToBlkMap.end()) << std::endl);
+            CFDEBUG(std::cout << "WARNING: VarEquiv new blk name exists " <<  newname << " " << regionName << " "  << (pointsToRegionMap.find(newname) == pointsToRegionMap.end()) << " " << (pointsToRegionMap.find(regionName) != pointsToRegionMap.end()) << std::endl);
         }
     }
 
-    std::string VarEquiv::getBlkName(std::string name){
-        if(pointsToBlkMap.find(name) != pointsToBlkMap.end()){
-            return pointsToBlkMap[name];
+    std::string VarEquiv::getRegionName(std::string name){
+        if(pointsToRegionMap.find(name) != pointsToRegionMap.end()){
+            return pointsToRegionMap[name];
         } else {
-            CFDEBUG(std::cout << "ERROR: getBlkName error: " << name << std::endl;);
+            CFDEBUG(std::cout << "ERROR: getRegionName error: " << name << std::endl;);
             return "$Null";
         }
     }
 
 
-    void VarEquiv::modifyBlkName(std::string name, std::string newBlkname){
-        if(pointsToBlkMap.find(name) != pointsToBlkMap.end()){
-            pointsToBlkMap[name] = newBlkname;
+    void VarEquiv::modifyRegionName(std::string name, std::string newRegionName){
+        if(pointsToRegionMap.find(name) != pointsToRegionMap.end()){
+            pointsToRegionMap[name] = newRegionName;
         } else {
-            CFDEBUG(std::cout << "ERROR: modifyBlkName error: " << name << std::endl;);
+            CFDEBUG(std::cout << "ERROR: modify RegionName error: " << name << std::endl;);
             return;
         }
     }
 
 
-    bool VarEquiv::hasBlkName(std::string name){
-        if(pointsToBlkMap.find(name) != pointsToBlkMap.end()){
+    bool VarEquiv::hasRegionName(std::string regionName){
+        if(pointsToRegionMap.find(regionName) != pointsToRegionMap.end()){
             return true;
         } else {
             return false;
@@ -118,17 +118,17 @@ namespace smack
     // name2blk offset operations
 
     void VarEquiv::addNewOffset(std::string name, int offset){
-        if(this->pointsToBlkOffset.find(name) != this->pointsToBlkOffset.end()){
+        if(this->pointsToRegionOffset.find(name) != this->pointsToRegionOffset.end()){
             CFDEBUG(std::cout << "name,offset: " << name << ", " << offset << " already exists. " << std::endl;);
         } else {
-            this->pointsToBlkOffset[name] = offset;
+            this->pointsToRegionOffset[name] = offset;
         }
     }
 
 
     void VarEquiv::modifyOffset(std::string name, int newOffset){
-        if(this->pointsToBlkOffset.find(name) != this->pointsToBlkOffset.end()){
-            this->pointsToBlkOffset[name] = newOffset;
+        if(this->pointsToRegionOffset.find(name) != this->pointsToRegionOffset.end()){
+            this->pointsToRegionOffset[name] = newOffset;
         } else {
             CFDEBUG(std::cout << "ERROR: offset not exist, modify failed.." << std::endl;);
             return;
@@ -136,11 +136,11 @@ namespace smack
     }
 
     int VarEquiv::getOffset(std::string name){
-        if(this->pointsToBlkOffset.find(name) != this->pointsToBlkOffset.end()){
-            return pointsToBlkOffset[name];
+        if(this->pointsToRegionOffset.find(name) != this->pointsToRegionOffset.end()){
+            return pointsToRegionOffset[name];
         } else {
             // TODOsh: find what may cause this negative ERROR
-            CFDEBUG(std::cout << "ERROR: VarEquiv blkoffset no name exists. " << name << std::endl);
+            CFDEBUG(std::cout << "ERROR: VarEquiv regionOffset no name exists. " << name << std::endl);
             return -1;
         }
     }
@@ -184,29 +184,29 @@ namespace smack
     }
     // isAllocPtr operations
 
-    void VarEquiv::setStructArrayPtr(std::string name, bool val){
+    void VarEquiv::setStructArrayRegion(std::string name, bool val){
         assert(name.find("$p") != std::string::npos || name.find("$") == std::string::npos);
-        this->structArrayPtr[name] = val;
+        this->structArrayRegion[name] = val;
     }
 
 
     
-    bool VarEquiv::isStructArrayPtr(std::string name){
+    bool VarEquiv::isStructArrayRegion(std::string name){
         //assert(name.find("$p") != std::string::npos || name.find("$") == std::string::npos);
-        return this->structArrayPtr[name];
+        return this->structArrayRegion[name];
     }
 
-    // freedBlkName operations
+    // freedRegionName operations
 
-    void VarEquiv::addNewFreedName(std::string name){
-        auto ret = this->freedBlkName.insert(name);
+    void VarEquiv::addNewFreedRegionName(std::string name){
+        auto ret = this->freedRegionName.insert(name);
         if(!ret.second){
             CDEBUG(std::cout << "ERROR: add new freed name error, this should not happen. freed var exists " << name << std::endl;);
         }
     }
 
-    bool VarEquiv::isFreedName(std::string name){
-        if(this->freedBlkName.find(name) == this->freedBlkName.end()){
+    bool VarEquiv::isFreedRegionName(std::string name){
+        if(this->freedRegionName.find(name) == this->freedRegionName.end()){
             return false;
         } else {
             return true;
@@ -218,52 +218,52 @@ namespace smack
 
     VarEquivPtr VarEquiv::clone(){
         VarEquivPtr newVarEquiv = std::make_shared<VarEquiv>();
-        newVarEquiv->setPointsToBlkMap(this->getPointsToBlkMap());
-        newVarEquiv->setPointsToBlkOffset(this->getPointsToBlkOffset());
-        newVarEquiv->setStructArrayPtr(this->getStructArrayPtr());
+        newVarEquiv->setPointsToRegionMap(this->getPointsToRegionMap());
+        newVarEquiv->setPointsToRegionOffset(this->getPointsToRegionOffset());
+        newVarEquiv->setStructArrayRegion(this->getStructArrayRegion());
         newVarEquiv->setVarAllocEqualMap(this->getVarAllocEqualMap());
         newVarEquiv->setVarToIntVal(this->getVarToIntVal());
-        newVarEquiv->setFreedBlkName(this->getFreedBlkName());
+        newVarEquiv->setFreedRegionName(this->getFreedRegionName());
         return newVarEquiv;
     }
 
     std::map<std::string, std::string> VarEquiv::getVarAllocEqualMap(){
         return this->varAllocEqualMap;
     }
-    std::map<std::string, std::string> VarEquiv::getPointsToBlkMap(){
-        return this->pointsToBlkMap;
+    std::map<std::string, std::string> VarEquiv::getPointsToRegionMap(){
+        return this->pointsToRegionMap;
     }
-    std::map<std::string, int> VarEquiv::getPointsToBlkOffset(){
-        return this->pointsToBlkOffset;
+    std::map<std::string, int> VarEquiv::getPointsToRegionOffset(){
+        return this->pointsToRegionOffset;
     }
     std::map<std::string, int> VarEquiv::getVarToIntVal(){
         return this->varToIntVal;
     }
-    std::map<std::string, bool> VarEquiv::getStructArrayPtr(){
-        return this->structArrayPtr;
+    std::map<std::string, bool> VarEquiv::getStructArrayRegion(){
+        return this->structArrayRegion;
     }
 
-    std::set<std::string> VarEquiv::getFreedBlkName(){
-        return this->freedBlkName;
+    std::set<std::string> VarEquiv::getFreedRegionName(){
+        return this->freedRegionName;
     }
 
     void VarEquiv::setVarAllocEqualMap(std::map<std::string, std::string> i){
         this->varAllocEqualMap = i;
     }
-    void VarEquiv::setPointsToBlkMap(std::map<std::string, std::string> i){
-        this->pointsToBlkMap = i;
+    void VarEquiv::setPointsToRegionMap(std::map<std::string, std::string> i){
+        this->pointsToRegionMap = i;
     }
-    void VarEquiv::setPointsToBlkOffset(std::map<std::string, int> i){
-        this->pointsToBlkOffset = i;
+    void VarEquiv::setPointsToRegionOffset(std::map<std::string, int> i){
+        this->pointsToRegionOffset = i;
     }
     void VarEquiv::setVarToIntVal(std::map<std::string, int> i){
         this->varToIntVal = i;
     }
-    void VarEquiv::setStructArrayPtr(std::map<std::string, bool> i){
-        this->structArrayPtr = i;
+    void VarEquiv::setStructArrayRegion(std::map<std::string, bool> i){
+        this->structArrayRegion = i;
     }
-    void VarEquiv::setFreedBlkName(std::set<std::string> i){
-        this->freedBlkName = i;
+    void VarEquiv::setFreedRegionName(std::set<std::string> i){
+        this->freedRegionName = i;
     }
 
 } // namespace smack

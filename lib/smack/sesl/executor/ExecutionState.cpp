@@ -15,11 +15,11 @@ namespace smack{
             assert(var != nullptr);
             resultSet.insert(var->name());
         }
-        std::cout << " xxxxxxxxxxxxxxxxxxx resultSet: " << std::endl;
-        for(std::string s : resultSet){
-            std::cout << s << "  " ;
-        }
-        std::cout << std::endl;
+        // std::cout << " xxxxxxxxxxxxxxxxxxx resultSet: " << std::endl;
+        // for(std::string s : resultSet){
+        //     std::cout << s << "  " ;
+        // }
+        // std::cout << std::endl;
         return resultSet;
     }
 }

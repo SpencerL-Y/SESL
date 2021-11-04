@@ -1,7 +1,7 @@
 //
 // This file is distributed under the MIT License. See LICENSE for details.
 //
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Naming.h"
 #include "llvm/IR/Constants.h"
 #include <iostream>
@@ -1142,7 +1142,8 @@ namespace smack {
         const Expr* clonedExpr = new BvConcat(renamedLeft, renamedRight);
         return clonedExpr;
     }
-
+    // -------------------------------- Separation Logic in AST --------------------------------
+    // -------------------------- Spatial Literals
     const SpatialLiteral *SpatialLiteral::emp() {
         std::set<std::string> emptyStackMems;
         return new EmpLit("", emptyStackMems);
@@ -1518,104 +1519,326 @@ namespace smack {
         return z3Ctx.bool_val(val);
     }
 
-    std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_and(SHExprPtr first, SHExprPtr second) {
-        const Expr *newPure;
-        if (second->getPure()->getType() == ExprType::BOOL) {
-            if (((const BoolLit *) second->getPure())->getVal()) {
-                newPure = first->getPure();
+    // -------------------- Spatial Clause
+    // spatialLit-level operations
+    std::tuple<
+        std::list<const SpatialLiteral*>, 
+        const SpatialLiteral*, 
+        std::list<const SpatialLiteral*>
+    > 
+    RegionClause::selectOutSpLit
+    (SpatialLiteral::Kind kind, int selectIndex) const{
+        std::list<const SpatialLiteral*> leftSplList;
+        const SpatialLiteral* selectedSpl;
+        std::list<const SpatialLiteral*> rightSplList;
+
+        bool leftPhase = true;
+        bool selectPhase = false;
+        bool rightPhase = false;
+
+        int countIndex = 1; 
+        for(const SpatialLiteral* spl : this->spatialLits){
+            // control 
+            if(kind == spl->getId() && selectIndex == countIndex){
+                leftPhase = false;
+                selectPhase = true;
+                rightPhase = false;
+            } else if(selectPhase){
+                leftPhase = false;
+                selectPhase = false;
+                rightPhase = true;
             }
-        } else {
-            newPure = Expr::and_(first->getPure(), second->getPure());
-        }
 
-        std::list<const SpatialLiteral *> splist;
-        auto result = std::make_shared<SymbolicHeapExpr>(newPure, splist);
-        for (const SpatialLiteral *spl :  first->getSpatialExpr()) {
-            result->addSpatialLit(spl);
+            // select
+            if(leftPhase){
+                leftSplList.push_back(spl);
+            } else if(selectPhase){
+                selectedSpl = spl;
+            } else if(rightPhase){
+                rightSplList.push_back(spl);
+            } else {
+                assert(false);
+                std::cout << "ERROR: select out split, this should not happen" << std::endl;
+            }
+
+            // count
+            if(kind == spl->getId()){
+                countIndex += 1;
+            }
         }
-        for (const SpatialLiteral *spl : second->getSpatialExpr()) {
-            result->addSpatialLit(spl);
-        }
-        return result;
+        return {leftSplList, selectedSpl, rightSplList};
     }
 
-    std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_conj(SHExprPtr originSH, const Expr *conj) {
-        const Expr *newPureExpr = Expr::and_(originSH->getPure(), conj);
-        std::list<const SpatialLiteral *> spatialExpr = originSH->getSpatialExpr();
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPureExpr, spatialExpr);
-        return newSH;
-    }
+    std::tuple<
+        std::list<const SpatialLiteral*>, 
+        std::list<const SpatialLiteral*>, 
+        std::list<const SpatialLiteral*>
+    > 
+    RegionClause::selectOutSpLitList
+    (SpatialLiteral::Kind startKind, int startSelectIndex, 
+         SpatialLiteral::Kind endKind, int endSelectIndex) const{
+        std::list<const SpatialLiteral *> leftSplList;
+        std::list<const SpatialLiteral *> selectedList;
+        std::list<const SpatialLiteral *> rightSplList;
+        bool leftPhase = true;
+        bool selectPhase = false;
+        bool rightPhase = false;
+        int startKindCount = 1;
+        int endKindCount = 1;
 
-    std::shared_ptr<SymbolicHeapExpr>
-    SymbolicHeapExpr::sh_sep_conj(SHExprPtr originSH, std::list<const SpatialLiteral *> conjs) {
-        const Expr *pureExpr = originSH->getPure();
-        std::list<const SpatialLiteral *> newSpatialExpr;
-        for (const SpatialLiteral *sp : originSH->getSpatialExpr()) {
-            newSpatialExpr.push_back(sp);
+        for(const SpatialLiteral* spl : this->spatialLits){
+            // control 
+            if(startKind == spl->getId() &&  startKindCount == startSelectIndex){
+                leftPhase = false;
+                selectPhase = true;
+                rightPhase = false;
+            } 
+            if(endKind == spl->getId() && endKindCount > endSelectIndex){
+                leftPhase = false;
+                selectPhase = false;
+                rightPhase = true;
+            }
+            // select 
+            if(leftPhase){
+                leftSplList.push_back(spl);
+            } else if(selectPhase){
+                selectedList.push_back(spl);
+            } else if(rightPhase){
+                rightSplList.push_back(spl);
+            } else {
+                assert(false);
+                std::cout << "ERROR: select out split, this should not happen" << std::endl;
+            }
+            
+            // count
+            if(startKind == spl->getId()){
+                startKindCount += 1;
+            }
+            if(endKind == spl->getId()){
+                endKindCount += 1;
+            }
         }
-        for (const SpatialLiteral *sp : conjs) {
-            newSpatialExpr.push_back(sp);
-        }
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(pureExpr, newSpatialExpr);
-        return newSH;
     }
-
-    std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::emp_sh() {
-        const BoolLit *trueExpr = new BoolLit(true);
-        std::list<const SpatialLiteral *> splist;
-        SHExprPtr empsh = std::make_shared<SymbolicHeapExpr>(trueExpr, splist);
-        empsh->addSpatialLit(SpatialLiteral::emp());
-        return empsh;
-    }
-
-
-    bool SymbolicHeapExpr::isError() {
-        const SpatialLiteral *sp = this->spatialExpr.front();
-        if (SpatialLiteral::Kind::ERR == sp->getId()) {
-            return true;
+    
+    // utils
+    bool 
+    RegionClause::containGcFuncName
+    (std::string funcName) const{
+        for(std::string name : this->regionCallStack){
+            if(!name.compare(funcName)){
+                return true;
+            }
         }
         return false;
     }
 
-    void SymbolicHeapExpr::addSpatialLit(const SpatialLiteral *spl) {
-        spatialExpr.push_back(spl);
+
+    // std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_and(SHExprPtr first, SHExprPtr second) {
+    //     const Expr *newPure;
+    //     if (second->getPure()->getType() == ExprType::BOOL) {
+    //         if (((const BoolLit *) second->getPure())->getVal()) {
+    //             newPure = first->getPure();
+    //         }
+    //     } else {
+    //         newPure = Expr::and_(first->getPure(), second->getPure());
+    //     }
+
+    //     std::list<const SpatialLiteral *> splist;
+    //     auto result = std::make_shared<SymbolicHeapExpr>(newPure, splist);
+    //     for (const SpatialLiteral *spl :  first->getSpatialExpr()) {
+    //         result->addSpatialLit(spl);
+    //     }
+    //     for (const SpatialLiteral *spl : second->getSpatialExpr()) {
+    //         result->addSpatialLit(spl);
+    //     }
+    //     return result;
+    // }
+
+    // std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_conj(SHExprPtr originSH, const Expr *conj) {
+    //     const Expr *newPureExpr = Expr::and_(originSH->getPure(), conj);
+    //     std::list<const SpatialLiteral *> spatialExpr = originSH->getSpatialExpr();
+    //     SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPureExpr, spatialExpr);
+    //     return newSH;
+    // }
+
+    // std::shared_ptr<SymbolicHeapExpr>
+    // SymbolicHeapExpr::sh_sep_conj(SHExprPtr originSH, std::list<const SpatialLiteral *> conjs) {
+    //     const Expr *pureExpr = originSH->getPure();
+    //     std::list<const SpatialLiteral *> newSpatialExpr;
+    //     for (const SpatialLiteral *sp : originSH->getSpatialExpr()) {
+    //         newSpatialExpr.push_back(sp);
+    //     }
+    //     for (const SpatialLiteral *sp : conjs) {
+    //         newSpatialExpr.push_back(sp);
+    //     }
+    //     SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(pureExpr, newSpatialExpr);
+    //     return newSH;
+    // }
+
+    // std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::emp_sh() {
+    //     const BoolLit *trueExpr = new BoolLit(true);
+    //     std::list<const SpatialLiteral *> splist;
+    //     SHExprPtr empsh = std::make_shared<SymbolicHeapExpr>(trueExpr, splist);
+    //     empsh->addSpatialLit(SpatialLiteral::emp());
+    //     return empsh;
+    // }
+
+
+    // bool SymbolicHeapExpr::isError() {
+    //     const SpatialLiteral *sp = this->spatialExpr.front();
+    //     if (SpatialLiteral::Kind::ERR == sp->getId()) {
+    //         return true;executeMemc
+    //     }
+    //     return false;
+    // }
+
+    // void SymbolicHeapExpr::addSpatialLit(const SpatialLiteral *spl) {
+    //     spatialExpr.push_back(spl);
+    // }
+
+
+    // const Expr *SymbolicHeapExpr::getBlkSize(std::string blkName) const {
+    //     if(!blkName.compare("$Null")){
+    //         return new IntLit((long long)0);
+    //     }
+    //     for (const SpatialLiteral *sp : this->spatialExpr) {
+    //         if (SpatialLiteral::Kind::SPT == sp->getId() &&
+    //             !sp->getBlkName().compare(blkName)) {
+    //             const SizePtLit *st = (const SizePtLit *) sp;
+    //             return st->getSize();
+    //         }
+    //     }
+    //     CFDEBUG(std::cout << "ERROR: Block Name not found: " <<  blkName << std::endl;);
+    //     return nullptr;
+    // }
+
+    
+    // ---------------------- Symbolic Heap
+    // region-level operations
+    void 
+    SymbolicHeapExpr::addRegionClause
+    (const RegionClause * clause){
+        if(this->hasRegion(clause->getRegionName)){
+            CFDEBUG(std::cout << "ERROR: add region error, region name exists: " << clause->getRegionName() << std::endl;);
+        } else {
+            this->regions.push_back(clause);
+        }
     }
 
+    void 
+    SymbolicHeapExpr::addErrorClause
+    (const ErrorClause * clause){
+        this->regions.push_back(clause);
+    }
 
-    const Expr *SymbolicHeapExpr::getBlkSize(std::string blkName) const {
-        if(!blkName.compare("$Null")){
-            return new IntLit((long long)0);
-        }
-        for (const SpatialLiteral *sp : this->spatialExpr) {
-            if (SpatialLiteral::Kind::SPT == sp->getId() &&
-                !sp->getBlkName().compare(blkName)) {
-                const SizePtLit *st = (const SizePtLit *) sp;
-                return st->getSize();
+    const RegionClause * 
+    SymbolicHeapExpr::getRegion
+    (std::string regionName) const{
+        for(const RegionClause * rc : this->regions){
+            if(!rc->getRegionName().compare(regionName)){
+                return rc;
             }
         }
-        CFDEBUG(std::cout << "ERROR: Block Name not found: " <<  blkName << std::endl;);
+        CFDEBUG(std::cout << "ERROR: region not found: " << regionName << std::endl;);
         return nullptr;
     }
 
-    const SizePtLit* SymbolicHeapExpr::getRegionSpt(std::string mallocName) const{
-        for(const SpatialLiteral* sp : this->spatialExpr){
-            if (SpatialLiteral::Kind::SPT == sp->getId() &&
-                !sp->getBlkName().compare(mallocName)) {
-                const SizePtLit *st = (const SizePtLit *) sp;
-                return st;
+    std::tuple<
+        std::list<const RegionClause *>,
+        const RegionClause *,
+        std::list<const RegionClause *>
+    > 
+    SymbolicHeapExpr::selectRegion
+    (std::string regionName) const{
+        std::list<const RegionClause *> leftRegions;
+        std::list<const RegionClause *> rightRegions;
+        const RegionClause * selectedRegion;
+        bool startRight = false;
+        for(const RegionClause * region : this->regions){
+            if(!region->getRegionName.compare(regionName)){
+                selectedRegion = region;
+                startRight = true;
+            } else {
+                if(startRight){
+                    rightRegions.push_back(region);
+                } else {
+                    leftRegion.push_back(region);
+                }
+            }
+        } 
+        return {leftRegions, selectedRegion, rightRegions};
+    }
+
+    const Expr* 
+    SymbolicHeapExpr::getRegionSizeExpr
+    (std::string regionName) const{
+        return this->getRegion(regionName)->getRegionSizeExpr();
+    }
+
+    bool 
+    SymbolicHeapExpr::hasRegion
+    (std::string regionName) const{
+        for(const RegionClause * rc : this->regions){
+            if(!rc->getRegionName().compare(regionName)){
+                return true;
             }
         }
-        CFDEBUG(std::cout << "ERROR: region spt not found!! " << mallocName << std::endl;);
-        return nullptr;
+        return false;
     }
+
+    bool 
+    SymbolicHeapExpr::hasError() const{
+        for(const RegionClause * rc : this->regions){
+            if(rc->isErrorClause()){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    SHExprPtr 
+    SymbolicHeapExpr::eliminateStackRegion
+    (std::string funcName){
+        std::list<const RegionClause*> newRegions;
+        for(const RegionClause* rc : this->regions){
+            if(rc->isGcRegion() && rc->containGcFuncName(funcName)){
+                
+            } else {
+                newRegions.push_back(rc);
+            }
+        }
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(this->getPures(), newRegions);
+        return newSH;
+    }
+
+    // const SizePtLit* SymbolicHeapExpr::getRegionSpt(std::string mallocName) const{
+    //     for(const SpatialLiteral* sp : this->spatialExpr){
+    //         if (SpatialLiteral::Kind::SPT == sp->getId() &&
+    //             !sp->getBlkName().compare(mallocName)) {
+    //             const SizePtLit *st = (const SizePtLit *) sp;
+    //             return st;
+    //         }
+    //     }
+    //     CFDEBUG(std::cout << "ERROR: region spt not found!! " << mallocName << std::endl;);
+    //     return nullptr;
+    // }
 
     void SymbolicHeapExpr::print(std::ostream &os) const {
         if(FULL_DEBUG && OPEN_SH){
-        os << "SymbHeap(" << pure << "|";
-        print_seq<const SpatialLiteral *>(os, spatialExpr, " # ");
+        os << "SymbHeap(" << std::endl;
+        for(const Expr* pure : this->pures){
+            os << pure << "\t";
+        }
+        os << std::endl;
+        os << "|";
+        print_seq<const RegionClause *>(os, this->regions, " # ");
         os << ")";
         }
     }
+
+
+    // ----------------------------- END of Separation Logic in AST --------------------------------- 
 
     const Expr* StringLit::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
         return this;

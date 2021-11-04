@@ -2,7 +2,7 @@
 // This file is distributed under the MIT License. See LICENSE for details.
 //
 #include "smack/BplFilePrinter.h"
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/SmackModuleGenerator.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/GraphWriter.h"

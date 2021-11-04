@@ -10,10 +10,12 @@
 #include <vector>
 #include <set>
 #include <stack>
+#include <tuple>
 #include <memory>
 #include "z3++.h"
 #include "utils/TranslatorUtil.h"
 #include "smack/sesl/executor/VarEquiv.h"
+#include "smack/sesl/executor/StoreSplitter.h"
 
 #define CHAR_BYTEWIDTH 4
 #define PTR_BYTEWIDTH 8
@@ -589,7 +591,8 @@ namespace smack {
         bool isValue() const { return false; }
     };
 
-    
+    // --------------------------- AST for Array Separation Logic ------------------------------
+    // -------------------------- Spatial Literals 
     class BytePt;
     class SpatialLiteral : public Expr {
     public:
@@ -597,7 +600,7 @@ namespace smack {
             EMP,
             PT,
             BLK,
-            SPT,
+            // SPT,
             ERR
         };
         Kind id;
@@ -614,16 +617,16 @@ namespace smack {
 
         static const SpatialLiteral *blk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::list<std::string> callStack);
 
-        static const SpatialLiteral *gcPt(const Expr *fcallStackSetrom, const Expr *to, std::string blkName, int stepSize, std::list<std::string> callStack);
+        // static const SpatialLiteral *gcPt(const Expr *fcallStackSetrom, const Expr *to, std::string blkName, int stepSize, std::list<std::string> callStack);
 
-        // TODOsh: implement and modify to make it compatible with bytewise
-        static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts, std::list<std::string> callStack);
+        // // TODOsh: implement and modify to make it compatible with bytewise
+        // static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts, std::list<std::string> callStack);
 
-        static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::list<std::string> callStack);
+        // static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::list<std::string> callStack);
 
-        static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack);
+        // static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack);
 
-        static const SpatialLiteral *gcSpt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack);
+        // static const SpatialLiteral *gcSpt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack);
 
         static const BytePt *bytePt(const Expr* from, const Expr* to);
 
@@ -648,9 +651,6 @@ namespace smack {
         bool isValue() const { return false; }
 
         virtual bool isStackEliminated(std::string exitFuncName) const=0;
-
-        
-
     };
 
     class EmpLit : public SpatialLiteral {
@@ -681,7 +681,7 @@ namespace smack {
             void print(std::ostream &os) const;
 
             virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-            bool isStackEliminated(std::string exitFuncName) const;
+            // bool isStackEliminated(std::string exitFuncName) const;
 
     };
 
@@ -702,12 +702,12 @@ namespace smack {
             setStackMembers(stackMems);
         }
 
-        PtLit(const Expr *f, const Expr* t, std::string blkName, int ss, std::vector<const BytePt*> bpts, std::set<std::string> stackMems) :
+        PtLit(const Expr *f, const Expr* t, std::string blkName, int ss, std::vector<const BytePt*> bpts/*, std::set<std::string> stackMems*/) :
         from(f), to(t), stepSize(ss), isBytewise(true), bytifiedPts(bpts)
         {
             setId(SpatialLiteral::Kind::PT);
             setBlkName(blkName);
-            setStackMembers(stackMems);
+            // setStackMembers(stackMems);
         }
 
         void print(std::ostream &os) const;
@@ -728,20 +728,20 @@ namespace smack {
 
         // TODOsh: implement and modify to make it compatible with bytewise
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isStackEliminated(std::string exitFuncName) const;
+        // bool isStackEliminated(std::string exitFuncName) const;
     };
 
     
 
-    class GCPtLit : public PtLit {
-    public:
-        GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::set<std::string> stackMems) : PtLit(f, t, blkName, ss, stackMems) {};
-        GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::vector<const BytePt*> bgcpts, std::set<std::string> stackMems) : PtLit(f,t,blkName, ss, bgcpts, stackMems) {};
+    // class GCPtLit : public PtLit {
+    // public:
+    //     GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::set<std::string> stackMems) : PtLit(f, t, blkName, ss, stackMems) {};
+    //     GCPtLit(const Expr *f, const Expr *t, std::string blkName, int ss, std::vector<const BytePt*> bgcpts, std::set<std::string> stackMems) : PtLit(f,t,blkName, ss, bgcpts, stackMems) {};
 
-        // TODOsh: implement and modify to make it compatible with bytewise
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isStackEliminated(std::string exitFuncName) const;
-    };
+    //     // TODOsh: implement and modify to make it compatible with bytewise
+    //     virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+    //     bool isStackEliminated(std::string exitFuncName) const;
+    // };
 
 
     class BlkLit : public SpatialLiteral {
@@ -769,52 +769,52 @@ namespace smack {
         int getBlkByteSize() const {return blkByteSize;}
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isStackEliminated(std::string exitFuncName) const;
+        // bool isStackEliminated(std::string exitFuncName) const;
 
         const Expr *getFrom() const { return from; }
 
         const Expr *getTo() const { return to; }
     };
 
-    class GCBlkLit : public BlkLit {
-    public:
-        GCBlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize, std::set<std::string> stackMems) : BlkLit(f, t, blkName, byteSize, stackMems) {};
+    // class GCBlkLit : public BlkLit {
+    // public:
+    //     GCBlkLit(const Expr *f, const Expr *t, std::string blkName, int byteSize, std::set<std::string> stackMems) : BlkLit(f, t, blkName, byteSize, stackMems) {};
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isStackEliminated(std::string exitFuncName) const;
-    };
+    //     virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+    //     bool isStackEliminated(std::string exitFuncName) const;
+    // };
 
-    class SizePtLit : public SpatialLiteral {
-    protected:
-        const Expr *var;
-        const Expr *size;
+    // class SizePtLit : public SpatialLiteral {
+    // protected:
+    //     const Expr *var;
+    //     const Expr *size;
 
-    public:
-        SizePtLit(const Expr *v, const Expr *s, std::string blkName, std::set<std::string> stackMems) : var(v), size(s) {
-            setId(SpatialLiteral::Kind::SPT);
-            setBlkName(blkName);
-            setStackMembers(stackMems);
-        }
+    // public:
+    //     SizePtLit(const Expr *v, const Expr *s, std::string blkName, std::set<std::string> stackMems) : var(v), size(s) {
+    //         setId(SpatialLiteral::Kind::SPT);
+    //         setBlkName(blkName);
+    //         setStackMembers(stackMems);
+    //     }
 
-        std::string getVarName() const;
+    //     std::string getVarName() const;
 
-        const Expr *getVar() const { return var; }
+    //     const Expr *getVar() const { return var; }
 
-        const Expr *getSize() const { return size; }
+    //     const Expr *getSize() const { return size; }
 
-        void print(std::ostream &os) const;
+    //     void print(std::ostream &os) const;
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isStackEliminated(std::string exitFuncName) const;
-    };
+    //     virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+    //     // bool isStackEliminated(std::string exitFuncName) const;
+    // };
 
-    class GCSizePtLit : public SizePtLit{
-    public:
-        GCSizePtLit(const Expr *v, const Expr *s, std::string blkName, std::set<std::string> stackMems): SizePtLit(v, s, blkName, stackMems) {};
+    // class GCSizePtLit : public SizePtLit{
+    // public:
+    //     GCSizePtLit(const Expr *v, const Expr *s, std::string blkName, std::set<std::string> stackMems): SizePtLit(v, s, blkName, stackMems) {};
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isStackEliminated(std::string exitFuncName) const;
-    };
+    //     virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+    //     bool isStackEliminated(std::string exitFuncName) const;
+    // };
 
     
 
@@ -840,51 +840,155 @@ namespace smack {
         void print(std::ostream &os) const;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
-        bool isStackEliminated(std::string exitFuncName) const;
+        // bool isStackEliminated(std::string exitFuncName) const;
     };
 
+    // -------------------------- Spatial Clauses 
 
-// Symbolic Heap in BoogieAST
+    class SpatialClause : public Expr {
+    protected:
+        std::list<const SpatialLiteral *> spatialLits;
+    public:
+        SpatialClause();
+        std::list<const SpatialLiteral *> getSpatialLits(){ return this->spatialLits;}
+        virtual bool isErrorClause()=0;
+        virtual bool isRegionClause()=0;
+    };
+    typedef std::shared_ptr<SpatialClause> SpatialClausePtr;
+
+
+    class RegionClause : public SpatialClause {
+        const VarExpr* regionInitVar;
+        const Expr* regionSizeExpr;
+        std::string regionName;
+        int regionSize;
+        bool isGc;
+
+        RegionBlkSplitUtilPtr regionMetaInfo;
+
+        std::list<std::string> regionCallStack;
+        
+    public:
+        // for region on heap 
+        RegionClause(const VarExpr* initVar, const Expr* sizeExpr, std::string regionName, int size) : regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(false) {
+            this->regionMetaInfo = std::make_shared<RegionBlkSplitUtil>();
+        }
+        // for region on stack
+        RegionClause(const VarExpr* initVar, const Expr* sizeExpr, std::string regionName, int size, std::list<std::string> callStack) : regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(true), regionCallStack(callStack) {
+            this->regionMetaInfo = std::make_shared<RegionBlkSplitUtil>();
+        }
+
+        // attributes getters
+        const VarExpr* getRegionInitVar() const { return this->regionInitVar;}
+        const Expr* getRegionSizeExpr() const {return this->regionSizeExpr;}
+        std::string getRegionName() const {return this->regionName;}
+        int getRegionSize() const {return this->regionSize;}
+        bool isGcRegion() const {return this->isGc;};
+
+        // split utils
+        RegionBlkSplitUtilPtr getRegionMetaInfo() const {return this->regionMetaInfo;}
+
+        // spatialLiteral-level operations
+        std::tuple<
+            std::list<const SpatialLiteral*>, 
+            const SpatialLiteral*, 
+            std::list<const SpatialLiteral*>
+        > 
+        selectOutSpLit
+        (SpatialLiteral::Kind kind, int selectIndex) const;
+
+        std::tuple<
+            std::list<const SpatialLiteral*>, 
+            std::list<const SpatialLiteral*>, 
+            std::list<const SpatialLiteral*>
+        > 
+        selectOutSpLitList
+        (SpatialLiteral::Kind startKind, int startSelectIndex, 
+         SpatialLiteral::Kind endKind, int endSelectIndex) const;
+
+        
+        // utils
+        bool containGcFuncName(std::string funcName) const;
+        bool isErrorClause() const { return false;}
+        bool isRegionClause() const { return true;}
+
+        // print
+        void print(std::ostream& os) const;
+    };
+
+    class ErrorClause : public RegionClause {
+        const ErrorLit * errlit;
+    public: 
+        ErrorClause(const ErrorLit * e) : RegionClause(nullptr, nullptr, "", 0), errlit(e){}
+
+        ErrType getErrReason() const {return this->errlit->getReason(); }
+
+        bool isErrorClause() const { return true;}
+        bool isRegionClause() const { return false;}
+    };
+
+    
+    // -------------------------- Symbolic Heap
     class SymbolicHeapExpr : public Expr {
-        const Expr *pure;
-        std::list<const SpatialLiteral *> spatialExpr;
+        std::list<const Expr*> pures;
+        std::list<const RegionClause *> regions;
         typedef std::shared_ptr<SymbolicHeapExpr> SHExprPtr;
     public:
-        SymbolicHeapExpr(const Expr *p, std::list<const SpatialLiteral *> splist) : pure(p), spatialExpr(splist) {}
+        SymbolicHeapExpr(std::list<const Expr*> purelist, std::list<const RegionClause *> regionlist) : pures(purelist), regions(regionlist) {}
+        // pure-level operations
+        // const Expr *getPure() const { return this->pure; }
+        std::list<const Expr*> getPures() const { return this->pures; }
 
-        const Expr *getPure() const { return this->pure; }
+        void addPure(const Expr* pureLit) {this->pures.push_back(pureLit); }
+        // region-level operations
+        // TODOsh: REFACTOR add AST element for region
+        // std::list<const SpatialLiteral *> getSpatialExpr() const { return this->spatialExpr; }
+        std::list<const RegionClause *> getRegions() const { return this->regions; }
+        
+        // TODOsh: REFACTOR change name 
+        // const Expr *getBlkSize(std::string blkName) const;
 
-        std::list<const SpatialLiteral *> getSpatialExpr() const { return this->spatialExpr; }
+        // TODOsh: add spatial literal to a specific region
+        // void addSpatialLit(const SpatialLiteral *spatialLit);
+        void addRegionClause(const RegionClause * clause);
 
-        const Expr *getBlkSize(std::string blkName) const;
+        // TODOsh: add error clause initialization
+        void addErrorClause(const ErrorClause * clause);
 
-        const SizePtLit* getRegionSpt(std::string mallocName) const;
 
-        void print(std::ostream &os) const;
+        
+        const RegionClause * getRegion(std::string regionName) const; 
 
-        void addSpatialLit(const SpatialLiteral *spatialLit);
+        const Expr* getRegionSizeExpr(std::string regionName) const;
+        
+        std::tuple<
+            std::list<const RegionClause *>,
+            const RegionClause *,
+            std::list<const RegionClause *>
+        > selectRegion(std::string regionName) const;
 
-        static SHExprPtr sh_and(SHExprPtr first, SHExprPtr second);
+        bool hasRegion(std::string regionName) const;
 
-        static SHExprPtr sh_conj(SHExprPtr originSH, const Expr *conj);
+        bool hasError() const;
 
-        static SHExprPtr sh_sep_conj(SHExprPtr originSH, std::list<const SpatialLiteral *> conjs);
-
-        static SHExprPtr emp_sh();
+        SHExprPtr eliminateStackRegion(std::string funcName);
 
         ExprType getType() const { return ExprType::SH; }
 
+        // print
+        void print(std::ostream &os) const;
+
+
+        // interface 
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
-
-        bool isError();
-
 
     };
 
     typedef std::shared_ptr<SymbolicHeapExpr> SHExprPtr;
 
+    // --------------------------- END of  AST for Array Separation Logic ------------------------------
 
     class Attr {
     protected:
@@ -1055,7 +1159,7 @@ namespace smack {
         static bool classof(const Stmt *S) { return S->getKind() == ASSUME; }
     };
 
-// Symbolic Heap Statement
+    // Symbolic Heap Statement
     class SHStmt : public Stmt {
         SHExprPtr symbheap;
 

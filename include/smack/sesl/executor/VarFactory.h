@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include "z3++.h"
 
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 
 namespace smack
 {

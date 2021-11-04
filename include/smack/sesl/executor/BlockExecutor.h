@@ -8,11 +8,11 @@
 #include <regex>
 #include <stack>
 #include <string>
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "llvm/IR/DebugInfo.h"
 #include "smack/AddTiming.h"
 #include "smack/Debug.h"
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/sesl/executor/ExecutionState.h"
 #include "smack/sesl/mem_manage/MemoryManager.h"
 #include "smack/sesl/executor/VarEquiv.h"

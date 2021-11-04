@@ -4,7 +4,7 @@
 #define DEBUG_TYPE "smack-mod-gen"
 
 #include "smack/SmackModuleGenerator.h"
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Debug.h"
 #include "smack/Naming.h"
 #include "smack/Prelude.h"

@@ -115,7 +115,7 @@ add_library(
 
 add_library(smackTranslator STATIC
   include/smack/AddTiming.h
-  include/smack/BoogieAst.h
+  include/smack/sesl/ast/BoogieAst.h
   include/smack/BplFilePrinter.h
   include/smack/BplPrinter.h
   include/smack/DSAWrapper.h
@@ -160,7 +160,7 @@ add_library(smackTranslator STATIC
         include/smack/sesl/cfg/ProcManager.h
         include/tinyxml/tinyxml2.h
   lib/smack/AddTiming.cpp
-  lib/smack/BoogieAst.cpp
+  lib/smack/sesl/ast/BoogieAst.cpp
   lib/smack/BplFilePrinter.cpp
   lib/smack/BplPrinter.cpp
   lib/smack/Debug.cpp

@@ -1,6 +1,6 @@
 #ifndef VAREQUIV_H
 #define VAREQUIV_H
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include <stdlib.h>
 #include <string>
 #include <map>

@@ -13,15 +13,15 @@
     {
         
         
-        class BlkSplitUtil{
+        class RegionBlkSplitUtil{
         //TODO: this class is used for the ptr arithmetic for the correct blk splitting
             std::vector<int> splitAxis;
             int maxOffset;
             std::map<int, int> offsetPosToSize;
             public:
 
-            BlkSplitUtil(std::vector<int> axis) : splitAxis(axis) {}
-            BlkSplitUtil() {splitAxis.push_back(-1);}
+            RegionBlkSplitUtil(std::vector<int> axis) : splitAxis(axis) {}
+            RegionBlkSplitUtil() {splitAxis.push_back(-1);}
 
             void print();
             int addSplit(int offset);
@@ -39,12 +39,12 @@
 
             void wipeInterval(int fromOffset, int toOffset);
         };
-        typedef std::shared_ptr<BlkSplitUtil> BlkSplitterPtr;
+        typedef std::shared_ptr<RegionBlkSplitUtil> RegionBlkSplitUtilPtr;
 
         class StoreSplitter
         {
         private:
-            std::map<std::string, BlkSplitterPtr> splitMap;
+            std::map<std::string, RegionBlkSplitUtilPtr> splitMap;
             typedef std::shared_ptr<StoreSplitter> StoreSplitterPtr;
         public:
             StoreSplitter(/* args */) {};
@@ -68,7 +68,7 @@
             // wipe the split points in interval [fromOffset, toOffset)
             void wipeInterval(std::string allocName, int fromOffset, int toOffset);
 
-            void setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap);
+            void setSplitMap(std::map<std::string, RegionBlkSplitUtilPtr> splitMap);
             StoreSplitterPtr clone();
             void print();
         };

@@ -1,7 +1,7 @@
 #ifndef EXECUTION_STATE_H
 #define EXECUTION_STATE_H
 
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/sesl/executor/VarEquiv.h"
 #include "smack/sesl/executor/VarFactory.h"
 #include "smack/sesl/executor/StoreSplitter.h"

@@ -4,7 +4,7 @@ namespace smack
 {
     
 
-    void BlkSplitUtil::print(){
+    void RegionBlkSplitUtil::print(){
         DEBUG_WITH_COLOR(std::cout << " Axis: ";, color::yellow);
         for(auto i : this->splitAxis){
 
@@ -18,7 +18,7 @@ namespace smack
         DEBUG_WITH_COLOR(std::cout << std::endl;, color::yellow);
     }
 
-    int BlkSplitUtil::addSplit(int offset){
+    int RegionBlkSplitUtil::addSplit(int offset){
         assert(offset >= 0);
         if(this->isInitialized(offset)){
             CFDEBUG(std::cout << "ERROR: split position is a pt, unable to split.." << std::endl;);
@@ -52,7 +52,7 @@ namespace smack
     }
 
 
-    int BlkSplitUtil::addSplitLength(int offset, int length){
+    int RegionBlkSplitUtil::addSplitLength(int offset, int length){
         if(this->offsetPosToSize.find(offset) == this->offsetPosToSize.end()){
             this->offsetPosToSize[offset] = length;
             return 0;
@@ -63,7 +63,7 @@ namespace smack
     }
 
 
-    int BlkSplitUtil::getSplit(int offset){
+    int RegionBlkSplitUtil::getSplit(int offset){
         if(this->isInitialized(offset)){
             CFDEBUG(std::cout << "ERROR: split position is a pt, unable to get split.." << std::endl;);
             return -1;
@@ -92,7 +92,7 @@ namespace smack
         }
     }
 
-    int BlkSplitUtil::getSplittableLength(int offset){
+    int RegionBlkSplitUtil::getSplittableLength(int offset){
         int getSplitInfo = this->getSplit(offset);
         if(getSplitInfo > 0){
             for(int ptPos : this->splitAxis){
@@ -108,12 +108,12 @@ namespace smack
 
     }
 
-    void BlkSplitUtil::setMaxOffset(int max){
+    void RegionBlkSplitUtil::setMaxOffset(int max){
         this->maxOffset = max;
     }
 
 
-    std::pair<bool, int> BlkSplitUtil::getOffsetPos(int offset){
+    std::pair<bool, int> RegionBlkSplitUtil::getOffsetPos(int offset){
         // find the position of pt predicate that is exactly offset
         for(int index = 0; index < this->splitAxis.size(); index ++){
             // splitAxis[0] == 0 means the initial position of a allocName has a pt predicate
@@ -131,7 +131,7 @@ namespace smack
     }
 
 
-    std::pair<bool, int> BlkSplitUtil::getInitializedPos(int offset){
+    std::pair<bool, int> RegionBlkSplitUtil::getInitializedPos(int offset){
         // infd the position of pt predicate that offset lies in
         for(int index = 0; index < this->splitAxis.size(); index ++){
             // splitAxis[0] == 0 means the initial position of a allocName has a pt predicate
@@ -151,11 +151,11 @@ namespace smack
     }
 
 
-    int BlkSplitUtil::getInitializedLength(int offset){
+    int RegionBlkSplitUtil::getInitializedLength(int offset){
         return this->offsetPosToSize[offset];
     }
 
-    int BlkSplitUtil::getInitializedSuffixLength(int offset){
+    int RegionBlkSplitUtil::getInitializedSuffixLength(int offset){
         // find the suffix length can be used
         for(int index = 0; index < this->splitAxis.size(); index ++){
             int ptPos = this->splitAxis[index];
@@ -168,7 +168,7 @@ namespace smack
     }
 
 
-    int BlkSplitUtil::getInitializedPrefixLength(int offset){
+    int RegionBlkSplitUtil::getInitializedPrefixLength(int offset){
         for(int index = 0; index < this->splitAxis.size(); index ++){
             int ptPos = this->splitAxis[index];
             if(offset >= ptPos && offset < ptPos + this->offsetPosToSize[ptPos]){
@@ -179,7 +179,7 @@ namespace smack
         return -1;
     }
 
-    bool BlkSplitUtil::isInitialized(int pos){
+    bool RegionBlkSplitUtil::isInitialized(int pos){
         for(std::pair<int, int> i : this->offsetPosToSize){
             if(pos >= i.first && pos < i.first + i.second){
                 return true;
@@ -189,7 +189,7 @@ namespace smack
     }
 
 
-    void BlkSplitUtil::wipeInterval(int fromOffset, int toOffset){
+    void RegionBlkSplitUtil::wipeInterval(int fromOffset, int toOffset){
                CFDEBUG(std::cout << "INFO: maxOffset: " << this->maxOffset << std::endl;);
         assert(fromOffset >= 0 && fromOffset < this->maxOffset && 
                toOffset   >= 0 && toOffset   <= this->maxOffset);
@@ -224,7 +224,7 @@ namespace smack
         if(this->splitMap.find(ptrName) != this->splitMap.end()){
             CFDEBUG(std::cout << "ERROR: Name exists check execution!!!" << std::endl);
         } else {
-            BlkSplitterPtr newAxis = std::make_shared<BlkSplitUtil>();
+            BlkSplitterPtr newAxis = std::make_shared<RegionBlkSplitUtil>();
             this->splitMap[ptrName] = newAxis;
         }
     }

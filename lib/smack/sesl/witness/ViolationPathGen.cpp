@@ -1,5 +1,5 @@
 #include "smack/sesl/witness/ViolationPathGen.h"
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/SmackOptions.h"
 #include "smack/sesl/verifier/MemSafeVerifier.h"
 

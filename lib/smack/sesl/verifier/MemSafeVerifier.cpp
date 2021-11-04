@@ -1,5 +1,5 @@
 #include "smack/sesl/verifier/MemSafeVerifier.h"
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Debug.h"
 #include "smack/Prelude.h"
 #include "smack/Regions.h"

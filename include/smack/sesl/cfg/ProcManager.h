@@ -6,7 +6,7 @@
 #define SMACK_PROCMANAGER_H
 
 #include <string>
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "unordered_map"
 
 using namespace std;

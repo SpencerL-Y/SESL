@@ -604,8 +604,6 @@ namespace smack {
             ERR
         };
         Kind id;
-        std::string regionName;
-
 
         static const SpatialLiteral *emp();
 

@@ -827,6 +827,7 @@ namespace smack {
     public:
         SpatialClause();
         std::list<const SpatialLiteral *> getSpatialLits(){ return this->spatialLits;}
+        void setSpatialLits(std::list<const SpatialLiteral*> splList){ this->spatialLits = splList};
         virtual bool isErrorClause()=0;
         virtual bool isRegionClause()=0;
     };
@@ -845,12 +846,17 @@ namespace smack {
         
     public:
         // for region on heap 
-        RegionClause(const VarExpr* initVar, const Expr* sizeExpr, std::string regionName, int size) : regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(false) {
+        RegionClause(std::list<const SpatialLiteral*> splList, const VarExpr* initVar, const Expr* sizeExpr, std::string regionName, int size， bool gc) : regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(gc) {
             this->regionMetaInfo = std::make_shared<RegionBlkSplitUtil>();
+            this->regionMetaInfo->setMaxOffset(size);
+            this->setSpatialLits(splList);
+
         }
         // for region on stack
-        RegionClause(const VarExpr* initVar, const Expr* sizeExpr, std::string regionName, int size, std::list<std::string> callStack) : regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(true), regionCallStack(callStack) {
+        RegionClause(std::list<const SpatialLiteral*> splList, const VarExpr* initVar, const Expr* sizeExpr, std::string regionName, int size, bool gc, std::list<std::string> callStack) : regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(gc), regionCallStack(callStack) {
             this->regionMetaInfo = std::make_shared<RegionBlkSplitUtil>();
+            this->regionMetaInfo->setMaxOffset(size);
+            this->setSpatialLits(splList);
         }
 
         // attributes getters
@@ -935,6 +941,8 @@ namespace smack {
         const RegionClause * getRegion(std::string regionName) const; 
 
         const Expr* getRegionSizeExpr(std::string regionName) const;
+
+        const int getRegionSize(std::string regionName) const;
         
         std::tuple<
             std::list<const RegionClause *>,

@@ -109,7 +109,7 @@ namespace smack{
         int parseStoreFuncSize(std::string funcName);
         int parseLoadFuncSize(std::string funcName);
         // ------------------ Symbolic Heap Utilities
-        SHExprPtr createErrLitSH(const Expr* newPure, ErrType errType);
+        SHExprPtr createErrLitSH(std::list<const Expr*> newPures, std::list<const RegionClause *> oldRegions, ErrType errType);
 
         const SpatialLiteral* createPtAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::list<std::string> tempCallStack);
         const SpatialLiteral* createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts, std::list<std::string> tempCallStack);
@@ -127,7 +127,7 @@ namespace smack{
         // commomly used utilities
         // << HIGH LEVEL METHODS>>
         
-        std::pair<const VarExpr*, const Expr*> updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, const Expr* oldPure);
+        std::pair<const VarExpr*, std::list<const Expr*>> updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, std::list<const Expr*> oldPures);
         
         // bytelevel operations for store
         std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndEqualHighLevelVar(const PtLit* oldPt, const Expr* oldPure);
@@ -230,7 +230,7 @@ namespace smack{
         BlockExecutor::ExprMemoryManager->registerPointer(ptr)
 
     #define CHECK_VALID_DEREF_FOR_BLK(blk) \
-        if(this->varEquiv->isFreedName(blk)){ \
+        if(this->varEquiv->isFreedRegionName(blk)){ \
             SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF); \
             CFDEBUG(std::cout << "INFO: INVALID DEREF " << std::endl;); \
             return newSH; \

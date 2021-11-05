@@ -1775,6 +1775,13 @@ namespace smack {
         return this->getRegion(regionName)->getRegionSizeExpr();
     }
 
+
+    const int 
+    SymbolicHeapExpr::getRegionSize
+    (std::string regionName) const{
+        return this->getRegion(regionName)->getRegionSize();
+    }
+
     bool 
     SymbolicHeapExpr::hasRegion
     (std::string regionName) const{

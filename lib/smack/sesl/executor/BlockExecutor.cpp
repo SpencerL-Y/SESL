@@ -2216,10 +2216,84 @@ namespace smack{
                 // the index of the pt predicate need to be modified 
                 int modifyIndex = posInfo.second;
                 // initialization for the new symbolic heap structure
-                const Expr* newPure = sh->getPure();
-                std::list<const SpatialLiteral*> newSpatial;
+                std::list<const Expr*> newPures = sh->getPures();
+                std::list<const RegionClause*> newRegions;
                 int currentIndex = 1;
 
+                std::tuple<
+                    std::list<const SpatialLiteral*>, 
+                    const SpatialLiteral*, 
+                    std::list<const SpatialLiteral*>
+                > selectOutTuple = origRegionClause->selectOutSpLit(SpatialLiteral::Kind::PT, modifyIndex);
+
+                const PtLit* ptLiteral = (const PtLit*) std::get<1>(selectOutTuple);
+                if(storedSize == ptLiteral->getStepSize()){
+                    // Situation A.1.(1)
+                    CFDEBUG(std::cout << "INFO: store situation A.1.(1)" << std::endl;);
+                    // use a fresh variable to represent the storedVar 
+                    const VarExpr* freshVar = this->varFactory->getFreshVar(storedSize);
+                    // discuss the stored expression:
+                    if(arg2->isVar()){
+                        // the stored expression is a variable
+                        const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
+                        std::string varOrigArg2Name = varOrigArg2->name();
+                        // obtain the var used
+                        const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
+                        std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
+                        // update the equivalent classes
+                        this->updateBindingsEqualVarAndRhsVar(freshVar, varArg2);
+                        // add type info of fresh variable according to the var type
+                        this->updateVarType(freshVar, varArg2, varArg2, storedSize);
+                        // update newPure
+                        const Expr* eq = Expr::eq(freshVar, varArg2);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    } else if(arg2->isValue()){
+                        // update the equivalent classes
+                        this->updateBindingsEqualVarAndRhsValue(freshVar, arg2);
+                        //add type info to cfg
+                        this->updateVarType(freshVar, arg2, arg2, storedSize);
+                        const Expr* eq = Expr::eq(freshVar, arg2);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    }  
+                    else {    
+                        // the stored expression is an arithmetic expression
+                        // it must be an arithmetic expression
+                        CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
+                        std::pair<const Expr*, bool> usedPair =  getUsedArithExprAndVar(freshVar, arg2);
+                        // compute the used expr
+                        const Expr* storedExpr = usedPair.first;
+                        assert(storedExpr != nullptr);
+                        bool isPtr = usedPair.second;
+                        // update the variable
+                        this->updateBindingsEqualVarAndRhsArithExpr(freshVar, arg2, storedExpr, isPtr);
+                        // add type info
+                        this->updateVarType(freshVar, arg2, storedExpr, storedSize);
+                        // update new pure
+                        const Expr* eq = Expr::eq(freshVar, storedExpr);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    }
+                    //STOP HEREEEEEEEEEEEEEEEEEEEEEEEEEEEE
+                    if(!ptLiteral->isByteLevel()){
+                        // Situation A.1.(1).a
+                        const SpatialLiteral* newPt = this->createPtAccordingToMallocName(regionName, ptLiteral->getFrom(), freshVar, ptLiteral->getStepSize(), storeDstCallStack);
+                        newSpatial.push_back(newPt);
+                        
+                    } else {
+                        // Situation A.1.(1).b
+                        // need to modify the low level pts besides the modification of high level
+                        std::pair<const PtLit*, const Expr*> newPtPurePair =  this->updateModifyBytifiedPtPredicateAndModifyHighLevelVar(ptLiteral, freshVar, newPure);
+                        const SpatialLiteral* newPt = newPtPurePair.first;
+                        newPure = newPtPurePair.second;
+                        newSpatial.push_back(newPt);
+                    }
+                } else if(storedSize < ptLiteral->getStepSize()){
+
+                } else {
+
+                }
                 // find the correct pt to modify into a new pt literal
                 for(const SpatialLiteral* i : sh->getSpatialExpr()){
                     if(!i->getBlkName().compare(regionName) &&
@@ -2232,71 +2306,7 @@ namespace smack{
                         2. otherwise it can only be used through previous parsed storeFuncSize
                         */
                         if(storedSize == ptLiteral->getStepSize()){
-                            // Situation A.1.(1)
-                            CFDEBUG(std::cout << "INFO: store situation A.1.(1)" << std::endl;);
-                            // use a fresh variable to represent the storedVar 
-                            const VarExpr* freshVar = this->varFactory->getFreshVar(storedSize);
-                            // discuss the stored expression:
-                            if(arg2->isVar()){
-                                // the stored expression is a variable
-                                const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
-                                std::string varOrigArg2Name = varOrigArg2->name();
-                                // obtain the var used
-                                const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
-                                std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
-                                // update the equivalent classes
-                                this->updateBindingsEqualVarAndRhsVar(freshVar, varArg2);
-                                // add type info of fresh variable according to the var type
-                                this->updateVarType(freshVar, varArg2, varArg2, storedSize);
-                                // update newPure
-                                const Expr* eq = Expr::eq(freshVar, varArg2);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            } else if(arg2->isValue()){
-                                // update the equivalent classes
-                                this->updateBindingsEqualVarAndRhsValue(freshVar, arg2);
-                                //add type info to cfg
-                                this->updateVarType(freshVar, arg2, arg2, storedSize);
-                                const Expr* eq = Expr::eq(freshVar, arg2);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            }  
-                            else {    
-                                // the stored expression is an arithmetic expression
-                                // it must be an arithmetic expression
-                                CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
-                                std::pair<const Expr*, bool> usedPair =  getUsedArithExprAndVar(freshVar, arg2);
-                                // compute the used expr
-                                const Expr* storedExpr = usedPair.first;
-                                assert(storedExpr != nullptr);
-                                bool isPtr = usedPair.second;
-                                // update the variable
-                                this->updateBindingsEqualVarAndRhsArithExpr(freshVar, arg2, storedExpr, isPtr);
-                                // add type info
-                                this->updateVarType(freshVar, arg2, storedExpr, storedSize);
-
-                                // update new pure
-                                const Expr* eq = Expr::eq(freshVar, storedExpr);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            }
-
-                            if(!ptLiteral->isByteLevel()){
-                                // Situation A.1.(1).a
-                                const SpatialLiteral* newPt = this->createPtAccordingToMallocName(regionName, ptLiteral->getFrom(), freshVar, ptLiteral->getStepSize(), storeDstCallStack);
-                                newSpatial.push_back(newPt);
-                                
-                            } else {
-                                // Situation A.1.(1).b
-                                // need to modify the low level pts besides the modification of high level
-                                std::pair<const PtLit*, const Expr*> newPtPurePair =  this->updateModifyBytifiedPtPredicateAndModifyHighLevelVar(ptLiteral, freshVar, newPure);
-                                const SpatialLiteral* newPt = newPtPurePair.first;
-                                newPure = newPtPurePair.second;
-                                newSpatial.push_back(newPt);
-                            }
+                            
 
                         } else if(storedSize < ptLiteral->getStepSize()){
                             // situation A.1.(2)
@@ -3639,6 +3649,7 @@ namespace smack{
 
 
     void BlockExecutor::updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs, int storedSize){
+        // DONE: loadIndex refactored
         // lhs and rhs are both used var
         if(rhs->isVar()){
             const VarExpr* rhsVar = (const VarExpr*) rhs;

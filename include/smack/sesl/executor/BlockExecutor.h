@@ -111,11 +111,11 @@ namespace smack{
         // ------------------ Symbolic Heap Utilities
         SHExprPtr createErrLitSH(std::list<const Expr*> newPures, std::list<const RegionClause *> oldRegions, ErrType errType);
 
-        const SpatialLiteral* createPtAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::list<std::string> tempCallStack);
-        const SpatialLiteral* createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts, std::list<std::string> tempCallStack);
-        const SpatialLiteral* createBlkAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int byteSize, std::list<std::string> tempCallStack);
-        std::list<const SpatialLiteral*> splitBlkByCreatingPt(std::string mallocName, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
-        std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyBlkPredicate(const SpatialLiteral* oldBlk, const Expr* oldPure);
+        const SpatialLiteral* createPtAccordingToRegionName(std::string regionName, const Expr* from, const Expr* to, int stepSize, std::list<std::string> tempCallStack);
+        const SpatialLiteral* createBPtAccodingToRegionName(std::string regionName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts, std::list<std::string> tempCallStack);
+        const SpatialLiteral* createBlkAccordingToRegionName(std::string regionName, const Expr* from, const Expr* to, int byteSize, std::list<std::string> tempCallStack);
+        std::list<const SpatialLiteral*> splitBlkByCreatingPt(std::string regionName, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
+        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyBlkPredicate(const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures);
         std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyForCalloc(const SpatialLiteral* oldBlk, const Expr* oldPure);
         // special cases
         int getMaxRegionLength(SHExprPtr sh);
@@ -130,11 +130,17 @@ namespace smack{
         std::pair<const VarExpr*, std::list<const Expr*>> updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, std::list<const Expr*> oldPures);
         
         // bytelevel operations for store
-        std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndEqualHighLevelVar(const PtLit* oldPt, const Expr* oldPure);
-        std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure);
-        std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndModifyPartial(const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, const Expr* oldPure);
-        std::pair<const PtLit*, const Expr*> updateModifyBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure);
-        std::pair<const PtLit*, const Expr*> updateModifyBytifiedPtPredicateAndModifyPartial(const PtLit* pt, const VarExpr* modifyVar, int offset, int length, const Expr* oldPure);
+        std::pair<const PtLit*, std::list<const Expr*>> updateCreateBytifiedPtPredicateAndEqualHighLevelVar(const PtLit* oldPt, std::list<const Expr*> oldPures);
+        
+        // std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure);
+        std::pair<const PtLit*, std::list<const Expr*>> updateCreateBytifiedPtPredicateAndModifyPartial(const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, std::list<const Expr*> oldPures);
+        
+        std::pair<const PtLit*, std::list<const Expr*>> updateModifyBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, std::list<const Expr*> oldPures);
+        
+        std::pair<const PtLit*, std::list<const Expr*>> updateModifyBytifiedPtPredicateAndModifyPartial(const PtLit* pt, const VarExpr* modifyVar, int offset, int length, std::list<const Expr*> oldPures);
+
+        std::pair<const RegionClause*, std::list<const Expr*>> updateBytifyBlkPredicate(const RegionClause* oldRegion, int blkCountIndex, std::list<const Expr*> oldPures);
+
         
         // bytelevel operations for load
         std::pair<const VarExpr*, const Expr*> updateLoadBytifiedPtPredicatePartial(const PtLit* oldPt, int offset, int length, const Expr* oldPure);

@@ -614,17 +614,6 @@ namespace smack {
 
         static const SpatialLiteral *blk(const Expr *from, const Expr *to, int byteSize);
 
-        // static const SpatialLiteral *gcPt(const Expr *fcallStackSetrom, const Expr *to, std::string blkName, int stepSize, std::list<std::string> callStack);
-
-        // // TODOsh: implement and modify to make it compatible with bytewise
-        // static const SpatialLiteral *gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts, std::list<std::string> callStack);
-
-        // static const SpatialLiteral *gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::list<std::string> callStack);
-
-        // static const SpatialLiteral *spt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack);
-
-        // static const SpatialLiteral *gcSpt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack);
-
         static const BytePt *bytePt(const Expr* from, const Expr* to);
 
         static const SpatialLiteral *errlit(bool f, ErrType r);
@@ -915,6 +904,7 @@ namespace smack {
         std::list<const RegionClause *> regions;
         typedef std::shared_ptr<SymbolicHeapExpr> SHExprPtr;
     public:
+
         SymbolicHeapExpr(std::list<const Expr*> purelist, std::list<const RegionClause *> regionlist) : pures(purelist), regions(regionlist) {}
         // pure-level operations
         // const Expr *getPure() const { return this->pure; }

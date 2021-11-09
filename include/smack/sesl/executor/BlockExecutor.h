@@ -143,7 +143,7 @@ namespace smack{
 
         
         // bytelevel operations for load
-        std::pair<const VarExpr*, const Expr*> updateLoadBytifiedPtPredicatePartial(const PtLit* oldPt, int offset, int length, const Expr* oldPure);
+        std::pair<const VarExpr*, std::list<const Expr*>> updateLoadBytifiedPtPredicatePartial(const PtLit* oldPt, int offset, int length, std::list<const Expr*> oldPures);
         
         void updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs, int storedSize);
         void updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs);

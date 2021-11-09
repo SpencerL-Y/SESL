@@ -1847,30 +1847,6 @@ namespace smack{
     (SHExprPtr sh, const CallStmt* stmt){
         SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::UNKNOWN);
         return newSH;
-        // if(stmt->getReturns().size() > 0){
-        //     CFDEBUG(std::cout << "INFO: execute Unintepreted function. " << stmt->getProc() << std::endl;);
-        //     std::string retOrigVarName = stmt->getReturns().front();
-        //     const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
-        //     std::string retVarName = retVar->name();
-        //     std::pair<std::string, int> typeInfo = this->cfg->getVarDetailType(retOrigVarName);
-        //     const VarExpr* freshVar = this->varFactory->getFreshVar(typeInfo.second);
-        //     this->cfg->addVarType(freshVar->name(), "i" + std::to_string(typeInfo.second));
-
-        //     this->varEquiv->addNewName(freshVar->name());
-        //     this->varEquiv->linkName(retVarName, freshVar->name());
-
-        //     const Expr* newConj = Expr::eq(retVar, freshVar);
-        //     REGISTER_EXPRPTR(newConj);
-        //     const Expr* newPure = Expr::and_(sh->getPure(), newConj);
-        //     REGISTER_EXPRPTR(newPure);
-        //     SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
-        //     newSH->print(std::cout);
-        //     CFDEBUG(std::cout << std::endl;);
-        //     return newSH;
-        // } else {
-        //     return sh;  
-        // }
-        
     }
 
     SHExprPtr  
@@ -2702,6 +2678,7 @@ namespace smack{
     BlockExecutor::executeLoad
     (SHExprPtr sh, std::string lhsVarName, std::string lhsVarOrigName, const FunExpr* rhsFun){ 
         assert(rhsFun->name().find("$load") != std::string::npos);
+        // DONE: loadIndex refactored
         // use ldPtr to store the position of load instruction
         const VarExpr* ldOrigPtr = nullptr;
         std::string ldOrigPtrName;
@@ -2800,199 +2777,187 @@ namespace smack{
         // B.3.(2).2: the loaded position is initialized, but not an offset. THe loadedSize + loadedPos > ptOffset + stepSize
         // B.3.(1): the loaded position is not initialized, [offset, offset + length) lies in some blk.
         // B.3.(2).3: the loaded position is not initalized, [offset, offset + length) covers some pt predicate
-        if(oldRegionClause->getRegionMetaInfo()->hasOffset(regionName, loadedOffset) || oldRegionClause->getRegionMetaInfo()->isInitialized(regionName, loadedOffset)){
+        if(oldRegionClause->getRegionMetaInfo()->hasOffset(loadedOffset) || oldRegionClause->getRegionMetaInfo()->isInitialized(loadedOffset)){
             
-            // STOP HEREEEEEE: add temp and new  
+            const RegionClause* tempRegionClause = oldRegionClause;
+            RegionBlkSplitUtilPtr tempMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempRegionClause->getRegionMetaInfo());
 
+            // -------------- new things --------------
+            std::list<const SpatialLiteral*> newLeftList;
+            std::list<const SpatialLiteral*> newMiddleList;
+            std::list<const SpatialLiteral*> newRightList;
+            RegionBlkSplitUtilPtr newMetaInfo;
+            const RegionClause* newRegionClause;
 
-
-
-            // spt * blk * pt * blk * pt
-            //              1          2
-            //              2*1+1      2*2+1
-            const Expr* newPure = sh->getPure();
-            std::list<const SpatialLiteral*> newSpatial;
-
-            std::pair<bool, int> posResult = this->storeSplit->getOffsetPos(
-                regionName,
-                loadedOffset
-            );
+            std::pair<bool, int> posResult = tempMetaInfo->getOffsetPos(loadedOffset);
+            CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
             if(posResult.first){    
                 // Situation B.1
-                if(this->storeSplit->getInitializedLength(regionName, loadedOffset) >= loadedSize ){
-                    int ptLength = this->storeSplit->getInitializedPos(regionName, loadedOffset).second;
+                if(tempMetaInfo->getInitializedLength(loadedOffset) >= loadedSize ){
+                    int ptLength = tempMetaInfo->getInitializedPos(loadedOffset).second;
                     int loadIndex = posResult.second;
-                    // start counting pt when we enter the blk & pts that created by the correct malloc function
-                    bool startCounting = false;
-                    // increase index by 1 when counting is started 
-                    int countIndex = 1;
-                    for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-                        if(SpatialLiteral::Kind::SPT == spl->getId()){
-                            const SizePtLit* sizePt = (const SizePtLit*) spl;
-                            if(!sizePt->getBlkName().compare(this->varEquiv->getRegionName(ldPtrName))){
-                                startCounting = true;
-                            } else {
-                                startCounting = false;
-                            }
-                        }
-                        if(startCounting) {
-                            if(SpatialLiteral::Kind::PT == spl->getId()){
-                                if(countIndex == loadIndex){
-                                    // find the correct index and load the content out
-                                    const PtLit* pt = (const PtLit*) spl;
-                                    // toExpr should be a variable
-                                    const Expr* toExprOrig = pt->getTo();
-                                    const VarExpr* toExprOrigVar = (const VarExpr*) toExprOrig;
-                                    const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
-                                    CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
-                                    if(loadedSize == this->storeSplit->getInitializedLength(regionName, loadedOffset)){
-                                        // Situation B.1.(1)
-                                        this->updateBindingsEqualVarAndRhsVar(lhsVar, toExprVar);
-                                        this->updateVarType(lhsVar, toExprVar, toExprVar);
-                                        const Expr* eq1 = Expr::eq(lhsVar, toExprVar);
-                                        REGISTER_EXPRPTR(eq1);
-                                        newPure = Expr::and_(newPure, eq1);
-                                        REGISTER_EXPRPTR(newPure);
-                                        const Expr* eq2 =  Expr::eq(lhsVar, toExprVar);
-                                        REGISTER_EXPRPTR(eq2);
-                                        const Expr* newPure = Expr::and_(sh->getPure(), eq2);
-                                        newSpatial.push_back(spl);
-                                    } else if(loadedSize < this->storeSplit->getInitializedLength(regionName, loadedOffset)){
-                                        // Situation B.1.(2)
-                                        if(pt->isByteLevel()){
-                                            std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
-                                            this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                            this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                            newPure =  newLoadedVarPurePair.second;
-                                            const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                            REGISTER_EXPRPTR(eq);
-                                            newPure = Expr::and_(newPure, eq);
-                                            REGISTER_EXPRPTR(newPure);
-                                            newSpatial.push_back(spl);  
-                                        } else {
-                                            std::pair<const PtLit*, const Expr*> newPtPurePair =    this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
-                                            const PtLit* newPt = newPtPurePair.first;
-                                            newSpatial.push_back(newPt);
-                                            newPure = newPtPurePair.second;
-                                            std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(newPt, 0, loadedSize, newPure);
-                                            this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                            newPure =  newLoadedVarPurePair.second;
-                                            this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                            const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                            REGISTER_EXPRPTR(eq);
-                                            newPure = Expr::and_(newPure, eq);
-                                            REGISTER_EXPRPTR(newPure);
-                                        }
-                                    } else {
-                                        CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
-                                        newSpatial.push_back(spl);
-                                    }
-                                } else {
-                                    newSpatial.push_back(spl);
-                                }
-                                countIndex += 1;
-                            } else {
-                                newSpatial.push_back(spl);
-                            }
+
+                    std::tuple<
+                    std::list<const SpatialLiteral*>,
+                    const SpatialLiteral*,
+                    std::list<const SpatialLiteral*>
+                    > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::PT, loadIndex);
+
+                    // find the correct index and load the content out
+                    const PtLit* ptLiteral = std::get<1>(selectOutTuple);
+                    const PtLit* newPtLiteral = nullptr;
+                    // toExpr should be a variable
+                    const Expr* toExprOrig = ptLiteral->getTo();
+                    const VarExpr* toExprOrigVar = (const VarExpr*) toExprOrig;
+                    const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
+                    CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
+                    if(loadedSize == tempMetaInfo->getInitializedLength(regionName, loadedOffset)){
+                        // Situation B.1.(1)
+                        this->updateBindingsEqualVarAndRhsVar(lhsVar, toExprVar);
+                        this->updateVarType(lhsVar, toExprVar, toExprVar);
+
+                        const Expr* eq1 = Expr::eq(lhsVar, toExprVar);
+                        REGISTER_EXPRPTR(eq1);
+                        newPures.push_back(eq1);
+                        const Expr* eq2 =  Expr::eq(lhsVar, toExprVar);
+                        REGISTER_EXPRPTR(eq2);
+                        newPures.push_back(eq2);
+                        newPtLiteral = ptLiteral;
+                    } else if(loadedSize < tempMetaInfo->getInitializedLength(regionName, loadedOffset)){
+                        // Situation B.1.(2)
+                        if(ptLiteral->isByteLevel()){
+                            std::pair<const VarExpr*, std::list<const Expr*>> newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(ptLiteral, 0, loadedSize, newPures);
+
+                            this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                            this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+
+                            newPures =  newLoadedVarPurePair.second;
+                            const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                            REGISTER_EXPRPTR(eq);
+                            newPures.push_back(eq);
+                            newPtLiteral = ptLiteral;
                         } else {
-                            newSpatial.push_back(spl);
+                            std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(ptLiteral, newPures);
+                            newPtLiteral = newPtPurePair.first;
+                            newPures = newPtPurePair.second;
+                            std::pair<const VarExpr*, std::list<const Expr*>>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(newPtLiteral, 0, loadedSize, newPures);
+
+                            this->updateBindingsEqualVarAndRhsVar(lhsVar, newLoadedVarPurePair.first);
+                            newPures =  newLoadedVarPurePair.second;
+                            this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+
+                            const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                            REGISTER_EXPRPTR(eq);
+                            newPures.push_back(eq);
                         }
+                    } else {
+                        CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
+                        assert(false);
                     }
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-                    newSH->print(std::cout);
-                    CFDEBUG(std::cout << std::endl;);
-                    return newSH;
+
+                    newLeftList = std::get<0>(selectOutTuple);
+                    newMiddleList.push_back(newPtLiteral);
+                    newRightList = std::get<2>(selectOutTuple);
+
+                    newMetaInfo = tempMetaInfo;
+                    newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
                 } else {
                     // Situation B.3.(2).1
                 
                     CFDEBUG(std::cout << "INFO: Situation 3.(2).1 currently not support, to be added later" << std::endl;)
                     CFDEBUG(std::cout << "INFO: Initialized length: " << this->storeSplit->getInitializedLength(regionName, loadedOffset) << " loaded size: " << loadedSize << std::endl;);
-                    SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                    SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
                     return newSH;
                 } 
-            } else if(this->storeSplit->isInitialized(regionName, loadedOffset)){
+            } else if(tempMetaInfo->isInitialized(loadedOffset)){
                 // Situation B.2
-                if (loadedSize <= this->storeSplit->getInitializedSuffixLength(regionName, loadedOffset)){
+                if (loadedSize <= tempMetaInfo->getInitializedSuffixLength(loadedOffset)){
                     // Situation B.2.(1)
-                    // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
-                    int prefixLength = this->storeSplit->getInitializedPrefixLength(regionName, loadedOffset);
+                    int prefixLength = tempMetaInfo->getInitializedPrefixLength(loadedOffset);
                     int loadIndex = posResult.second;
-                    bool startCounting = false;
-                    // increase index by 1 when counting is started 
-                    int countIndex = 1;
-                    for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-                        if(SpatialLiteral::Kind::SPT == spl->getId()){
-                            const SizePtLit* sizePt = (const SizePtLit*) spl;
-                            if(!sizePt->getBlkName().compare(this->varEquiv->getRegionName(ldPtrName))){
-                                startCounting = true;
-                            } else {
-                                startCounting = false;
-                            }
-                        }
-                        if(startCounting){
-                            if(SpatialLiteral::Kind::PT == spl->getId()){
-                                if(countIndex == loadIndex){
-                                    // find the correct index and load the content out
-                                    const PtLit* pt = (const PtLit*) spl;
-                                    assert(pt->getTo()->isVar());
-                                    const VarExpr* toExprOrigVar = (const VarExpr*)pt->getTo();
-                                    const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
-                                    CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
-                                    if(pt->isByteLevel()){
-                                        std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                        this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                        this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                        newPure =  newLoadedVarPurePair.second;
-                                        const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                        REGISTER_EXPRPTR(eq);
-                                        newPure = Expr::and_(newPure, eq);
-                                        REGISTER_EXPRPTR(newPure);
-                                        newSpatial.push_back(spl);
-                                    } else {
-                                        std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
-                                        newSpatial.push_back(newPtPurePair.first);
-                                        newPure = newPtPurePair.second;
-                                        std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                        this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                        this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                        newPure =  newLoadedVarPurePair.second;
-                                        const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                        REGISTER_EXPRPTR(eq);
-                                        newPure = Expr::and_(newPure, eq);
-                                        REGISTER_EXPRPTR(newPure);
-                                    }
-                                } else {
-                                    newSpatial.push_back(spl);
-                                }
-                                countIndex += 1;
-                            } else {
-                                newSpatial.push_back(spl);
-                            }
-                        } else {
-                            newSpatial.push_back(spl);
-                        }
+                    
+                    std::tuple<
+                        std::list<const SpatialLiteral*>,
+                        const SpatialLiteral*,
+                        std::list<const SpatialLiteral*>
+                    > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::PT, loadIndex);
+
+                    // find the correct index and load the content out
+                    const PtLit* ptLiteral = std::get<1>(selectOutTuple);
+                    const PtLit* newPtLiteral = nullptr;
+
+
+                    assert(ptLiteral->getTo()->isVar());
+                    const VarExpr* toExprOrigVar = (const VarExpr*)(ptLiteral->getTo());
+                    const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
+
+                    CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
+                    if(ptLiteral->isByteLevel()){
+                        std::pair<const VarExpr*, std::list<const Expr*>>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(ptLiteral, prefixLength, loadedSize, newPures);
+
+                        this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                        this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+
+                        newPures =  newLoadedVarPurePair.second;
+                        const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                        newPtLiteral = ptLiteral;
+                    } else {
+                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(ptLiteral, newPures);
+                        newPtLiteral = newPtPurePair.first;
+                        newPures = newPtPurePair.second;
+                        std::pair<const VarExpr*, std::list<const Expr*>>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(ptLiteral, prefixLength, loadedSize, newPures);
+
+                        this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                        this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+
+                        newPures =  newLoadedVarPurePair.second;
+                        const Expr* eq = Expr::eq(lhsVar, newLoadedVarPurePair.first);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
                     }
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-                    newSH->print(std::cout);
-                    CFDEBUG(std::cout << std::endl;);
-                    return newSH;
+                    newLeftList = std::get<0>(selectOutTuple);
+                    newMiddleList.push_back(newPtLiteral);
+                    newRightList = std::get<2>(selectOutTuple);
+
+                    newMetaInfo = tempMetaInfo;
+                    newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
                 } else {
                     // Situation B.3.(2).2
-
+                    CFDEBUG(std::cout << "INFO: Load Situation B.3.(2).2 currently not considered." << std::endl;)
+                    SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
+                    return newSH;
                 }
             } else {
                 CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);
                 assert(false);
             }
-            CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
-        } else if(!this->storeSplit->isInitialized(regionName, loadedOffset)) {
-            //  Use fresh variable for the nondeterministic value
-            //  and modify the value of the original one 
+            for(const RegionClause* r : newRegions){
+                if(!r->getRegionName().compare(regionName)){
+                    newRegions.push_back(newRegionClause);
+                } else {
+                    newRegions.push_back(r);
+                }
+            }
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
+            newSH->print(std::cout);
+            CFDEBUG(std::cout << std::endl;);
+            return newSH;
+        
+        } else if(!oldRegionClause->getRegionMetaInfo()->isInitialized(loadedOffset)) {
+            // Situation B.3 (Partial)
+            const RegionClause* tempRegionClause = oldRegionClause;
+            RegionBlkSplitUtilPtr tempMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempRegionClause->getRegionMetaInfo());
+
+            // -------------- new things --------------
+            std::list<const SpatialLiteral*> newLeftList;
+            std::list<const SpatialLiteral*> newMiddleList;
+            std::list<const SpatialLiteral*> newRightList;
+            RegionBlkSplitUtilPtr newMetaInfo;
+            const RegionClause* newRegionClause;
             CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory... "  << std::endl;);
-            // compute the loaded byteSize
-            const Expr* newPure = sh->getPure();
-            std::list<const SpatialLiteral*> newSpatial;
-            
+
             if(stepSize == 0){
                 loadedSize = this->parseLoadFuncSize(rhsFun->name());
             } else {
@@ -3001,60 +2966,64 @@ namespace smack{
             CFDEBUG(std::cout << "load size: " << loadedSize << std::endl;);
             assert(loadedSize > 0);
 
-            if(this->storeSplit->computeCoveredNumOfPts(regionName, loadedOffset, loadedSize) == 0){
+            if(tempMetaInfo->computeCoveredNumOfPts(loadedOffset, loadedSize) == 0){
                 // Situation B.3.(1)
                 // regard the unintialized region as data variable
                 const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(loadedSize);
+
                 const Expr* eq = Expr::eq(freshPtVar, lhsVar);
                 REGISTER_EXPRPTR(eq);
-                newPure = Expr::and_(newPure, eq);
-                REGISTER_EXPRPTR(newPure);
-                int splitBlkIndex = this->storeSplit->addSplit(regionName, loadedOffset);
-                                    this->storeSplit->addSplitLength(regionName, loadedOffset, loadedSize);
-                int currentIndex = 1;
-                for(const SpatialLiteral* i : sh->getSpatialExpr()){
-                    if(!i->getBlkName().compare(regionName) &&
-                              currentIndex == splitBlkIndex &&
-                        SpatialLiteral::Kind::BLK == i->getId()
-                    ){
-                        // the blk to break is found
-                        const BlkLit* breakBlk = (const BlkLit*) i;
-                        // if(breakBlk->isEmpty()){
-                        //     SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
-                        //     CFDEBUG(std::cout << "INFO: break empty blk" << std::endl;);
-                        //     return newSH;
-                        // }
+                newPures.push_back(eq);
 
-                        std::list<const SpatialLiteral*> splittedResult = this->splitBlkByCreatingPt(regionName, ldPtr, freshPtVar, loadedSize, breakBlk);
-                        for(const SpatialLiteral* splsp : splittedResult){
-                            newSpatial.push_back(splsp);
-                        }
-                        currentIndex += 1;
-                    } else if(!i->getBlkName().compare(regionName) && 
-                           SpatialLiteral::Kind::BLK == i->getId() && 
-                                     currentIndex != splitBlkIndex
-                    ){
-                        newSpatial.push_back(i);
-                        currentIndex += 1;
-                    } 
-                    else {
-                        newSpatial.push_back(i);
-                    }
-                }
-            } else if(this->storeSplit->computeCoveredNumOfPts(regionName, loadedOffset, loadedSize) > 0){
+                int splitBlkIndex = tempMetaInfo->addSplit(loadedOffset);
+                                    tempMetaInfo->addSplitLength(loadedOffset, loadedSize);
+
+                std::tuple<
+                    std::list<const SpatialLiteral*>,
+                    const SpatialLiteral*,
+                    std::list<const SpatialLiteral*>
+                > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::BLK, splitBlkIndex);
+
+                const BlkLit* blkLiteral = std::get<1>(selectOutTuple);
+
+                // the blk to break is found
+                const BlkLit* breakBlk = (const BlkLit*) i;
+
+                std::list<const SpatialLiteral*> splittedResult = this->splitBlkByCreatingPt(tempMetaInfo, ldPtr, freshPtVar, loadedSize, blkLiteral);
+                
+                newLeftList = std::get<0>(selectOutTuple);
+                newMiddleList = splittedResult;
+                newRightList = std::get<2>(selectOutTuple);
+
+                newMetaInfo = tempMetaInfo;
+                newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
+            } else if(tempMetaInfo->computeCoveredNumOfPts(loadedOffset, loadedSize) > 0){
                 // Situation B.3.(2).2
+                CFDEBUG(std::cout << "INFO: Load Situation B.3.(2).2 currently not considered." << std::endl;)
+                SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
+                return newSH;
             } else {
                 CFDEBUG(std::cout << "ERROR: load compute covered num of pts error" << std::endl;);
+                assert(false);
             }
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+
+            for(const RegionClause* r : newRegions){
+                if(!r->getRegionName().compare(regionName)){
+                    newRegions.push_back(newRegionClause);
+                } else {
+                    newRegions.push_back(r);
+                }
+            }
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
-        } else if(!this->storeSplit->hasName(regionName)){  
+        } else if(sh->getRegion(regionName) == nullptr){  
             CFDEBUG(std::cout << "ERROR: Alloc name store split not get !!" << std::endl;);
             return sh;
         } else {
             CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
+            assert(false);
             return sh;
         }
     }
@@ -3898,13 +3867,14 @@ namespace smack{
     }
 
 
-    std::pair<const VarExpr*, const Expr*> 
+    std::pair<const VarExpr*, std::list<const Expr*>>
     BlockExecutor::updateLoadBytifiedPtPredicatePartial
-    (const PtLit* pt, int offset, int length, const Expr* oldPure){
+    (const PtLit* pt, int offset, int length, std::list<const Expr*> oldPures){
+        // DONE: loadIndex refactored
         assert(pt->isByteLevel());
         const VarExpr* freshLoadedVar = this->createAndRegisterFreshDataVar(length);
         std::vector<const BytePt*> bytifiedPts = pt->getBytifiedPts();
-        const Expr* resultPure = oldPure;
+        std::list<const Expr*> resultPures = oldPures;
         std::vector<const BytePt*> loadedPts;
         for(int i = 0; i < pt->getStepSize(); i++){
             if(i >= offset && i < offset + length){
@@ -3912,12 +3882,8 @@ namespace smack{
             }
         }
         const Expr* loadedEqualConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(loadedPts, freshLoadedVar);
-        resultPure = Expr::and_(
-            resultPure,
-            loadedEqualConstraint
-        );
-        REGISTER_EXPRPTR(resultPure);
-        return {freshLoadedVar, resultPure};
+        resultPures.push_back(loadedEqualConstraint);
+        return {freshLoadedVar, resultPures};
     }
         
 

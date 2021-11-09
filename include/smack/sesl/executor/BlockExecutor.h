@@ -114,8 +114,8 @@ namespace smack{
         const SpatialLiteral* createPtAccordingToRegionName(std::string regionName, const Expr* from, const Expr* to, int stepSize, std::list<std::string> tempCallStack);
         const SpatialLiteral* createBPtAccodingToRegionName(std::string regionName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts, std::list<std::string> tempCallStack);
         const SpatialLiteral* createBlkAccordingToRegionName(std::string regionName, const Expr* from, const Expr* to, int byteSize, std::list<std::string> tempCallStack);
-        std::list<const SpatialLiteral*> splitBlkByCreatingPt(std::string regionName, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
-        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyBlkPredicate(const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures);
+        std::list<const SpatialLiteral*> splitBlkByCreatingPt(RegionBlkSplitUtilPtr metaInfo, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
+        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyBlkPredicate(RegionBlkSplitUtilPtr metaInfo, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures);
         std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyForCalloc(const SpatialLiteral* oldBlk, const Expr* oldPure);
         // special cases
         int getMaxRegionLength(SHExprPtr sh);
@@ -124,7 +124,7 @@ namespace smack{
         bool isMemcopyOverlapping(const VarExpr* srcVar, const VarExpr* dstVar, int copySize);
 
         // ------------------ Execution Utilities
-        // commomly used utilities
+        // commonly used utilities
         // << HIGH LEVEL METHODS>>
         
         std::pair<const VarExpr*, std::list<const Expr*>> updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, std::list<const Expr*> oldPures);

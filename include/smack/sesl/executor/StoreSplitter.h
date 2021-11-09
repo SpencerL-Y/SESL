@@ -21,7 +21,15 @@
             public:
 
             RegionBlkSplitUtil(std::vector<int> axis) : splitAxis(axis) {}
+
             RegionBlkSplitUtil() {splitAxis.push_back(-1);}
+
+            RegionBlkSplitUtil(RegionBlkSplitUtilPtr oldMetaInfo) : 
+            splitAxis(oldMetaInfo->getSplitAxis()), 
+            maxOffset(oldMetaInfo->getMaxOffset()),
+            offsetPosToSize(oldMetaInfo->getOffsetPosToSize())
+            {}
+            
 
             void print();
             int addSplit(int offset);
@@ -35,6 +43,8 @@
             int getInitializedSuffixLength(int offset);
             int getInitializedPrefixLength(int offset);
             std::vector<int> getSplitAxis() {return this->splitAxis;};
+            int getMaxOffset(){return this->maxOffset;}
+            std::map<int, int> getOffsetPosToSize(){return this->offsetPosToSize};
             bool isInitialized(int pos);
 
             void wipeInterval(int fromOffset, int toOffset);

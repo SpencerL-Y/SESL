@@ -216,195 +216,196 @@ namespace smack
         }
     }
 
+    int RegionBlkSplitUtil::getMaxOffset() {
+        return this->maxOffset;
+    }
+
+
+    // void StoreSplitter::createAxis(std::string ptrName){
+    //     if(this->splitMap.find(ptrName) != this->splitMap.end()){
+    //         CFDEBUG(std::cout << "ERROR: Name exists check execution!!!" << std::endl);
+    //     } else {
+    //         BlkSplitterPtr newAxis = std::make_shared<RegionBlkSplitUtil>();
+    //         this->splitMap[ptrName] = newAxis;
+    //     }
+    // }
+
     
 
+    // int StoreSplitter::addSplit(std::string allocName, int offset){
+    //     if(this->splitMap.find(allocName) != this->splitMap.end()){
+    //         return this->splitMap[allocName]->addSplit(offset);
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
+    //         return -1;
+    //     }
+    // }
+
+    // int StoreSplitter::addSplitLength(std::string allocName, int offset, int length){
+    //     if(this->splitMap.find(allocName) != this->splitMap.end()){
+    //         return this->splitMap[allocName]->addSplitLength(offset, length);
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
+    //         return -1;
+    //     }
+    // }
 
 
-    void StoreSplitter::createAxis(std::string ptrName){
-        if(this->splitMap.find(ptrName) != this->splitMap.end()){
-            CFDEBUG(std::cout << "ERROR: Name exists check execution!!!" << std::endl);
-        } else {
-            BlkSplitterPtr newAxis = std::make_shared<RegionBlkSplitUtil>();
-            this->splitMap[ptrName] = newAxis;
-        }
-    }
+    // int StoreSplitter::getSplit(std::string allocName, int offset){
+    //     if(this->splitMap.find(allocName) != this->splitMap.end()){
+    //         return this->splitMap[allocName]->getSplit(offset);
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
+    //         return -1;
+    //     }
+    // }
 
+    // int StoreSplitter::getSplittableLength(std::string allocName, int offset){
+    //     if(this->splitMap.find(allocName) != this->splitMap.end()){
+    //         return this->splitMap[allocName]->getSplittableLength(offset);
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
+    //         return -1;
+    //     }
+    // }
+
+
+    // void StoreSplitter::setMaxOffset(std::string ptrName, int max){
+    //     if(this->splitMap.find(ptrName) != this->splitMap.end()){
+    //         this->splitMap[ptrName]->setMaxOffset(max);
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
+    //     }
+    // }
+
+
+    // bool StoreSplitter::hasOffset(std::string allocName, int offset){
+    //     if(this->splitMap.find(allocName) != this->splitMap.end()){
+    //         std::pair<bool, int> findPos = this->splitMap[allocName]->getOffsetPos(offset);
+    //         return findPos.first;
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
+    //         return false;
+    //     }
+    // }
+
+
+    // bool StoreSplitter::hasName(std::string allocName){
+    //     if(this->splitMap.find(allocName) != this->splitMap.end()){
+    //         return true;
+    //     }
+    //     return true;
+    // }
+
+
+    // bool StoreSplitter::isInitialized(std::string allocName, int pos){
+    //     if(this->splitMap.find(allocName) != this->splitMap.end()){
+    //         return this->splitMap[allocName]->isInitialized(pos);
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
+    //         return false;
+    //     }
+    // }
+
+    // std::pair<bool, int> StoreSplitter::getOffsetPos(std::string allocName, int offset){
+    //     if(this->splitMap.find(allocName) != this->splitMap.end()){
+    //         return this->splitMap[allocName]->getOffsetPos(offset);
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
+    //         return std::pair<bool, int>(false, -1);
+    //     }
+    // }
+
+
+    // std::pair<bool, int> StoreSplitter::getInitializedPos(std::string allocName, int offset){
+    //     if(this->splitMap.find(allocName) != this->splitMap.end()){
+    //         return this->splitMap[allocName]->getInitializedPos(offset);
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl;);    
+    //         return std::pair<bool, int>(false, -1);
+    //     }
+    // }
+
+    // int StoreSplitter::getInitializedLength(std::string allocName, int offset){
+    //     bool hasOffset = this->splitMap[allocName]->getInitializedPos(offset).first;
+    //     if(!hasOffset){
+    //         CFDEBUG(std::cout << "INFO: offset not exists, pleas check.." << std::endl;);
+    //         return -1;
+    //     }
+    //     return this->splitMap[allocName]->getInitializedLength(offset);
+    // }
     
 
-    int StoreSplitter::addSplit(std::string allocName, int offset){
-        if(this->splitMap.find(allocName) != this->splitMap.end()){
-            return this->splitMap[allocName]->addSplit(offset);
-        } else {
-            CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
-            return -1;
-        }
-    }
+    // int StoreSplitter::getInitializedSuffixLength(std::string allocName, int offset){
+    //     std::pair<bool, int> inited = this->getInitializedPos(allocName, offset);
+    //     if(inited.first){
+    //         return this->splitMap[allocName]->getInitializedSuffixLength(offset);
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: offset not initialized, check!!" << std::endl;);
+    //         return -1;
+    //     }
 
-    int StoreSplitter::addSplitLength(std::string allocName, int offset, int length){
-        if(this->splitMap.find(allocName) != this->splitMap.end()){
-            return this->splitMap[allocName]->addSplitLength(offset, length);
-        } else {
-            CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
-            return -1;
-        }
-    }
+    // }
 
-
-    int StoreSplitter::getSplit(std::string allocName, int offset){
-        if(this->splitMap.find(allocName) != this->splitMap.end()){
-            return this->splitMap[allocName]->getSplit(offset);
-        } else {
-            CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
-            return -1;
-        }
-    }
-
-    int StoreSplitter::getSplittableLength(std::string allocName, int offset){
-        if(this->splitMap.find(allocName) != this->splitMap.end()){
-            return this->splitMap[allocName]->getSplittableLength(offset);
-        } else {
-            CFDEBUG(std::cout << "ERROR: Name " << allocName <<  " not exists check execution!!!" << std::endl);
-            return -1;
-        }
-    }
+    // int StoreSplitter::getInitializedPrefixLength(std::string allocName, int offset){
+    //     std::pair<bool, int> inited = this->getInitializedPos(allocName, offset);
+    //     if(inited.first){
+    //         return this->splitMap[allocName]->getInitializedPrefixLength(offset);
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: offset not initialized, check!!" << std::endl;);
+    //         return -1;
+    //     }
+    // }
 
 
-    void StoreSplitter::setMaxOffset(std::string ptrName, int max){
-        if(this->splitMap.find(ptrName) != this->splitMap.end()){
-            this->splitMap[ptrName]->setMaxOffset(max);
-        } else {
-            CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
-        }
-    }
+    // int StoreSplitter::computeCoveredNumOfPts(std::string allocName, int offset, int length){
+    //     // compute the number of pt predicates covered by the region [offset, offset + length)
+    //     if(this->splitMap.find(allocName) != this->splitMap.end()){
+    //         int coveredNum = 0;
+    //         if(this->isInitialized(allocName, offset)){
+    //             coveredNum += 1;
+    //         }
+    //         for(int i : this->splitMap[allocName]->getSplitAxis()){
+    //             if( i >= offset && i < offset + length){
+    //                 coveredNum += 1;
+    //             }
+    //         }
+    //         return coveredNum;
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: alloc name not exists " << allocName << std::endl;);
+    //         return -1;
+    //     }
+
+    // }
 
 
-    bool StoreSplitter::hasOffset(std::string allocName, int offset){
-        if(this->splitMap.find(allocName) != this->splitMap.end()){
-            std::pair<bool, int> findPos = this->splitMap[allocName]->getOffsetPos(offset);
-            return findPos.first;
-        } else {
-            CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
-            return false;
-        }
-    }
+    // void StoreSplitter::wipeInterval(std::string allocName, int fromOffset, int toOffset){
+    //     // this method can only be used when the corresponding area of symbolic heap is modified
+    //     if(this->splitMap.find(allocName) != this->splitMap.end()){
+    //         CFDEBUG(std::cout << "INFO: Wipe interval [" << fromOffset << ", " << toOffset << ")" << std::endl;);
+    //         this->splitMap[allocName]->wipeInterval(fromOffset, toOffset);
+    //     } else {
+    //         CFDEBUG(std::cout << "ERROR: alloc name not exists " << allocName << std::endl;);
+    //         assert(false);
+    //     }
+    // }
 
+    // void StoreSplitter::setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap){
+    //     this->splitMap = splitMap;
+    // }
 
-    bool StoreSplitter::hasName(std::string allocName){
-        if(this->splitMap.find(allocName) != this->splitMap.end()){
-            return true;
-        }
-        return true;
-    }
+    // StoreSplitterPtr StoreSplitter::clone(){
+    //     StoreSplitterPtr newStoreSplit = std::make_shared<StoreSplitter>();
+    //     newStoreSplit->setSplitMap(splitMap);
+    //     return newStoreSplit;
+    // }
 
-
-    bool StoreSplitter::isInitialized(std::string allocName, int pos){
-        if(this->splitMap.find(allocName) != this->splitMap.end()){
-            return this->splitMap[allocName]->isInitialized(pos);
-        } else {
-            CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
-            return false;
-        }
-    }
-
-    std::pair<bool, int> StoreSplitter::getOffsetPos(std::string allocName, int offset){
-        if(this->splitMap.find(allocName) != this->splitMap.end()){
-            return this->splitMap[allocName]->getOffsetPos(offset);
-        } else {
-            CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl);
-            return std::pair<bool, int>(false, -1);
-        }
-    }
-
-
-    std::pair<bool, int> StoreSplitter::getInitializedPos(std::string allocName, int offset){
-        if(this->splitMap.find(allocName) != this->splitMap.end()){
-            return this->splitMap[allocName]->getInitializedPos(offset);
-        } else {
-            CFDEBUG(std::cout << "ERROR: Name not exists check execution!!!" << std::endl;);    
-            return std::pair<bool, int>(false, -1);
-        }
-    }
-
-    int StoreSplitter::getInitializedLength(std::string allocName, int offset){
-        bool hasOffset = this->splitMap[allocName]->getInitializedPos(offset).first;
-        if(!hasOffset){
-            CFDEBUG(std::cout << "INFO: offset not exists, pleas check.." << std::endl;);
-            return -1;
-        }
-        return this->splitMap[allocName]->getInitializedLength(offset);
-    }
-    
-
-    int StoreSplitter::getInitializedSuffixLength(std::string allocName, int offset){
-        std::pair<bool, int> inited = this->getInitializedPos(allocName, offset);
-        if(inited.first){
-            return this->splitMap[allocName]->getInitializedSuffixLength(offset);
-        } else {
-            CFDEBUG(std::cout << "ERROR: offset not initialized, check!!" << std::endl;);
-            return -1;
-        }
-
-    }
-
-    int StoreSplitter::getInitializedPrefixLength(std::string allocName, int offset){
-        std::pair<bool, int> inited = this->getInitializedPos(allocName, offset);
-        if(inited.first){
-            return this->splitMap[allocName]->getInitializedPrefixLength(offset);
-        } else {
-            CFDEBUG(std::cout << "ERROR: offset not initialized, check!!" << std::endl;);
-            return -1;
-        }
-    }
-
-
-    int StoreSplitter::computeCoveredNumOfPts(std::string allocName, int offset, int length){
-        // compute the number of pt predicates covered by the region [offset, offset + length)
-        if(this->splitMap.find(allocName) != this->splitMap.end()){
-            int coveredNum = 0;
-            if(this->isInitialized(allocName, offset)){
-                coveredNum += 1;
-            }
-            for(int i : this->splitMap[allocName]->getSplitAxis()){
-                if( i >= offset && i < offset + length){
-                    coveredNum += 1;
-                }
-            }
-            return coveredNum;
-        } else {
-            CFDEBUG(std::cout << "ERROR: alloc name not exists " << allocName << std::endl;);
-            return -1;
-        }
-
-    }
-
-
-    void StoreSplitter::wipeInterval(std::string allocName, int fromOffset, int toOffset){
-        // this method can only be used when the corresponding area of symbolic heap is modified
-        if(this->splitMap.find(allocName) != this->splitMap.end()){
-            CFDEBUG(std::cout << "INFO: Wipe interval [" << fromOffset << ", " << toOffset << ")" << std::endl;);
-            this->splitMap[allocName]->wipeInterval(fromOffset, toOffset);
-        } else {
-            CFDEBUG(std::cout << "ERROR: alloc name not exists " << allocName << std::endl;);
-            assert(false);
-        }
-    }
-
-    void StoreSplitter::setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap){
-        this->splitMap = splitMap;
-    }
-
-    StoreSplitterPtr StoreSplitter::clone(){
-        StoreSplitterPtr newStoreSplit = std::make_shared<StoreSplitter>();
-        newStoreSplit->setSplitMap(splitMap);
-        return newStoreSplit;
-    }
-
-    void StoreSplitter::print(){
-       for(std::pair<std::string, BlkSplitterPtr>  i : this->splitMap){
-           DEBUG_WITH_COLOR(std::cout << i.first;, color::yellow);
-           i.second->print();
+    // void StoreSplitter::print(){
+    //    for(std::pair<std::string, BlkSplitterPtr>  i : this->splitMap){
+    //        DEBUG_WITH_COLOR(std::cout << i.first;, color::yellow);
+    //        i.second->print();
            
-       }
-    }
+    //    }
+    // }
 
 } // namespace smack

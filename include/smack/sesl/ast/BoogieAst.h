@@ -815,7 +815,7 @@ namespace smack {
         std::list<const SpatialLiteral *> spatialLits;
     public:
         SpatialClause();
-        std::list<const SpatialLiteral *> getSpatialLits(){ return this->spatialLits;}
+        std::list<const SpatialLiteral *> getSpatialLits() const { return this->spatialLits;}
         void setSpatialLits(std::list<const SpatialLiteral*> splList){ this->spatialLits = splList};
         virtual bool isErrorClause()=0;
         virtual bool isRegionClause()=0;
@@ -847,16 +847,47 @@ namespace smack {
             this->regionMetaInfo->setMaxOffset(size);
             this->setSpatialLits(splList);
         }
+        
+        // with blkSplitUtil change
+        RegionClause(std::list<const SpatialLiteral*> newSplList, RegionBlkSplitUtilPtr info, const RegionClause* oldRegion) : 
+        regionInitVar(oldRegion->getRegionInitVar()), 
+        regionSizeExpr(oldRegion->getRegionSizeExpr()), 
+        regionName(oldRegion->getRegionName()), 
+        regionSize(info->getmaxOffset()), 
+        isGc(oldRegion->isGcRegion()),
+        regionCallStack(oldRegion->getRegionCallStack()) {
+            this->setRegionMetaInfo(info);
+            this->setSpatialLits(newSplList);
+        }
 
-        // attributes getters
+        RegionClause(std::list<const SpatialLiteral*> leftList, std::list<const SpatialLiteral> middleList, std::list<const SpatialLiteral*> rightList, RegionBlkSplitUtilPtr info, const RegionClause* oldRegion) : 
+        regionInitVar(oldRegion->getRegionInitVar()), 
+        regionSizeExpr(oldRegion->getRegionSizeExpr()), 
+        regionName(oldRegion->getRegionName()), 
+        regionSize(info->getmaxOffset()), 
+        isGc(oldRegion->isGcRegion()),
+        regionCallStack(oldRegion->getRegionCallStack()) {
+            this->setRegionMetaInfo(info);
+            for(const SpatialLiteral* l : leftList){
+                this->spatialLits.push_back(l);
+            }
+            for(const SpatialLiteral* l : middleList){
+                this->spatialLits.push_back(l);
+            }
+            for(const SpatialLiteral* l : rightList){
+                this->spatialLits.push_back(l);
+            }
+        }
+
+        // attributes getters and setters
         const VarExpr* getRegionInitVar() const { return this->regionInitVar;}
         const Expr* getRegionSizeExpr() const {return this->regionSizeExpr;}
         std::string getRegionName() const {return this->regionName;}
         int getRegionSize() const {return this->regionSize;}
         bool isGcRegion() const {return this->isGc;};
-
-        // split utils
+        std::list<std::string> getRegionCallStack() {return this->regionCallStack;}
         RegionBlkSplitUtilPtr getRegionMetaInfo() const {return this->regionMetaInfo;}
+        void setRegionMetaInfo(RegionBlkSplitUtilPtr info) { this->regionMetaInfo = info;}
 
         // spatialLiteral-level operations
         std::tuple<

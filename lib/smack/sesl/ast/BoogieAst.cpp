@@ -1153,7 +1153,6 @@ namespace smack {
         assert(stepSize > 0);
         if(stepSize != 1){
             const SpatialLiteral* newPt = new PtLit(from, to, stepSize);
-            REGISTER_EXPRPTR(newPt);
             return newPt;
         } else {
             const BytePt* bpt = new BytePt(from, to);
@@ -1161,7 +1160,6 @@ namespace smack {
             std::vector<const BytePt*> bytifiedVec;
             bytifiedVec.push_back(bpt);
             const SpatialLiteral* newPt = new PtLit(from, to, stepSize, bytifiedVec);
-            REGISTER_EXPRPTR(newPt);
             return newPt;
         }
     }

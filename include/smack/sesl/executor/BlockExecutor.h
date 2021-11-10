@@ -111,12 +111,9 @@ namespace smack{
         // ------------------ Symbolic Heap Utilities
         SHExprPtr createErrLitSH(std::list<const Expr*> newPures, std::list<const RegionClause *> oldRegions, ErrType errType);
 
-        const SpatialLiteral* createPtAccordingToRegionName(std::string regionName, const Expr* from, const Expr* to, int stepSize, std::list<std::string> tempCallStack);
-        const SpatialLiteral* createBPtAccodingToRegionName(std::string regionName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts, std::list<std::string> tempCallStack);
-        const SpatialLiteral* createBlkAccordingToRegionName(std::string regionName, const Expr* from, const Expr* to, int byteSize, std::list<std::string> tempCallStack);
         std::list<const SpatialLiteral*> splitBlkByCreatingPt(RegionBlkSplitUtilPtr metaInfo, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
-        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyBlkPredicate(RegionBlkSplitUtilPtr metaInfo, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures);
-        std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyForCalloc(const SpatialLiteral* oldBlk, const Expr* oldPure);
+        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyBlkPredicate(RegionBlkSplitUtilPtr metaInfo, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures);
+        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyForCalloc(RegionBlkSplitUtilPtr metaInfo, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures)
         // special cases
         int getMaxRegionLength(SHExprPtr sh);
 

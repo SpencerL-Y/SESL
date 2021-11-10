@@ -885,7 +885,7 @@ namespace smack {
         std::string getRegionName() const {return this->regionName;}
         int getRegionSize() const {return this->regionSize;}
         bool isGcRegion() const {return this->isGc;};
-        std::list<std::string> getRegionCallStack() {return this->regionCallStack;}
+        std::list<std::string> getRegionCallStack() const {return this->regionCallStack;}
         RegionBlkSplitUtilPtr getRegionMetaInfo() const {return this->regionMetaInfo;}
         void setRegionMetaInfo(RegionBlkSplitUtilPtr info) { this->regionMetaInfo = info;}
 
@@ -919,10 +919,14 @@ namespace smack {
 
     class ErrorClause : public RegionClause {
         const ErrorLit * errlit;
+        bool isFresh;
     public: 
-        ErrorClause(const ErrorLit * e) : RegionClause(nullptr, nullptr, "", 0), errlit(e){}
+        ErrorClause(const ErrorLit * e) : RegionClause(nullptr, nullptr, "", 0), errlit(e), isFresh(true){}
+        ErrorClause(const ErrorClause* ec) : RegionClause(nullptr, nullptr, "", 0), errlit(ec->getErrLit()), isFresh(false){}
 
         ErrType getErrReason() const {return this->errlit->getReason(); }
+        const ErrorLit* getErrLit() const {return errlit;}
+        bool isFresh() const {return this->isFresh;}
 
         bool isErrorClause() const { return true;}
         bool isRegionClause() const { return false;}

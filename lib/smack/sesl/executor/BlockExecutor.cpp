@@ -289,7 +289,6 @@ namespace smack{
                 // 4. Deal with load and store instructions
             } else if(this->isStoreLoadFuncName(rhsFun->name())){
                 CFDEBUG(std::cout << "ASSIGN: rhs store or load" << std::endl;);
-                /// TODOHEREEEEEEEEEEEEEEEEEEEE
                 // This may contain the pointer arithmetic
                 if(rhsFun->name().find("$store") != std::string::npos){
                     // lhsVarName is not needed, since lhsVar is not used in store instruction.
@@ -762,17 +761,15 @@ namespace smack{
 
 
     SHExprPtr BlockExecutor::executeAssume(SHExprPtr sh, const Stmt* stmt){
+        // DONE: loadIndex refactored
         // TODOsh: should replace the variable in assume condition according to the varEquiv
         if(Stmt::ASSUME == stmt->getKind()){
             const AssumeStmt* ass = (const AssumeStmt*) stmt;
             const Expr* origCond = ass->getExpr();
             const Expr* cond = this->parseCondition(origCond);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                cond
-            );
-            REGISTER_EXPRPTR(newPure);
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            std::list<const Expr*> newPures = sh->getPures();
+            newPures.push_back(cond);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
@@ -828,6 +825,7 @@ namespace smack{
             } else if(!call->getProc().compare("$alloc")){
                 return this->executeAlloc(sh, call);
             } else if(!call->getProc().compare("calloc")) {
+                // STOP HEREEE
                 return this->executeCalloc(sh, call);
             } else if(call->getProc().find("__VERIFIER") != std::string::npos){
                 return this->executeVeriCall(sh, call);
@@ -1852,9 +1850,9 @@ namespace smack{
     SHExprPtr  
     BlockExecutor::executeMalloc
     (SHExprPtr sh, const CallStmt* stmt){
-        
         std::string funcName = stmt->getProc();
         if(!funcName.compare("malloc")){
+            // DONE: load index refactored
             std::string retOrigVarName = stmt->getReturns().front();
             const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
             std::string retVarName = retVar->name();
@@ -1866,56 +1864,40 @@ namespace smack{
                 this->varFactory->getNullVar()
             );
             REGISTER_EXPRPTR(pureConj);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                pureConj
-            );
-            REGISTER_EXPRPTR(newPure);
+            std::list<const Expr*> newPures = sh->getPures();
+            std::list<const RegionClause*> newRegions = sh->getRegions();
+            newPures.push_back(pureConj);
 
             if(param->isVar()){
                 const VarExpr* paramOrigVar = (const VarExpr*)param;
                 std::string paramOrigVarName = paramOrigVar->name();
                 const VarExpr* paramVar = this->varFactory->getVar(paramOrigVarName);
                 std::string paramVarName = paramVar->name();
+
                 this->varEquiv->addNewName(retVarName);
                 this->varEquiv->addNewRegionName(retVarName);
                 this->varEquiv->addNewOffset(retVarName, 0);
                 this->varEquiv->setStructArrayRegion(retVarName, false);
-                this->storeSplit->createAxis(retVarName);
-                this->storeSplit->setMaxOffset(retVarName, paramVar->translateToInt(this->varEquiv).second);
-                
-                std::list<const SpatialLiteral *> newSpatialExpr;
-                for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                    newSpatialExpr.push_back(sp);
-                }
-                const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                    retVar,
-                    paramVar,
-                    retVarName,
-                    this->callStack
-                );
-                REGISTER_EXPRPTR(sizePt);
-                int blkSize = paramVar->translateToInt(this->varEquiv).second;
+
+                int regionSize = paramVar->translateToInt(this->varEquiv).second;
                 if(!paramVar->translateToInt(this->varEquiv).first){
                     CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized malloc" << std::endl;);
-                    SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                    SHExprPtr newSH = this->createErrLitSH(newPures, newRegions, ErrType::UNKNOWN);
                     return newSH;
                 }
-                const Expr* add = Expr::add(
-                        retVar,
-                        paramVar);
+                const Expr* add = Expr::add(retVar, paramVar);
                 REGISTER_EXPRPTR(add);
-                const SpatialLiteral* allocBlk = SpatialLiteral::blk(
-                    retVar,
-                    add,
-                    retVarName,
-                    blkSize,
-                    this->callStack
-                );
-                REGISTER_EXPRPTR(allocBlk);
-                newSpatialExpr.push_back(sizePt);
-                newSpatialExpr.push_back(allocBlk);
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                const SpatialLiteral* mallocBlk = SpatialLiteral::blk(retVar, add, regionSize);
+                REGISTER_EXPRPTR(mallocBlk);
+
+                std::list<const SpatialLiteral *> newSplList;
+                newSplList.push_back(mallocBlk);
+
+                const RegionClause* newRegion = new RegionClause(newSplList, retVar, paramVar, retVarName, regionSize, false);
+                assert(!sh->hasRegion(retVarName));
+                newRegions.push_back(newRegion);
+
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl)
                 return newSH;
@@ -1926,41 +1908,27 @@ namespace smack{
                 this->varEquiv->addNewRegionName(retVarName);
                 this->varEquiv->addNewOffset(retVarName, 0);
                 this->varEquiv->setStructArrayRegion(retVarName, false);
-                this->storeSplit->createAxis(retVarName);
-                this->storeSplit->setMaxOffset(retVarName, sizeExpr->translateToInt(this->varEquiv).second);
 
-               
-                std::list<const SpatialLiteral*> newSpatialExpr;
-                for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                    newSpatialExpr.push_back(sp);
-                }
-                const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                    this->varFactory->getVar(retOrigVarName),
-                    sizeExpr,
-                    retVarName,
-                    this->callStack
-                );
-                REGISTER_EXPRPTR(sizePt);
 
-                int blkSize = param->translateToInt(this->varEquiv).second;
+                int regionSize = param->translateToInt(this->varEquiv).second;
                 if(!param->translateToInt(this->varEquiv).first){
                     CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized malloc" << std::endl;);
-                    SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                    SHExprPtr newSH = this->createErrLitSH(newPures, newRegions, ErrType::UNKNOWN);
                     return newSH;
                 }
                 const Expr* add = Expr::add(retVar, sizeExpr);
                 REGISTER_EXPRPTR(add);
-                const SpatialLiteral* allocBlk = SpatialLiteral::blk(
-                    this->varFactory->getVar(retOrigVarName),
-                    add,
-                    retVarName,
-                    blkSize,
-                    this->callStack
-                );
-                REGISTER_EXPRPTR(allocBlk);
-                newSpatialExpr.push_back(sizePt);
-                newSpatialExpr.push_back(allocBlk);
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                const SpatialLiteral* mallocBlk = SpatialLiteral::blk(retVar, add, regionSize);
+                REGISTER_EXPRPTR(mallocBlk);
+
+                std::list<const SpatialLiteral*> newSplList;
+                newSplList.push_back(mallocBlk);
+
+                const RegionClause* newRegion = new RegionClause(newSplList, retVar, sizeExpr, retVarName, regionSize, false);
+                REGISTER_EXPRPTR(newRegion);
+                assert(!sh->hasRegion(retVarName));
+
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
@@ -1978,6 +1946,7 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::executeFree
     (SHExprPtr sh, const CallStmt* stmt){
+        // DONE: loadIndex refactored
         // TODOsh: current use a attribute in spatial literal to store the information which spatial literals need to be freed.
         if(!stmt->getProc().compare("free_")){
             const Expr* arg1 = stmt->getParams().front();
@@ -1994,15 +1963,15 @@ namespace smack{
 
 
                 if(this->varEquiv->isFreedRegionName(linkVarName)){
-                    SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_FREE);
-                    CFDEBUG(std:: cout << "INFO: INVALID FREE" << std::endl;);
+                    SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_FREE);
+                    CFDEBUG(std::cout << "INFO: INVALID FREE" << std::endl;);
                     return newSH;
                 }
                 if(linkVarName.compare(allocVarName)){
                     CFDEBUG(std:: cout << "INFO: INVALID FREE" << std::endl;);
                     if(this->varEquiv->getOffset(freedVar->name()) != 0){
                         // This means the freed variable is not an allocated location and error happens.
-                        SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_FREE);
+                        SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_FREE);
                         return newSH;
                     } else {
                         allocVarName = linkVarName;
@@ -2010,23 +1979,23 @@ namespace smack{
                 }
                 if(this->varEquiv->isStructArrayRegion(linkVarName)){
                     CFDEBUG(std::cout << "INFO: FREE GLOBAL PTR, UNKNOWN" << std::endl;);
-                    SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::UNKNOWN);
+                    SHExprPtr newSH = this->createErrLitSH(sh->getPure(), sh->getRegions(), ErrType::UNKNOWN);
                     return newSH;
                 }
 
-                const Expr* newPure = sh->getPure();
-                std::list<const SpatialLiteral*> newSpatial;
-                for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                    if(!sp->getBlkName().compare(allocVarName)){
+                std::list<const Expr*> newPures = sh->getPures();
+                std::list<const RegionClause*> newRegions;
+
+                for(const RegionClause* r : sh->getRegions()){
+                    if(!r->getRegionName().compare(allocVarName)){
 
                     } else {
-                        newSpatial.push_back(sp);
+                        newRegions.push_back(r);
                     }
                 }
                 this->varEquiv->addNewFreedRegionName(allocVarName);
 
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
@@ -2257,6 +2226,7 @@ namespace smack{
                     if(!ptLiteral->isByteLevel()){
                         // Situation A.1.(1).a
                         newPtLiteral = SpatialLiteral::pt(ptLiteral->getFrom(), freshVar, ptLiteral->getStepSize());
+                        REGISTER_EXPRPTR(newPtLiteral);
                     } else {
                         // Situation A.1.(1).b
                         std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair =  this->updateModifyBytifiedPtPredicateAndModifyHighLevelVar(ptLiteral, freshVar, newPures);
@@ -2405,7 +2375,7 @@ namespace smack{
                         const SpatialLiteral* oldMiddleBlk = std::get<1>(selectOutTailBlk);
                         std::list<const SpatialLiteral*> tempLeftList = std::get<0>(selectOutTailBlk);
                         std::list<const SpatialLiteral*> tempRightList = std::get<2>(selectOutTailBlk);
-                        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPair = this->bytifyBlkPredicate(tempMetaInfo, oldMiddleBlk, newPures);
+                        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPair = this->bytifyBlkPredicate(tempMetaInfo, regionName, oldMiddleBlk, newPures);
                         std::list<const SpatialLiteral*> tempMiddleList = resultBytifiedPair.first;
                         newPures = resultBytifiedPair.second;
 
@@ -2427,6 +2397,7 @@ namespace smack{
                     );
 
                     newPtLiteral = SpatialLiteral::pt(varArg1, freshStoredVar, storedSize);
+                    REGISTER_EXPRPTR(newPtLiteral);
 
                     tempMetaInfo->wipeInterval(regionName, offset, offset + storedSize);
                     tempMetaInfo->addSplit(regionName, offset);
@@ -2628,6 +2599,7 @@ namespace smack{
             const SpatialLiteral* leftBlk = SpatialLiteral::blk(blkLiteral->getFrom(), varArg1, leftBlkSize);
             REGISTER_EXPRPTR(leftBlk);
             const SpatialLiteral* storedPt = SpatialLiteral::pt(varArg1, freshVar, storedSize);
+            REGISTER_EXPRPTR(storedPt);
 
             CFDEBUG(std::cout << "Store var: " << freshVar << " Store stepsize: " << storedSize << std::endl;);
             long long size = storedSize;
@@ -3097,6 +3069,7 @@ namespace smack{
     SHExprPtr  
     BlockExecutor::executeAlloc
     (SHExprPtr sh, const CallStmt* stmt){
+        // DONE: loadIndex refactored
         // example of the instruction
         // 1. call $p1 = $alloc($mul.ref(4, $i2))
         // 2. call $p2 = $alloc($mul.ref(40, $zext.i32.i64(1)))
@@ -3109,6 +3082,9 @@ namespace smack{
             const Expr* param = stmt->getParams().front();
             assert(ExprType::FUNC == param->getType());
             const FunExpr* multiFuncExpr = (const FunExpr*) param;
+
+            std::list<const Expr*> newPures = sh->getPures();
+            std::list<const RegionClause*> newRegions = sh->getRegions();
             if(!multiFuncExpr->name().compare("$mul.ref")){
                 const Expr* multiArg1 = multiFuncExpr->getArgs().front();
                 const Expr* multiArg2 = multiFuncExpr->getArgs().back();
@@ -3121,41 +3097,27 @@ namespace smack{
                     this->varEquiv->addNewRegionName(retVarName);
                     this->varEquiv->addNewOffset(retVarName, 0);
                     this->varEquiv->setStructArrayRegion(retVarName, true);
-                    this->storeSplit->createAxis(retVarName);
-                    this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
-                    const Expr* newPure = sh->getPure();
-                    std::list<const SpatialLiteral *> newSpatialExpr;
-                    for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                        newSpatialExpr.push_back(sp);
-                    }
-                    const SpatialLiteral* sizePt = SpatialLiteral::gcSpt(
-                        retVar,
-                        lengthExpr,
-                        retVarName,
-                        this->callStack
-                    );
-                    REGISTER_EXPRPTR(sizePt);
-                    int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
 
+                    int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
                     if(!lengthExpr->translateToInt(this->varEquiv).first){
                         CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized alloc" << std::endl;);
-                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        SHExprPtr newSH = this->createErrLitSH(newPures, newRegions, ErrType::UNKNOWN);
                         return newSH;
                     }
                     const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
-                    const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
-                        retVar,
-                        add,
-                        retVarName,
-                        allocSize,
-                        this->callStack
-                    );
+                    const SpatialLiteral* allocBlk = SpatialLiteral::blk(retVar, add, allocSize);
                     REGISTER_EXPRPTR(allocBlk);
-
-                    newSpatialExpr.push_back(sizePt);
+                    std::list<const SpatialLiteral*> newSplList;
                     newSpatialExpr.push_back(allocBlk);
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+
+                    const RegionClause* newRegion = new RegionClause(newSplList, retVar, lengthExpr, retVarName, allocSize, true, this->callStack);
+                    REGISTER_EXPRPTR(newRegion);
+                    assert(!sh->hasRegion(retVarName));
+                    newRegions.push_back(newRegion);
+
+
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl)
                     return newSH;
@@ -3171,40 +3133,26 @@ namespace smack{
                     this->varEquiv->addNewRegionName(retVarName);
                     this->varEquiv->addNewOffset(retVarName, 0);
                     this->varEquiv->setStructArrayRegion(retVarName, true);
-                    this->storeSplit->createAxis(retVarName);
-                    this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
-                    const Expr* newPure = sh->getPure();
-                    std::list<const SpatialLiteral *> newSpatialExpr;
-                    for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                        newSpatialExpr.push_back(sp);
-                    }
-                    const SpatialLiteral* sizePt = SpatialLiteral::gcSpt(
-                        retVar,
-                        lengthExpr,
-                        retVarName,
-                        this->callStack
-                    ); 
-                    REGISTER_EXPRPTR(sizePt);
+            
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
                     if(!lengthExpr->translateToInt(this->varEquiv).first){
                         CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized alloc" << std::endl;);
-                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        SHExprPtr newSH = this->createErrLitSH(newPures, newRegions, ErrType::UNKNOWN);
                         return newSH;
                     }
                     const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
-                    const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
-                        retVar,
-                        add,
-                        retVarName,
-                        allocSize,
-                        this->callStack
-                    );
+                    const SpatialLiteral* allocBlk = SpatialLiteral::blk(retVar, add, allocSize);
                     REGISTER_EXPRPTR(allocBlk);
+                    std::list<const SpatialLiteral*> newSplList;
+                    newSplList.push_back(allocBlk);
 
-                    newSpatialExpr.push_back(sizePt);
-                    newSpatialExpr.push_back(allocBlk);
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                    const RegionClause* newRegion = new RegionClause(newSplList, retVar, lengthExpr, retVarName, allocSize, true, this->callStack);
+                    REGISTER_EXPRPTR(newRegion);
+                    assert(!sh->hasRegion(retVarName));
+                    newRegions.push_back(newRegion);
+
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl)
                     return newSH;
@@ -3217,39 +3165,26 @@ namespace smack{
                     this->varEquiv->addNewRegionName(retVarName);
                     this->varEquiv->addNewOffset(retVarName, 0);
                     this->varEquiv->setStructArrayRegion(retVarName, true);
-                    this->storeSplit->createAxis(retVarName);
-                    this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
-                    const Expr* newPure = sh->getPure();
-                    std::list<const SpatialLiteral *> newSpatialExpr;
-                    for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                        newSpatialExpr.push_back(sp);
-                    }
-                    const SpatialLiteral* sizePt = SpatialLiteral::gcSpt(
-                        retVar,
-                        lengthExpr,
-                        retVarName,
-                        this->callStack
-                    ); 
+
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
                     if(!lengthExpr->translateToInt(this->varEquiv).first){
                         CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized alloc" << std::endl;);
-                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        SHExprPtr newSH = this->createErrLitSH(newPures, newRegions, ErrType::UNKNOWN);
                         return newSH;
                     }
                     const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
-                    const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
-                        retVar,
-                        add,
-                        retVarName,
-                        allocSize,
-                        this->callStack
-                    );
+                    const SpatialLiteral* allocBlk = SpatialLiteral::blk(retVar, add, allocSize);
                     REGISTER_EXPRPTR(allocBlk);
+                    std::list<const SpatialLiteral*> newSplList;
+                    newSplList.push_back(allocBlk);
 
-                    newSpatialExpr.push_back(sizePt);
-                    newSpatialExpr.push_back(allocBlk);
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                    const RegionClause* newRegion = new RegionClause(newSplList, retVar, lengthExpr, retVarName, allocSize, true, this->callStack);
+                    REGISTER_EXPRPTR(newRegion);
+                    assert(!sh->hasRegion(retVarName));
+                    newRegions.push_back(newRegion);
+
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl)
                     return newSH;
@@ -3272,6 +3207,7 @@ namespace smack{
     SHExprPtr
     BlockExecutor::executeCalloc
     (SHExprPtr sh, const CallStmt* stmt) {
+        // DONE: loadIndex refactored
         // call $p = calloc(n, s)
         // allocate a memory for an array of n objects of s size
         // and initializes it to all zero
@@ -3280,60 +3216,53 @@ namespace smack{
         const Expr* num = stmt->getParams().front();
         const Expr* size = stmt->getParams().back();
         // get number of object
-        if(num->isValue()) {
-            
-        } else {
+        if(!num->isValue()) {
             CFDEBUG(std::cout<< "WARNING: Unsupported num type" << std::endl;);
             return nullptr;
         }
         // get size of each object
-        if(size->isValue()) {
-            
-        } else {
+        if(Qsize->isValue()) {
             CFDEBUG(std::cout<< "WARNING: Unsupported size type" << std::endl;);
             return nullptr;
         }
+        std::list<const Expr*> newPures = sh->getPures();
+        std::list<const RegionClause*> newRegions = sh->getRegions();
+
         CFDEBUG(std::cout << "INFO: allocate an array to " << retOrigVarName << std::endl;);
-        CFDEBUG(std::cout << "ARRAY: " << num << " objects of " << size << " size for each one" << std::endl;);
+        CFDEBUG(std::cout << "INFO: array " << num << " objects of " << size << " size for each one" << std::endl;);
         const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
         const std::string retVarName = retVar->name();
         this->varEquiv->addNewName(retVarName);
         this->varEquiv->addNewRegionName(retVarName);
         this->varEquiv->addNewOffset(retVarName, 0);
         this->varEquiv->setStructArrayRegion(retVarName, false);
-        this->storeSplit->createAxis(retVarName);
+
         const Expr* lengthExpr = Expr::multiply(num, size);
+        int callocSize = lengthExpr->translateToInt(this->varEquiv).second;
         REGISTER_EXPRPTR(lengthExpr);
-        this->storeSplit->setMaxOffset(
-            retVarName,
-            lengthExpr->translateToInt(this->varEquiv).second);
-        const SpatialLiteral* sizePt = SpatialLiteral::spt(
-            retVar,
-            lengthExpr,
-            retVarName,
-            this->callStack
-        );
-        REGISTER_EXPRPTR(sizePt);
+        
         const Expr* add = Expr::add(retVar, lengthExpr);
         REGISTER_EXPRPTR(add);
-        int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
-        const SpatialLiteral* blk = SpatialLiteral::blk(
-            retVar,
-            add,
-            retVarName,
-            allocSize,
-            this->callStack
-        );
+        const SpatialLiteral* blk = SpatialLiteral::blk(retVar, add, callocSize);
         REGISTER_EXPRPTR(blk);
-        std::pair<std::list<const SpatialLiteral*>, const Expr*>
-        newSplAndPure = this->bytifyForCalloc(blk, sh->getPure());
-        std::list<const SpatialLiteral*> newSpatial = sh->getSpatialExpr();
-        const Expr* newPure = newSplAndPure.second;
-        REGISTER_EXPRPTR(newPure);
-        newSpatial.push_back(sizePt);
-        for(auto nsp : newSplAndPure.first)
-            newSpatial.push_back(nsp);
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+        std::list<const SpatialLiteral*> tempSplList;
+        tempSplList.push_back(blk);
+
+        const RegionClause* tempRegion = new RegionClause(tempSplList, retVar, lengthExpr, retVarName, callocSize, false);
+        REGISTER_EXPRPTR(tempRegion);
+        RegionBlkSplitUtilPtr tempMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempRegion->getRegionMetaInfo());
+        std::string tempRegionName = tempRegion->getRegionName();
+
+        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> newSplListAndPure = this->bytifyForCalloc(tempMetaInfo, tempRegionName, blk, newPures);
+        std::list<const SpatialLiteral*> newSplList = newSplListAndPure.first;
+        newPures = newSplListAndPure.second;
+        RegionBlkSplitUtilPtr newMetaInfo = tempMetaInfo;
+        const RegionClause* newRegion = new RegionClause(newSplList, newMetaInfo, tempRegion);
+        REGISTER_EXPRPTR(newRegion);
+        assert(!sh->hasRegion(retVarName));
+        newRegions.push_back(newRegion);
+
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
         newSH->print(std::cout);
         CFDEBUG(std::cout << std::endl)
         return newSH;
@@ -3363,30 +3292,38 @@ namespace smack{
         CFDEBUG(std::cout << std::endl);
         }
         if(FULL_DEBUG && OPEN_STORE_SPLIT){
-            this->storeSplit->print();
+            for(const RegionClause* r : currSH->getRegions()){
+                r->getRegionMetaInfo()->print();
+            }
         }
         this->printCallStack();
 
-        if(currSH->isError()){
-            const SpatialLiteral* sp = currSH->getSpatialExpr().front();
-            assert(SpatialLiteral::Kind::ERR == sp->getId());
-            const ErrorLit* errlit = (const ErrorLit*) sp;
-            if(errlit->isFresh()){
-                CFDEBUG(std::cout << "INFO: execute error.." << std::endl;);
-                std::list<const SpatialLiteral*> newSpatial;
-                const SpatialLiteral* sp = SpatialLiteral::errlit(false, errlit->getReason());
-                REGISTER_EXPRPTR(sp);
-                newSpatial.push_back(sp);
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(currSH->getPure(), newSpatial);
-                newSH->print(std::cout);
-                return newSH;
-            } else {
-                return currSH;
+        std::list<const RegionClause*> newErrRegions;
+        if(currSH->hasError()){
+            CFDEBUG(std::cout << "INFO: execute error.." << std::endl;);
+            for(const RegionClause* r : currSH->getRegions()){
+                if(!r->isErrorClause()){
+                    newErrRegions.push_back(r);
+                } else {
+                    const ErrorClause* oldErrClause = (const ErrorClause*) r;
+                    if(oldErrClause->isFresh()){
+                        const ErrorClause* newErrClause = new ErrorClause(r);
+                        REGISTER_EXPRPTR(newErrClause);
+                        newErrRegions.push_back(newErrClause);
+                    } else {
+                        const ErrorClause* newErrClause = oldErrClause;
+                        newErrRegions.push_back(newErrClause);
+                    }
+                }
             }
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(currSH->getPures(), newErrRegions);
+            newSH->print(std::cout);
+            return newSH;
         }
 
         if(Stmt::CALL == stmt->getKind()){
             CFDEBUG(std::cout << "INFO: stmt kind CALL" << std::endl;);
+            // STOP HEREEEEEEEEEEEEEEEEEEEE
             return this->executeCall(currSH, stmt);
         } else if(Stmt::ASSIGN == stmt->getKind()){
             CFDEBUG(std::cout << "INFO: stmt kind ASSIGN" << std::endl;);
@@ -3722,6 +3659,7 @@ namespace smack{
         REGISTER_EXPRPTR(resultPures);
         
         const PtLit* resultPt = SpatialLiteral::pt(oldPt->getFrom(), oldPt->getTo(), oldPt->getStepSize(), bytifiedPts);
+        REGISTER_EXPRPTR(resultPt);
         return {resultPt, resultPures};
     }
 
@@ -3787,6 +3725,7 @@ namespace smack{
         resultPures.push_back(equalConstraint);
 
         const PtLit* resultPt = SpatialLiteral::pt(oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts);
+        REGISTER_EXPRPTR(resultPt);
         return {resultPt, resultPures};
     }
 
@@ -3809,6 +3748,7 @@ namespace smack{
         const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, storedVar);
         resultPures.push_back(equalConstraint);
         const PtLit* resultPt =  SpatialLiteral::pt(oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts);
+        REGISTER_EXPRPTR(resultPt);
         return {resultPt, resultPures};
     }
 
@@ -3843,13 +3783,13 @@ namespace smack{
         // TODO: WRONG
         resultPures.push_back(equalConstraint);
         const PtLit* resultPt = SpatialLiteral::pt(oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts);
+        REGISTER_EXPRPTR(resultPt);
         return {resultPt, resultPures};
     }
 
 
     std::pair<const RegionClause*, std::list<const Expr*>> BlockExecutor::updateBytifyBlkPredicate(const RegionClause* oldRegion, int blkCountIndex, std::list<const Expr*> oldPures){
         // DONE: loadIndex refactored
-        // STOP HEREEEEEEEEEEEEE
         std::list<const Expr*> resultPures = oldPures;
         std::tuple<
             std::list<const SpatialLiteral*>,
@@ -4025,44 +3965,6 @@ namespace smack{
         }
     }
 
-
-
-    // const SpatialLiteral* 
-    // BlockExecutor::createPtAccordingToRegionName
-    // (std::string regionName, const Expr* from, const Expr* to, int stepSize, std::list<std::string> tempStack){
-    //     if(this->varEquiv->isStructArrayRegion(regionName)){
-    //         return SpatialLiteral::pt(from, to, regionName, stepSize, tempStack));
-    //     } else {
-    //         return SpatialLiteral::pt(from, to, regionName, stepSize, tempStack);
-    //     }
-    // }
-
-    // const SpatialLiteral* 
-    // BlockExecutor::createBPtAccodingToRegionName(std::string regionName, const Expr* from, const Expr* to, int stepSize,std::vector<const BytePt*> bytifiedPts, std::list<std::string> tempStack){
-    //     const SpatialLiteral* sp = nullptr;
-    //     if(this->varEquiv->isStructArrayRegion(regionName)){
-    //         sp = SpatialLiteral::gcPt(from, to, regionName, stepSize, bytifiedPts, tempStack);
-    //     } else {
-    //         sp = SpatialLiteral::pt(from, to, regionName, stepSize, bytifiedPts, tempStack);
-    //     }
-    //     REGISTER_EXPRPTR(sp);
-    //     return sp;
-    // }
-
-    // const SpatialLiteral* 
-    // BlockExecutor::createBlkAccordingToRegionName
-    // (std::string regionName, const Expr* from, const Expr* to, int byteSize, std::list<std::string> tempStack){
-    //     const SpatialLiteral* sp = nullptr;
-    //     if(this->varEquiv->isStructArrayRegion(regionName)){
-    //         sp = SpatialLiteral::gcBlk(from, to, regionName, byteSize, tempStack);
-    //     } else {
-    //         sp = SpatialLiteral::blk(from, to, regionName, byteSize, tempStack);
-    //     }
-    //     REGISTER_EXPRPTR(sp);
-    //     return sp;
-    // }
-
-
     std::list<const SpatialLiteral*> BlockExecutor::splitBlkByCreatingPt(RegionBlkSplitUtilPtr metaInfo, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk){
         // DONE: loadIndex refactored
         assert(oldBlk->getId() == SpatialLiteral::Kind::BLK);
@@ -4082,12 +3984,15 @@ namespace smack{
         metaInfo->addSplitLength(ptFromOffset, stepSize);
         std::list<const SpatialLiteral*> resultList;
         const SpatialLiteral* leftBlk = SpatialLiteral::blk(oldBlkFrom, from, ptFromOffset - oldBlkFromOffset);
+        REGISTER_EXPRPTR(leftBlk);
         const SpatialLiteral* createdPt = SpatialLiteral::pt(from, to, stepSize);
+        REGISTER_EXPRPTR(createdPt);
         const Expr* lit = Expr::lit((long long) stepSize);
         REGISTER_EXPRPTR(lit);
         const Expr* add = Expr::add(from, lit);
         REGISTER_EXPRPTR(add);
         const SpatialLiteral* rightBlk = SpatialLiteral::blk(add, oldBlkTo, oldBlkToOffset - ptFromOffset - stepSize);
+        REGISTER_EXPRPTR(rightBlk);
         resultList.push_back(leftBlk);
         resultList.push_back(createdPt);
         resultList.push_back(rightBlk);
@@ -4095,19 +4000,18 @@ namespace smack{
     }
 
 
-    std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> BlockExecutor::bytifyBlkPredicate(RegionBlkSplitUtilPtr metaInfoPtr, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures){
+    std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> BlockExecutor::bytifyBlkPredicate(RegionBlkSplitUtilPtr metaInfoPtr, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures){
         // DONE: loadIndex refactored
         assert(oldBlk->getId() == SpatialLiteral::Kind::BLK);
         std::list<const SpatialLiteral*> resultPredicateList;
         std::list<const SpatialLiteral*> splittedTriplet;
         std::list<const Expr*> resultPures = oldPures;
-        std::string mallocName = oldBlk->getBlkName();
         const BlkLit* tempRhsBlk = (const BlkLit*) oldBlk;
         while(tempRhsBlk->getBlkByteSize() != 0){
             const Expr* tempFrom = tempRhsBlk->getFrom();
             assert(!this->computeArithmeticOffsetValue(tempFrom).first);
             int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom).second;
-            const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, mallocName, fromVarOffset);
+            const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, regionName, fromVarOffset);
             const Expr* eq = Expr::eq(tempFrom, fromVar);
             REGISTER_EXPRPTR(eq);
             resultPures.push_back(eq);
@@ -4184,30 +4088,29 @@ namespace smack{
         return newSH;
     }
 
-    std::pair<std::list<const SpatialLiteral*>, const Expr*> BlockExecutor::bytifyForCalloc(const SpatialLiteral* oldBlk, const Expr* oldPure) {
+    std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> BlockExecutor::bytifyForCalloc(RegionBlkSplitUtilPtr metaInfo, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures) {
+        // DONE: loadIndex refactored
         assert(oldBlk->getId() == SpatialLiteral::Kind::BLK);
         std::list<const SpatialLiteral*> resultPredicateList;
         std::list<const SpatialLiteral*> splittedTriplet;
-        const Expr* resultPure = oldPure;
-        std::string mallocName = oldBlk->getBlkName();
+        std::list<const Expr*> resultPures = oldPures;
         const BlkLit* tempRhsBlk = (const BlkLit*) oldBlk;
+
         while(tempRhsBlk->getBlkByteSize() != 0){
             const Expr* tempFrom = tempRhsBlk->getFrom();
             assert(!this->computeArithmeticOffsetValue(tempFrom).first);
             int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom).second;
-            const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, mallocName, fromVarOffset);
+            const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, regionName, fromVarOffset);
             const Expr* eq = Expr::eq(tempFrom, fromVar);
             REGISTER_EXPRPTR(eq);
-            resultPure = Expr::and_(resultPure, eq);
-            REGISTER_EXPRPTR(resultPure);
+            resultPures.push_back(eq);
             const VarExpr* toVar = this->createAndRegisterFreshDataVar(1);
             const Expr* zero = Expr::lit((long long)0);
             REGISTER_EXPRPTR(zero);
             const Expr* eq0 = Expr::eq(toVar, zero);
             REGISTER_EXPRPTR(eq0);
-            resultPure = Expr::and_(resultPure, eq0);
-            REGISTER_EXPRPTR(resultPure);
-            splittedTriplet = this->splitBlkByCreatingPt(mallocName, fromVar, toVar, 1, tempRhsBlk);
+            resultPures.push_back(eq0);
+            splittedTriplet = this->splitBlkByCreatingPt(metaInfo, fromVar, toVar, 1, tempRhsBlk);
             assert(3 == splittedTriplet.size());
             resultPredicateList.push_back(splittedTriplet.front()); splittedTriplet.pop_front();
             resultPredicateList.push_back(splittedTriplet.front()); splittedTriplet.pop_front();
@@ -4217,7 +4120,7 @@ namespace smack{
         if(FULL_DEBUG && OPEN_STORE_SPLIT){
             this->storeSplit->print();
         }
-        return {resultPredicateList, resultPure};
+        return {resultPredicateList, resultPures};
     }
 
 }

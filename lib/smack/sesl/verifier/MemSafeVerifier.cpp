@@ -87,15 +87,13 @@ namespace smack {
             VarEquivPtr allocEquiv = std::make_shared<VarEquiv>();
             // Initialize the varFactory class for variable         remembering
             VarFactoryPtr varFac = std::make_shared<VarFactory>();
-            // Initialize store splitter
-            StoreSplitterPtr storeSplit = std::make_shared<StoreSplitter>();
             // Initialize call Stack
             std::list<std::string> callStack;
             // Initialize memtrack utils
             std::map<std::string, std::string> src2IRVar;
             std::set<std::string> globalStaticVars;
 
-            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, storeSplit, callStack, src2IRVar, globalStaticVars);
+            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, callStack, src2IRVar, globalStaticVars);
             // initialization of the execution initial state over
             // Initialize a CFGExecutor
             SHExprPtr currSH = initSH;

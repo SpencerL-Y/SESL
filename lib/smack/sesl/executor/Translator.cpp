@@ -51,6 +51,7 @@ namespace smack{
     }
 
     void TransToZ3::translate() {
+        // STOP HEREEE
         translatePure();
         translateSpatial();
     }

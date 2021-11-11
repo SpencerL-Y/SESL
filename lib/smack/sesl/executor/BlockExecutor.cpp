@@ -37,7 +37,7 @@ namespace smack{
                 if(this->getVarType(globalVarName) == VarType::DATA){
                     this->registerDataVar(globalVar);
                 } else {
-                    //CFDEBUG(std::cout << "ERROR: executeGlobal this situation should not happen since mallocName unknown" << std::endl;);
+                    //CFDEBUG(std::cout << "ERROR: executeGlobal this situation should not happen since regionName unknown" << std::endl;);
                     this->registerPtrVar(globalVar, globalVarName, 0);
                 }
             } else {
@@ -399,6 +399,7 @@ namespace smack{
 
     // ----------- Util functions for string judgement -------------
     bool BlockExecutor::isPtrVar(std::string name){
+        // DONE: loadIndex refactored
         if(name.find("$p") != std::string::npos ||
            name.find("$") == std::string::npos){
             return true;
@@ -816,6 +817,7 @@ namespace smack{
     
 
     SHExprPtr BlockExecutor::executeCall(SHExprPtr sh, const Stmt* callstmt){
+        // DONE: loadIndex refactored
         if(Stmt::CALL == callstmt->getKind()){
             const CallStmt* call = (const CallStmt*) callstmt;
             if(!call->getProc().compare("malloc")){
@@ -831,7 +833,6 @@ namespace smack{
             } else if(call->getProc().find("$memcpy") != std::string::npos || call->getProc().find("memcpy") != std::string::npos ){
                 return this->executeMemcpy(sh, call);
             } else if(call->getProc().find("$memset") != std::string::npos || call->getProc().find("memset") != std::string::npos){
-                // STOP HEREEE
                 return this->executeMemset(sh, call);
             } else if(call->getProc().find("time") != std::string::npos) {
                 return this->executeTime(sh, call);
@@ -852,7 +853,7 @@ namespace smack{
     }
 
     SHExprPtr BlockExecutor::executeFuncCallStack(SHExprPtr sh, const CallStmt* callstmt){
-        return sh;
+        // DONE: loadIndex refactored
         assert(callstmt->getProc().find("boogie_si_record") != std::string::npos);
         int i = 0;
         const Attr* startEndAttr = callstmt->getAttrs().front();
@@ -886,21 +887,7 @@ namespace smack{
                 assert(false);
             }
             this->callStack.pop_back();
-            const Expr* newPure = sh->getPure();
-            std::list<const SpatialLiteral*> newSpatial;
-            for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-                if(!spl->isStackEliminated(funcName)){
-                    newSpatial.push_back(spl);
-                    std::cout << spl << std::endl;
-                    for(std::string mem : spl->getStackMembers()){
-                        std::cout << mem << std::endl;
-                    }
-                }
-            }
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-            newSH->print(std::cout);
-            CFDEBUG(std::cout << std::endl;);
-            return newSH;
+            return sh->eliminateStackRegion(funcName);
         } else {
             assert(false);
         }
@@ -1412,7 +1399,7 @@ namespace smack{
         }
 
 
-        // wipe the storeSplit interval [dstOffset, dstOffset + copySize)
+        // wipe the interval [dstOffset, dstOffset + copySize)
         tempDstMetaInfo->wipeInterval(dstOffset, dstOffset + copySize);
         int cumulatedOffset = dstOffset;
         for(const SpatialLiteral* spl : copiedSplList){
@@ -1709,7 +1696,7 @@ namespace smack{
         newTargetLeftList = std::get<0>(newSelectOutTuple);
         newTargetRightList = std::get<2>(newSelectOutTuple);
         newTargetMiddleList = std::get<1>(newSelectOutTuple);
-        // wipe old storeSplit
+        // wipe old interval
         tempTargetMetaInfo->wipeInterval(targetOffset, targetOffset + memsetLength);
         // add middle
         for(int i = 0; i < memsetLength; i++){
@@ -1760,16 +1747,17 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::executeUnintepreted
     (SHExprPtr sh, const CallStmt* stmt){
-        SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::UNKNOWN);
+        // DONE: loadIndex refactored
+        SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::UNKNOWN);
         return newSH;
     }
 
     SHExprPtr  
     BlockExecutor::executeMalloc
     (SHExprPtr sh, const CallStmt* stmt){
+        // DONE: load index refactored
         std::string funcName = stmt->getProc();
         if(!funcName.compare("malloc")){
-            // DONE: load index refactored
             std::string retOrigVarName = stmt->getReturns().front();
             const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
             std::string retVarName = retVar->name();
@@ -2004,7 +1992,7 @@ namespace smack{
             regionSize = sh->getBlkSize(regionName)->translateToInt(this->varEquiv).second;
             // update the symbolic heap
             SHExprPtr oldSh = sh;
-            sh = std::make_shared<SymbolicHeapExpr>(newPures, oldSh->getSpatialExpr());
+            sh = std::make_shared<SymbolicHeapExpr>(newPures, oldSh->getRegions());
         } else {
             CFDEBUG(std::cout << "ERROR: stored arg1 not allowed situation" << std::endl;);
             return sh;
@@ -2457,7 +2445,7 @@ namespace smack{
             CFDEBUG(std::cout << "INFO: store situation A.3" << std::endl;);
             CFDEBUG(std::cout << "INFO: new store offset" << std::endl;);
             // if the position is not stored yet, create a new pt predicate to store it
-            // set offset to allocated in the storeSplit
+            // set offset to allocated in the metaInfo
             int splitBlkIndex = tempMetaInfo->addSplit(offset);
             assert(splitBlkIndex > 0);
             CFDEBUG(std::cout << "malloc name: " << regionName << " splitIndex: " << splitBlkIndex <<  std::endl);
@@ -2759,7 +2747,7 @@ namespace smack{
                     // Situation B.3.(2).1
                 
                     CFDEBUG(std::cout << "INFO: Situation 3.(2).1 currently not support, to be added later" << std::endl;)
-                    CFDEBUG(std::cout << "INFO: Initialized length: " << this->storeSplit->getInitializedLength(loadedOffset) << " loaded size: " << loadedSize << std::endl;);
+                    CFDEBUG(std::cout << "INFO: Initialized length: " << tempMetaInfo->getInitializedLength(loadedOffset) << " loaded size: " << loadedSize << std::endl;);
                     SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
                     return newSH;
                 } 
@@ -2925,6 +2913,7 @@ namespace smack{
     }
 
     SHExprPtr BlockExecutor::executeTime(SHExprPtr sh, const CallStmt* stmt) {
+        //DONE: loadIndex refactored
         CFDEBUG(std::cout << "INFO: execute Time func" << std::endl;);
         std::string retOrigName = stmt->getReturns().front();
         const VarExpr* retVar = this->varFactory->useVar(retOrigName);
@@ -2936,9 +2925,9 @@ namespace smack{
         const VarExpr* timeVar = this->createAndRegisterFreshDataVar(4);
         const Expr* eq = Expr::eq(retVar, timeVar);
         REGISTER_EXPRPTR(eq);
-        const Expr* newPure = Expr::and_(sh->getPure(), eq);
-        REGISTER_EXPRPTR(newPure);
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+        std::list<const Expr*> newPures = sh->getPure();
+        newPures.push_back(eq);
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
         newSH->print(std::cout);
         CFDEBUG(std::cout << std::endl;);
         return newSH;
@@ -3209,6 +3198,7 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::executeStmt
     (SHExprPtr currSH, const Stmt* stmt){
+        // DONE: loadIndex refactored
         this->varEquiv->debugPrint();
         CFDEBUG(std::cout << "INFO: executing for stmt: " << std::endl);
         if(FULL_DEBUG && OPEN_EXECUTION_PATH){
@@ -3247,7 +3237,6 @@ namespace smack{
 
         if(Stmt::CALL == stmt->getKind()){
             CFDEBUG(std::cout << "INFO: stmt kind CALL" << std::endl;);
-            // STOP HEREEEEEEEEEEEEEEEEEEEE
             return this->executeCall(currSH, stmt);
         } else if(Stmt::ASSIGN == stmt->getKind()){
             CFDEBUG(std::cout << "INFO: stmt kind ASSIGN" << std::endl;);
@@ -3268,13 +3257,12 @@ namespace smack{
 
     // -------------------- General Interface -------------------
     std::pair<ExecutionStatePtr, StatementList> BlockExecutor::execute(ExecutionStatePtr previousExecState){
+        // DONE: loadIndex refactored
         SHExprPtr previousSH = previousExecState->getSH();
         // Initialize the equivalent class for allocation
         this->varEquiv = previousExecState->getVarEquiv();
         // Initialize the varFactory class for variable remembering
         this->varFactory = previousExecState->getVarFactory();
-        // Initialize store splitter
-        this->storeSplit = previousExecState->getStoreSplit();
         // Initialize callStack
         this->callStack = previousExecState->getCallStack();
         // Initialize memtrack utils
@@ -3293,7 +3281,7 @@ namespace smack{
             currSH = newSH;
         }
 
-        ExecutionStatePtr resultExecState = std::make_shared<ExecutionState>(currSH, this->varEquiv, this->varFactory, this->storeSplit, this->callStack, this->src2IRVar, this->globalStaticVars);
+        ExecutionStatePtr resultExecState = std::make_shared<ExecutionState>(currSH, this->varEquiv, this->varFactory, this->callStack, this->src2IRVar, this->globalStaticVars);
         return std::pair<ExecutionStatePtr, StatementList>(resultExecState, newStmts);
     }
 
@@ -3304,8 +3292,6 @@ namespace smack{
         this->varEquiv = initialExecState->getVarEquiv();
         // Initialize the varFactory class for variable remembering
         this->varFactory = initialExecState->getVarFactory();
-        // Initialize store splitter
-        this->storeSplit = initialExecState->getStoreSplit();
         // Initialize stack
         this->callStack = initialExecState->getCallStack();
         // Initialize memtrack utils
@@ -3314,12 +3300,13 @@ namespace smack{
 
         SHExprPtr newSH = this->executeGlobal(previousSH);
 
-        ExecutionStatePtr resultExecState =  std::make_shared<ExecutionState>(newSH, this->varEquiv, this->varFactory, this->storeSplit, this->callStack, this->src2IRVar, this->globalStaticVars);
+        ExecutionStatePtr resultExecState =  std::make_shared<ExecutionState>(newSH, this->varEquiv, this->varFactory, this->callStack, this->src2IRVar, this->globalStaticVars);
         return  resultExecState;
     }
 
     // ---------------- Execution Utilities
     VarType BlockExecutor::getVarType(std::string varName){
+        // DONE: loadIndex refactored
         // varName is used varname
         if(!varName.compare("$Null")){
             return VarType::NIL;
@@ -3335,6 +3322,7 @@ namespace smack{
     }
 
     int BlockExecutor::getBitwidthOfDataVar(std::string varName){
+        // DONE: loadIndex refactored
         // varName is used varname
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
         assert(VarType::DATA == this->getVarType(varName));
@@ -3344,6 +3332,7 @@ namespace smack{
     }
 
     int BlockExecutor::getStepSizeOfPtrVar(std::string varName){
+        // DONE: loadIndex refactored
         // varName is used varname
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
         assert(VarType::PTR == this->getVarType(varName) || 
@@ -3354,12 +3343,14 @@ namespace smack{
     }
 
     void BlockExecutor::setDataVarBitwidth(std::string varName, int bitWidth){
+        // DONE: loadIndex refactored
         // varName is used varname
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
         this->cfg->addVarType(varOrigName, "i" + std::to_string(bitWidth));
     }
 
     void BlockExecutor::setPtrVarStepSize(std::string varName, int stepSize){
+        // DONE: loadIndex refactored
         // varName is used varname
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
         this->cfg->addVarType(varOrigName, "ref" + std::to_string(stepSize * 8));
@@ -3587,36 +3578,6 @@ namespace smack{
         return {resultPt, resultPures};
     }
 
-    // std::pair<const PtLit*, const Expr*> 
-    // BlockExecutor::updateCreateBytifiedPtPredicateAndModifyHighLevelVar
-    // (const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure){
-    //     std::pair<const PtLit*, const Expr*> tempPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, oldPure);
-    //     const Expr* resultPure = tempPtPurePair.second;
-    //     std::vector<const BytePt*> oldBytifiedPts = tempPtPurePair.first->getBytifiedPts();
-    //     assert(oldBytifiedPts.size() == tempPtPurePair.first->getStepSize());
-    //     std::vector<const BytePt*> newBytifiedPts;
-    //     for(const BytePt* bpt : oldBytifiedPts){
-    //         // rearrange the symbolic heap
-    //         const VarExpr* newBySizeVar = this->createAndRegisterFreshDataVar(1);
-    //         const BytePt* cnbpt = SpatialLiteral::bytePt(bpt->getFrom(), newBySizeVar);
-    //         REGISTER_EXPRPTR(cnbpt);
-    //         newBytifiedPts.push_back(cnbpt);
-    //     }
-        
-    //     const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, storedVar);
-    //     resultPure = Expr::and_(
-    //         resultPure,
-    //         equalConstraint
-    //     );
-    //     REGISTER_EXPRPTR(resultPure);
-    //     std::list<std::string> tempCallStack;
-    //     for(std::string s : oldPt->getStackMembers()){
-    //         tempCallStack.push_back(s);
-    //     }
-    //     const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts, tempCallStack));
-    //     return {resultPt, resultPure};
-    // }
-
 
     std::pair<const PtLit*, std::list<const Expr*>> 
     BlockExecutor::updateCreateBytifiedPtPredicateAndModifyPartial
@@ -3790,6 +3751,7 @@ namespace smack{
     
 
     std::pair<const VarExpr*, std::string> BlockExecutor::getUsedVarAndName(std::string origVarName){
+        // DONE: loadIndex refactored
         // obtain the used var if it is used..
         const VarExpr* usedVar = this->varFactory->getVarConsume(origVarName);
         std::string usedVarName = usedVar->name();
@@ -3798,6 +3760,7 @@ namespace smack{
 
 
     std::pair<const VarExpr*, std::string> BlockExecutor::useVarAndName(std::string origVarName){
+        // DONE: loadIndex refactored
         const VarExpr* newUsedVar = this->varFactory->useVar(origVarName);
         std::string newUsedVarName = newUsedVar->name();
         return {newUsedVar, newUsedVarName};
@@ -3844,6 +3807,7 @@ namespace smack{
     const VarExpr* 
     BlockExecutor::createAndRegisterFreshDataVar
     (int size){
+        // DONE: loadIndex refactored
         CFDEBUG(std::cout << "INFO: create fresh data var " << size << std::endl;);
         const VarExpr* freshVar = this->varFactory->getFreshVar(size);
         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(8 * size));
@@ -3855,19 +3819,20 @@ namespace smack{
     void
     BlockExecutor::registerDataVar
     (const VarExpr* usedDataVar){
+        // DONE: loadIndex refactored
         assert(this->getVarType(usedDataVar->name()) == VarType::DATA);
         this->varEquiv->addNewName(usedDataVar->name());
     }
 
     const VarExpr* 
     BlockExecutor::createAndRegisterFreshPtrVar
-    (int stepSize, std::string mallocName, int offset){
-        
-        CFDEBUG(std::cout << "INFO: create fresh ptr var " << stepSize << " " <<  mallocName << " " << offset << std::endl;);
+    (int stepSize, std::string regionName, int offset){
+        // DONE: loadIndex refactored        
+        CFDEBUG(std::cout << "INFO: create fresh ptr var " << stepSize << " " <<  regionName << " " << offset << std::endl;);
         const VarExpr* freshVar = this->varFactory->getFreshVar(PTR_BYTEWIDTH);
         this->cfg->addVarType(freshVar->name(), "ref" + std::to_string(8 * stepSize));
         this->varEquiv->addNewName(freshVar->name());
-        this->varEquiv->linkRegionName(freshVar->name(), mallocName);
+        this->varEquiv->linkRegionName(freshVar->name(), regionName);
         this->varEquiv->addNewOffset(freshVar->name(), offset);
         return freshVar;
     }
@@ -3875,7 +3840,7 @@ namespace smack{
 
     void
     BlockExecutor::registerPtrVar
-    (const VarExpr* usedPtrVar, std::string mallocName, int offset){
+    (const VarExpr* usedPtrVar, std::string regionName, int offset){
         assert(this->getVarType(usedPtrVar->name()) == VarType::PTR || 
                this->getVarType(usedPtrVar->name()) == VarType::NIL);
         if(this->getVarType(usedPtrVar->name()) == VarType::NIL){
@@ -3884,7 +3849,7 @@ namespace smack{
             this->varEquiv->addNewOffset(usedPtrVar->name(), this->varEquiv->getOffset(this->varFactory->getNullVar()->name()));
         } else {
             this->varEquiv->addNewName(usedPtrVar->name());
-            this->varEquiv->linkRegionName(usedPtrVar->name(), mallocName);
+            this->varEquiv->linkRegionName(usedPtrVar->name(), regionName);
             this->varEquiv->addNewOffset(usedPtrVar->name(), offset);
         }
     }
@@ -3953,24 +3918,8 @@ namespace smack{
         return {resultPredicateList, resultPures};
     }
 
-
-    int BlockExecutor::getMaxRegionLength(SHExprPtr sh){
-        int max = -1;
-        for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-            if(spl->getId() == SpatialLiteral::Kind::SPT){
-                const SizePtLit* spt = (const SizePtLit*) spl;
-                assert(spt->getSize()->translateToInt(this->varEquiv).first);
-                int tempVal = spt->getSize()->translateToInt(this->varEquiv).second; 
-                if(tempVal > max){
-                    max = tempVal;
-                }
-            }
-        }
-        return max;
-    }
-
-
     bool BlockExecutor::isMemcopyOverlapping(const VarExpr* srcVar, const VarExpr* dstVar, int copySize){
+        // DONE: loadIndex refactored
         // srcVar and dstVar are used vars
         assert(copySize >= 0);
         assert(VarType::PTR == this->getVarType(srcVar->name()) ||
@@ -3993,7 +3942,7 @@ namespace smack{
     }
  
 
-    SHExprPtr BlockExecutor::createErrLitSH(std::list<const Expr*> newPures, std::list<const RegionClause *> oldRegions, ErrType errType);{
+    SHExprPtr BlockExecutor::createErrLitSH(std::list<const Expr*> newPures, std::list<const RegionClause *> oldRegions, ErrType errType){
         // DONE: loadIndex refactored
         // spl literal
         const SpatialLiteral* errlit = SpatialLiteral::errlit(true, errType);
@@ -4042,7 +3991,7 @@ namespace smack{
         }
         resultPredicateList.push_back(tempRhsBlk);
         if(FULL_DEBUG && OPEN_STORE_SPLIT){
-            this->storeSplit->print();
+            metaInfo->print();
         }
         return {resultPredicateList, resultPures};
     }

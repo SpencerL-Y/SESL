@@ -41,13 +41,12 @@ namespace smack{
 
         // An abstract state for execution includes:
         // (p,SHExprPtr)
-        // auxillary information: varEquiv, varFactory and storeSplit
+        // auxillary information: varEquiv, varFactory
 
         Program* program;
         Block* currentBlock;
         VarEquivPtr varEquiv;
         VarFactoryPtr varFactory;
-        StoreSplitterPtr storeSplit;
         std::list<std::string> callStack;
         // for memtrack
         std::map<std::string, std::string> IROrigVar2Src;
@@ -59,8 +58,8 @@ namespace smack{
         // << HIGH LEVEL METHODS >>
         const VarExpr* createAndRegisterFreshDataVar(int size);
         void registerDataVar(const VarExpr* usedDataVar);
-        const VarExpr* createAndRegisterFreshPtrVar(int stepSize, std::string mallocName, int offset);
-        void registerPtrVar(const VarExpr* usedPtrVar, std::string mallocName, int offset);
+        const VarExpr* createAndRegisterFreshPtrVar(int stepSize, std::string regionName, int offset);
+        void registerPtrVar(const VarExpr* usedPtrVar, std::string regionName, int offset);
         bool isPtrVar(std::string name);
         VarType getVarType(std::string varName);
         int getBitwidthOfDataVar(std::string varName);
@@ -115,7 +114,6 @@ namespace smack{
         std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyBlkPredicate(RegionBlkSplitUtilPtr metaInfo, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures);
         std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyForCalloc(RegionBlkSplitUtilPtr metaInfo, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures)
         // special cases
-        int getMaxRegionLength(SHExprPtr sh);
 
         // ----------------- Bytelevel Utilities
         bool isMemcopyOverlapping(const VarExpr* srcVar, const VarExpr* dstVar, int copySize);
@@ -216,7 +214,6 @@ namespace smack{
         void setBlock(StatePtr cb){ currentBlock = cb->getStateBlock(); }
         VarEquivPtr getVarEquiv() { return varEquiv;}
         VarFactoryPtr getVarFactory() { return varFactory;}
-        StoreSplitterPtr getStoreSplit() { return storeSplit;}
         std::list<std::string> getCallStack() { return callStack;}
 
         void printCallStack(){ 

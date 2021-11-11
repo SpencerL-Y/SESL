@@ -825,11 +825,12 @@ namespace smack{
             } else if(!call->getProc().compare("$alloc")){
                 return this->executeAlloc(sh, call);
             } else if(!call->getProc().compare("calloc")) {
-                // STOP HEREEE
                 return this->executeCalloc(sh, call);
             } else if(call->getProc().find("__VERIFIER") != std::string::npos){
                 return this->executeVeriCall(sh, call);
             } else if(call->getProc().find("$memcpy") != std::string::npos || call->getProc().find("memcpy") != std::string::npos ){
+
+                // STOP HEREEE
                 return this->executeMemcpy(sh, call);
             } else if(call->getProc().find("$memset") != std::string::npos || call->getProc().find("memset") != std::string::npos){
                 return this->executeMemset(sh, call);
@@ -911,6 +912,7 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::executeVeriCall
     (SHExprPtr sh, const CallStmt* stmt){
+        // DONE: loadIndex refactored
         CFDEBUG(std::cout << "INFO: execute VERIFIER Call." << std::endl;);
         assert(stmt->getProc().find("__VERIFIER") != std::string::npos);
         if(!stmt->getProc().compare(SVNaming::SV_NONDET_CHAR)) {
@@ -928,12 +930,9 @@ namespace smack{
             this->varEquiv->linkName(retVarName, nondetCharVar->name());
             const Expr* eq = Expr::eq(retVar, nondetCharVar);
             REGISTER_EXPRPTR(eq);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                eq
-            );
-            REGISTER_EXPRPTR(newPure);
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            std::list<const Expr*> newPures = sh->getPures();
+            newPures.push_back(eq);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;)
             return newSH;
@@ -952,12 +951,9 @@ namespace smack{
             this->varEquiv->linkName(retVarName, nondetIntVar->name());
             const Expr* eq = Expr::eq(retVar, nondetIntVar);
             REGISTER_EXPRPTR(eq);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                eq
-            );
-            REGISTER_EXPRPTR(newPure);
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            std::list<const Expr*> newPures = sh->getPures();
+            newPures.push_back(eq);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
@@ -976,12 +972,9 @@ namespace smack{
             this->varEquiv->linkName(retVarName, nondetLongVar->name());
             const Expr* eq = Expr::eq(retVar, nondetLongVar);
             REGISTER_EXPRPTR(eq);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                eq
-            );
-            REGISTER_EXPRPTR(newPure);
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            std::list<const Expr*> newPures = sh->getPures();
+            newPures.push_back(eq);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
@@ -1003,12 +996,9 @@ namespace smack{
             this->varEquiv->linkName(retVarName, nondetBoolVar->name());
             const Expr* eq = Expr::eq(retVar, nondetBoolVar);
             REGISTER_EXPRPTR(eq);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                eq
-            );
-            REGISTER_EXPRPTR(newPure);
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            std::list<const Expr*> newPures = sh->getPures();
+            newPures.push_back(eq);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;)
             return newSH;
@@ -1021,6 +1011,7 @@ namespace smack{
 
 
     SHExprPtr BlockExecutor::executeMemcpy(SHExprPtr sh, const CallStmt* stmt){
+        // DONE: loadIndex refactored
         // Points: 
         // 1. the source to be copied need to be bytified
         // 2. the destination is assumed to be set to zeros
@@ -1028,32 +1019,38 @@ namespace smack{
         // 1. Overlapping of source and destination
         // 2. destination has non-bytified or non-zero pts
         // extract the loaded src and dst to ptr vars
-        const Expr* newPure = sh->getPure();
-        std::list<const SpatialLiteral*> newSpatial;
+        std::list<const Expr*> newPures = sh->getPures();
+        std::list<const RegionClause*> newRegions;
 
-        std::list<const SpatialLiteral*> srcBytifiedSpatial;
-        std::list<const SpatialLiteral*> dstBytifiedSpatial;
-        std::list<const SpatialLiteral*> copiedSpatialPts;
-        std::list<const SpatialLiteral*> adaptedCopiedSpatialPts;
+
+        std::list<const SpatialLiteral*> srcLeftList;
+        std::list<const SpatialLiteral*> srcMiddleList;
+        std::list<const SpatialLiteral*> srcRightList;
+        
+        std::list<const SpatialLiteral*> dstLeftList;
+        std::list<const SpatialLiteral*> dstMiddleList;
+        std::list<const SpatialLiteral*> dstRightList;
+
+        std::list<const SpatialLiteral*> copiedSplList;
+        std::list<const SpatialLiteral*> adaptedCopiedSplList;
 
         int copySize = -1;
         const VarExpr* srcVar = nullptr;
         const VarExpr* srcOrigVar = nullptr;
         std::string srcVarName;
         std::string srcOrigVarName;
-        std::string srcMallocName;
-        int srcBlkSize = -1;
+        std::string srcRegionName;
+
+        int srcRegionSize = -1;
         int srcOffset = -1;
 
         const VarExpr* dstVar = nullptr;
         const VarExpr* dstOrigVar = nullptr;
         std::string dstVarName;
         std::string dstOrigVarName;
-        std::string dstMallocName;
-        int dstBlkSize = -1;
+        std::string dstRegionName;
+        int dstRegionSize = -1;
         int dstOffset = -1;
-
-        std::list<std::string> dstCallStack;
 
         assert(stmt->getProc().find("memcpy") != std::string::npos);
         std::list<const Expr*> params =  stmt->getParams();
@@ -1084,24 +1081,26 @@ namespace smack{
             srcOrigVarName = srcOrigVar->name();
             srcVar = this->getUsedVarAndName(srcOrigVarName).first;
             srcVarName = this->getUsedVarAndName(srcOrigVarName).second;
-            srcMallocName = this->varEquiv->getRegionName(srcVarName);
-            CHECK_VALID_DEREF_FOR_BLK(srcMallocName);
-            srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv).second;
+            
+            srcRegionName = this->varEquiv->getRegionName(srcVarName);
+            CHECK_VALID_DEREF_FOR_BLK(srcRegionName);
+
+            srcRegionSize = sh->getRegionSize(srcRegionName);
             srcOffset = this->varEquiv->getOffset(srcVarName);;
         } else if(sourceLocation->getType() == ExprType::FUNC){
             const FunExpr* ptrArithFunc = (const FunExpr*) sourceLocation;
             assert(this->isPtrArithFuncName(ptrArithFunc->name()));
             // sourceLocation is a ptr arithmetic
-            std::pair<const VarExpr*, const Expr*> newSrcVarPurePair = updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPure);
+            std::pair<const VarExpr*, const Expr*> newSrcVarPurePair = updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPures);
             const VarExpr* freshSrcVar = newSrcVarPurePair.first;
-            newPure = newSrcVarPurePair.second;
+            newPures = newSrcVarPurePair.second;
 
             srcOrigVar = freshSrcVar;
             srcVar = freshSrcVar;
             srcOrigVarName = srcOrigVar->name();
             srcVarName = srcVar->name();
-            srcMallocName = this->varEquiv->getRegionName(srcOrigVarName);
-            srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv).second;
+            srcRegionName = this->varEquiv->getRegionName(srcOrigVarName);
+            srcRegionSize = sh->getBlkSize(srcRegionName)->translateToInt(this->varEquiv).second;
             srcOffset = this->varEquiv->getOffset(srcVarName);
 
         } else {
@@ -1110,7 +1109,7 @@ namespace smack{
             return sh;
         }
         CFDEBUG(std::cout << "INFO: Memcpy source information -------------- " << std::endl;);
-        CFDEBUG(std::cout << "INFO: Memcpy source: " << srcMallocName << " " << srcOffset << " " << copySize - 1<< std::endl;);
+        CFDEBUG(std::cout << "INFO: Memcpy source: " << srcRegionName << " " << srcOffset << " " << copySize - 1<< std::endl;);
         
         
         // discussion of dstLocation
@@ -1119,24 +1118,24 @@ namespace smack{
             dstOrigVarName = dstOrigVar->name();
             dstVar = this->getUsedVarAndName(dstOrigVarName).first;
             dstVarName = this->getUsedVarAndName(dstOrigVarName).second;
-            dstMallocName = this->varEquiv->getRegionName(dstVarName);
-            CHECK_VALID_DEREF_FOR_BLK(dstMallocName);
-            dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv).second;
+            dstRegionName = this->varEquiv->getRegionName(dstVarName);
+            CHECK_VALID_DEREF_FOR_BLK(dstRegionName);
+            dstRegionSize = sh->getRegionSize(dstRegionName);
             dstOffset = this->varEquiv->getOffset(dstVarName);
         } else if(dstLocation->getType() == ExprType::FUNC){
             
             const FunExpr* ptrArithFunc = (const FunExpr*) dstLocation;
             assert(this->isPtrArithFuncName(ptrArithFunc->name()));
-            std::pair<const VarExpr*, const Expr*> newDstVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPure);
+            std::pair<const VarExpr*, const Expr*> newDstVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPures);
             const VarExpr* freshDstVar = newDstVarPurePair.first;
-            newPure = newDstVarPurePair.second;
+            newPures = newDstVarPurePair.second;
 
             dstOrigVar = freshDstVar;
             dstVar = freshDstVar;
             dstOrigVarName = freshDstVar->name();
             dstVarName = freshDstVar->name();
-            dstMallocName = this->varEquiv->getRegionName(dstOrigVarName);
-            dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv).second;
+            dstRegionName = this->varEquiv->getRegionName(dstOrigVarName);
+            dstRegionSize = sh->getRegionSize(dstRegionName);
             dstOffset = this->varEquiv->getOffset(dstVarName);
              
         } else {
@@ -1144,7 +1143,6 @@ namespace smack{
             assert(false);
             return sh;
         }
-
 
         if(stmt->getProc().find("$memcpy") == std::string::npos){
             assert(stmt->getReturns().size() == 1);
@@ -1161,263 +1159,180 @@ namespace smack{
                 callRhsVar
             );
             REGISTER_EXPRPTR(eq);
-            newPure = Expr::and_(
-                sh->getPure(),
-                newPure
-            );
+            newPures.push_back(eq);
         }
         CFDEBUG(std::cout << "INFO: Memcpy dst information --------------" << std::endl;);
-        CFDEBUG(std::cout << "INFO: Memcpy dst: " << dstMallocName << " " << dstOffset << " " << copySize - 1 << std::endl;)
+        CFDEBUG(std::cout << "INFO: Memcpy dst: " << dstRegionName << " " << dstOffset << " " << copySize - 1 << std::endl;)
         
         // if the copy is overlapping, report the error
 
         if(this->isMemcopyOverlapping(srcVar, dstVar, copySize)){
-            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
             CFDEBUG(std::cout << "INFO: memcopy overlapping.." << std::endl;);
             return newSH;
         }
-        if(srcOffset + copySize > srcBlkSize || dstOffset + copySize > dstBlkSize){
-            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::VALID_DEREF);
+        if(srcOffset + copySize > srcRegionSize || dstOffset + copySize > dstRegionSize){
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: memcopy out of range.." << std::endl;);
             return newSH;
         }
         if(copySize < 0){
-            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::VALID_DEREF);
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: memcopy size error.." << std::endl;);
             return newSH;
         }
+
+        bool srcDstSame = (!srcRegionName.compare(dstRegionName));
+        const RegionClause* tempSrcRegion = nullptr;
+        const RegionClause* tempDstRegion= nullptr;
+        RegionBlkSplitUtilPtr tempSrcMetaInfo = std::make_shared<RegionBlkSplitUtil>(sh->getRegion(srcRegionName)->getRegionMetaInfo());
+        RegionBlkSplitUtilPtr tempDstMetaInfo = srcDstSame ? tempSrcMetaInfo : std::make_shared<RegionBlkSplitUtil>(sh->getRegion(dstRegionName)->getRegionMetaInfo());
+        tempSrcRegion = sh->getRegion(srcRegionName);
+        tempDstRegion = sh->getRegion(dstRegionName);
+
         CFDEBUG(std::cout << "src head position: " << srcOffset << std::endl);
         CFDEBUG(std::cout << "src tail position: " << srcOffset + copySize - 1 << std::endl);
-        bool isSrcHeadPtSplitted = this->storeSplit->isInitialized(srcMallocName, srcOffset) && !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset).first);
-        // the tail is initialized but not the head of some pt predicate
-        bool isSrcTailPtSplitted = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize) && 
-        !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset + copySize).first);
-        if(isSrcHeadPtSplitted || isSrcTailPtSplitted){
-            CFDEBUG(std::cout  << "ERROR: src  pt splitted situation currently not considered: head tail: " << isSrcHeadPtSplitted << " " << isSrcTailPtSplitted << std::endl;);
-            assert(false);
-            return nullptr;
-        }
-
-        // replace the section in the dst region
-        bool isDstHeadPtSplitted = this->storeSplit->isInitialized(dstMallocName, dstOffset) && !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset).first);
-        bool isDstTailPtSplitted = this->storeSplit->isInitialized(dstMallocName, dstOffset + copySize) && !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset + copySize).first);
+        bool isSrcHeadPtSplitted = tempSrcMetaInfo->isInitialized(srcOffset) && !(tempSrcMetaInfo->getOffsetPos(srcOffset).first);
+        bool isSrcTailPtSplitted = tempSrcMetaInfo->isInitialized(srcOffset + copySize) && !(tempSrcMetaInfo->getOffsetPos(srcOffset + copySize).first);
+        bool isDstHeadPtSplitted = tempDstMetaInfo->isInitialized(dstOffset) && !(dstTempMetaInfogetOffsetPos(dstOffset).first);
+        bool isDstTailPtSplitted = tempDstMetaInfo->isInitialized(dstOffset + copySize) && !(tempDstMetaInfo->getOffsetPos(dstOffset + copySize).first);
 
         CFDEBUG(std::cout << "src head pt splitted: " << isSrcHeadPtSplitted << std::endl);
         CFDEBUG(std::cout << "src tail pt splitted: " << isSrcTailPtSplitted << std::endl);
         CFDEBUG(std::cout << "dst head pt splitted: " << isDstHeadPtSplitted << std::endl);
         CFDEBUG(std::cout << "dst tail pt splitted: " << isDstTailPtSplitted << std::endl);
         
-        if(isDstHeadPtSplitted || isDstTailPtSplitted){
-            CFDEBUG(std::cout << "ERROR: dst pt splitted situation currently not considered" << std::endl;);
-            assert(false);
-            return nullptr;
-        }
-
-        if(srcMallocName == "$Null" || dstMallocName == "$Null") {
-            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::VALID_DEREF);
-            CFDEBUG(std::cout << "INFO: invalid pointer.." << std::endl;);
+        if(isSrcHeadPtSplitted || isSrcTailPtSplitted){
+            CFDEBUG(std::cout  << "ERROR: src  pt splitted situation currently not considered: head tail: " << isSrcHeadPtSplitted << " " << isSrcTailPtSplitted << std::endl;);
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
             return newSH;
         }
-
-
-        const SpatialLiteral* dstSpt = sh->getRegionSpt(dstMallocName);
-        for(std::string s : dstSpt->getStackMembers()){
-            dstCallStack.push_back(s);
+        if(isDstHeadPtSplitted || isDstTailPtSplitted){
+            CFDEBUG(std::cout << "ERROR: dst pt splitted situation currently not considered" << std::endl;);
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
+            return newSH;
+        }
+        if(srcRegionName == "$Null" || dstRegionName == "$Null") {
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
+            CFDEBUG(std::cout << "INFO: invalid pointer.." << std::endl;);
+            return newSH;
         }
 
         CFDEBUG(std::cout << "INFO:--------------- BEGIN COPY --------------- " << std::endl;);
         // whether head and tail of an copied area located in some pt 
         // TODOsh: make sure the tail offset computation is correct
-        bool isSrcHeadInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset);
-        bool isSrcTailInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize - 1);
-        int srcHeadPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset).second;
-        int srcHeadBlkIndex = isSrcHeadInitialized? -1 : this->storeSplit->getSplit(srcMallocName, srcOffset);
-        int srcTailPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset + copySize - 1).second;
-        int srcTailBlkIndex = isSrcTailInitialized ? -1 : this->storeSplit->getSplit(srcMallocName, srcOffset + copySize - 1);
+        bool isSrcHeadInitialized = tempSrcMetaInfo->isInitialized(srcOffset);
+        bool isSrcTailInitialized = tempSrcMetaInfo->isInitialized(srcOffset + copySize - 1);
+        int srcHeadPtIndex = tempSrcMetaInfo->getInitializedPos(srcOffset).second;
+        int srcHeadBlkIndex = isSrcHeadInitialized ? -1 : tempSrcMetaInfo->getSplit(srcOffset);
+        int srcTailPtIndex = tempSrcMetaInfo->getInitializedPos(srcRegionName, srcOffset + copySize - 1).second;
+        int srcTailBlkIndex = isSrcTailInitialized ? -1 : tempSrcMetaInfo->getSplit(srcOffset + copySize - 1);
         
         CFDEBUG(std::cout << "src head initialized: " << isSrcHeadInitialized << std::endl);
         CFDEBUG(std::cout << "src tail initialized: " << isSrcTailInitialized << std::endl);
         CFDEBUG(std::cout << "src head pt index and blk index: " << srcHeadPtIndex << " " << srcHeadBlkIndex << std::endl);
         CFDEBUG(std::cout << "src tail pt index and blk index : " << srcTailPtIndex << " " << srcTailBlkIndex << std::endl);
 
-        bool srcBeginCounting = false;
-        bool srcBeginBytifying = false;
-        int srcCurrentPtIndex = 1;
-        int srcCurrentBlkIndex = 1;
-        // the first pass to bytify all the predicates
-        for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-            // iterate over old symbolic heap and modify
-            if(SpatialLiteral::Kind::SPT == spl->getId()){
-                if(!spl->getBlkName().compare(srcMallocName)){
-                    srcBeginCounting = true;
-                } else {
-                    srcBeginCounting = false;
-                }
-            }
-            if(isSrcHeadInitialized && srcCurrentPtIndex >= srcHeadPtIndex || 
-               !isSrcHeadInitialized && srcCurrentBlkIndex >= srcHeadBlkIndex){
-                srcBeginBytifying = true;
-            }
-            if(isSrcTailInitialized && srcCurrentPtIndex > srcTailPtIndex || 
-              !isSrcTailInitialized && srcCurrentBlkIndex > srcTailBlkIndex){
-                srcBeginBytifying = false;
-            }
-            if(srcBeginCounting) {
-                if(SpatialLiteral::Kind::BLK == spl->getId()){
-                    if(srcBeginBytifying){
-                        std::pair<std::list<const SpatialLiteral*>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
-                        for(const SpatialLiteral* i : resultBytifiedPurePair.first){
-                            srcBytifiedSpatial.push_back(i);
-                        }
-                        newPure = resultBytifiedPurePair.second;
-                    } else {
-                        srcBytifiedSpatial.push_back(spl);
-                    }
-                    srcCurrentBlkIndex += 1;
-                } else if(SpatialLiteral::Kind::PT == spl->getId()){
-                    if(srcBeginBytifying){
-                        // const PtLit* oldPt = (const PtLit*) spl;
-                        // std::pair<const PtLit*, const Expr*> resultPtPurePair =  this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, newPure);
-                        // srcBytifiedSpatial.push_back(resultPtPurePair.first);
-                        // newPure = resultPtPurePair.second;
-                        srcBytifiedSpatial.push_back(spl);
-                    } else {
-                        srcBytifiedSpatial.push_back(spl);
-                    }
-                    srcCurrentPtIndex += 1;
-                } else {    
-                    srcBytifiedSpatial.push_back(spl);
-                }
-            } else {
-                srcBytifiedSpatial.push_back(spl);
-            }
-        }
+        const SpatialLiteral::Kind srcStartKind = isSrcHeadInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::Kind::BLK;
+        const SpatialLiteral::Kind srcEndKind = isSrcTailInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::Kind::BLK;
+        int srcStartKindIndex  = isSrcHeadInitialized ? srcHeadPtIndex: srcHeadBlkIndex;
+        int srcEndKindIndex  = isSrcTailInitialized ? srcTailPtIndex: srcTailBlkIndex;
+
+        std::tuple<
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>
+        > selectOutSrcTuple = tempSrcRegion->selectOutSpLitList(srcStartKind, srcStartKindIndex,
+                                                                srcEndKind, srcEndKindIndex);
         
+        srcMiddleList = std::get<1>(selectOutSrcTuple);
+        srcLeftList = std::get<0>(selectOutSrcTuple);
+        srcRightList = std::get<2>(selectOutSrcTuple);
+        std::list<const SpatialLiteral*> srcBytifiedMiddleList;
 
-        // after bytifying, the head and tail must be pt predicates
-        int newSrcHeadPtIndex = this->storeSplit->getOffsetPos(srcMallocName, srcOffset).second;
-        int newSrcTailPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset + copySize - 1).second;
-        CFDEBUG(std::cout << "new srcheadPtIndex and srcTailPtIndex: " << newSrcHeadPtIndex << " " << newSrcTailPtIndex << std::endl;);
-        assert(newSrcHeadPtIndex <= newSrcTailPtIndex);
-        int newCurrentSrcPtIndex = 1;
-        bool newSrcBeginCounting = false;
-        for(const SpatialLiteral* nspl : srcBytifiedSpatial){
-            if(nspl->getId() == SpatialLiteral::Kind::SPT){
-                if(!nspl->getBlkName().compare(srcMallocName)){
-                    newSrcBeginCounting = true;
-                } else {
-                    newSrcBeginCounting = false;
+        for(const SpatialLiteral* spl : srcMiddleList){
+            if(SpatialLiteral::Kind::BLK == spl->getId()) {
+                std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPurePair = this->bytifyBlkPredicate(tempSrcMetaInfo, srcRegionName, spl, newPures);
+                for(const SpatialLiteral* i : resultBytifiedPurePair.first){
+                    srcBytifiedMiddleList.push_back(i);
                 }
-            }
-
-            if(newSrcBeginCounting){
-                if(nspl->getId() == SpatialLiteral::Kind::BLK){
-                    if(newCurrentSrcPtIndex >= newSrcHeadPtIndex && 
-                       newCurrentSrcPtIndex <= newSrcTailPtIndex) {
-                        const BlkLit* tempBlk = (const BlkLit*) nspl;
-                        CFDEBUG(std::cout << "INFO: check memcopy blk zero size.." << std::endl;);
-                        assert(tempBlk->getBlkByteSize() == 0);
-                    }
-                } else if(nspl->getId() == SpatialLiteral::Kind::PT){
-                    if(newCurrentSrcPtIndex >= newSrcHeadPtIndex && 
-                       newCurrentSrcPtIndex <= newSrcTailPtIndex) {
-                        copiedSpatialPts.push_back(nspl);
-                    }
-                    newCurrentSrcPtIndex += 1;
-                } else {
-                    // do nothing
-                }
-
+                newPures = resultBytifiedPurePair.second;
             } else {
-                //do nothing
+                srcBytifiedMiddleList.push_back(spl);
             }
         }
+        for(const SpatialLiteral* bspl : srcBytifiedMiddleList){
+            if(SpatialLiteral::Kind::BLK == spl->getId()){
+                assert(((const BlkLit*) bspl)->getBlkByteSize() == 0);
+            }
+        }
+
+        tempSrcRegion = new RegionClause(srcLeftList, srcBytifiedMiddleList, srcRightList, tempSrcMetaInfo, tempSrcRegion);
+        tempDstRegion = srcDstSame ? tempSrcRegion : tempDstRegion;
+        tempSrcMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempSrcRegion->getRegionMetaInfo());
+        tempDstMetaInfo = srcDstSame ? tempSrcMetaInfo : tempDstMetaInfo;
 
         CFDEBUG(std::cout << "INFO: src bytified ---" << std::endl;);
-        for(const SpatialLiteral* sbsl : srcBytifiedSpatial){
+        for(const SpatialLiteral* sbsl : tempSrcRegion->getSpatialLits()){
             sbsl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
         }
         CFDEBUG(std::cout << "INFO: copied ---" << std::endl;);
-        for(const SpatialLiteral* cpsl : copiedSpatialPts){
+        for(const SpatialLiteral* cpsl : srcBytifiedMiddleList){
             cpsl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
         }
-
-
         CFDEBUG(std::cout << "INFO:--------------- END COPY --------------- " << std::endl;);
 
         CFDEBUG(std::cout << "INFO:--------------- BEGIN PASTE --------------- " << std::endl;);
         // whether head and tail of an copied area located in some pt 
         // TODOsh: make sure the tail offset computation is correct
-        bool isDstHeadInitialized = this->storeSplit->isInitialized(dstMallocName, dstOffset);
-        bool isDstTailInitialized = this->storeSplit->isInitialized(dstMallocName, dstOffset + copySize - 1);
-        int dstHeadPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset).second;
-        int dstHeadBlkIndex = isDstHeadInitialized ? -1 : this->storeSplit->getSplit(dstMallocName, dstOffset);
-        int dstTailPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset + copySize - 1).second;
-        int dstTailBlkIndex = isDstTailInitialized ? -1 : this->storeSplit->getSplit(dstMallocName, dstOffset + copySize - 1);
+        bool isDstHeadInitialized = tempDstMetaInfo->isInitialized(dstOffset);
+        bool isDstTailInitialized = tempDstMetaInfo->isInitialized(dstOffset + copySize - 1);
+        int dstHeadPtIndex = tempDstMetaInfo->getInitializedPos(dstOffset).second;
+        int dstHeadBlkIndex = isDstHeadInitialized ? -1 : tempDstMetaInfo->getSplit(dstOffset);
+        int dstTailPtIndex = tempDstMetaInfo->getInitializedPos(dstOffset + copySize - 1).second;
+        int dstTailBlkIndex = isDstTailInitialized ? -1 : tempDstMetaInfo->getSplit(dstOffset + copySize - 1);
 
         CFDEBUG(std::cout << "dst head initialized: " << isDstHeadInitialized << std::endl);
         CFDEBUG(std::cout << "dst tail initialized: " << isDstTailInitialized << std::endl);
         CFDEBUG(std::cout << "dst head pt index and blk index: " << dstHeadPtIndex << " " << dstHeadBlkIndex << std::endl);
         CFDEBUG(std::cout << "dst tail pt index and blk index : " << dstTailPtIndex << " " << dstTailBlkIndex << std::endl);
+        
+        const SpatialLiteral::Kind dstStartKind = isDstHeadInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::Kind::BLK;
+        const SpatialLiteral::Kind dstEndKind = isDstHeadInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::Kind::BLK;
+        int dstStartKindIndex  = isDstHeadInitialized ? dstHeadPtIndex: dstHeadBlkIndex;
+        int dstEndKindIndex  = isDstTailInitialized ? dstTailPtIndex: dstTailBlkIndex;
 
-        bool dstBeginCounting = false;
-        bool dstBeginBytifying = false;
-        int dstCurrentPtIndex = 1;
-        int dstCurrentBlkIndex = 1;
-        // the first pass to bytify all the predicates
-        for(const SpatialLiteral* spl : srcBytifiedSpatial){
-            // iterate over old symbolic heap and modify
-            if(SpatialLiteral::Kind::SPT == spl->getId()){
-                if(!spl->getBlkName().compare(dstMallocName)){
-                    dstBeginCounting = true;
-                } else {
-                    dstBeginCounting = false;
+
+        std::tuple<
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>
+        > selectOutDstTuple = tempDstRegion->selectOutSpLitList(dstStartKind, dstStartKindIndex,
+                                                                dstEndKind, dstEndKindIndex);
+
+        dstLeftList = std::get<0>(selectOutDstTuple);
+        dstRightList = std::get<2>(selectOutDstTuple);
+        dstMiddleList = std::get<1>(selectOutDstTuple);
+        std::list<const SpatialLiteral*> dstBytifiedMiddleList;
+
+        for(const SpatialLiteral* spl : dstMiddleList){
+            if(SpatialLiteral::Kind::BLK == spl->getId()){
+                std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPurePair = this->bytifyBlkPredicate(tempDstMetaInfo, dstRegionName, spl, newPures);
+                for(const SpatialLiteral* i : resultBytifiedPurePair.first){
+                    dstBytifiedMiddleList.push_back(i);
                 }
-            }
-            if(isDstHeadInitialized && dstCurrentPtIndex >= dstHeadPtIndex || 
-               !isDstHeadInitialized && dstCurrentBlkIndex >= dstHeadBlkIndex){
-                dstBeginBytifying = true;
-            }
-            if(isDstTailInitialized && dstCurrentPtIndex > dstTailPtIndex || 
-              !isDstTailInitialized && dstCurrentBlkIndex > dstTailBlkIndex){
-                dstBeginBytifying = false;
-            }
-            if(dstBeginCounting) {
-                if(SpatialLiteral::Kind::BLK == spl->getId()){
-                    if(dstBeginBytifying){
-                        std::pair<std::list<const SpatialLiteral*>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
-                        for(const SpatialLiteral* i : resultBytifiedPurePair.first){
-                            dstBytifiedSpatial.push_back(i);
-                        }
-                        newPure = resultBytifiedPurePair.second;
-                    } else {
-                        dstBytifiedSpatial.push_back(spl);
-                    }
-                    dstCurrentBlkIndex += 1;
-                } else if(SpatialLiteral::Kind::PT == spl->getId()){
-                    if(dstBeginBytifying){
-                        // const PtLit* oldPt = (const PtLit*) spl;
-                        // std::pair<const PtLit*, const Expr*> resultPtPurePair =  this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, newPure);
-                        // dstBytifiedSpatial.push_back(resultPtPurePair.first);
-                        // newPure = resultPtPurePair.second;
-                        dstBytifiedSpatial.push_back(spl);
-                    } else {
-                        dstBytifiedSpatial.push_back(spl);
-                    }
-                    dstCurrentPtIndex += 1;
-                } else {    
-                    dstBytifiedSpatial.push_back(spl);
-                }
+                newPures = resultBytifiedPurePair.second;
             } else {
-                dstBytifiedSpatial.push_back(spl);
+                dstBytifiedMiddleList.push_back(spl);
             }
         }
+
         CFDEBUG(std::cout << "INFO: dst bytified ---" << std::endl;);
-        for(const SpatialLiteral* dbsl : dstBytifiedSpatial){
+        for(const SpatialLiteral* dbsl : dstBytifiedMiddleList){
             dbsl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
@@ -1426,66 +1341,26 @@ namespace smack{
         // rename all the ptr variable, add zero blk literals to the copiedVector
         // to copy, first erase the target storeSplit, symbolicHeap 
         // and compute the offset and modify the storeSplit
-        int newDstHeadPtIndex = this->storeSplit->getOffsetPos(dstMallocName, dstOffset).second;
-        int newDstTailPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset + copySize - 1).second;
+        int newDstHeadPtIndex = tempDstMetaInfo->getOffsetPos(dstOffset).second;
+        int newDstTailPtIndex = tempDstMetaInfo->getInitializedPos(dstOffset + copySize - 1).second;
         CFDEBUG(std::cout << "new srcheadPtIndex and srcTailPtIndex: " << newDstHeadPtIndex << " " << newDstTailPtIndex << std::endl;);
-        std::list<const SpatialLiteral*> leftLiterals;
-        std::list<const SpatialLiteral*> rightLiterals;
-        bool isLeft = true;
-        bool isRight = false;
-        bool nextRight = false;
-        assert(newDstHeadPtIndex <= newDstTailPtIndex);
-        int newCurrentDstPtIndex = 0;
-        bool newDstBeginCounting = false;
-         for(const SpatialLiteral* spl : dstBytifiedSpatial){
-            CFDEBUG(std::cout << "INFO: newCurrentDstPtIndex: " << newCurrentDstPtIndex << std::endl;);
-            // iterate over old symbolic heap and modify
-            if(SpatialLiteral::Kind::SPT == spl->getId()){
-                if(!spl->getBlkName().compare(dstMallocName)){
-                    newDstBeginCounting = true;
-                }
-            }
-            
-            if(newDstBeginCounting){
-                
-                
-                assert(!(isLeft && isRight));
+        copiedSplList = srcBytifiedMiddleList;
 
-                if(SpatialLiteral::Kind::PT == spl->getId()){
-                    newCurrentDstPtIndex += 1;
-                }
-
-                if(newCurrentDstPtIndex ==  newDstHeadPtIndex){
-                    isLeft = false;
-                }
-                if(newCurrentDstPtIndex >  newDstTailPtIndex || 
-                   newCurrentDstPtIndex == newDstTailPtIndex && SpatialLiteral::Kind::PT != spl->getId()){
-                    isRight = true;
-                }
-            } 
-            if(isLeft){
-                leftLiterals.push_back(spl);
-            }
-            if(isRight){
-                rightLiterals.push_back(spl);
-            }
-            
-        }
-
+        CFDEBUG(std::cout << "INFO: Dst Region: " << dstRegionName << std::endl;)
         CFDEBUG(std::cout << "INFO: LEFT---" << std::endl;);
-        for(const SpatialLiteral* lsl : leftLiterals){
+        for(const SpatialLiteral* lsl : dstLeftList){
             lsl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
         }
         CFDEBUG(std::cout << "INFO: COPIED---" << std::endl;);
-        for(const SpatialLiteral* csl : copiedSpatialPts){
+        for(const SpatialLiteral* csl : copiedSplList){
             csl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
         }
         CFDEBUG(std::cout << "INFO: RIGHT---" << std::endl;);
-        for(const SpatialLiteral* rsl : rightLiterals){
+        for(const SpatialLiteral* rsl : dstRightList){
             rsl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
@@ -1493,12 +1368,9 @@ namespace smack{
 
 
         // wipe the storeSplit interval [dstOffset, dstOffset + copySize)
-        this->storeSplit->wipeInterval(dstMallocName, dstOffset, dstOffset + copySize);
-        for(const SpatialLiteral* left : leftLiterals){
-            newSpatial.push_back(left);
-        }
+        tempDstMetaInfo->wipeInterval(dstRegionName, dstOffset, dstOffset + copySize);
         int cumulatedOffset = dstOffset;
-        for(const SpatialLiteral* spl : copiedSpatialPts){
+        for(const SpatialLiteral* spl : copiedSplList){
             assert(spl->getId() == SpatialLiteral::Kind::PT);
             const PtLit* copiedPt = (const PtLit*) spl;
             
@@ -1506,28 +1378,52 @@ namespace smack{
             const VarExpr* toVar = (const VarExpr*) copiedPt->getTo();
             const VarExpr* oldFromVar = (const VarExpr*) copiedPt->getFrom();
             int fromStepSize = ptStepSize;
-            const VarExpr* freshFromVar = this->createAndRegisterFreshPtrVar(fromStepSize, dstMallocName, cumulatedOffset);
+            const VarExpr* freshFromVar = this->createAndRegisterFreshPtrVar(fromStepSize, dstRegionName, cumulatedOffset);
             
 
-            const SpatialLiteral* newSetPt = this->createPtAccordingToMallocName(dstMallocName, freshFromVar, toVar, ptStepSize, dstCallStack);
+            const SpatialLiteral* newSetPt = SpatialLiteral::pt(freshFromVar, toVar, ptStepSize);
             const Expr* lit = Expr::lit((long long) ptStepSize);
             REGISTER_EXPRPTR(lit);
             const Expr* empBlkExpr = Expr::add(freshFromVar, lit);
             REGISTER_EXPRPTR(empBlkExpr);
-            const SpatialLiteral* emptyBlk = this->createBlkAccordingToMallocName(dstMallocName, empBlkExpr, empBlkExpr, 0, dstCallStack);
-            this->storeSplit->addSplit(dstMallocName, cumulatedOffset);
-            this->storeSplit->addSplitLength(dstMallocName, cumulatedOffset, ptStepSize);
-            newSpatial.push_back(newSetPt);
-            newSpatial.push_back(emptyBlk);
+            const SpatialLiteral* emptyBlk = SpatialLiteral::blk(empBlkExpr, empBlkExpr, 0);
+            tempDstMetaInfo->addSplit(dstRegionName, cumulatedOffset);
+            tempDstMetaInfo->addSplitLength(dstRegionName, cumulatedOffset, ptStepSize);
+            adaptedCopiedSplList.push_back(newSetPt);
+            adaptedCopiedSplList.push_back(emptyBlk);
             cumulatedOffset += ptStepSize;
-        }
-        for(const SpatialLiteral* right : rightLiterals){
-            newSpatial.push_back(right);
+
+
+            
         }
         CFDEBUG(std::cout << "INFO:--------------- END PASTE --------------- " << std::endl;);
+        tempDstRegion = new RegionClause(dstLeftList, adaptedCopiedSplList, dstRightList, tempDstMetaInfo, tempDstRegion);
+        tempSrcRegion = srcDstSame ? tempDstRegion : tempSrcRegion;
 
+        const RegionClause* newSrcRegion = tempSrcRegion;
+        const RegionClause* newDstRegion = tempDstRegion;
 
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+        if(srcDstSame){
+            for(const RegionClause* r : sh->getRegions()){
+                if(!r->getRegionName().compare(dstRegionName)){
+                    newRegions.push_back(newDstRegion);
+                } else {
+                    newRegions.push_back(r);
+                }
+            }
+        } else {
+            for(const RegionClause* r : sh->getRegions()){
+                if(!r->getRegionName().compare(srcRegionName)){
+                    newRegions.push_back(newSrcRegion)
+                } else if(!r->getRegionName().compare(dstRegionName)){
+                    newRegions.push_back(newDstRegion);
+                } else {
+                    newRegions.push_back(r);
+                }
+            }
+        }
+
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
         newSH->print(std::cout);
         CFDEBUG(std::cout << std::endl;)
         return newSH;
@@ -4051,9 +3947,9 @@ namespace smack{
         assert(copySize >= 0);
         assert(VarType::PTR == this->getVarType(srcVar->name()) ||
                VarType::PTR == this->getVarType(dstVar->name()));
-        std::string srcVarMallocName = this->varEquiv->getRegionName(srcVar->name());
-        std::string dstvarMallocName = this->varEquiv->getRegionName(dstVar->name());
-        if(srcVarMallocName.compare(dstvarMallocName)){
+        std::string srcVarRegionName = this->varEquiv->getRegionName(srcVar->name());
+        std::string dstVarRegionName = this->varEquiv->getRegionName(dstVar->name());
+        if(srcVarRegionName.compare(dstVarRegionName)){
             return false;
         }
         assert(this->computeArithmeticOffsetValue(srcVar).first);

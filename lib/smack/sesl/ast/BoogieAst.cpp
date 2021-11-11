@@ -1533,7 +1533,7 @@ namespace smack {
                 selectPhase = true;
                 rightPhase = false;
             } 
-            if(endKind == spl->getId() && endKindCount > endSelectIndex){
+            if(endKindCount > endSelectIndex){
                 leftPhase = false;
                 selectPhase = false;
                 rightPhase = true;

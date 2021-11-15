@@ -74,12 +74,15 @@ namespace smack {
 
             mainGraph->initPathVarType();
             const Expr* boolTrue = Expr::lit(true);
+            REGISTER_EXPRPTR(boolTrue);
             // initial list of spatial lits
-            std::list<const SpatialLiteral*> splist;
+            std::list<const Expr*> initPures;
+            std::list<const RegionClause*> initRegions;
+            initPures.push_back(boolTrue);
             const SpatialLiteral* emp = SpatialLiteral::emp();
             splist.push_back(emp);
             // initialization for the symbolic heap
-            SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(boolTrue, splist);
+            SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(initPures, initRegions);
             //---------------------- initialization of auxillaries
             // Initialize the equivalent class for 
             // initialization for the symbolic heap

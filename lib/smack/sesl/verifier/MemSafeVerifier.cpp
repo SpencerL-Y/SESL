@@ -112,7 +112,6 @@ namespace smack {
                 }
             }
             z3::context ctx;
-            // STOP HER
             auto trans = std::make_shared<smack::TransToZ3> (ctx, currSH, mainGraph, varFac);
             trans->translate();
 
@@ -120,6 +119,7 @@ namespace smack {
             
             //std::cout << std::endl;
             bool pathFeasible = checker->checkPathFeasibility();
+            // STOP HER
             bool memLeakSafeSat = checker->checkCurrentMemLeak(currExecState, mainGraph, pathFeasible).first;
             bool infErrorSafeSat = checker->checkInferenceError(pathFeasible).first;
             if(!memLeakSafeSat || !infErrorSafeSat){
@@ -285,15 +285,13 @@ namespace smack {
                 DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: MemLeak!!!" << std::endl;, color::red);
                 std::set<std::string> blknamesRemained;
                 // gather all the blknames
-                for(const SpatialLiteral* spl : state->getSH()->getSpatialExpr()){
-                    if(spl->getId() != SpatialLiteral::Kind::EMP 
-                    || spl->getId() != SpatialLiteral::Kind::ERR){
-                        if(!state->getVarEquiv()->isStructArrayPtr(spl->getBlkName()) && 
-                            blknamesRemained.find(spl->getBlkName()) == blknamesRemained.end()){
-                            blknamesRemained.insert(spl->getBlkName());
-                        }
+                for(const RegionClause* r : state->getSH()->getRegions()){
+                    if(!state->getVarEquiv()->isStructArrayPtr(r->getRegionName()) && 
+                        blknamesRemained.find(r->getRegionName()) == blknamesRemained.end()){
+                        blknamesRemained.insert(r->getRegionName());
                     }
                 }
+                // TODO: REFACTOR HERE
                 int errType;
                 std::set<std::string> memtrackRoots = state->obtainMemtrackRootSet();
                 if(!checkMemTrack(state, mainGraph)) {
@@ -371,6 +369,7 @@ namespace smack {
 
 
     bool MemSafeChecker::checkPathFeasibility(){
+        // DONE: loadIndex refactored
         CFDEBUG(std::cout << "BEGIN PATH FEASIBILITY CHECK ----------------------------" << std::endl;);
         const SHStmt* previousSH = nullptr;
         const Stmt* current =  nullptr;

@@ -40,9 +40,8 @@ namespace smack{
             spatial = slah_api::newEmp(*z3Ctx);
             return;
         } else {
-            // STOP HEREEE
-            std::list<const SpatialLiteral*> spatialList = shExpr->getSpatialExpr();
-            CDEBUG(std::cout << "======center test: in spatial translate process======\n");
+            // STOP HEREEEEEEEE
+            CDEBUG(std::cout << "======center test: in regions translate process======\n");
             z3::expr_vector z3SpatialAtoms(*z3Ctx);
             bool hasSpatials = false;
             for(const SpatialLiteral* sp : spatialList){

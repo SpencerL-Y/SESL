@@ -817,6 +817,9 @@ namespace smack {
         SpatialClause();
         std::list<const SpatialLiteral *> getSpatialLits() const { return this->spatialLits;}
         void setSpatialLits(std::list<const SpatialLiteral*> splList){ this->spatialLits = splList};
+
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+
         virtual bool isErrorClause()=0;
         virtual bool isRegionClause()=0;
     };
@@ -911,7 +914,9 @@ namespace smack {
         // utils
         bool containGcFuncName(std::string funcName) const;
         bool isErrorClause() const { return false;}
-        bool isRegionClause() const { return true;}
+        bool isRegionClause() const { return true;}virtual 
+        z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+
 
         // print
         void print(std::ostream& os) const;
@@ -930,6 +935,9 @@ namespace smack {
 
         bool isErrorClause() const { return true;}
         bool isRegionClause() const { return false;}
+
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+
     };
 
     

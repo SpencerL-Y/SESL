@@ -6,6 +6,7 @@
 #include "llvm/IR/Constants.h"
 #include <iostream>
 #include <set>
+#include <tuple>
 #include <typeinfo>
 #include <sstream>
 #include <cstring>
@@ -1284,89 +1285,10 @@ namespace smack {
         return false;
     }
 
-    z3::expr GCPtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        // z3::expr res = slah_api::newEmp(z3Ctx);
-        // BUG FIXED: cannot simply use emp for memleak, since some constraint relies on the spatial formula
-        if(!this->isByteLevel()){
-            // if the pt predicate is not bytified, old logic as usual
-            assert(this->getFrom()->isVar() && this->getTo()->isVar());
-            const VarExpr *fromVar = (const VarExpr *) this->getFrom();
-            const VarExpr *toVar = (const VarExpr *) this->getTo();
-            std::string fromOrigVarName = varFac->getOrigVarName(fromVar->name());
-            // TODOsh: change to stepSize later
-            int stepWidth = cfg->getVarDetailType(fromOrigVarName).second / 8;
-            // e.g. a pointer $p with type int* points to a variable $fresh
-            // $p --> $fresh
-            // will be translated into
-            /*  ($fresh_0, $fresh_1, $fresh_2, $fresh_3) = i
-                | ($p_0, $p_1, $p_2, $p_3) --> $fresh_0 #
-                  ($p_0, $p_1, $p_2, $p_3) + 1 --> $fresh_1 #
-                  ($p_0, $p_1, $p_2, $p_3) + 2 --> $fresh_2 #
-                  ($p_0, $p_1, $p_2, $p_3) + 3 --> $fresh_3
-           */
-            z3::expr res = slah_api::newEmp(z3Ctx);
-            for (int i = 0; i < stepWidth; i++) {
-                res = slah_api::sep(
-                        res,
-                        slah_api::newPto(
-                                z3Ctx.int_const((fromVar->name() + "_" + std::to_string(i)).c_str()),
-                                z3Ctx.int_const((toVar->name() + "_" + std::to_string(i)).c_str())
-                        )
-                );
-            }
-            // z3::expr res = slah_api::newPto(
-            //   from->translateToZ3(z3Ctx, cfg, varFac, varBounder),
-            //   to->translateToZ3(z3Ctx, cfg, varFac, varBounder)
-            // );
-            CDEBUG(std::cout << "in ptlit!" << res.to_string() << std::endl;);
-            return res;
-        } else {
-            // use new logic
-            z3::expr res = slah_api::newEmp(z3Ctx);
-            for(int i = 0; i < this->stepSize; i++){
-                res = slah_api::sep(
-                    res,
-                    this->getByte(i)->translateToZ3(z3Ctx, cfg, varFac, varBounder)
-                );
-            }
-            return res;
-        }
-    }
-
-    bool GCPtLit::isStackEliminated(std::string exitFuncName) const {
-        for(std::string e : this->callStackSet){
-            if(!e.compare(exitFuncName)){
-                return true;
-            }
-        }
-        return false;
-    }
-
+    
 
     void BlkLit::print(std::ostream &os) const {
         os << "Blk(" << from << ", " << to << ")";
-    }
-
-    z3::expr GCBlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        // z3::expr res = slah_api::newEmp(z3Ctx);
-        // BUG FIXED: cannot simply use emp for memleak, since some constraint relies on the spatial formula
-        if(this->isEmpty()){
-            return slah_api::newEmp(z3Ctx);
-        }
-        auto f = from->translateToZ3(z3Ctx, cfg, varFac, varBounder);
-        auto t = to->translateToZ3(z3Ctx, cfg, varFac, varBounder);
-        CDEBUG(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl;);
-        z3::expr res = slah_api::newBlk(f, t);
-        return res;
-    }
-
-    bool GCBlkLit::isStackEliminated(std::string exitFuncName) const {
-        for(std::string e : this->callStackSet){
-            if(!e.compare(exitFuncName)){
-                return true;
-            }
-        }
-        return false;
     }
 
     z3::expr BlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
@@ -1382,47 +1304,6 @@ namespace smack {
 
     bool BlkLit::isStackEliminated(std::string exitFuncName) const {
         return false;
-    }
-
-    void SizePtLit::print(std::ostream &os) const {
-        os << var << " >-s-> " << size;
-    }
-
-    z3::expr SizePtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        //CDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
-        // TODOsh: later changed to above one
-        CDEBUG(std::cout << "sizeptlit" << std::endl;);
-        return slah_api::newEmp(z3Ctx);
-    }
-
-    bool SizePtLit::isStackEliminated(std::string exitFuncName) const {
-        return false;
-    }
-
-    z3::expr GCSizePtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        //CDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
-        // TODOsh: later changed to above one
-        CDEBUG(std::cout << "gc sizeptlit" << std::endl;);
-        return slah_api::newEmp(z3Ctx);
-    }
-
-    bool GCSizePtLit::isStackEliminated(std::string exitFuncName) const {
-        for(std::string e : this->callStackSet){
-            if(!e.compare(exitFuncName)){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    std::string SizePtLit::getVarName() const {
-        if (var->isVar()) {
-            const VarExpr *varExpr = (const VarExpr *) var;
-            return varExpr->name();
-        } else {
-            CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl);
-            return nullptr;
-        }
     }
 
     std::string ErrorLit::getReasonStr() const {
@@ -1456,7 +1337,7 @@ namespace smack {
     }
 
     z3::expr BoolLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        return z3Ctx.bool_val(val);
+        return z3Ctx.bool_val(this->val);
     }
 
     // -------------------- Spatial Clause
@@ -1572,85 +1453,32 @@ namespace smack {
         return false;
     }
 
-
-    // std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_and(SHExprPtr first, SHExprPtr second) {
-    //     const Expr *newPure;
-    //     if (second->getPure()->getType() == ExprType::BOOL) {
-    //         if (((const BoolLit *) second->getPure())->getVal()) {
-    //             newPure = first->getPure();
-    //         }
-    //     } else {
-    //         newPure = Expr::and_(first->getPure(), second->getPure());
-    //     }
-
-    //     std::list<const SpatialLiteral *> splist;
-    //     auto result = std::make_shared<SymbolicHeapExpr>(newPure, splist);
-    //     for (const SpatialLiteral *spl :  first->getSpatialExpr()) {
-    //         result->addSpatialLit(spl);
-    //     }
-    //     for (const SpatialLiteral *spl : second->getSpatialExpr()) {
-    //         result->addSpatialLit(spl);
-    //     }
-    //     return result;
-    // }
-
-    // std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_conj(SHExprPtr originSH, const Expr *conj) {
-    //     const Expr *newPureExpr = Expr::and_(originSH->getPure(), conj);
-    //     std::list<const SpatialLiteral *> spatialExpr = originSH->getSpatialExpr();
-    //     SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPureExpr, spatialExpr);
-    //     return newSH;
-    // }
-
-    // std::shared_ptr<SymbolicHeapExpr>
-    // SymbolicHeapExpr::sh_sep_conj(SHExprPtr originSH, std::list<const SpatialLiteral *> conjs) {
-    //     const Expr *pureExpr = originSH->getPure();
-    //     std::list<const SpatialLiteral *> newSpatialExpr;
-    //     for (const SpatialLiteral *sp : originSH->getSpatialExpr()) {
-    //         newSpatialExpr.push_back(sp);
-    //     }
-    //     for (const SpatialLiteral *sp : conjs) {
-    //         newSpatialExpr.push_back(sp);
-    //     }
-    //     SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(pureExpr, newSpatialExpr);
-    //     return newSH;
-    // }
-
-    // std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::emp_sh() {
-    //     const BoolLit *trueExpr = new BoolLit(true);
-    //     std::list<const SpatialLiteral *> splist;
-    //     SHExprPtr empsh = std::make_shared<SymbolicHeapExpr>(trueExpr, splist);
-    //     empsh->addSpatialLit(SpatialLiteral::emp());
-    //     return empsh;
-    // }
+    z3::expr
+    RegionClause::translateToZ3
+    (z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
+        z3::expr_vector resultExprList(z3Ctx);
+        bool hasSpatials = false;
+        for(const SpatialLiteral* sp : this->spatialLits){
+            if(hasSpatials && SpatialLiteral::Kind::EMP == sp->getId()){
+                continue;
+            }
+            z3::expr z3sp = sp->translateToZ3(z3Ctx, cfg, varFac, varBounder);
+            resultExprList.push_back(z3sp);
+            hasSpatials = true;
+        }
+        if(!hasSpatials){
+            resultExprList.push_back(slah_api::newEmp(z3Ctx));
+        }
+        z3::expr resultExp = slah_api::newSep(resultExprList);
+        return resultExp;
+    }
 
 
-    // bool SymbolicHeapExpr::isError() {
-    //     const SpatialLiteral *sp = this->spatialExpr.front();
-    //     if (SpatialLiteral::Kind::ERR == sp->getId()) {
-    //         return true;executeMemc
-    //     }
-    //     return false;
-    // }
-
-    // void SymbolicHeapExpr::addSpatialLit(const SpatialLiteral *spl) {
-    //     spatialExpr.push_back(spl);
-    // }
-
-
-    // const Expr *SymbolicHeapExpr::getBlkSize(std::string blkName) const {
-    //     if(!blkName.compare("$Null")){
-    //         return new IntLit((long long)0);
-    //     }
-    //     for (const SpatialLiteral *sp : this->spatialExpr) {
-    //         if (SpatialLiteral::Kind::SPT == sp->getId() &&
-    //             !sp->getBlkName().compare(blkName)) {
-    //             const SizePtLit *st = (const SizePtLit *) sp;
-    //             return st->getSize();
-    //         }
-    //     }
-    //     CFDEBUG(std::cout << "ERROR: Block Name not found: " <<  blkName << std::endl;);
-    //     return nullptr;
-    // }
+    z3::expr
+    RegionClause::translateToZ3
+    (z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
+        return slah_api::newEmp(z3Ctx);
+    }
 
     
     // ---------------------- Symbolic Heap

@@ -79,8 +79,6 @@ namespace smack {
             std::list<const Expr*> initPures;
             std::list<const RegionClause*> initRegions;
             initPures.push_back(boolTrue);
-            const SpatialLiteral* emp = SpatialLiteral::emp();
-            splist.push_back(emp);
             // initialization for the symbolic heap
             SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(initPures, initRegions);
             //---------------------- initialization of auxillaries
@@ -114,6 +112,7 @@ namespace smack {
                 }
             }
             z3::context ctx;
+            // STOP HER
             auto trans = std::make_shared<smack::TransToZ3> (ctx, currSH, mainGraph, varFac);
             trans->translate();
 

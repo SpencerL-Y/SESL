@@ -170,12 +170,12 @@ namespace smack {
     std::set<std::string> MemSafeChecker::getRootVarsForMemtrackAnalysis(ExecutionStatePtr state, CFGPtr cfg) {
         std::set<std::string> rootVars;
         for(auto rootVar : state->obtainMemtrackRootSet()) {
-            std::string blkName = state->getVarEquiv()->getBlkName(rootVar);
-            rootVars.insert(blkName);
+            std::string regionName = state->getVarEquiv()->getRegionName(rootVar);
+            rootVars.insert(regionName);
         }
         for(auto globalVar : cfg->getConstDecls()) {
             std::string varName = globalVar->getName();
-            rootVars.insert(state->getVarEquiv()->getBlkName(varName + "_bb0"));
+            rootVars.insert(state->getVarEquiv()->getRegionName(varName + "_bb0"));
         }
         return rootVars;
     }
@@ -183,12 +183,10 @@ namespace smack {
     std::vector<std::string> MemSafeChecker::getSuccessorsForMemtrackAnalysis(ExecutionStatePtr state, std::string u) {
         std::vector<std::string> successors;
         int u_offset = state->getVarEquiv()->getOffset(u);
-        std::string u_blk = state->getVarEquiv()->getBlkName(u);
-        bool inRegion = false;
-        for(auto spl : state->getSH()->getSpatialExpr()) {
-            if(spl->getId() == SpatialLiteral::Kind::SPT &&
-               spl->getBlkName() == u_blk) inRegion = true;
-            if(inRegion && spl->getId() == SpatialLiteral::Kind::PT) {
+        std::string u_region = state->getVarEquiv()->getRegionName(u);
+        const RegionClause* region = state->getSH()->getRegion(u_region);
+        for(auto spl : region->getSpatialLits()) {
+            if(spl->getId() == SpatialLiteral::Kind::PT) {
                 const PtLit* pt = (const PtLit*) spl;
                 const Expr* from = pt->getFrom();
                 const Expr* to = pt->getTo();
@@ -197,11 +195,9 @@ namespace smack {
                 if(to->isVar() && (u_offset == 0 || index == u_offset)) {
                     const VarExpr* var = (const VarExpr*)to;
                     successors.push_back(
-                        state->getVarEquiv()->getAllocName(var->name()));
+                        state->getVarEquiv()->getRegionName(var->name()));
                 }
             }
-            if(spl->getId() == SpatialLiteral::Kind::SPT &&
-               spl->getBlkName() != u_blk) inRegion = false;
         }
         return successors;
     }
@@ -225,9 +221,8 @@ namespace smack {
                 workList.push(v);
             }
         }
-        for(auto spl : state->getSH()->getSpatialExpr())
-            if(spl->getId() == SpatialLiteral::Kind::SPT &&
-                !tracked[spl->getBlkName()])
+        for(auto region : state->getSH()->getRegions())
+            if(!tracked[region->getRegionName()])
                 return false;
         return true;
     }

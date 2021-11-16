@@ -167,46 +167,23 @@ namespace smack {
         this->trans->setSymbolicHeapHExpr(sh);
     }
 
-    bool MemSafeChecker::isValidPtrInMain(std::string ptrName) {
-        int l, r = ptrName.length();
-        for(l = 1; ptrName[l - 1] != '_'; l++);
-        if(r - l < 5) return false;
-        std::string funcName = ptrName.substr(l, 4);
-        std::string reaptedTime = ptrName.substr(l + 4, r - l - 4);
-        // std::cout << funcName << ' ' << reaptedTime << std::endl;
-        if(funcName != "main") return false;
-        for(auto ch : reaptedTime)
-            if(ch < '0' || ch > '9')
-                return false;
-        // std::cout << ptrName << " is valid in main\n";
-        return true;
+    std::set<std::string> MemSafeChecker::getRootVarsForMemtrackAnalysis(ExecutionStatePtr state, CFGPtr cfg) {
+        std::set<std::string> rootVars;
+        for(auto rootVar : state->obtainMemtrackRootSet()) {
+            std::string blkName = state->getVarEquiv()->getBlkName(rootVar);
+            rootVars.insert(blkName);
+        }
+        for(auto globalVar : cfg->getConstDecls()) {
+            std::string varName = globalVar->getName();
+            rootVars.insert(state->getVarEquiv()->getBlkName(varName + "_bb0"));
+        }
+        return rootVars;
     }
 
-    std::queue<std::string> MemSafeChecker::getValidPtrInMain(ExecutionStatePtr state, CFGPtr cfg) {
-        std::queue<std::string> Q;
-        std::map<std::string, bool> isGlobal;
-        for(auto gv : cfg->getConstDecls()) {
-            // std::cout << gv->getName() << std::endl;
-            isGlobal[gv->getName()] = true;
-        }
-        for(auto spl : state->getSH()->getSpatialExpr()) {
-            if(spl->getId() != SpatialLiteral::Kind::SPT) continue;
-            // std::cout << spl << std::endl;
-            std::string blkName = spl->getBlkName();
-            std::string origName = state->getVarFactory()->getOrigVarName(blkName);
-            if(this->isValidPtrInMain(origName) || isGlobal[origName]) {
-                Q.push(blkName);
-                // std::cout << blkName << std::endl;
-            }
-        }
-        return Q;
-    }
-
-    std::vector<std::string> MemSafeChecker::getSuccessors(ExecutionStatePtr state, std::string u) {
+    std::vector<std::string> MemSafeChecker::getSuccessorsForMemtrackAnalysis(ExecutionStatePtr state, std::string u) {
         std::vector<std::string> successors;
         int u_offset = state->getVarEquiv()->getOffset(u);
         std::string u_blk = state->getVarEquiv()->getBlkName(u);
-        // std::cout << u << " " << u_blk << " " << u_offset << std::endl;
         bool inRegion = false;
         for(auto spl : state->getSH()->getSpatialExpr()) {
             if(spl->getId() == SpatialLiteral::Kind::SPT &&
@@ -233,24 +210,20 @@ namespace smack {
         std::queue<std::string> workList;
         std::map<std::string, bool> hasVisited;
         std::map<std::string, bool> tracked;
-        workList = this->getValidPtrInMain(state, cfg);
+        for(auto rootVar : this->getRootVarsForMemtrackAnalysis(state, cfg))
+            workList.push(rootVar);
         while(!workList.empty()) {
             std::string u = workList.front();
-            // std::cout << "\n=============================\n";
-            // std::cout << "src: " << u << std::endl;
             workList.pop();
             if(hasVisited[u]) continue;
             hasVisited[u] = true;
             if(state->getVarEquiv()->getOffset(u) == 0) {
-                // std::cout << u << " is tracked" << std::endl;
                 tracked[u] = true;
             }
-            for(auto v : this->getSuccessors(state, u)) {
-                // std::cout << state->getVarEquiv()->getAllocName(v) << ' ';
+            for(auto v : this->getSuccessorsForMemtrackAnalysis(state, u)) {
                 if(hasVisited[v]) continue;
                 workList.push(v);
             }
-            // std::cout << "\n=============================\n";
         }
         for(auto spl : state->getSH()->getSpatialExpr())
             if(spl->getId() == SpatialLiteral::Kind::SPT &&
@@ -292,14 +265,18 @@ namespace smack {
                     }
                 }
                 // TODO: REFACTOR HERE
+                std::string prp = SmackOptions::prp.getValue();
+                bool trackAll = checkMemTrack(state, mainGraph);
                 int errType;
-                std::set<std::string> memtrackRoots = state->obtainMemtrackRootSet();
-                if(!checkMemTrack(state, mainGraph)) {
+                if(!trackAll && prp.find("memsafety") != std::string::npos) {
                     DEBUG_WITH_COLOR(std::cout << "LEAK: Memtrack!!!" << std::endl;, color::red);
                     errType = MEMTRACK;
-                } else {
+                } else if(trackAll && prp.find("memcleanup") != std::string::npos){
                     DEBUG_WITH_COLOR(std::cout << "LEAK: Memcleanup!!!" << std::endl;, color::red);
                     errType = MEMCLEAN;
+                } else {
+                    DEBUG_WITH_COLOR(std::cout << "LEAK: CHECKUNKNOWN!!!" << std::endl;, color::yellow);
+                    errType = UNKNOWN;
                 }
                 return {false, errType};
                 // for(std::string unusedName : state->getVarFactory()->getUnusedNames()){

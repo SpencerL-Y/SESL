@@ -187,6 +187,9 @@ namespace smack {
         int u_offset = state->getVarEquiv()->getOffset(u);
         std::string u_region = state->getVarEquiv()->getRegionName(u);
         const RegionClause* region = state->getSH()->getRegion(u_region);
+        if(region == nullptr){
+            return successors;
+        }
         for(auto spl : region->getSpatialLits()) {
             if(spl->getId() == SpatialLiteral::Kind::PT) {
                 const PtLit* pt = (const PtLit*) spl;

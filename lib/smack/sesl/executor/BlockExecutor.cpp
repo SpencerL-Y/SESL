@@ -887,7 +887,7 @@ namespace smack{
                 assert(false);
             }
             this->callStack.pop_back();
-            return sh->eliminateStackRegion(funcName);
+            SHExprPtr newSH = sh->eliminateStackRegion(funcName);
         } else {
             assert(false);
         }
@@ -1833,6 +1833,7 @@ namespace smack{
                 const RegionClause* newRegion = new RegionClause(newSplList, retVar, sizeExpr, retVarName, regionSize, false);
                 REGISTER_EXPRPTR(newRegion);
                 assert(!sh->hasRegion(retVarName));
+                newRegions.push_back(newRegion);
 
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                 newSH->print(std::cout);
@@ -2317,7 +2318,7 @@ namespace smack{
                 
                 newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
                 REGISTER_EXPRPTR(newRegionClause);
-                for(const RegionClause* r : newRegions){
+                for(const RegionClause* r : sh->getRegions()){
                     if(!r->getRegionName().compare(regionName)){
                         newRegions.push_back(newRegionClause);
                     } else {
@@ -2415,7 +2416,7 @@ namespace smack{
                 }
                 newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
                 REGISTER_EXPRPTR(newRegionClause);
-                for(const RegionClause* r : newRegions){
+                for(const RegionClause* r : sh->getRegions()){
                     if(!r->getRegionName().compare(regionName)){
                         newRegions.push_back(newRegionClause);
                     } else {
@@ -2541,7 +2542,7 @@ namespace smack{
 
             newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
             REGISTER_EXPRPTR(newRegionClause);
-            for(const RegionClause* r : newRegions){
+            for(const RegionClause* r : sh->getRegions()){
                 if(!r->getRegionName().compare(regionName)){
                     newRegions.push_back(newRegionClause);
                 } else {
@@ -2816,7 +2817,7 @@ namespace smack{
                 CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);
                 assert(false);
             }
-            for(const RegionClause* r : newRegions){
+            for(const RegionClause* r : sh->getRegions()){
                 if(!r->getRegionName().compare(regionName)){
                     newRegions.push_back(newRegionClause);
                 } else {
@@ -2888,7 +2889,7 @@ namespace smack{
                 assert(false);
             }
 
-            for(const RegionClause* r : newRegions){
+            for(const RegionClause* r : sh->getRegions()){
                 if(!r->getRegionName().compare(regionName)){
                     newRegions.push_back(newRegionClause);
                 } else {

@@ -230,7 +230,8 @@ namespace smack{
         BlockExecutor::ExprMemoryManager->registerPointer(ptr)
 
     #define CHECK_VALID_DEREF_FOR_BLK(regionName) \
-        if(this->varEquiv->isFreedRegionName(regionName)){ \
+        if(this->varEquiv->isFreedRegionName(regionName) ||\
+           !regionName.compare("$Null")){ \
             SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF); \
             CFDEBUG(std::cout << "INFO: INVALID DEREF " << std::endl;); \
             return newSH; \

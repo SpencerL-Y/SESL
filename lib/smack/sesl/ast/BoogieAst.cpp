@@ -1592,12 +1592,15 @@ namespace smack {
         std::list<const RegionClause*> newRegions;
         for(const RegionClause* rc : this->regions){
             if(rc->isGcRegion() && rc->containGcFuncName(funcName)){
+                CFDEBUG(std::cout << "INFO: remove region " << rc->getRegionName() << std::endl;)
                 
             } else {
                 newRegions.push_back(rc);
             }
         }
         SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(this->getPures(), newRegions);
+        newSH->print(std::cout);
+        CFDEBUG(std::cout << std::endl;);
         return newSH;
     }
 

@@ -1146,8 +1146,7 @@ namespace smack {
     // -------------------------------- Separation Logic in AST --------------------------------
     // -------------------------- Spatial Literals
     const SpatialLiteral *SpatialLiteral::emp() {
-        std::set<std::string> emptyStackMems;
-        return new EmpLit("", emptyStackMems);
+        return new EmpLit();
     }
 
     const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, int stepSize) {
@@ -1195,10 +1194,6 @@ namespace smack {
         return res;
     }
 
-    bool EmpLit::isStackEliminated(std::string exitFuncName) const {
-        return false;
-    }
-
     void BytePt::print(std::ostream &os) const {
         os << "[" << this->from << " :--> " << this->to << "]";
     }
@@ -1213,10 +1208,6 @@ namespace smack {
         varBounder->addVarName(fromVar->name());
         varBounder->addVarName(toVar->name());
         return res;
-    }
-
-    bool BytePt::isStackEliminated(std::string exitFuncName) const {
-        return false;
     }
 
     void PtLit::print(std::ostream &os) const {
@@ -1281,12 +1272,6 @@ namespace smack {
         
     }
 
-    bool PtLit::isStackEliminated(std::string exitFuncName) const {
-        return false;
-    }
-
-    
-
     void BlkLit::print(std::ostream &os) const {
         os << "Blk(" << from << ", " << to << ")";
     }
@@ -1300,10 +1285,6 @@ namespace smack {
         CDEBUG(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl;);
         z3::expr res = slah_api::newBlk(f, t);
         return res;
-    }
-
-    bool BlkLit::isStackEliminated(std::string exitFuncName) const {
-        return false;
     }
 
     std::string ErrorLit::getReasonStr() const {
@@ -1330,10 +1311,6 @@ namespace smack {
         CDEBUG(std::cout << "errorLit" << std::endl;);
         // Since error occurs, we set the pure constraint pure to false
         return (slah_api::newEmp(z3Ctx));
-    }
-
-    bool ErrorLit::isStackEliminated(std::string exitFuncName) const {
-        return false;
     }
 
     z3::expr BoolLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
@@ -1474,8 +1451,22 @@ namespace smack {
     }
 
 
+    void 
+    RegionClause::print(std::ostream& os) const {
+        if(FULL_DEBUG && OPEN_SH){
+        os << "[Region:" << this->regionName << "] # ";
+        for(const SpatialLiteral* spl : this->spatialLits){
+            spl->print(os);
+            os << " # ";
+            
+        }
+        os << "[RegionEnd:" << this->regionName << "]";
+        }
+    }
+
+
     z3::expr
-    RegionClause::translateToZ3
+    ErrorClause::translateToZ3
     (z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         return slah_api::newEmp(z3Ctx);
     }
@@ -1486,7 +1477,7 @@ namespace smack {
     void 
     SymbolicHeapExpr::addRegionClause
     (const RegionClause * clause){
-        if(this->hasRegion(clause->getRegionName)){
+        if(this->hasRegion(clause->getRegionName())){
             CFDEBUG(std::cout << "ERROR: add region error, region name exists: " << clause->getRegionName() << std::endl;);
         } else {
             this->regions.push_back(clause);
@@ -1523,14 +1514,14 @@ namespace smack {
         const RegionClause * selectedRegion;
         bool startRight = false;
         for(const RegionClause * region : this->regions){
-            if(!region->getRegionName.compare(regionName)){
+            if(!region->getRegionName().compare(regionName)){
                 selectedRegion = region;
                 startRight = true;
             } else {
                 if(startRight){
                     rightRegions.push_back(region);
                 } else {
-                    leftRegion.push_back(region);
+                    leftRegions.push_back(region);
                 }
             }
         } 
@@ -1572,6 +1563,29 @@ namespace smack {
     }
 
 
+    std::pair<bool, ErrType> 
+    SymbolicHeapExpr::getErrorReason() const{
+        for(const RegionClause * rc : this->regions){
+            if(rc->isErrorClause()){
+                const ErrorClause* errorClause = (const ErrorClause*) rc;
+                return {true, errorClause->getErrReason()};
+            }
+        }
+        return {false, ErrType::UNKNOWN};
+    }
+
+
+    std::string SymbolicHeapExpr::getErrorReasonStr() const{
+        for(const RegionClause * rc : this->regions){
+            if(rc->isErrorClause()){
+                const ErrorClause* errorClause = (const ErrorClause*) rc;
+                return errorClause->getErrReasonStr();
+            }
+        }
+        return "no error found..";
+    }
+
+
     SHExprPtr 
     SymbolicHeapExpr::eliminateStackRegion
     (std::string funcName){
@@ -1601,14 +1615,14 @@ namespace smack {
 
     void SymbolicHeapExpr::print(std::ostream &os) const {
         if(FULL_DEBUG && OPEN_SH){
-        os << "SymbHeap(" << std::endl;
+        os << "SH------------START" << std::endl;
         for(const Expr* pure : this->pures){
-            os << pure << "\t";
+            os << pure << " /\\ ";
         }
         os << std::endl;
-        os << "|";
-        print_seq<const RegionClause *>(os, this->regions, " # ");
-        os << ")";
+        os << "-------------------\n";
+        print_seq<const RegionClause *>(os, this->regions, "\n");
+        os << "\nSH--------------END";
         }
     }
 

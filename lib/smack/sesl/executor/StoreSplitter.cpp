@@ -216,8 +216,23 @@ namespace smack
         }
     }
 
-    int RegionBlkSplitUtil::getMaxOffset() {
-        return this->maxOffset;
+    int RegionBlkSplitUtil::computeCoveredNumOfPts(int offset, int length){
+        // compute the number of pt predicates covered by the region [offset, offset + length)
+        int coveredNum = 0;
+        if(this->isInitialized(offset)){
+            coveredNum += 1;
+        }
+        for(int i : this->getSplitAxis()){
+            if( i >= offset && i < offset + length){
+                coveredNum += 1;
+            }
+        }
+        return coveredNum;
+    }
+
+    bool RegionBlkSplitUtil::hasOffset(int offset){
+        std::pair<bool, int> findPos = this->getOffsetPos(offset);
+        return findPos.first;
     }
 
 

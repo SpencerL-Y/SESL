@@ -112,7 +112,7 @@ namespace smack{
 
         std::list<const SpatialLiteral*> splitBlkByCreatingPt(RegionBlkSplitUtilPtr metaInfo, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
         std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyBlkPredicate(RegionBlkSplitUtilPtr metaInfo, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures);
-        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyForCalloc(RegionBlkSplitUtilPtr metaInfo, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures)
+        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyForCalloc(RegionBlkSplitUtilPtr metaInfo, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures);
         // special cases
 
         // ----------------- Bytelevel Utilities
@@ -125,16 +125,16 @@ namespace smack{
         std::pair<const VarExpr*, std::list<const Expr*>> updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, std::list<const Expr*> oldPures);
         
         // bytelevel operations for store
-        std::pair<const PtLit*, std::list<const Expr*>> updateCreateBytifiedPtPredicateAndEqualHighLevelVar(const PtLit* oldPt, std::list<const Expr*> oldPures);
+        std::pair<const PtLit*, std::list<const Expr*>> updateCreateBytifiedPtPredicateAndEqualHighLevelVar(std::string oldRegionName, const PtLit* oldPt, std::list<const Expr*> oldPures);
         
         // std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure);
-        std::pair<const PtLit*, std::list<const Expr*>> updateCreateBytifiedPtPredicateAndModifyPartial(const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, std::list<const Expr*> oldPures);
+        std::pair<const PtLit*, std::list<const Expr*>> updateCreateBytifiedPtPredicateAndModifyPartial(std::string oldRegionName, const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, std::list<const Expr*> oldPures);
         
         std::pair<const PtLit*, std::list<const Expr*>> updateModifyBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, std::list<const Expr*> oldPures);
         
         std::pair<const PtLit*, std::list<const Expr*>> updateModifyBytifiedPtPredicateAndModifyPartial(const PtLit* pt, const VarExpr* modifyVar, int offset, int length, std::list<const Expr*> oldPures);
 
-        std::pair<const RegionClause*, std::list<const Expr*>> updateBytifyBlkPredicate(const RegionClause* oldRegion, int blkCountIndex, std::list<const Expr*> oldPures);
+        // std::pair<const RegionClause*, std::list<const Expr*>> updateBytifyBlkPredicate(const RegionClause* oldRegion, int blkCountIndex, std::list<const Expr*> oldPures);
 
         
         // bytelevel operations for load
@@ -229,9 +229,9 @@ namespace smack{
     #define REGISTER_EXPRPTR(ptr) \
         BlockExecutor::ExprMemoryManager->registerPointer(ptr)
 
-    #define CHECK_VALID_DEREF_FOR_BLK(blk) \
-        if(this->varEquiv->isFreedRegionName(blk)){ \
-            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF); \
+    #define CHECK_VALID_DEREF_FOR_BLK(regionName) \
+        if(this->varEquiv->isFreedRegionName(regionName)){ \
+            SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF); \
             CFDEBUG(std::cout << "INFO: INVALID DEREF " << std::endl;); \
             return newSH; \
         }

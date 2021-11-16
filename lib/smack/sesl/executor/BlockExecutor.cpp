@@ -76,7 +76,7 @@ namespace smack{
                 std::list<const SpatialLiteral*> newSplList;
                 newSplList.push_back(sAllocBlk);
                 // region init
-                const RegionClause* newRegion = new RegionClause(newSplList, staticVar, regionSizeExpr, regionSize, true);
+                const RegionClause* newRegion = new RegionClause(newSplList, staticVar, regionSizeExpr, staticVarName, regionSize, true, this->callStack);
                 REGISTER_EXPRPTR(newRegion);
                 // regList init
                 newRegions.push_back(newRegion);
@@ -1083,7 +1083,7 @@ namespace smack{
             const FunExpr* ptrArithFunc = (const FunExpr*) sourceLocation;
             assert(this->isPtrArithFuncName(ptrArithFunc->name()));
             // sourceLocation is a ptr arithmetic
-            std::pair<const VarExpr*, const Expr*> newSrcVarPurePair = updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPures);
+            std::pair<const VarExpr*, std::list<const Expr*>> newSrcVarPurePair = updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPures);
             const VarExpr* freshSrcVar = newSrcVarPurePair.first;
             newPures = newSrcVarPurePair.second;
 
@@ -1092,7 +1092,7 @@ namespace smack{
             srcOrigVarName = srcOrigVar->name();
             srcVarName = srcVar->name();
             srcRegionName = this->varEquiv->getRegionName(srcOrigVarName);
-            srcRegionSize = sh->getBlkSize(srcRegionName)->translateToInt(this->varEquiv).second;
+            srcRegionSize = sh->getRegionSize(srcRegionName);
             srcOffset = this->varEquiv->getOffset(srcVarName);
 
         } else {
@@ -1118,7 +1118,7 @@ namespace smack{
             
             const FunExpr* ptrArithFunc = (const FunExpr*) dstLocation;
             assert(this->isPtrArithFuncName(ptrArithFunc->name()));
-            std::pair<const VarExpr*, const Expr*> newDstVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPures);
+            std::pair<const VarExpr*, std::list<const Expr*>> newDstVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPures);
             const VarExpr* freshDstVar = newDstVarPurePair.first;
             newPures = newDstVarPurePair.second;
 
@@ -1185,7 +1185,7 @@ namespace smack{
         CFDEBUG(std::cout << "src tail position: " << srcOffset + copySize - 1 << std::endl);
         bool isSrcHeadPtSplitted = tempSrcMetaInfo->isInitialized(srcOffset) && !(tempSrcMetaInfo->getOffsetPos(srcOffset).first);
         bool isSrcTailPtSplitted = tempSrcMetaInfo->isInitialized(srcOffset + copySize) && !(tempSrcMetaInfo->getOffsetPos(srcOffset + copySize).first);
-        bool isDstHeadPtSplitted = tempDstMetaInfo->isInitialized(dstOffset) && !(dstTempMetaInfogetOffsetPos(dstOffset).first);
+        bool isDstHeadPtSplitted = tempDstMetaInfo->isInitialized(dstOffset) && !(tempDstMetaInfo->getOffsetPos(dstOffset).first);
         bool isDstTailPtSplitted = tempDstMetaInfo->isInitialized(dstOffset + copySize) && !(tempDstMetaInfo->getOffsetPos(dstOffset + copySize).first);
 
         CFDEBUG(std::cout << "src head pt splitted: " << isSrcHeadPtSplitted << std::endl);
@@ -1253,7 +1253,7 @@ namespace smack{
             }
         }
         for(const SpatialLiteral* bspl : srcBytifiedMiddleList){
-            if(SpatialLiteral::Kind::BLK == spl->getId()){
+            if(SpatialLiteral::Kind::BLK == bspl->getId()){
                 assert(((const BlkLit*) bspl)->getBlkByteSize() == 0);
             }
         }
@@ -1448,7 +1448,7 @@ namespace smack{
         } else {
             for(const RegionClause* r : sh->getRegions()){
                 if(!r->getRegionName().compare(srcRegionName)){
-                    newRegions.push_back(newSrcRegion)
+                    newRegions.push_back(newSrcRegion);
                 } else if(!r->getRegionName().compare(dstRegionName)){
                     newRegions.push_back(newDstRegion);
                 } else {
@@ -1522,7 +1522,7 @@ namespace smack{
             // target position is a ptr arithmetic
             const FunExpr* ptrArithFunc = (const FunExpr*) arg1Target;
             assert(this->isPtrArithFuncName(ptrArithFunc->name()));
-            std::pair<const VarExpr*, const Expr*> newTargetVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPures);
+            std::pair<const VarExpr*, std::list<const Expr*>> newTargetVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPures);
             const VarExpr* freshTargetVar = newTargetVarPurePair.first;
             newPures = newTargetVarPurePair.second;
             targetOrigVar = freshTargetVar;
@@ -1639,7 +1639,7 @@ namespace smack{
         int headPtIndex = tempTargetMetaInfo->getInitializedPos(targetOffset).second;
         int headBlkIndex = isHeadInitialized ? -1 : tempTargetMetaInfo->getSplit(targetOffset);
         int tailPtIndex = tempTargetMetaInfo->getInitializedPos(targetOffset + memsetLength - 1).second;
-        int tailBlkIndex = isTailInitialized ? -1 : tempTargetMetaInfot->getSplit(targetOffset + memsetLength - 1);
+        int tailBlkIndex = isTailInitialized ? -1 : tempTargetMetaInfo->getSplit(targetOffset + memsetLength - 1);
 
         CFDEBUG(std::cout << "target head initialized: " << isHeadInitialized << std::endl;);
         CFDEBUG(std::cout << "target tail initialized: " << isTailInitialized << std::endl;);
@@ -1666,7 +1666,7 @@ namespace smack{
 
         for(const SpatialLiteral* spl : targetMiddleList){
             if(spl->getId() == SpatialLiteral::Kind::BLK){
-                std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPures);
+                std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPurePair = this->bytifyBlkPredicate(tempTargetMetaInfo, targetRegionName, spl, newPures);
                 for(const SpatialLiteral* i : resultBytifiedPurePair.first){
                     bytifiedTargetMiddleList.push_back(i);
                 }
@@ -1716,8 +1716,8 @@ namespace smack{
             const SpatialLiteral* newPt = SpatialLiteral::pt(newFromVar, newToVar, 1);
             REGISTER_EXPRPTR(newPt);
             
-            tempTargetMetaInfo->addSplit(targetRegionName, targetOffset + i);
-            tempTargetMetaInfo->addSplitLength(targetRegionName, targetOffset + i, 1);
+            tempTargetMetaInfo->addSplit(targetOffset + i);
+            tempTargetMetaInfo->addSplitLength(targetOffset + i, 1);
             newMemsetTargetMiddleList.push_back(newPt);
             if(i < memsetLength - 1){
                 const SpatialLiteral* newBlk = SpatialLiteral::blk(empBlkExpr, empBlkExpr, 0);
@@ -1885,7 +1885,7 @@ namespace smack{
                 }
                 if(this->varEquiv->isStructArrayRegion(linkVarName)){
                     CFDEBUG(std::cout << "INFO: FREE GLOBAL PTR, UNKNOWN" << std::endl;);
-                    SHExprPtr newSH = this->createErrLitSH(sh->getPure(), sh->getRegions(), ErrType::UNKNOWN);
+                    SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::UNKNOWN);
                     return newSH;
                 }
 
@@ -1963,7 +1963,7 @@ namespace smack{
             // check whether it is freed
             CHECK_VALID_DEREF_FOR_BLK(regionName);
 
-            regionSize = sh->getRegionSize();
+            regionSize = sh->getRegionSize(regionName);
 
             if(varOrigArg1->name().find("$") == std::string::npos){
                 // if the stored position is represented by a non-global variable, step size later will use the type info obtained from cfg
@@ -1976,7 +1976,7 @@ namespace smack{
             // The step size of struct and array is determined through the expression to find the location
             CFDEBUG(std::cout << "INFO: arg1 is funcexpr" << std::endl;);
             std::list<const Expr*> newPures = sh->getPures();
-            std::pair<const VarExpr*, const Expr*> newVarPuresPair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(arg1, newPures);
+            std::pair<const VarExpr*, std::list<const Expr*>> newVarPuresPair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(arg1, newPures);
             const VarExpr* freshVar = newVarPuresPair.first;
             newPures = newVarPuresPair.second;
 
@@ -1989,7 +1989,7 @@ namespace smack{
             // check whether it is freed
             CHECK_VALID_DEREF_FOR_BLK(regionName);
 
-            regionSize = sh->getBlkSize(regionName)->translateToInt(this->varEquiv).second;
+            regionSize = sh->getRegionSize(regionName);
             // update the symbolic heap
             SHExprPtr oldSh = sh;
             sh = std::make_shared<SymbolicHeapExpr>(newPures, oldSh->getRegions());
@@ -2060,7 +2060,7 @@ namespace smack{
         oldRegionClause = sh->getRegion(regionName);
 
 
-        if(oldRegionClause->getRegionMetaInfo()->hasOffset(regionName, offset) || oldRegionClause->getRegionMetaInfo()->isInitialized(regionName, offset)){
+        if(oldRegionClause->getRegionMetaInfo()->hasOffset(offset) || oldRegionClause->getRegionMetaInfo()->isInitialized(offset)){
             CFDEBUG(std::cout << "INFO: store offset exists" << std::endl;);
             const RegionClause* tempRegionClause = oldRegionClause;
             RegionBlkSplitUtilPtr tempMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempRegionClause->getRegionMetaInfo());
@@ -2190,7 +2190,7 @@ namespace smack{
                     if(!ptLiteral->isByteLevel()){
                         // A.1.(2).b: the original pt predicate is not bytified, bytify the pt predicate
                         // bytify the original pt
-                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, 0, storedSize, newPures);
+                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndModifyPartial(regionName, ptLiteral, freshStoredVar, 0, storedSize, newPures);
                         newPtLiteral = newPtPurePair.first;
                         newPures = newPtPurePair.second;
                     } else {
@@ -2328,7 +2328,7 @@ namespace smack{
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
-            } else if(tempMetaInfo->isInitialized(regionName, offset)){
+            } else if(tempMetaInfo->isInitialized(offset)){
                 // A.2 situation
                 CFDEBUG(std::cout << "INFO: store offset is initialized" << std::endl;);
                 std::pair<bool, int> posInfo =  tempMetaInfo->getInitializedPos(offset);
@@ -2346,7 +2346,7 @@ namespace smack{
                 std::list<const SpatialLiteral*>
                 > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::PT, modifyIndex);
 
-                const PtLit* ptLiteral = std::get<1>(selectOutTuple);
+                const PtLit* ptLiteral = (const PtLit*)std::get<1>(selectOutTuple);
                 const PtLit* newPtLiteral = nullptr;
 
                 if(storedSize <= suffixLength){
@@ -2376,7 +2376,7 @@ namespace smack{
                     }  
                     else {    
                         CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
-                        std::pair<const Expr*, bool> usedPair =  getUsedArithExprAndVar(freshStoredVar, arg2);
+                        std::pair<const Expr*, bool> usedPair = getUsedArithExprAndVar(freshStoredVar, arg2);
                         const Expr* storedExpr = usedPair.first;
                         assert(storedExpr != nullptr);
                         bool isPtr = usedPair.second;
@@ -2393,7 +2393,7 @@ namespace smack{
                     // update the predicate 
                     if(!ptLiteral->isByteLevel()){
                         // Situation -- b: the pt predicate is not bytified
-                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, offset, storedSize, newPures);
+                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndModifyPartial(regionName, ptLiteral, freshStoredVar, offset, storedSize, newPures);
                         newPtLiteral = newPtPurePair.first;
                         newPures = newPtPurePair.second;
 
@@ -2456,7 +2456,7 @@ namespace smack{
             std::list<const SpatialLiteral*>
             > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::BLK, splitBlkIndex);
 
-            const BlkLit* blkLiteral = std::get<1>(selectOutTuple);
+            const BlkLit* blkLiteral = (const BlkLit*)std::get<1>(selectOutTuple);
 
             CFDEBUG(std::cout << "INFO: storedSize: " << offset << " " << storedSize << std::endl;);
 
@@ -2622,7 +2622,7 @@ namespace smack{
         }
 
         if(!(VarType::PTR == this->getVarType(ldPtrName) || VarType::NIL == this->getVarType(ldPtrName))){
-            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+            SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: load a unintialized memory, INVALID DEREF.." << std::endl;);
             return newSH;
         }
@@ -2630,12 +2630,12 @@ namespace smack{
         int stepSize = this->getStepSizeOfPtrVar(ldPtrName);
         loadedSize = this->parseLoadFuncSize(rhsFun->name());
         if(!regionName.compare("$Null")){
-            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+            SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: load null ptr" << std::endl;);
             return newSH;
         }
         if(loadedOffset >= regionSize || loadedOffset + loadedSize > regionSize || loadedOffset < 0){
-            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+            SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: loadedOffset out of range" << std::endl;);
             return newSH;
         }
@@ -2685,7 +2685,7 @@ namespace smack{
                     > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::PT, loadIndex);
 
                     // find the correct index and load the content out
-                    const PtLit* ptLiteral = std::get<1>(selectOutTuple);
+                    const PtLit* ptLiteral = (const PtLit*)std::get<1>(selectOutTuple);
                     const PtLit* newPtLiteral = nullptr;
                     // toExpr should be a variable
                     const Expr* toExprOrig = ptLiteral->getTo();
@@ -2718,7 +2718,7 @@ namespace smack{
                             newPures.push_back(eq);
                             newPtLiteral = ptLiteral;
                         } else {
-                            std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(ptLiteral, newPures);
+                            std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(regionName, ptLiteral, newPures);
                             newPtLiteral = newPtPurePair.first;
                             newPures = newPtPurePair.second;
                             std::pair<const VarExpr*, std::list<const Expr*>>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(newPtLiteral, 0, loadedSize, newPures);
@@ -2765,7 +2765,7 @@ namespace smack{
                     > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::PT, loadIndex);
 
                     // find the correct index and load the content out
-                    const PtLit* ptLiteral = std::get<1>(selectOutTuple);
+                    const PtLit* ptLiteral = (const PtLit*) std::get<1>(selectOutTuple);
                     const PtLit* newPtLiteral = nullptr;
 
 
@@ -2786,7 +2786,7 @@ namespace smack{
                         newPures.push_back(eq);
                         newPtLiteral = ptLiteral;
                     } else {
-                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(ptLiteral, newPures);
+                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(regionName, ptLiteral, newPures);
                         newPtLiteral = newPtPurePair.first;
                         newPures = newPtPurePair.second;
                         std::pair<const VarExpr*, std::list<const Expr*>>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(ptLiteral, prefixLength, loadedSize, newPures);
@@ -2867,10 +2867,7 @@ namespace smack{
                     std::list<const SpatialLiteral*>
                 > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::BLK, splitBlkIndex);
 
-                const BlkLit* blkLiteral = std::get<1>(selectOutTuple);
-
-                // the blk to break is found
-                const BlkLit* breakBlk = (const BlkLit*) i;
+                const BlkLit* blkLiteral = (const BlkLit*) std::get<1>(selectOutTuple);
 
                 std::list<const SpatialLiteral*> splittedResult = this->splitBlkByCreatingPt(tempMetaInfo, ldPtr, freshPtVar, loadedSize, blkLiteral);
                 
@@ -2925,7 +2922,7 @@ namespace smack{
         const VarExpr* timeVar = this->createAndRegisterFreshDataVar(4);
         const Expr* eq = Expr::eq(retVar, timeVar);
         REGISTER_EXPRPTR(eq);
-        std::list<const Expr*> newPures = sh->getPure();
+        std::list<const Expr*> newPures = sh->getPures();
         newPures.push_back(eq);
         SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
         newSH->print(std::cout);
@@ -3022,7 +3019,7 @@ namespace smack{
                     const SpatialLiteral* allocBlk = SpatialLiteral::blk(retVar, add, allocSize);
                     REGISTER_EXPRPTR(allocBlk);
                     std::list<const SpatialLiteral*> newSplList;
-                    newSpatialExpr.push_back(allocBlk);
+                    newSplList.push_back(allocBlk);
 
                     const RegionClause* newRegion = new RegionClause(newSplList, retVar, lengthExpr, retVarName, allocSize, true, this->callStack);
                     REGISTER_EXPRPTR(newRegion);
@@ -3134,7 +3131,7 @@ namespace smack{
             return nullptr;
         }
         // get size of each object
-        if(Qsize->isValue()) {
+        if(size->isValue()) {
             CFDEBUG(std::cout<< "WARNING: Unsupported size type" << std::endl;);
             return nullptr;
         }
@@ -3221,7 +3218,7 @@ namespace smack{
                 } else {
                     const ErrorClause* oldErrClause = (const ErrorClause*) r;
                     if(oldErrClause->isFresh()){
-                        const ErrorClause* newErrClause = new ErrorClause(r);
+                        const ErrorClause* newErrClause = new ErrorClause(oldErrClause);
                         REGISTER_EXPRPTR(newErrClause);
                         newErrRegions.push_back(newErrClause);
                     } else {
@@ -3277,7 +3274,7 @@ namespace smack{
             newStmts.push_back(i);
             SHExprPtr newSH = this->executeStmt(currSH, i);
             newStmts.push_back(Stmt::symbheap(newSH));
-            auto const pure = newSH->getPure();
+            auto const pure = newSH->getPures();
             currSH = newSH;
         }
 
@@ -3545,9 +3542,9 @@ namespace smack{
     }
 
 
-    std::pair<const PtLit*, const Expr*> 
+    std::pair<const PtLit*, std::list<const Expr*>> 
     BlockExecutor::updateCreateBytifiedPtPredicateAndEqualHighLevelVar
-    (const PtLit* oldPt, std::list<const Expr*> oldPures){
+    (std::string oldRegionName, const PtLit* oldPt, std::list<const Expr*> oldPures){
         // DONE: loadIndex refactored
         assert(!oldPt->isByteLevel());
         std::list<const Expr*> resultPures = oldPures;
@@ -3559,8 +3556,8 @@ namespace smack{
             REGISTER_EXPRPTR(bptFromExpr);
             const VarExpr* fromVar = (const VarExpr*)(oldPt->getFrom());
             int offset = this->varEquiv->getOffset(fromVar->name());
-            CFDEBUG(std::cout << "old pt blkname: " << oldPt->getBlkName() << " offset: " << offset << std::endl;)
-            const VarExpr* bptFrom = this->createAndRegisterFreshPtrVar(1, oldPt->getBlkName(), offset + i);
+            CFDEBUG(std::cout << "old pt blkname: " << oldRegionName << " offset: " << offset << std::endl;)
+            const VarExpr* bptFrom = this->createAndRegisterFreshPtrVar(1, oldRegionName, offset + i);
             const VarExpr* bptTo = this->createAndRegisterFreshDataVar(1);
             const Expr* eq = Expr::eq(bptFrom, bptFromExpr);
             REGISTER_EXPRPTR(eq);
@@ -3571,9 +3568,8 @@ namespace smack{
         }
         const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(bytifiedPts, oldPt->getTo());
         resultPures.push_back(equalConstraint);
-        REGISTER_EXPRPTR(resultPures);
         
-        const PtLit* resultPt = SpatialLiteral::pt(oldPt->getFrom(), oldPt->getTo(), oldPt->getStepSize(), bytifiedPts);
+        const PtLit* resultPt = (const PtLit*) SpatialLiteral::pt(oldPt->getFrom(), oldPt->getTo(), oldPt->getStepSize(), bytifiedPts);
         REGISTER_EXPRPTR(resultPt);
         return {resultPt, resultPures};
     }
@@ -3581,9 +3577,9 @@ namespace smack{
 
     std::pair<const PtLit*, std::list<const Expr*>> 
     BlockExecutor::updateCreateBytifiedPtPredicateAndModifyPartial
-    (const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, std::list<const Expr*> oldPures){
+    (std::string oldRegionName, const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, std::list<const Expr*> oldPures){
         // DONE: loadIndex refactored
-        std::pair<const PtLit*, std::list<const Expr*>> tempPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, oldPures);
+        std::pair<const PtLit*, std::list<const Expr*>> tempPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldRegionName, oldPt, oldPures);
         const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(oldPt->getStepSize());
         std::list<const Expr*> resultPures = tempPtPurePair.second;
         std::vector<const BytePt*> oldBytifiedPts = tempPtPurePair.first->getBytifiedPts();
@@ -3609,12 +3605,12 @@ namespace smack{
         const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, freshPtVar);
         resultPures.push_back(equalConstraint);
 
-        const PtLit* resultPt = SpatialLiteral::pt(oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts);
+        const PtLit* resultPt = (const PtLit*) SpatialLiteral::pt(oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts);
         REGISTER_EXPRPTR(resultPt);
         return {resultPt, resultPures};
     }
 
-    std::pair<const PtLit*, const Expr*> 
+    std::pair<const PtLit*,  std::list<const Expr*>> 
     BlockExecutor::updateModifyBytifiedPtPredicateAndModifyHighLevelVar
     (const PtLit* oldPt, const VarExpr* storedVar, std::list<const Expr*> oldPures){
         // DONE: loadIndex refactored
@@ -3632,7 +3628,7 @@ namespace smack{
         }
         const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, storedVar);
         resultPures.push_back(equalConstraint);
-        const PtLit* resultPt =  SpatialLiteral::pt(oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts);
+        const PtLit* resultPt =  (const PtLit*) SpatialLiteral::pt(oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts);
         REGISTER_EXPRPTR(resultPt);
         return {resultPt, resultPures};
     }
@@ -3667,29 +3663,29 @@ namespace smack{
         resultPures.push_back(modifyEqualConstraint);
         // TODO: WRONG
         resultPures.push_back(equalConstraint);
-        const PtLit* resultPt = SpatialLiteral::pt(oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts);
+        const PtLit* resultPt = (const PtLit*) SpatialLiteral::pt(oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts);
         REGISTER_EXPRPTR(resultPt);
         return {resultPt, resultPures};
     }
 
 
-    std::pair<const RegionClause*, std::list<const Expr*>> BlockExecutor::updateBytifyBlkPredicate(const RegionClause* oldRegion, int blkCountIndex, std::list<const Expr*> oldPures){
-        // DONE: loadIndex refactored
-        std::list<const Expr*> resultPures = oldPures;
-        std::tuple<
-            std::list<const SpatialLiteral*>,
-            const SpatialLiteral*,
-            std::list<const SpatialLiteral*>
-        > 
-        selectOutTailBlk = oldRegionClause->selectOutSpLit(SpatialLiteral::Kind::BLK, blkCountIndex);
+    // std::pair<const RegionClause*, std::list<const Expr*>> BlockExecutor::updateBytifyBlkPredicate(const RegionClause* oldRegion, int blkCountIndex, std::list<const Expr*> oldPures){
+    //     // DONE: loadIndex refactored
+    //     std::list<const Expr*> resultPures = oldPures;
+    //     std::tuple<
+    //         std::list<const SpatialLiteral*>,
+    //         const SpatialLiteral*,
+    //         std::list<const SpatialLiteral*>
+    //     > 
+    //     selectOutTailBlk = oldRegionClause->selectOutSpLit(SpatialLiteral::Kind::BLK, blkCountIndex);
 
-        const SpatialLiteral* oldMiddleBlk = std::get<1>(selectOutTailBlk);
-        std::list<const SpatialLiteral*> tempLeftList = std::get<0>(selectOutTailBlk);
-        std::list<const SpatialLiteral*> tempRightList = std::get<2>(selectOutTailBlk);
-        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPair = this->bytifyBlkPredicate(oldMiddleBlk, resultPures);
-        std::list<const SpatialLiteral*> tempMiddleList = resultBytifiedPair.first;
-        resultPures = resultBytifiedPair.second;
-    }
+    //     const SpatialLiteral* oldMiddleBlk = std::get<1>(selectOutTailBlk);
+    //     std::list<const SpatialLiteral*> tempLeftList = std::get<0>(selectOutTailBlk);
+    //     std::list<const SpatialLiteral*> tempRightList = std::get<2>(selectOutTailBlk);
+    //     std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPair = this->bytifyBlkPredicate(oldMiddleBlk, resultPures);
+    //     std::list<const SpatialLiteral*> tempMiddleList = resultBytifiedPair.first;
+    //     resultPures = resultBytifiedPair.second;
+    // }
 
 
     std::pair<const VarExpr*, std::list<const Expr*>>
@@ -3945,7 +3941,7 @@ namespace smack{
     SHExprPtr BlockExecutor::createErrLitSH(std::list<const Expr*> newPures, std::list<const RegionClause *> oldRegions, ErrType errType){
         // DONE: loadIndex refactored
         // spl literal
-        const SpatialLiteral* errlit = SpatialLiteral::errlit(true, errType);
+        const ErrorLit* errlit = (const ErrorLit*)SpatialLiteral::errlit(true, errType);
         REGISTER_EXPRPTR(errlit);
         // region
         const ErrorClause* newRegion = new ErrorClause(errlit);

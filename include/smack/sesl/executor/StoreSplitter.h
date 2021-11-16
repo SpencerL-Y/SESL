@@ -20,6 +20,7 @@
             std::map<int, int> offsetPosToSize;
             public:
 
+            typedef std::shared_ptr<RegionBlkSplitUtil> RegionBlkSplitUtilPtr;
             RegionBlkSplitUtil(std::vector<int> axis) : splitAxis(axis) {}
 
             RegionBlkSplitUtil() {splitAxis.push_back(-1);}
@@ -36,6 +37,7 @@
             int addSplitLength(int offset, int length);
             int getSplit(int offset);
             int getSplittableLength(int offset);
+            bool hasOffset(int offset);
             void setMaxOffset(int max);
             std::pair<bool, int> getOffsetPos(int offset);
             std::pair<bool, int> getInitializedPos(int offset);
@@ -44,13 +46,14 @@
             int getInitializedPrefixLength(int offset);
             std::vector<int> getSplitAxis() {return this->splitAxis;};
             int getMaxOffset(){return this->maxOffset;}
-            std::map<int, int> getOffsetPosToSize(){return this->offsetPosToSize};
+            std::map<int, int> getOffsetPosToSize(){return this->offsetPosToSize;};
             bool isInitialized(int pos);
 
             void wipeInterval(int fromOffset, int toOffset);
+            int computeCoveredNumOfPts(int offset, int length);
         };
-        typedef std::shared_ptr<RegionBlkSplitUtil> RegionBlkSplitUtilPtr;
 
+        typedef std::shared_ptr<RegionBlkSplitUtil> RegionBlkSplitUtilPtr;
         class StoreSplitter
         {
         private:

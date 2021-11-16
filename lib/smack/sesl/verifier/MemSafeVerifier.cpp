@@ -168,6 +168,7 @@ namespace smack {
     }
 
     std::set<std::string> MemSafeChecker::getRootVarsForMemtrackAnalysis(ExecutionStatePtr state, CFGPtr cfg) {
+        // DONE: loadIndex refactored
         std::set<std::string> rootVars;
         for(auto rootVar : state->obtainMemtrackRootSet()) {
             std::string regionName = state->getVarEquiv()->getRegionName(rootVar);
@@ -181,6 +182,7 @@ namespace smack {
     }
 
     std::vector<std::string> MemSafeChecker::getSuccessorsForMemtrackAnalysis(ExecutionStatePtr state, std::string u) {
+        // DONE: loadIndex refactored
         std::vector<std::string> successors;
         int u_offset = state->getVarEquiv()->getOffset(u);
         std::string u_region = state->getVarEquiv()->getRegionName(u);
@@ -203,6 +205,7 @@ namespace smack {
     }
 
     bool MemSafeChecker::checkMemTrack(ExecutionStatePtr state, CFGPtr cfg) {
+        // DONE: loadIndex refactored
         std::queue<std::string> workList;
         std::map<std::string, bool> hasVisited;
         std::map<std::string, bool> tracked;
@@ -228,6 +231,7 @@ namespace smack {
     }
 
     std::pair<bool, int> MemSafeChecker::checkCurrentMemLeak(ExecutionStatePtr state, CFGPtr mainGraph, bool pathFeasible){
+        // DONE: loadIndex refactored
         if(!pathFeasible){
             //DEBUG_WITH_COLOR(std::cout << "CHECK: Satisfied, path condition false!" << std::endl, color::green);
             return {true, 0};
@@ -254,12 +258,11 @@ namespace smack {
                 std::set<std::string> blknamesRemained;
                 // gather all the blknames
                 for(const RegionClause* r : state->getSH()->getRegions()){
-                    if(!state->getVarEquiv()->isStructArrayPtr(r->getRegionName()) && 
+                    if(!state->getVarEquiv()->isStructArrayRegion(r->getRegionName()) && 
                         blknamesRemained.find(r->getRegionName()) == blknamesRemained.end()){
                         blknamesRemained.insert(r->getRegionName());
                     }
                 }
-                // TODO: REFACTOR HERE
                 std::string prp = SmackOptions::prp.getValue();
                 bool trackAll = checkMemTrack(state, mainGraph);
                 int errType;
@@ -274,39 +277,12 @@ namespace smack {
                     errType = UNKNOWN;
                 }
                 return {false, errType};
-                // for(std::string unusedName : state->getVarFactory()->getUnusedNames()){
-                //     std::string unusedOrigName = state->getVarFactory()->getOrigVarName(unusedName);
-                //     std::pair<std::string, int> sizeInfo = mainGraph->getVarDetailType(unusedOrigName);
-                //     if(!sizeInfo.first.compare("ref")){
-                //         std::string unusedBlkName = state->getVarEquiv()->getBlkName(unusedName);
-                //         if(state->getVarEquiv()->getOffset(unusedName) == 0 &&
-                //            blknamesRemained.find(unusedBlkName) != blknamesRemained.end()){
-                //             continue;
-                //         } else {
-                //             std::string prp = SmackOptions::prp.getValue();
-                //             if(prp.find("memcleanup") != std::string::npos){
-                //                 DEBUG_WITH_COLOR(std::cout << "LEAK: CHECKUNKNOWN!!!" << std::endl;, color::yellow);
-                //                 return {false, UNKNWN};
-                //             } else {
-                //                 DEBUG_WITH_COLOR(std::cout << "LEAK: Memtrack!!!" << std::endl;, color::red);
-                //                 return {false, MEMTRACK};
-                //             }
-                //         }
-                //     }
-                // }
-                // std::string prp = SmackOptions::prp.getValue();
-                // if(prp.find("memcleanup") != std::string::npos){
-                //     DEBUG_WITH_COLOR(std::cout << "LEAK: CHECKUNKNOWN!!!" << std::endl;, color::yellow);
-                //     return {false, UNKNWN};
-                // } else {
-                //     DEBUG_WITH_COLOR(std::cout << "LEAK: Memcleanup!!!" << std::endl;, color::red);
-                //     return {false, MEMCLEAN};
-                // }
             }   
         }
     }
 
     std::pair<bool, const Stmt*> MemSafeChecker::checkInferenceError(bool pathFeasible){
+        // DONE: loadIndex refactored
         if(!pathFeasible){
             //DEBUG_WITH_COLOR(std::cout << "CHECK: Inference check pass! Path condition unsat..." << std::endl;, color::green);
             return std::pair<bool, const Stmt*>(true, nullptr);
@@ -315,22 +291,21 @@ namespace smack {
             for(const Stmt* s : this->stmts){
                 if(Stmt::Kind::SH == s->getKind()){
                     const SHStmt* shs = (const SHStmt*) s;
-                    if(SpatialLiteral::Kind::ERR == 
-                        shs->getSymbHeap()->getSpatialExpr().front()->getId()){
-                            
-                            const ErrorLit* err = (const ErrorLit*)(shs->getSymbHeap()->getSpatialExpr().front());
-                            if(err->getReason() == ErrType::UNKNOWN){
-                                DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: Inference unknown:" << err->getReasonStr() << std::endl;, color::yellow);
-                                previous->print(std::cout);
-                                std::cout << std::endl;
-                                return std::pair<bool, const Stmt*>(false, previous);
-                            } else {
-                                DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: Inference error:" << err->getReasonStr() << std::endl;, color::red);
-                                previous->print(std::cout);
-                                std::cout << std::endl;
-                                return std::pair<bool, const Stmt*>(false, previous);
-                            }
+                    if(shs->getSymbHeap()->hasError()){
+                        assert(shs->getSymbHeap()->getErrorReason().first);
+                        ErrType errorType = shs->getSymbHeap()->getErrorReason().second;
+                        if(errorType == ErrType::UNKNOWN){
+                            DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: Inference unknown:" << shs->getSymbHeap()->getErrorReasonStr() << std::endl;, color::yellow);
+                            previous->print(std::cout);
+                            std::cout << std::endl;
+                            return std::pair<bool, const Stmt*>(false, previous);
+                        } else {
+                            DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: Inference error:" << shs->getSymbHeap()->getErrorReasonStr() << std::endl;, color::red);
+                            previous->print(std::cout);
+                            std::cout << std::endl;
+                            return std::pair<bool, const Stmt*>(false, previous);
                         }
+                    }
                 }
                 previous = s;
             }
@@ -387,15 +362,15 @@ namespace smack {
 
 
     SHExprPtr MemSafeChecker::extractHeapSymbolicHeap(SHExprPtr originalSH, ExecutionStatePtr state){
-        std::list<const SpatialLiteral*> heapSpatial;
-        for(const SpatialLiteral* sp : originalSH->getSpatialExpr()){
-            if(state->getVarEquiv()->isStructArrayPtr(sp->getBlkName())){
+        std::list<const RegionClause*> heapRegions;
+        for(const RegionClause* sp : originalSH->getRegions()){
+            if(state->getVarEquiv()->isStructArrayRegion(sp->getRegionName())){
 
             } else {
-                heapSpatial.push_back(sp);
+                heapRegions.push_back(sp);
             }
         }
-        SHExprPtr heapSH = std::make_shared<SymbolicHeapExpr>(originalSH->getPure(), heapSpatial);
+        SHExprPtr heapSH = std::make_shared<SymbolicHeapExpr>(originalSH->getPures(), heapRegions);
         return heapSH;   
     }
 }

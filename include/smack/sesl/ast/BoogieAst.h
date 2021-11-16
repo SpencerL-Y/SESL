@@ -63,6 +63,7 @@ namespace smack {
         BVExtract,
         BVConcat,
         SpatialLit,
+        RegClause,
         SH,
         CODE
     };
@@ -603,7 +604,7 @@ namespace smack {
             // SPT,
             ERR
         };
-        Kind id;gc
+        Kind id;
 
         static const SpatialLiteral *emp();
 
@@ -814,14 +815,13 @@ namespace smack {
     protected:
         std::list<const SpatialLiteral *> spatialLits;
     public:
-        SpatialClause();
         std::list<const SpatialLiteral *> getSpatialLits() const { return this->spatialLits;}
-        void setSpatialLits(std::list<const SpatialLiteral*> splList){ this->spatialLits = splList};
+        void setSpatialLits(std::list<const SpatialLiteral*> splList){ this->spatialLits = splList;};
 
-        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+        // virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
-        virtual bool isErrorClause()=0;
-        virtual bool isRegionClause()=0;
+        virtual bool isErrorClause() const = 0;
+        virtual bool isRegionClause() const = 0;
     };
 
 
@@ -838,14 +838,14 @@ namespace smack {
         
     public:
         // for region on heap 
-        RegionClause(std::list<const SpatialLiteral*> splList, const VarExpr* initVar, const Expr* sizeExpr, std::string regionName, int size， bool gc) : regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(gc) {
+        RegionClause(std::list<const SpatialLiteral*> splList, const VarExpr* initVar, const Expr* sizeExpr, std::string regionName, int size, bool gc) :  regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(gc){
             this->regionMetaInfo = std::make_shared<RegionBlkSplitUtil>();
             this->regionMetaInfo->setMaxOffset(size);
             this->setSpatialLits(splList);
 
         }
         // for region on stack
-        RegionClause(std::list<const SpatialLiteral*> splList, const VarExpr* initVar, const Expr* sizeExpr, std::string regionName, int size, bool gc, std::list<std::string> callStack) : regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(gc), regionCallStack(callStack) {
+        RegionClause(std::list<const SpatialLiteral*> splList, const VarExpr* initVar, const Expr* sizeExpr, std::string regionName, int size, bool gc, std::list<std::string> callStack) :  regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(gc), regionCallStack(callStack) {
             this->regionMetaInfo = std::make_shared<RegionBlkSplitUtil>();
             this->regionMetaInfo->setMaxOffset(size);
             this->setSpatialLits(splList);
@@ -856,18 +856,19 @@ namespace smack {
         regionInitVar(oldRegion->getRegionInitVar()), 
         regionSizeExpr(oldRegion->getRegionSizeExpr()), 
         regionName(oldRegion->getRegionName()), 
-        regionSize(info->getmaxOffset()), 
+        regionSize(info->getMaxOffset()), 
         isGc(oldRegion->isGcRegion()),
         regionCallStack(oldRegion->getRegionCallStack()) {
             this->setRegionMetaInfo(info);
             this->setSpatialLits(newSplList);
         }
 
-        RegionClause(std::list<const SpatialLiteral*> leftList, std::list<const SpatialLiteral> middleList, std::list<const SpatialLiteral*> rightList, RegionBlkSplitUtilPtr info, const RegionClause* oldRegion) : 
+        // with byte level operations
+        RegionClause(std::list<const SpatialLiteral*> leftList, std::list<const SpatialLiteral*> middleList, std::list<const SpatialLiteral*> rightList, RegionBlkSplitUtilPtr info, const RegionClause* oldRegion) : 
         regionInitVar(oldRegion->getRegionInitVar()), 
         regionSizeExpr(oldRegion->getRegionSizeExpr()), 
         regionName(oldRegion->getRegionName()), 
-        regionSize(info->getmaxOffset()), 
+        regionSize(info->getMaxOffset()), 
         isGc(oldRegion->isGcRegion()),
         regionCallStack(oldRegion->getRegionCallStack()) {
             this->setRegionMetaInfo(info);
@@ -882,6 +883,12 @@ namespace smack {
             }
         }
 
+        // with error clause
+        RegionClause(const VarExpr* initVar, const Expr* sizeExpr, int size, bool gc) : regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(gc) {
+            this->regionMetaInfo = std::make_shared<RegionBlkSplitUtil>();
+            this->regionMetaInfo->setMaxOffset(size);
+        }
+
         // attributes getters and setters
         const VarExpr* getRegionInitVar() const { return this->regionInitVar;}
         const Expr* getRegionSizeExpr() const {return this->regionSizeExpr;}
@@ -891,6 +898,7 @@ namespace smack {
         std::list<std::string> getRegionCallStack() const {return this->regionCallStack;}
         RegionBlkSplitUtilPtr getRegionMetaInfo() const {return this->regionMetaInfo;}
         void setRegionMetaInfo(RegionBlkSplitUtilPtr info) { this->regionMetaInfo = info;}
+
 
         // spatialLiteral-level operations
         std::tuple<
@@ -913,28 +921,37 @@ namespace smack {
         
         // utils
         bool containGcFuncName(std::string funcName) const;
-        bool isErrorClause() const { return false;}
-        bool isRegionClause() const { return true;}virtual 
-        z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+        virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
 
         // print
         void print(std::ostream& os) const;
+
+        // interfaces
+        bool isErrorClause() const { return false;}
+        bool isRegionClause() const { return true;}
+        bool isValue() const {return false;}
+        bool isVar() const {return false;}
+        ExprType getType() const {return ExprType::RegClause;}
     };
 
     class ErrorClause : public RegionClause {
         const ErrorLit * errlit;
-        bool isFresh;
+        bool fresh;
     public: 
-        ErrorClause(const ErrorLit * e) : RegionClause(nullptr, nullptr, "", 0), errlit(e), isFresh(true){}
-        ErrorClause(const ErrorClause* ec) : RegionClause(nullptr, nullptr, "", 0), errlit(ec->getErrLit()), isFresh(false){}
+        ErrorClause(const ErrorLit * e) : RegionClause(nullptr, nullptr, 0, false), errlit(e), fresh(true){}
+        ErrorClause(const ErrorClause* ec) : RegionClause(nullptr, nullptr, 0, false), errlit(ec->getErrLit()), fresh(false){}
+        ~ErrorClause(){}
 
         ErrType getErrReason() const {return this->errlit->getReason(); }
+        std::string getErrReasonStr() const {return errlit->getReasonStr();}
         const ErrorLit* getErrLit() const {return errlit;}
-        bool isFresh() const {return this->isFresh;}
+        bool isFresh() const {return this->fresh;}
 
-        bool isErrorClause() const { return true;}
+        bool isErrorClause() const  { return true;}
         bool isRegionClause() const { return false;}
+        bool isValue() const {return false;}
+        bool isVar() const {return false;}
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
@@ -986,6 +1003,10 @@ namespace smack {
         bool hasRegion(std::string regionName) const;
 
         bool hasError() const;
+
+        std::pair<bool, ErrType> getErrorReason() const;
+
+        std::string getErrorReasonStr() const;
 
         SHExprPtr eliminateStackRegion(std::string funcName);
 

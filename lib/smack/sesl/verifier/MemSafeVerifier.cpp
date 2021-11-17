@@ -200,7 +200,7 @@ namespace smack {
                 if(to->isVar() && (u_offset == 0 || index == u_offset)) {
                     const VarExpr* var = (const VarExpr*)to;
                     successors.push_back(
-                        state->getVarEquiv()->getRegionName(var->name()));
+                        state->getVarEquiv()->getAllocName(var->name()));
                 }
             }
         }
@@ -227,9 +227,10 @@ namespace smack {
                 workList.push(v);
             }
         }
-        for(auto region : state->getSH()->getRegions())
+        for(auto region : state->getSH()->getRegions()) {
             if(!tracked[region->getRegionName()])
                 return false;
+        }
         return true;
     }
 

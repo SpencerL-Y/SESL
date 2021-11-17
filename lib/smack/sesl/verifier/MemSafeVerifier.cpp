@@ -240,6 +240,9 @@ namespace smack {
             return {true, 0};
         } else {
             SHExprPtr heapSH = this->extractHeapSymbolicHeap(this->finalSH, state);
+            if(this->finalSH->hasError()){
+                return {true, 0};
+            }
             this->trans->setSymbolicHeapHExpr(heapSH);
             this->trans->translate();
             z3::expr premise = this->trans->getFinalExpr();

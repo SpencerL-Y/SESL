@@ -3947,13 +3947,14 @@ namespace smack{
     SHExprPtr BlockExecutor::createErrLitSH(std::list<const Expr*> newPures, std::list<const RegionClause *> oldRegions, ErrType errType){
         // DONE: loadIndex refactored
         // spl literal
+        std::list<const RegionClause*> emptyOldRegions;
         const ErrorLit* errlit = (const ErrorLit*)SpatialLiteral::errlit(true, errType);
         REGISTER_EXPRPTR(errlit);
         // region
         const ErrorClause* newRegion = new ErrorClause(errlit);
         REGISTER_EXPRPTR(newRegion);
         // new regionList
-        std::list<const RegionClause*> newRegions = oldRegions;
+        std::list<const RegionClause*> newRegions = emptyOldRegions;
         newRegions.push_back(newRegion);
         // new SH
         SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);

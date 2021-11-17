@@ -1092,6 +1092,7 @@ namespace smack{
             srcOrigVarName = srcOrigVar->name();
             srcVarName = srcVar->name();
             srcRegionName = this->varEquiv->getRegionName(srcOrigVarName);
+            CHECK_VALID_DEREF_FOR_BLK(srcRegionName);
             srcRegionSize = sh->getRegionSize(srcRegionName);
             srcOffset = this->varEquiv->getOffset(srcVarName);
 
@@ -1127,6 +1128,7 @@ namespace smack{
             dstOrigVarName = freshDstVar->name();
             dstVarName = freshDstVar->name();
             dstRegionName = this->varEquiv->getRegionName(dstOrigVarName);
+            CHECK_VALID_DEREF_FOR_BLK(dstRegionName);
             dstRegionSize = sh->getRegionSize(dstRegionName);
             dstOffset = this->varEquiv->getOffset(dstVarName);
              
@@ -1516,6 +1518,7 @@ namespace smack{
             assert(this->getVarType(targetVarName) == VarType::PTR || 
                    this->getVarType(targetVarName) == VarType::NIL);
             targetRegionName = this->varEquiv->getRegionName(targetVarName);
+            CHECK_VALID_DEREF_FOR_BLK(targetRegionName);
             targetOffset = this->varEquiv->getOffset(targetVarName);
             targetRegionSize = sh->getRegionSize(targetRegionName);
         } else if(ExprType::FUNC == arg1Target->getType()){
@@ -1532,6 +1535,7 @@ namespace smack{
             assert(this->getVarType(targetVarName) == VarType::PTR || 
                    this->getVarType(targetVarName) == VarType::NIL);
             targetRegionName = this->varEquiv->getRegionName(targetVarName);
+            CHECK_VALID_DEREF_FOR_BLK(targetRegionName);
             targetOffset = this->varEquiv->getOffset(targetVarName);
             targetRegionSize = sh->getRegionSize(targetRegionName);
         } else {
@@ -2610,6 +2614,7 @@ namespace smack{
                 ldOrigPtrName = freshLoadedVar->name();
                 ldPtrName = freshLoadedVar->name();
                 regionName = this->varEquiv->getRegionName(ldPtrName);
+                CHECK_VALID_DEREF_FOR_BLK(regionName);
 
                 regionSize = sh->getRegionSize(regionName);
                 loadedOffset = this->varEquiv->getOffset(ldPtrName);

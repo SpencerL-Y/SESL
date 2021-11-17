@@ -884,10 +884,7 @@ namespace smack {
         }
 
         // with error clause
-        RegionClause(const VarExpr* initVar, const Expr* sizeExpr, int size, bool gc) : regionInitVar(initVar), regionSizeExpr(sizeExpr), regionName(regionName), regionSize(size), isGc(gc) {
-            this->regionMetaInfo = std::make_shared<RegionBlkSplitUtil>();
-            this->regionMetaInfo->setMaxOffset(size);
-        }
+        RegionClause(bool gc) : isGc(gc) {}
 
         // attributes getters and setters
         const VarExpr* getRegionInitVar() const { return this->regionInitVar;}
@@ -939,8 +936,8 @@ namespace smack {
         const ErrorLit * errlit;
         bool fresh;
     public: 
-        ErrorClause(const ErrorLit * e) : RegionClause(nullptr, nullptr, 0, false), errlit(e), fresh(true){}
-        ErrorClause(const ErrorClause* ec) : RegionClause(nullptr, nullptr, 0, false), errlit(ec->getErrLit()), fresh(false){}
+        ErrorClause(const ErrorLit * e) : RegionClause(false), errlit(e), fresh(true){}
+        ErrorClause(const ErrorClause* ec) : RegionClause(false), errlit(ec->getErrLit()), fresh(false){}
         ~ErrorClause(){}
 
         ErrType getErrReason() const {return this->errlit->getReason(); }

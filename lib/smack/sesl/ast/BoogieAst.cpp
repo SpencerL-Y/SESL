@@ -1625,7 +1625,7 @@ namespace smack {
         os << std::endl;
         os << "-------------------\n";
         print_seq<const RegionClause *>(os, this->regions, "\n");
-        os << "\nSH--------------END";
+        os << "\nSH--------------END\n";
         }
     }
 

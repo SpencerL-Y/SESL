@@ -4,7 +4,7 @@
 #ifndef VECTOROPERATIONS_H
 #define VECTOROPERATIONS_H
 
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/SmackRep.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"

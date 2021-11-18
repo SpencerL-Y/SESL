@@ -11,7 +11,7 @@
 
 #include "z3++.h"
 #include "slah_api.h"
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include <unordered_map>
 #include "smack/sesl/executor/VarEquiv.h"
 #include "smack/sesl/cfg/CFG.h"

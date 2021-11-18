@@ -20,6 +20,7 @@ int foo(){
     node.a = 10;
     none(node.a);
     return 0;
+
 }
 // typedef struct node {
 //     int a;

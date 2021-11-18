@@ -1,11 +1,12 @@
 //
 // This file is distributed under the MIT License. See LICENSE for details.
 //
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Naming.h"
 #include "llvm/IR/Constants.h"
 #include <iostream>
 #include <set>
+#include <tuple>
 #include <typeinfo>
 #include <sstream>
 #include <cstring>
@@ -1142,101 +1143,41 @@ namespace smack {
         const Expr* clonedExpr = new BvConcat(renamedLeft, renamedRight);
         return clonedExpr;
     }
-
+    // -------------------------------- Separation Logic in AST --------------------------------
+    // -------------------------- Spatial Literals
     const SpatialLiteral *SpatialLiteral::emp() {
-        std::set<std::string> emptyStackMems;
-        return new EmpLit("", emptyStackMems);
+        return new EmpLit();
     }
 
-    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::list<std::string> callStack) {
+    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, int stepSize) {
         assert(stepSize > 0);
         if(stepSize != 1){
-            std::set<std::string> stackMems;
-            for(std::string f : callStack){
-                stackMems.insert(f);
-            }
-            const SpatialLiteral* newPt = new PtLit(from, to, blkName, stepSize, stackMems);
-            REGISTER_EXPRPTR(newPt);
+            const SpatialLiteral* newPt = new PtLit(from, to, stepSize);
             return newPt;
         } else {
-            std::set<std::string> stackMems;
-            for(std::string f : callStack){
-                stackMems.insert(f);
-            }
             const BytePt* bpt = new BytePt(from, to);
             REGISTER_EXPRPTR(bpt);
             std::vector<const BytePt*> bytifiedVec;
             bytifiedVec.push_back(bpt);
-            return new PtLit(from, to, blkName, stepSize, bytifiedVec, stackMems);
+            const SpatialLiteral* newPt = new PtLit(from, to, stepSize, bytifiedVec);
+            return newPt;
         }
     }
 
-    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::vector<const BytePt*> bpts, std::list<std::string> callStack){
+    const SpatialLiteral *SpatialLiteral::pt(const Expr *from, const Expr *to,  int stepSize, std::vector<const BytePt*> bpts){
         assert(stepSize > 0);
         assert(stepSize == bpts.size());
-        std::set<std::string> stackMems;
-        for(std::string f : callStack){
-            stackMems.insert(f);
-        }
-        return new PtLit(from, to, blkName, stepSize, bpts, stackMems);
+        return new PtLit(from, to, stepSize, bpts);
     }
 
-    const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::list<std::string> callStack) {
+    const SpatialLiteral *SpatialLiteral::blk(const Expr *from, const Expr *to, int byteSize) {
         assert(byteSize >= 0);
-        std::set<std::string> stackMems;
-        for(std::string f : callStack){
-            stackMems.insert(f);
-        }
-        return new BlkLit(from, to, blkName, byteSize, stackMems);
-    }
-
-    const SpatialLiteral *SpatialLiteral::spt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack) {
-        std::set<std::string> stackMems;
-        for(std::string f : callStack){
-            stackMems.insert(f);
-        }
-        return new SizePtLit(var, size, blkName, stackMems);
-    }
-
-    const SpatialLiteral *SpatialLiteral::gcSpt(const Expr *var, const Expr *size, std::string blkName, std::list<std::string> callStack){
-        std::set<std::string> stackMems;
-        for(std::string f : callStack){
-            stackMems.insert(f);
-        }
-        return new GCSizePtLit(var, size, blkName, stackMems);
+        return new BlkLit(from, to, byteSize);
     }
 
     const BytePt *SpatialLiteral::bytePt(const Expr* from, const Expr* to) {
         assert(from->isVar() && to->isVar());
         return new BytePt(from, to);
-    }
-
-    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize, std::list<std::string> callStack) {
-        assert(stepSize > 0);
-        std::set<std::string> stackMems;
-        for(std::string f : callStack){
-            stackMems.insert(f);
-        }
-        return new GCPtLit(from, to, blkName, stepSize, stackMems);
-    }
-
-    const SpatialLiteral *SpatialLiteral::gcPt(const Expr *from, const Expr *to, std::string blkName, int stepSize,std::vector<const BytePt*> bgcpts, std::list<std::string> callStack){
-        assert(stepSize > 0);
-        assert(bgcpts.size() == stepSize);
-        std::set<std::string> stackMems;
-        for(std::string f : callStack){
-            stackMems.insert(f);
-        }
-        return new GCPtLit(from, to, blkName, stepSize, bgcpts, stackMems);
-    }
-
-    const SpatialLiteral *SpatialLiteral::gcBlk(const Expr *from, const Expr *to, std::string blkName, int byteSize, std::list<std::string> callStack) {
-        assert(byteSize >= 0);
-        std::set<std::string> stackMems;
-        for(std::string f : callStack){
-            stackMems.insert(f);
-        }
-        return new GCBlkLit(from, to, blkName, byteSize, stackMems);
     }
 
     const SpatialLiteral *SpatialLiteral::errlit(bool f, ErrType reason) {
@@ -1253,10 +1194,6 @@ namespace smack {
         return res;
     }
 
-    bool EmpLit::isStackEliminated(std::string exitFuncName) const {
-        return false;
-    }
-
     void BytePt::print(std::ostream &os) const {
         os << "[" << this->from << " :--> " << this->to << "]";
     }
@@ -1271,10 +1208,6 @@ namespace smack {
         varBounder->addVarName(fromVar->name());
         varBounder->addVarName(toVar->name());
         return res;
-    }
-
-    bool BytePt::isStackEliminated(std::string exitFuncName) const {
-        return false;
     }
 
     void PtLit::print(std::ostream &os) const {
@@ -1339,93 +1272,8 @@ namespace smack {
         
     }
 
-    bool PtLit::isStackEliminated(std::string exitFuncName) const {
-        return false;
-    }
-
-    z3::expr GCPtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        // z3::expr res = slah_api::newEmp(z3Ctx);
-        // BUG FIXED: cannot simply use emp for memleak, since some constraint relies on the spatial formula
-        if(!this->isByteLevel()){
-            // if the pt predicate is not bytified, old logic as usual
-            assert(this->getFrom()->isVar() && this->getTo()->isVar());
-            const VarExpr *fromVar = (const VarExpr *) this->getFrom();
-            const VarExpr *toVar = (const VarExpr *) this->getTo();
-            std::string fromOrigVarName = varFac->getOrigVarName(fromVar->name());
-            // TODOsh: change to stepSize later
-            int stepWidth = cfg->getVarDetailType(fromOrigVarName).second / 8;
-            // e.g. a pointer $p with type int* points to a variable $fresh
-            // $p --> $fresh
-            // will be translated into
-            /*  ($fresh_0, $fresh_1, $fresh_2, $fresh_3) = i
-                | ($p_0, $p_1, $p_2, $p_3) --> $fresh_0 #
-                  ($p_0, $p_1, $p_2, $p_3) + 1 --> $fresh_1 #
-                  ($p_0, $p_1, $p_2, $p_3) + 2 --> $fresh_2 #
-                  ($p_0, $p_1, $p_2, $p_3) + 3 --> $fresh_3
-           */
-            z3::expr res = slah_api::newEmp(z3Ctx);
-            for (int i = 0; i < stepWidth; i++) {
-                res = slah_api::sep(
-                        res,
-                        slah_api::newPto(
-                                z3Ctx.int_const((fromVar->name() + "_" + std::to_string(i)).c_str()),
-                                z3Ctx.int_const((toVar->name() + "_" + std::to_string(i)).c_str())
-                        )
-                );
-            }
-            // z3::expr res = slah_api::newPto(
-            //   from->translateToZ3(z3Ctx, cfg, varFac, varBounder),
-            //   to->translateToZ3(z3Ctx, cfg, varFac, varBounder)
-            // );
-            CDEBUG(std::cout << "in ptlit!" << res.to_string() << std::endl;);
-            return res;
-        } else {
-            // use new logic
-            z3::expr res = slah_api::newEmp(z3Ctx);
-            for(int i = 0; i < this->stepSize; i++){
-                res = slah_api::sep(
-                    res,
-                    this->getByte(i)->translateToZ3(z3Ctx, cfg, varFac, varBounder)
-                );
-            }
-            return res;
-        }
-    }
-
-    bool GCPtLit::isStackEliminated(std::string exitFuncName) const {
-        for(std::string e : this->callStackSet){
-            if(!e.compare(exitFuncName)){
-                return true;
-            }
-        }
-        return false;
-    }
-
-
     void BlkLit::print(std::ostream &os) const {
         os << "Blk(" << from << ", " << to << ")";
-    }
-
-    z3::expr GCBlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        // z3::expr res = slah_api::newEmp(z3Ctx);
-        // BUG FIXED: cannot simply use emp for memleak, since some constraint relies on the spatial formula
-        if(this->isEmpty()){
-            return slah_api::newEmp(z3Ctx);
-        }
-        auto f = from->translateToZ3(z3Ctx, cfg, varFac, varBounder);
-        auto t = to->translateToZ3(z3Ctx, cfg, varFac, varBounder);
-        CDEBUG(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl;);
-        z3::expr res = slah_api::newBlk(f, t);
-        return res;
-    }
-
-    bool GCBlkLit::isStackEliminated(std::string exitFuncName) const {
-        for(std::string e : this->callStackSet){
-            if(!e.compare(exitFuncName)){
-                return true;
-            }
-        }
-        return false;
     }
 
     z3::expr BlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
@@ -1437,51 +1285,6 @@ namespace smack {
         CDEBUG(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl;);
         z3::expr res = slah_api::newBlk(f, t);
         return res;
-    }
-
-    bool BlkLit::isStackEliminated(std::string exitFuncName) const {
-        return false;
-    }
-
-    void SizePtLit::print(std::ostream &os) const {
-        os << var << " >-s-> " << size;
-    }
-
-    z3::expr SizePtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        //CDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
-        // TODOsh: later changed to above one
-        CDEBUG(std::cout << "sizeptlit" << std::endl;);
-        return slah_api::newEmp(z3Ctx);
-    }
-
-    bool SizePtLit::isStackEliminated(std::string exitFuncName) const {
-        return false;
-    }
-
-    z3::expr GCSizePtLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        //CDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
-        // TODOsh: later changed to above one
-        CDEBUG(std::cout << "gc sizeptlit" << std::endl;);
-        return slah_api::newEmp(z3Ctx);
-    }
-
-    bool GCSizePtLit::isStackEliminated(std::string exitFuncName) const {
-        for(std::string e : this->callStackSet){
-            if(!e.compare(exitFuncName)){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    std::string SizePtLit::getVarName() const {
-        if (var->isVar()) {
-            const VarExpr *varExpr = (const VarExpr *) var;
-            return varExpr->name();
-        } else {
-            CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl);
-            return nullptr;
-        }
     }
 
     std::string ErrorLit::getReasonStr() const {
@@ -1510,112 +1313,324 @@ namespace smack {
         return (slah_api::newEmp(z3Ctx));
     }
 
-    bool ErrorLit::isStackEliminated(std::string exitFuncName) const {
-        return false;
-    }
-
     z3::expr BoolLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        return z3Ctx.bool_val(val);
+        return z3Ctx.bool_val(this->val);
     }
 
-    std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_and(SHExprPtr first, SHExprPtr second) {
-        const Expr *newPure;
-        if (second->getPure()->getType() == ExprType::BOOL) {
-            if (((const BoolLit *) second->getPure())->getVal()) {
-                newPure = first->getPure();
+    // -------------------- Spatial Clause
+    // spatialLit-level operations
+    std::tuple<
+        std::list<const SpatialLiteral*>, 
+        const SpatialLiteral*, 
+        std::list<const SpatialLiteral*>
+    > 
+    RegionClause::selectOutSpLit
+    (SpatialLiteral::Kind kind, int selectIndex) const{
+        std::list<const SpatialLiteral*> leftSplList;
+        const SpatialLiteral* selectedSpl;
+        std::list<const SpatialLiteral*> rightSplList;
+
+        bool leftPhase = true;
+        bool selectPhase = false;
+        bool rightPhase = false;
+
+        int countIndex = 1; 
+        for(const SpatialLiteral* spl : this->spatialLits){
+            // control 
+            if(kind == spl->getId() && selectIndex == countIndex){
+                leftPhase = false;
+                selectPhase = true;
+                rightPhase = false;
+            } else if(selectPhase){
+                leftPhase = false;
+                selectPhase = false;
+                rightPhase = true;
             }
-        } else {
-            newPure = Expr::and_(first->getPure(), second->getPure());
-        }
 
-        std::list<const SpatialLiteral *> splist;
-        auto result = std::make_shared<SymbolicHeapExpr>(newPure, splist);
-        for (const SpatialLiteral *spl :  first->getSpatialExpr()) {
-            result->addSpatialLit(spl);
+            // select
+            if(leftPhase){
+                leftSplList.push_back(spl);
+            } else if(selectPhase){
+                selectedSpl = spl;
+            } else if(rightPhase){
+                rightSplList.push_back(spl);
+            } else {
+                assert(false);
+                std::cout << "ERROR: select out split, this should not happen" << std::endl;
+            }
+
+            // count
+            if(kind == spl->getId()){
+                countIndex += 1;
+            }
         }
-        for (const SpatialLiteral *spl : second->getSpatialExpr()) {
-            result->addSpatialLit(spl);
-        }
-        return result;
+        return {leftSplList, selectedSpl, rightSplList};
     }
 
-    std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::sh_conj(SHExprPtr originSH, const Expr *conj) {
-        const Expr *newPureExpr = Expr::and_(originSH->getPure(), conj);
-        std::list<const SpatialLiteral *> spatialExpr = originSH->getSpatialExpr();
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPureExpr, spatialExpr);
-        return newSH;
-    }
+    std::tuple<
+        std::list<const SpatialLiteral*>, 
+        std::list<const SpatialLiteral*>, 
+        std::list<const SpatialLiteral*>
+    > 
+    RegionClause::selectOutSpLitList
+    (SpatialLiteral::Kind startKind, int startSelectIndex, 
+         SpatialLiteral::Kind endKind, int endSelectIndex) const{
+        std::list<const SpatialLiteral *> leftSplList;
+        std::list<const SpatialLiteral *> selectedList;
+        std::list<const SpatialLiteral *> rightSplList;
+        bool leftPhase = true;
+        bool selectPhase = false;
+        bool rightPhase = false;
+        int startKindCount = 1;
+        int endKindCount = 1;
 
-    std::shared_ptr<SymbolicHeapExpr>
-    SymbolicHeapExpr::sh_sep_conj(SHExprPtr originSH, std::list<const SpatialLiteral *> conjs) {
-        const Expr *pureExpr = originSH->getPure();
-        std::list<const SpatialLiteral *> newSpatialExpr;
-        for (const SpatialLiteral *sp : originSH->getSpatialExpr()) {
-            newSpatialExpr.push_back(sp);
+        for(const SpatialLiteral* spl : this->spatialLits){
+            // control 
+            if(startKind == spl->getId() &&  startKindCount == startSelectIndex){
+                leftPhase = false;
+                selectPhase = true;
+                rightPhase = false;
+            } 
+            if(endKindCount > endSelectIndex){
+                leftPhase = false;
+                selectPhase = false;
+                rightPhase = true;
+            }
+            // select 
+            if(leftPhase){
+                leftSplList.push_back(spl);
+            } else if(selectPhase){
+                selectedList.push_back(spl);
+            } else if(rightPhase){
+                rightSplList.push_back(spl);
+            } else {
+                assert(false);
+                std::cout << "ERROR: select out split, this should not happen" << std::endl;
+            }
+            
+            // count
+            if(startKind == spl->getId()){
+                startKindCount += 1;
+            }
+            if(endKind == spl->getId()){
+                endKindCount += 1;
+            }
         }
-        for (const SpatialLiteral *sp : conjs) {
-            newSpatialExpr.push_back(sp);
-        }
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(pureExpr, newSpatialExpr);
-        return newSH;
     }
-
-    std::shared_ptr<SymbolicHeapExpr> SymbolicHeapExpr::emp_sh() {
-        const BoolLit *trueExpr = new BoolLit(true);
-        std::list<const SpatialLiteral *> splist;
-        SHExprPtr empsh = std::make_shared<SymbolicHeapExpr>(trueExpr, splist);
-        empsh->addSpatialLit(SpatialLiteral::emp());
-        return empsh;
-    }
-
-
-    bool SymbolicHeapExpr::isError() {
-        const SpatialLiteral *sp = this->spatialExpr.front();
-        if (SpatialLiteral::Kind::ERR == sp->getId()) {
-            return true;
+    
+    // utils
+    bool 
+    RegionClause::containGcFuncName
+    (std::string funcName) const{
+        for(std::string name : this->regionCallStack){
+            if(!name.compare(funcName)){
+                return true;
+            }
         }
         return false;
     }
 
-    void SymbolicHeapExpr::addSpatialLit(const SpatialLiteral *spl) {
-        spatialExpr.push_back(spl);
+    z3::expr
+    RegionClause::translateToZ3
+    (z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
+        z3::expr_vector resultExprList(z3Ctx);
+        bool hasSpatials = false;
+        for(const SpatialLiteral* sp : this->spatialLits){
+            if(hasSpatials && SpatialLiteral::Kind::EMP == sp->getId()){
+                continue;
+            }
+            z3::expr z3sp = sp->translateToZ3(z3Ctx, cfg, varFac, varBounder);
+            resultExprList.push_back(z3sp);
+            hasSpatials = true;
+        }
+        if(!hasSpatials){
+            resultExprList.push_back(slah_api::newEmp(z3Ctx));
+        }
+        z3::expr resultExp = slah_api::newSep(resultExprList);
+        return resultExp;
     }
 
 
-    const Expr *SymbolicHeapExpr::getBlkSize(std::string blkName) const {
-        if(!blkName.compare("$Null")){
-            return new IntLit((long long)0);
+    void 
+    RegionClause::print(std::ostream& os) const {
+        if(FULL_DEBUG && OPEN_SH){
+        os << "[Region:" << this->regionName << "] # ";
+        for(const SpatialLiteral* spl : this->spatialLits){
+            spl->print(os);
+            os << " # ";
+            
         }
-        for (const SpatialLiteral *sp : this->spatialExpr) {
-            if (SpatialLiteral::Kind::SPT == sp->getId() &&
-                !sp->getBlkName().compare(blkName)) {
-                const SizePtLit *st = (const SizePtLit *) sp;
-                return st->getSize();
+        os << "[RegionEnd:" << this->regionName << "]";
+        }
+    }
+
+
+    z3::expr
+    ErrorClause::translateToZ3
+    (z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
+        return slah_api::newEmp(z3Ctx);
+    }
+
+    
+    // ---------------------- Symbolic Heap
+    // region-level operations
+    void 
+    SymbolicHeapExpr::addRegionClause
+    (const RegionClause * clause){
+        if(this->hasRegion(clause->getRegionName())){
+            CFDEBUG(std::cout << "ERROR: add region error, region name exists: " << clause->getRegionName() << std::endl;);
+        } else {
+            this->regions.push_back(clause);
+        }
+    }
+
+    void 
+    SymbolicHeapExpr::addErrorClause
+    (const ErrorClause * clause){
+        this->regions.push_back(clause);
+    }
+
+    const RegionClause * 
+    SymbolicHeapExpr::getRegion
+    (std::string regionName) const{
+        for(const RegionClause * rc : this->regions){
+            if(!rc->getRegionName().compare(regionName)){
+                return rc;
             }
         }
-        CFDEBUG(std::cout << "ERROR: Block Name not found: " <<  blkName << std::endl;);
+        CFDEBUG(std::cout << "ERROR: region not found: " << regionName << std::endl;);
         return nullptr;
     }
 
-    const SizePtLit* SymbolicHeapExpr::getRegionSpt(std::string mallocName) const{
-        for(const SpatialLiteral* sp : this->spatialExpr){
-            if (SpatialLiteral::Kind::SPT == sp->getId() &&
-                !sp->getBlkName().compare(mallocName)) {
-                const SizePtLit *st = (const SizePtLit *) sp;
-                return st;
+    std::tuple<
+        std::list<const RegionClause *>,
+        const RegionClause *,
+        std::list<const RegionClause *>
+    > 
+    SymbolicHeapExpr::selectRegion
+    (std::string regionName) const{
+        std::list<const RegionClause *> leftRegions;
+        std::list<const RegionClause *> rightRegions;
+        const RegionClause * selectedRegion;
+        bool startRight = false;
+        for(const RegionClause * region : this->regions){
+            if(!region->getRegionName().compare(regionName)){
+                selectedRegion = region;
+                startRight = true;
+            } else {
+                if(startRight){
+                    rightRegions.push_back(region);
+                } else {
+                    leftRegions.push_back(region);
+                }
+            }
+        } 
+        return {leftRegions, selectedRegion, rightRegions};
+    }
+
+    const Expr* 
+    SymbolicHeapExpr::getRegionSizeExpr
+    (std::string regionName) const{
+        return this->getRegion(regionName)->getRegionSizeExpr();
+    }
+
+
+    const int 
+    SymbolicHeapExpr::getRegionSize
+    (std::string regionName) const{
+        return this->getRegion(regionName)->getRegionSize();
+    }
+
+    bool 
+    SymbolicHeapExpr::hasRegion
+    (std::string regionName) const{
+        for(const RegionClause * rc : this->regions){
+            if(!rc->getRegionName().compare(regionName)){
+                return true;
             }
         }
-        CFDEBUG(std::cout << "ERROR: region spt not found!! " << mallocName << std::endl;);
-        return nullptr;
+        return false;
     }
+
+    bool 
+    SymbolicHeapExpr::hasError() const{
+        for(const RegionClause * rc : this->regions){
+            if(rc->isErrorClause()){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    std::pair<bool, ErrType> 
+    SymbolicHeapExpr::getErrorReason() const{
+        for(const RegionClause * rc : this->regions){
+            if(rc->isErrorClause()){
+                const ErrorClause* errorClause = (const ErrorClause*) rc;
+                return {true, errorClause->getErrReason()};
+            }
+        }
+        return {false, ErrType::UNKNOWN};
+    }
+
+
+    std::string SymbolicHeapExpr::getErrorReasonStr() const{
+        for(const RegionClause * rc : this->regions){
+            if(rc->isErrorClause()){
+                const ErrorClause* errorClause = (const ErrorClause*) rc;
+                return errorClause->getErrReasonStr();
+            }
+        }
+        return "no error found..";
+    }
+
+
+    SHExprPtr 
+    SymbolicHeapExpr::eliminateStackRegion
+    (std::string funcName){
+        std::list<const RegionClause*> newRegions;
+        for(const RegionClause* rc : this->regions){
+            if(rc->isGcRegion() && rc->containGcFuncName(funcName)){
+                CFDEBUG(std::cout << "INFO: remove region " << rc->getRegionName() << std::endl;)
+                
+            } else {
+                newRegions.push_back(rc);
+            }
+        }
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(this->getPures(), newRegions);
+        newSH->print(std::cout);
+        CFDEBUG(std::cout << std::endl;);
+        return newSH;
+    }
+
+    // const SizePtLit* SymbolicHeapExpr::getRegionSpt(std::string mallocName) const{
+    //     for(const SpatialLiteral* sp : this->spatialExpr){
+    //         if (SpatialLiteral::Kind::SPT == sp->getId() &&
+    //             !sp->getBlkName().compare(mallocName)) {
+    //             const SizePtLit *st = (const SizePtLit *) sp;
+    //             return st;
+    //         }
+    //     }
+    //     CFDEBUG(std::cout << "ERROR: region spt not found!! " << mallocName << std::endl;);
+    //     return nullptr;
+    // }
 
     void SymbolicHeapExpr::print(std::ostream &os) const {
         if(FULL_DEBUG && OPEN_SH){
-        os << "SymbHeap(" << pure << "|";
-        print_seq<const SpatialLiteral *>(os, spatialExpr, " # ");
-        os << ")";
+        os << "SH------------START" << std::endl;
+        for(const Expr* pure : this->pures){
+            os << pure << " /\\ ";
+        }
+        os << std::endl;
+        os << "-------------------\n";
+        print_seq<const RegionClause *>(os, this->regions, "\n");
+        os << "\nSH--------------END\n";
         }
     }
+
+
+    // ----------------------------- END of Separation Logic in AST --------------------------------- 
 
     const Expr* StringLit::renameClone(std::string funcName, int usedNum, std::set<std::string> usedVarNames) const{
         return this;

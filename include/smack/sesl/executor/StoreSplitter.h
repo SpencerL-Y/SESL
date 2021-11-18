@@ -13,21 +13,31 @@
     {
         
         
-        class BlkSplitUtil{
+        class RegionBlkSplitUtil{
         //TODO: this class is used for the ptr arithmetic for the correct blk splitting
             std::vector<int> splitAxis;
             int maxOffset;
             std::map<int, int> offsetPosToSize;
             public:
 
-            BlkSplitUtil(std::vector<int> axis) : splitAxis(axis) {}
-            BlkSplitUtil() {splitAxis.push_back(-1);}
+            typedef std::shared_ptr<RegionBlkSplitUtil> RegionBlkSplitUtilPtr;
+            RegionBlkSplitUtil(std::vector<int> axis) : splitAxis(axis) {}
+
+            RegionBlkSplitUtil() {splitAxis.push_back(-1);}
+
+            RegionBlkSplitUtil(RegionBlkSplitUtilPtr oldMetaInfo) : 
+            splitAxis(oldMetaInfo->getSplitAxis()), 
+            maxOffset(oldMetaInfo->getMaxOffset()),
+            offsetPosToSize(oldMetaInfo->getOffsetPosToSize())
+            {}
+            
 
             void print();
             int addSplit(int offset);
             int addSplitLength(int offset, int length);
             int getSplit(int offset);
             int getSplittableLength(int offset);
+            bool hasOffset(int offset);
             void setMaxOffset(int max);
             std::pair<bool, int> getOffsetPos(int offset);
             std::pair<bool, int> getInitializedPos(int offset);
@@ -35,16 +45,19 @@
             int getInitializedSuffixLength(int offset);
             int getInitializedPrefixLength(int offset);
             std::vector<int> getSplitAxis() {return this->splitAxis;};
+            int getMaxOffset(){return this->maxOffset;}
+            std::map<int, int> getOffsetPosToSize(){return this->offsetPosToSize;};
             bool isInitialized(int pos);
 
             void wipeInterval(int fromOffset, int toOffset);
+            int computeCoveredNumOfPts(int offset, int length);
         };
-        typedef std::shared_ptr<BlkSplitUtil> BlkSplitterPtr;
 
+        typedef std::shared_ptr<RegionBlkSplitUtil> RegionBlkSplitUtilPtr;
         class StoreSplitter
         {
         private:
-            std::map<std::string, BlkSplitterPtr> splitMap;
+            std::map<std::string, RegionBlkSplitUtilPtr> splitMap;
             typedef std::shared_ptr<StoreSplitter> StoreSplitterPtr;
         public:
             StoreSplitter(/* args */) {};
@@ -68,7 +81,7 @@
             // wipe the split points in interval [fromOffset, toOffset)
             void wipeInterval(std::string allocName, int fromOffset, int toOffset);
 
-            void setSplitMap(std::map<std::string, BlkSplitterPtr> splitMap);
+            void setSplitMap(std::map<std::string, RegionBlkSplitUtilPtr> splitMap);
             StoreSplitterPtr clone();
             void print();
         };

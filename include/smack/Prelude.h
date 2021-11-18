@@ -5,7 +5,7 @@
 #ifndef PRELUDE_H
 #define PRELUDE_H
 
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/SmackRep.h"
 
 #include <string>

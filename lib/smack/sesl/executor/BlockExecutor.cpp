@@ -9,27 +9,24 @@ namespace smack{
     MemoryManagerPtr BlockExecutor::ExprMemoryManager = std::make_shared<MemoryManager>();
     
     SHExprPtr BlockExecutor::executeGlobal(SHExprPtr sh){
+        // DONE: loadIndex Refactored
         CFDEBUG(std::cout << "INFO: static initialization" << std::endl;);
         std::vector<ConstDecl*> globalDecls = this->cfg->getConstDecls();
-        const Expr* newPure = sh->getPure();
-        std::list<const SpatialLiteral*> newSpatialExpr;
-        for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-            newSpatialExpr.push_back(sp);
-        }
-        for(const ConstDecl* cd : globalDecls){
-            
-            bool sizeAttrFound = false;
-            const Expr* allocSizeExpr = nullptr;
-            std::string typeStr = cd->getType();
+        std::list<const Expr*> newPures = sh->getPures();
+        std::list<const RegionClause*> newRegions = sh->getRegions();
 
+
+        for(const ConstDecl* cd : globalDecls){
+            bool sizeAttrFound = false;
+            const Expr* allocBitwidthExpr = nullptr;
+            std::string typeStr = cd->getType();
             for(const Attr* a : cd->getAttrs()){
                 if(!a->getName().compare("pointer_to_size")){
                     sizeAttrFound = true;
-                    allocSizeExpr = a->getVals().front();
+                    allocBitwidthExpr = a->getVals().front();
                 }
             }
             if(!sizeAttrFound){
-                
                 std::string globalVarOrigName = cd->getName();
                 CFDEBUG(std::cout << "INFO: register global variable: " << globalVarOrigName << " : " << typeStr <<  std::endl;);
                 this->cfg->addVarType(globalVarOrigName, typeStr);
@@ -40,14 +37,14 @@ namespace smack{
                 if(this->getVarType(globalVarName) == VarType::DATA){
                     this->registerDataVar(globalVar);
                 } else {
-                    //CFDEBUG(std::cout << "ERROR: executeGlobal this situation should not happen since mallocName unknown" << std::endl;);
+                    //CFDEBUG(std::cout << "ERROR: executeGlobal this situation should not happen since regionName unknown" << std::endl;);
                     this->registerPtrVar(globalVar, globalVarName, 0);
                 }
             } else {
                 // treat the global ptr the same way as $alloc
                 std::string staticVarOrigName = cd->getName();
                 
-                CFDEBUG(std::cout << "INFO: register region variable: " << staticVarOrigName << " : " << typeStr << std::endl;);
+                CFDEBUG(std::cout << "INFO: register global region: " << staticVarOrigName << " : " << typeStr << std::endl;);
                 // The var should only be used once since it is global
                 CFDEBUG(std::cout << "INFO: useVar " << staticVarOrigName << std::endl;);
                 this->cfg->addVarType(staticVarOrigName, typeStr);
@@ -55,46 +52,38 @@ namespace smack{
                 // this->globalStaticVars.insert(staticVarOrigName);
                 const VarExpr* staticVar = usedVarNamePair.first;
                 std::string staticVarName = usedVarNamePair.second; 
-
-                assert(ExprType::INT == allocSizeExpr->getType());
-                int allocSize = ((IntLit*) allocSizeExpr)->getVal()/8;
-
-                assert(allocSize > 0);
-                const Expr* blkSize = new IntLit((long long)allocSize);
-                REGISTER_EXPRPTR(blkSize);
+                
+                assert(ExprType::INT == allocBitwidthExpr->getType());
+                int regionSize = ((IntLit*) allocBitwidthExpr)->getVal()/8;
+                assert(regionSize > 0);
+                const Expr* regionSizeExpr = new IntLit((long long)regionSize);
+                REGISTER_EXPRPTR(regionSizeExpr);
+                // varEquiv initialization
                 this->varEquiv->addNewName(staticVarName);
-                this->varEquiv->addNewBlkName(staticVarName);
+                this->varEquiv->addNewRegionName(staticVarName);
                 this->varEquiv->addNewOffset(staticVarName, 0);
-                this->varEquiv->setStructArrayPtr(staticVarName, true);
-                this->storeSplit->createAxis(staticVarName);
-                this->storeSplit->setMaxOffset(staticVarName, allocSize);
-
-
-                const SpatialLiteral* sSizePt = SpatialLiteral::spt(
-                    staticVar,
-                    blkSize,
-                    staticVarName,
-                    this->callStack
-                );
-                REGISTER_EXPRPTR(sSizePt);
-
-                const Expr* add = Expr::add(staticVar, blkSize);
+                this->varEquiv->setStructArrayRegion(staticVarName, true);
+                const Expr* add = Expr::add(staticVar, regionSizeExpr);
                 REGISTER_EXPRPTR(add);
-                const SpatialLiteral* sAllocBlk = SpatialLiteral::gcBlk(
+                // spatial init
+                const SpatialLiteral* sAllocBlk= SpatialLiteral::blk(
                     staticVar,
                     add,
-                    staticVarName,
-                    allocSize, 
-                    this->callStack
+                    regionSize
                 );
                 REGISTER_EXPRPTR(sAllocBlk);
-
-                newSpatialExpr.push_back(sSizePt);
-                newSpatialExpr.push_back(sAllocBlk);
+                // splList init
+                std::list<const SpatialLiteral*> newSplList;
+                newSplList.push_back(sAllocBlk);
+                // region init
+                const RegionClause* newRegion = new RegionClause(newSplList, staticVar, regionSizeExpr, staticVarName, regionSize, true, this->callStack);
+                REGISTER_EXPRPTR(newRegion);
+                // regList init
+                newRegions.push_back(newRegion);
                 CFDEBUG(std::cout << "INFO: var " << staticVarOrigName << " registered" << std::endl;);
             }
         }
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
         newSH->print(std::cout);
         CFDEBUG(std::cout << std::endl);
         return newSH;
@@ -102,7 +91,7 @@ namespace smack{
     // ---------------------- Execution for Multiple Assign stmts -------------
 
     SHExprPtr BlockExecutor::executeAssign(SHExprPtr sh, const Stmt* assignStmt){
-
+        // DONE: loadIndex refactored
         assert(Stmt::ASSIGN == assignStmt->getKind());
         const AssignStmt* stmt = (const AssignStmt*) assignStmt;
         //TODOsh : here the assignment is restricted to the single assignment, may cause problem for boogie assignment.
@@ -128,6 +117,7 @@ namespace smack{
     
     // ---------------------- Execution for Single Assign stmts ---------------
     SHExprPtr BlockExecutor::executeAssignSingle(SHExprPtr sh, const Expr* lhs, const Expr* rhs){
+        // DONE: loadIndex refactored
         // the original var in the source
         const VarExpr* lhsOrigVar = NULL;
         // var created by varFactory
@@ -166,10 +156,6 @@ namespace smack{
         for(auto i : this->src2IRVar){
             CFDEBUG(std::cout << "SrcVar: " << i.first << " IRVar: " << i.second << std::endl;)
         }
-        // // TODOsh: refactor to make it more compatible with varFactory
-        // if(lhsVarName.find("$M") != std::string::npos){
-        //     this->cfg->addVarType(lhsVarOrigName, "ref" + std::to_string(8 * PTR_BYTEWIDTH));
-        // }
 
         if(ExprType::FUNC == rhs->getType()){
             // rhs is a function expression, deal with the execution depending on the function met.
@@ -194,7 +180,9 @@ namespace smack{
                         rhsVar
                     );
                     REGISTER_EXPRPTR(varEquality);
-                    SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
+                    std::list<const Expr*> newPures = sh->getPures();
+                    newPures.push_back(varEquality);
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl);
                     return newSH;
@@ -212,54 +200,20 @@ namespace smack{
                 const Expr* rhsExpr = parsedResult.first;
 
                 if(this->extractPtrArithmeticVar(rhsExpr) == nullptr) {
-                    SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
-                    CFDEBUG(std::cout << "WRONG: nullptr for pointer arithmetic" << std::endl;);
+                    SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF);
+                    CFDEBUG(std::cout << "INFERROR: nullptr for pointer arithmetic" << std::endl;);
                     return newSH;
                 }
-
                 this->updateBindingsEqualVarAndRhsArithExpr(lhsVar, rhsFun, rhsExpr, true);
                 this->updateVarType(lhsVar, rhsFun, rhsExpr);
-                // if(ExprType::BIN == rhsExpr->getType()){
-                //     const BinExpr* arithExpr = (const BinExpr*) rhsExpr;
-                //     if(BinExpr::Binary::Plus == arithExpr->getOp()){
-                //         const Expr* arithLhs = arithExpr->getLhs();
-                //         const Expr* arithRhs = arithExpr->getRhs();
-                //         if(arithLhs->isVar()){
-                //             // This is for normal ptr arithmetic
-                //             // normal ptr arithmetic is of the form
-                //             // $p1 = $p0 + arithRhs
-                //             const VarExpr* ptrVar = (const VarExpr*) arithLhs;
-                //             int lhsOffset = this->varEquiv->getOffset(ptrVar->name());
-                //             int rhsOffset = 0;
-                //             assert(lhsOffset >= 0);
-                //             auto rhsComputeResult = arithRhs->translateToInt(this->varEquiv);
-                //             if(rhsComputeResult.first){
-                //                 rhsOffset = rhsComputeResult.second;
-                //                 this->varEquiv->addNewOffset(lhsVarName, (lhsOffset + rhsOffset));
-                //             } else {
-                //                 CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET 1!!!" << std::endl; rhsExpr->print(std::cout););
-                //             }
-                //         } else {
-                //             // For other ptr arithmetic like struct and array
-                //             int offsetVal = this->computeArithmeticOffsetValue(rhsExpr);
-                //             const Expr* extractedExpr = this->extractPtrArithmeticVar(rhsExpr);
-                //             assert(extractedExpr->isVar());
-                //             const VarExpr* ptrVar = (const VarExpr*)extractedExpr;
-                //             std::string ptrVarName = ptrVar->name();
-                //             this->varEquiv->addNewOffset(lhsVarName, offsetVal);
-                //         }
-                //     }
-                // } else {
-                //     CFDEBUG(std::cout << "ERROR: UNSOLVED PTR ARITHMETIC OFFSET !!!" << std::endl; rhsExpr->print(std::cout));
-                // }
-
-                // this->varEquiv->addNewName(lhsVarName);
                 const Expr* varEquality = Expr::eq(
                     lhsVar,
                     rhsExpr
                 );
                 REGISTER_EXPRPTR(varEquality);
-                SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
+                std::list<const Expr*> newPures = sh->getPures();
+                newPures.push_back(varEquality);
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
@@ -273,14 +227,11 @@ namespace smack{
                 if(arg1->isValue()){
                     this->updateBindingsEqualVarAndRhsValue(lhsVar, arg1);
                     this->updateVarType(lhsVar, arg1, arg1);
-                    // this->varEquiv->addNewName(lhsVarName);
-                    // if(ExprType::INT ==  arg1->getType()){
-                    //     const IntLit* intValExpr =(const IntLit*)arg1;
-                    //     this->varEquiv->addNewVal(lhsVarName, intValExpr->getVal());
-                    // }
                     const Expr* valEquality = Expr::eq(lhsVar, arg1);
                     REGISTER_EXPRPTR(valEquality);
-                    SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, valEquality);
+                    std::list<const Expr*> newPures = sh->getPures();
+                    newPures.push_back(valEquality);
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl);
                     return newSH;
@@ -293,18 +244,14 @@ namespace smack{
                     std::string rhsVarName = this->getUsedVarAndName(rhsOrigVarName).second;
                     this->updateBindingsEqualVarAndRhsVar(lhsVar, rhsVar);
                     this->updateVarType(lhsVar, rhsVar, rhsVar);
-                    // varEquiv->linkName(lhsVarName, rhsVarName);
-                    // // if the int value can be computed, update the link 
-                    // if(this->varEquiv->getIntVal(rhsVar->name()).first){
-                    //     const IntLit* intValExpr = (const IntLit*) arg1;
-                    //     this->varEquiv->linkIntVar(lhsVarName, rhsVarName);
-                    // }
                     const Expr* varEquality = Expr::eq(
                         lhsVar,
                         rhsVar
                     );
                     REGISTER_EXPRPTR(varEquality);
-                    SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, varEquality);
+                    std::list<const Expr*> newPures = sh->getPures();
+                    newPures.push_back(varEquality);
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl);
                     return newSH;
@@ -334,7 +281,9 @@ namespace smack{
                     rhsExpr
                 );
                 REGISTER_EXPRPTR(equality);
-                SHExprPtr newSH = SymbolicHeapExpr::sh_conj(sh, equality);
+                std::list<const Expr*> newPures = sh->getPures();
+                newPures.push_back(equality);
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl);
                 return newSH;
@@ -362,9 +311,9 @@ namespace smack{
                         notPure
                     );
                     REGISTER_EXPRPTR(newPureConj);
-                    const Expr* newPure = Expr::and_(newPureConj, sh->getPure());
-                    REGISTER_EXPRPTR(newPure);
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                    std::list<const Expr*> newPures = sh->getPures();
+                    newPures.push_back(newPureConj);
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl;);
                     return newSH;
@@ -382,12 +331,9 @@ namespace smack{
                     rhsExpr
                 );
                 REGISTER_EXPRPTR(newPureConj);
-                const Expr* newPure = Expr::and_(
-                    newPureConj,
-                    sh->getPure()
-                );
-                REGISTER_EXPRPTR(newPure);
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                std::list<const Expr*> newPures = sh->getPures();
+                newPures.push_back(newPureConj);
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
@@ -396,7 +342,7 @@ namespace smack{
                 CFDEBUG(std::cout <<  "UNSOLVED FUNCEXPR CASE !!!!!" << std::endl);
                 CFDEBUG(std::cout <<  "FUNC NAME: " << rhsFun->name() << std::endl); 
                 CFDEBUG(std::cout << "INFO: UNSOLVED FUNCEXPR NAME" << std::endl;);
-                SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::UNKNOWN);
+                SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::UNKNOWN);
                 return newSH;
             }
         } else {
@@ -417,12 +363,9 @@ namespace smack{
                     rhsVar
                 );
                 REGISTER_EXPRPTR(eq);
-                const Expr* newPure = Expr::and_(
-                    sh->getPure(),
-                    eq
-                );
-                REGISTER_EXPRPTR(newPure);
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                std::list<const Expr*> newPures = sh->getPures();
+                newPures.push_back(eq);
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
@@ -443,12 +386,9 @@ namespace smack{
                     rhs
                 );
                 REGISTER_EXPRPTR(eq);
-                const Expr* newPure = Expr::and_(
-                    sh->getPure(),
-                    eq
-                );
-                REGISTER_EXPRPTR(newPure);
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+                std::list<const Expr*> newPures = sh->getPures();
+                newPures.push_back(eq);
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
@@ -460,6 +400,7 @@ namespace smack{
 
     // ----------- Util functions for string judgement -------------
     bool BlockExecutor::isPtrVar(std::string name){
+        // DONE: loadIndex refactored
         if(name.find("$p") != std::string::npos ||
            name.find("$") == std::string::npos){
             return true;
@@ -566,7 +507,7 @@ namespace smack{
                 if(this->isPtrVar(varGet->name())){
                     // link if it is a pointer variable
                     CFDEBUG(std::cout << "Link arithmetic operation: " <<  lhsName << " " << varGet->name() << std::endl;);
-                    this->varEquiv->linkBlkName(lhsName, varGet->name());  
+                    this->varEquiv->linkRegionName(lhsName, varGet->name());  
                 }
                 return varGet;
             } else {
@@ -822,17 +763,15 @@ namespace smack{
 
 
     SHExprPtr BlockExecutor::executeAssume(SHExprPtr sh, const Stmt* stmt){
+        // DONE: loadIndex refactored
         // TODOsh: should replace the variable in assume condition according to the varEquiv
         if(Stmt::ASSUME == stmt->getKind()){
             const AssumeStmt* ass = (const AssumeStmt*) stmt;
             const Expr* origCond = ass->getExpr();
             const Expr* cond = this->parseCondition(origCond);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                cond
-            );
-            REGISTER_EXPRPTR(newPure);
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            std::list<const Expr*> newPures = sh->getPures();
+            newPures.push_back(cond);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
@@ -879,6 +818,7 @@ namespace smack{
     
 
     SHExprPtr BlockExecutor::executeCall(SHExprPtr sh, const Stmt* callstmt){
+        // DONE: loadIndex refactored
         if(Stmt::CALL == callstmt->getKind()){
             const CallStmt* call = (const CallStmt*) callstmt;
             if(!call->getProc().compare("malloc")){
@@ -914,7 +854,7 @@ namespace smack{
     }
 
     SHExprPtr BlockExecutor::executeFuncCallStack(SHExprPtr sh, const CallStmt* callstmt){
-        return sh;
+        // DONE: loadIndex refactored
         assert(callstmt->getProc().find("boogie_si_record") != std::string::npos);
         int i = 0;
         const Attr* startEndAttr = callstmt->getAttrs().front();
@@ -948,21 +888,7 @@ namespace smack{
                 assert(false);
             }
             this->callStack.pop_back();
-            const Expr* newPure = sh->getPure();
-            std::list<const SpatialLiteral*> newSpatial;
-            for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-                if(!spl->isStackEliminated(funcName)){
-                    newSpatial.push_back(spl);
-                    std::cout << spl << std::endl;
-                    for(std::string mem : spl->getStackMembers()){
-                        std::cout << mem << std::endl;
-                    }
-                }
-            }
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-            newSH->print(std::cout);
-            CFDEBUG(std::cout << std::endl;);
-            return newSH;
+            SHExprPtr newSH = sh->eliminateStackRegion(funcName);
         } else {
             assert(false);
         }
@@ -973,6 +899,7 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::executeVeriCall
     (SHExprPtr sh, const CallStmt* stmt){
+        // DONE: loadIndex refactored
         CFDEBUG(std::cout << "INFO: execute VERIFIER Call." << std::endl;);
         assert(stmt->getProc().find("__VERIFIER") != std::string::npos);
         if(!stmt->getProc().compare(SVNaming::SV_NONDET_CHAR)) {
@@ -990,12 +917,9 @@ namespace smack{
             this->varEquiv->linkName(retVarName, nondetCharVar->name());
             const Expr* eq = Expr::eq(retVar, nondetCharVar);
             REGISTER_EXPRPTR(eq);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                eq
-            );
-            REGISTER_EXPRPTR(newPure);
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            std::list<const Expr*> newPures = sh->getPures();
+            newPures.push_back(eq);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;)
             return newSH;
@@ -1014,12 +938,9 @@ namespace smack{
             this->varEquiv->linkName(retVarName, nondetIntVar->name());
             const Expr* eq = Expr::eq(retVar, nondetIntVar);
             REGISTER_EXPRPTR(eq);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                eq
-            );
-            REGISTER_EXPRPTR(newPure);
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            std::list<const Expr*> newPures = sh->getPures();
+            newPures.push_back(eq);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
@@ -1038,12 +959,9 @@ namespace smack{
             this->varEquiv->linkName(retVarName, nondetLongVar->name());
             const Expr* eq = Expr::eq(retVar, nondetLongVar);
             REGISTER_EXPRPTR(eq);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                eq
-            );
-            REGISTER_EXPRPTR(newPure);
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            std::list<const Expr*> newPures = sh->getPures();
+            newPures.push_back(eq);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
@@ -1065,12 +983,9 @@ namespace smack{
             this->varEquiv->linkName(retVarName, nondetBoolVar->name());
             const Expr* eq = Expr::eq(retVar, nondetBoolVar);
             REGISTER_EXPRPTR(eq);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                eq
-            );
-            REGISTER_EXPRPTR(newPure);
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+            std::list<const Expr*> newPures = sh->getPures();
+            newPures.push_back(eq);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;)
             return newSH;
@@ -1083,6 +998,7 @@ namespace smack{
 
 
     SHExprPtr BlockExecutor::executeMemcpy(SHExprPtr sh, const CallStmt* stmt){
+        // DONE: loadIndex refactored
         // Points: 
         // 1. the source to be copied need to be bytified
         // 2. the destination is assumed to be set to zeros
@@ -1090,32 +1006,44 @@ namespace smack{
         // 1. Overlapping of source and destination
         // 2. destination has non-bytified or non-zero pts
         // extract the loaded src and dst to ptr vars
-        const Expr* newPure = sh->getPure();
-        std::list<const SpatialLiteral*> newSpatial;
+        std::list<const Expr*> newPures = sh->getPures();
+        std::list<const RegionClause*> newRegions;
 
-        std::list<const SpatialLiteral*> srcBytifiedSpatial;
-        std::list<const SpatialLiteral*> dstBytifiedSpatial;
-        std::list<const SpatialLiteral*> copiedSpatialPts;
-        std::list<const SpatialLiteral*> adaptedCopiedSpatialPts;
+
+        std::list<const SpatialLiteral*> srcLeftList;
+        std::list<const SpatialLiteral*> srcMiddleList;
+        std::list<const SpatialLiteral*> srcRightList;
+        std::list<const SpatialLiteral*> newSrcLeftList;
+        std::list<const SpatialLiteral*> newSrcMiddleList;
+        std::list<const SpatialLiteral*> newSrcRightList;
+        
+        std::list<const SpatialLiteral*> dstLeftList;
+        std::list<const SpatialLiteral*> dstMiddleList;
+        std::list<const SpatialLiteral*> dstRightList;
+        std::list<const SpatialLiteral*> newDstLeftList;
+        std::list<const SpatialLiteral*> newDstMiddleList;
+        std::list<const SpatialLiteral*> newDstRightList;
+
+        std::list<const SpatialLiteral*> copiedSplList;
+        std::list<const SpatialLiteral*> adaptedCopiedSplList;
 
         int copySize = -1;
         const VarExpr* srcVar = nullptr;
         const VarExpr* srcOrigVar = nullptr;
         std::string srcVarName;
         std::string srcOrigVarName;
-        std::string srcMallocName;
-        int srcBlkSize = -1;
+        std::string srcRegionName;
+
+        int srcRegionSize = -1;
         int srcOffset = -1;
 
         const VarExpr* dstVar = nullptr;
         const VarExpr* dstOrigVar = nullptr;
         std::string dstVarName;
         std::string dstOrigVarName;
-        std::string dstMallocName;
-        int dstBlkSize = -1;
+        std::string dstRegionName;
+        int dstRegionSize = -1;
         int dstOffset = -1;
-
-        std::list<std::string> dstCallStack;
 
         assert(stmt->getProc().find("memcpy") != std::string::npos);
         std::list<const Expr*> params =  stmt->getParams();
@@ -1146,24 +1074,27 @@ namespace smack{
             srcOrigVarName = srcOrigVar->name();
             srcVar = this->getUsedVarAndName(srcOrigVarName).first;
             srcVarName = this->getUsedVarAndName(srcOrigVarName).second;
-            srcMallocName = this->varEquiv->getBlkName(srcVarName);
-            CHECK_VALID_DEREF_FOR_BLK(srcMallocName);
-            srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv).second;
+            
+            srcRegionName = this->varEquiv->getRegionName(srcVarName);
+            CHECK_VALID_DEREF_FOR_BLK(srcRegionName);
+
+            srcRegionSize = sh->getRegionSize(srcRegionName);
             srcOffset = this->varEquiv->getOffset(srcVarName);;
         } else if(sourceLocation->getType() == ExprType::FUNC){
             const FunExpr* ptrArithFunc = (const FunExpr*) sourceLocation;
             assert(this->isPtrArithFuncName(ptrArithFunc->name()));
             // sourceLocation is a ptr arithmetic
-            std::pair<const VarExpr*, const Expr*> newSrcVarPurePair = updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPure);
+            std::pair<const VarExpr*, std::list<const Expr*>> newSrcVarPurePair = updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPures);
             const VarExpr* freshSrcVar = newSrcVarPurePair.first;
-            newPure = newSrcVarPurePair.second;
+            newPures = newSrcVarPurePair.second;
 
             srcOrigVar = freshSrcVar;
             srcVar = freshSrcVar;
             srcOrigVarName = srcOrigVar->name();
             srcVarName = srcVar->name();
-            srcMallocName = this->varEquiv->getBlkName(srcOrigVarName);
-            srcBlkSize = sh->getBlkSize(srcMallocName)->translateToInt(this->varEquiv).second;
+            srcRegionName = this->varEquiv->getRegionName(srcOrigVarName);
+            CHECK_VALID_DEREF_FOR_BLK(srcRegionName);
+            srcRegionSize = sh->getRegionSize(srcRegionName);
             srcOffset = this->varEquiv->getOffset(srcVarName);
 
         } else {
@@ -1172,7 +1103,7 @@ namespace smack{
             return sh;
         }
         CFDEBUG(std::cout << "INFO: Memcpy source information -------------- " << std::endl;);
-        CFDEBUG(std::cout << "INFO: Memcpy source: " << srcMallocName << " " << srcOffset << " " << copySize - 1<< std::endl;);
+        CFDEBUG(std::cout << "INFO: Memcpy source: " << srcRegionName << " " << srcOffset << " " << copySize - 1<< std::endl;);
         
         
         // discussion of dstLocation
@@ -1181,24 +1112,25 @@ namespace smack{
             dstOrigVarName = dstOrigVar->name();
             dstVar = this->getUsedVarAndName(dstOrigVarName).first;
             dstVarName = this->getUsedVarAndName(dstOrigVarName).second;
-            dstMallocName = this->varEquiv->getBlkName(dstVarName);
-            CHECK_VALID_DEREF_FOR_BLK(dstMallocName);
-            dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv).second;
+            dstRegionName = this->varEquiv->getRegionName(dstVarName);
+            CHECK_VALID_DEREF_FOR_BLK(dstRegionName);
+            dstRegionSize = sh->getRegionSize(dstRegionName);
             dstOffset = this->varEquiv->getOffset(dstVarName);
         } else if(dstLocation->getType() == ExprType::FUNC){
             
             const FunExpr* ptrArithFunc = (const FunExpr*) dstLocation;
             assert(this->isPtrArithFuncName(ptrArithFunc->name()));
-            std::pair<const VarExpr*, const Expr*> newDstVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPure);
+            std::pair<const VarExpr*, std::list<const Expr*>> newDstVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPures);
             const VarExpr* freshDstVar = newDstVarPurePair.first;
-            newPure = newDstVarPurePair.second;
+            newPures = newDstVarPurePair.second;
 
             dstOrigVar = freshDstVar;
             dstVar = freshDstVar;
             dstOrigVarName = freshDstVar->name();
             dstVarName = freshDstVar->name();
-            dstMallocName = this->varEquiv->getBlkName(dstOrigVarName);
-            dstBlkSize = sh->getBlkSize(dstMallocName)->translateToInt(this->varEquiv).second;
+            dstRegionName = this->varEquiv->getRegionName(dstOrigVarName);
+            CHECK_VALID_DEREF_FOR_BLK(dstRegionName);
+            dstRegionSize = sh->getRegionSize(dstRegionName);
             dstOffset = this->varEquiv->getOffset(dstVarName);
              
         } else {
@@ -1206,7 +1138,6 @@ namespace smack{
             assert(false);
             return sh;
         }
-
 
         if(stmt->getProc().find("$memcpy") == std::string::npos){
             assert(stmt->getReturns().size() == 1);
@@ -1223,373 +1154,313 @@ namespace smack{
                 callRhsVar
             );
             REGISTER_EXPRPTR(eq);
-            newPure = Expr::and_(
-                sh->getPure(),
-                newPure
-            );
+            newPures.push_back(eq);
         }
         CFDEBUG(std::cout << "INFO: Memcpy dst information --------------" << std::endl;);
-        CFDEBUG(std::cout << "INFO: Memcpy dst: " << dstMallocName << " " << dstOffset << " " << copySize - 1 << std::endl;)
+        CFDEBUG(std::cout << "INFO: Memcpy dst: " << dstRegionName << " " << dstOffset << " " << copySize - 1 << std::endl;)
         
         // if the copy is overlapping, report the error
 
         if(this->isMemcopyOverlapping(srcVar, dstVar, copySize)){
-            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
             CFDEBUG(std::cout << "INFO: memcopy overlapping.." << std::endl;);
             return newSH;
         }
-        if(srcOffset + copySize > srcBlkSize || dstOffset + copySize > dstBlkSize){
-            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::VALID_DEREF);
+        if(srcOffset + copySize > srcRegionSize || dstOffset + copySize > dstRegionSize){
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: memcopy out of range.." << std::endl;);
             return newSH;
         }
         if(copySize < 0){
-            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::VALID_DEREF);
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: memcopy size error.." << std::endl;);
             return newSH;
         }
+
+        bool srcDstSame = (!srcRegionName.compare(dstRegionName));
+        const RegionClause* tempSrcRegion = sh->getRegion(srcRegionName);
+        const RegionClause* tempDstRegion = sh->getRegion(dstRegionName);
+        RegionBlkSplitUtilPtr tempSrcMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempSrcRegion->getRegionMetaInfo());
+        RegionBlkSplitUtilPtr tempDstMetaInfo = srcDstSame ? tempSrcMetaInfo : std::make_shared<RegionBlkSplitUtil>(tempDstRegion->getRegionMetaInfo());
+        
+
         CFDEBUG(std::cout << "src head position: " << srcOffset << std::endl);
         CFDEBUG(std::cout << "src tail position: " << srcOffset + copySize - 1 << std::endl);
-        bool isSrcHeadPtSplitted = this->storeSplit->isInitialized(srcMallocName, srcOffset) && !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset).first);
-        // the tail is initialized but not the head of some pt predicate
-        bool isSrcTailPtSplitted = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize) && 
-        !(this->storeSplit->getOffsetPos(srcMallocName, srcOffset + copySize).first);
-        if(isSrcHeadPtSplitted || isSrcTailPtSplitted){
-            CFDEBUG(std::cout  << "ERROR: src  pt splitted situation currently not considered: head tail: " << isSrcHeadPtSplitted << " " << isSrcTailPtSplitted << std::endl;);
-            assert(false);
-            return nullptr;
-        }
-
-        // replace the section in the dst region
-        bool isDstHeadPtSplitted = this->storeSplit->isInitialized(dstMallocName, dstOffset) && !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset).first);
-        bool isDstTailPtSplitted = this->storeSplit->isInitialized(dstMallocName, dstOffset + copySize) && !(this->storeSplit->getOffsetPos(dstMallocName, dstOffset + copySize).first);
+        bool isSrcHeadPtSplitted = tempSrcMetaInfo->isInitialized(srcOffset) && !(tempSrcMetaInfo->getOffsetPos(srcOffset).first);
+        bool isSrcTailPtSplitted = tempSrcMetaInfo->isInitialized(srcOffset + copySize) && !(tempSrcMetaInfo->getOffsetPos(srcOffset + copySize).first);
+        bool isDstHeadPtSplitted = tempDstMetaInfo->isInitialized(dstOffset) && !(tempDstMetaInfo->getOffsetPos(dstOffset).first);
+        bool isDstTailPtSplitted = tempDstMetaInfo->isInitialized(dstOffset + copySize) && !(tempDstMetaInfo->getOffsetPos(dstOffset + copySize).first);
 
         CFDEBUG(std::cout << "src head pt splitted: " << isSrcHeadPtSplitted << std::endl);
         CFDEBUG(std::cout << "src tail pt splitted: " << isSrcTailPtSplitted << std::endl);
         CFDEBUG(std::cout << "dst head pt splitted: " << isDstHeadPtSplitted << std::endl);
         CFDEBUG(std::cout << "dst tail pt splitted: " << isDstTailPtSplitted << std::endl);
         
-        if(isDstHeadPtSplitted || isDstTailPtSplitted){
-            CFDEBUG(std::cout << "ERROR: dst pt splitted situation currently not considered" << std::endl;);
-            assert(false);
-            return nullptr;
-        }
-
-        if(srcMallocName == "$Null" || dstMallocName == "$Null") {
-            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::VALID_DEREF);
-            CFDEBUG(std::cout << "INFO: invalid pointer.." << std::endl;);
+        if(isSrcHeadPtSplitted || isSrcTailPtSplitted){
+            CFDEBUG(std::cout  << "ERROR: src  pt splitted situation currently not considered: head tail: " << isSrcHeadPtSplitted << " " << isSrcTailPtSplitted << std::endl;);
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
             return newSH;
         }
-
-
-        const SpatialLiteral* dstSpt = sh->getRegionSpt(dstMallocName);
-        for(std::string s : dstSpt->getStackMembers()){
-            dstCallStack.push_back(s);
+        if(isDstHeadPtSplitted || isDstTailPtSplitted){
+            CFDEBUG(std::cout << "ERROR: dst pt splitted situation currently not considered" << std::endl;);
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
+            return newSH;
+        }
+        if(srcRegionName == "$Null" || dstRegionName == "$Null") {
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
+            CFDEBUG(std::cout << "INFO: invalid pointer.." << std::endl;);
+            return newSH;
         }
 
         CFDEBUG(std::cout << "INFO:--------------- BEGIN COPY --------------- " << std::endl;);
         // whether head and tail of an copied area located in some pt 
         // TODOsh: make sure the tail offset computation is correct
-        bool isSrcHeadInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset);
-        bool isSrcTailInitialized = this->storeSplit->isInitialized(srcMallocName, srcOffset + copySize - 1);
-        int srcHeadPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset).second;
-        int srcHeadBlkIndex = isSrcHeadInitialized? -1 : this->storeSplit->getSplit(srcMallocName, srcOffset);
-        int srcTailPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset + copySize - 1).second;
-        int srcTailBlkIndex = isSrcTailInitialized ? -1 : this->storeSplit->getSplit(srcMallocName, srcOffset + copySize - 1);
+        bool isSrcHeadInitialized = tempSrcMetaInfo->isInitialized(srcOffset);
+        bool isSrcTailInitialized = tempSrcMetaInfo->isInitialized(srcOffset + copySize - 1);
+        int srcHeadPtIndex = tempSrcMetaInfo->getInitializedPos(srcOffset).second;
+        int srcHeadBlkIndex = isSrcHeadInitialized ? -1 : tempSrcMetaInfo->getSplit(srcOffset);
+        int srcTailPtIndex = tempSrcMetaInfo->getInitializedPos(srcOffset + copySize - 1).second;
+        int srcTailBlkIndex = isSrcTailInitialized ? -1 : tempSrcMetaInfo->getSplit(srcOffset + copySize - 1);
         
         CFDEBUG(std::cout << "src head initialized: " << isSrcHeadInitialized << std::endl);
         CFDEBUG(std::cout << "src tail initialized: " << isSrcTailInitialized << std::endl);
         CFDEBUG(std::cout << "src head pt index and blk index: " << srcHeadPtIndex << " " << srcHeadBlkIndex << std::endl);
         CFDEBUG(std::cout << "src tail pt index and blk index : " << srcTailPtIndex << " " << srcTailBlkIndex << std::endl);
 
-        bool srcBeginCounting = false;
-        bool srcBeginBytifying = false;
-        int srcCurrentPtIndex = 1;
-        int srcCurrentBlkIndex = 1;
-        // the first pass to bytify all the predicates
-        for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-            // iterate over old symbolic heap and modify
-            if(SpatialLiteral::Kind::SPT == spl->getId()){
-                if(!spl->getBlkName().compare(srcMallocName)){
-                    srcBeginCounting = true;
-                } else {
-                    srcBeginCounting = false;
-                }
-            }
-            if(isSrcHeadInitialized && srcCurrentPtIndex >= srcHeadPtIndex || 
-               !isSrcHeadInitialized && srcCurrentBlkIndex >= srcHeadBlkIndex){
-                srcBeginBytifying = true;
-            }
-            if(isSrcTailInitialized && srcCurrentPtIndex > srcTailPtIndex || 
-              !isSrcTailInitialized && srcCurrentBlkIndex > srcTailBlkIndex){
-                srcBeginBytifying = false;
-            }
-            if(srcBeginCounting) {
-                if(SpatialLiteral::Kind::BLK == spl->getId()){
-                    if(srcBeginBytifying){
-                        std::pair<std::list<const SpatialLiteral*>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
-                        for(const SpatialLiteral* i : resultBytifiedPurePair.first){
-                            srcBytifiedSpatial.push_back(i);
-                        }
-                        newPure = resultBytifiedPurePair.second;
-                    } else {
-                        srcBytifiedSpatial.push_back(spl);
-                    }
-                    srcCurrentBlkIndex += 1;
-                } else if(SpatialLiteral::Kind::PT == spl->getId()){
-                    if(srcBeginBytifying){
-                        // const PtLit* oldPt = (const PtLit*) spl;
-                        // std::pair<const PtLit*, const Expr*> resultPtPurePair =  this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, newPure);
-                        // srcBytifiedSpatial.push_back(resultPtPurePair.first);
-                        // newPure = resultPtPurePair.second;
-                        srcBytifiedSpatial.push_back(spl);
-                    } else {
-                        srcBytifiedSpatial.push_back(spl);
-                    }
-                    srcCurrentPtIndex += 1;
-                } else {    
-                    srcBytifiedSpatial.push_back(spl);
-                }
-            } else {
-                srcBytifiedSpatial.push_back(spl);
-            }
-        }
+        const SpatialLiteral::Kind srcStartKind = isSrcHeadInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::Kind::BLK;
+        const SpatialLiteral::Kind srcEndKind = isSrcTailInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::Kind::BLK;
+        int srcStartKindIndex  = isSrcHeadInitialized ? srcHeadPtIndex: srcHeadBlkIndex;
+        int srcEndKindIndex  = isSrcTailInitialized ? srcTailPtIndex: srcTailBlkIndex;
+
+        std::tuple<
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>
+        > selectOutSrcTuple = tempSrcRegion->selectOutSpLitList(srcStartKind, srcStartKindIndex,
+                                                                srcEndKind, srcEndKindIndex);
         
+        srcMiddleList = std::get<1>(selectOutSrcTuple);
+        srcLeftList = std::get<0>(selectOutSrcTuple);
+        srcRightList = std::get<2>(selectOutSrcTuple);
+        std::list<const SpatialLiteral*> srcBytifiedMiddleList;
 
-        // after bytifying, the head and tail must be pt predicates
-        int newSrcHeadPtIndex = this->storeSplit->getOffsetPos(srcMallocName, srcOffset).second;
-        int newSrcTailPtIndex = this->storeSplit->getInitializedPos(srcMallocName, srcOffset + copySize - 1).second;
-        CFDEBUG(std::cout << "new srcheadPtIndex and srcTailPtIndex: " << newSrcHeadPtIndex << " " << newSrcTailPtIndex << std::endl;);
-        assert(newSrcHeadPtIndex <= newSrcTailPtIndex);
-        int newCurrentSrcPtIndex = 1;
-        bool newSrcBeginCounting = false;
-        for(const SpatialLiteral* nspl : srcBytifiedSpatial){
-            if(nspl->getId() == SpatialLiteral::Kind::SPT){
-                if(!nspl->getBlkName().compare(srcMallocName)){
-                    newSrcBeginCounting = true;
-                } else {
-                    newSrcBeginCounting = false;
+        for(const SpatialLiteral* spl : srcMiddleList){
+            if(SpatialLiteral::Kind::BLK == spl->getId()) {
+                std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPurePair = this->bytifyBlkPredicate(tempSrcMetaInfo, srcRegionName, spl, newPures);
+                for(const SpatialLiteral* i : resultBytifiedPurePair.first){
+                    srcBytifiedMiddleList.push_back(i);
                 }
-            }
-
-            if(newSrcBeginCounting){
-                if(nspl->getId() == SpatialLiteral::Kind::BLK){
-                    if(newCurrentSrcPtIndex >= newSrcHeadPtIndex && 
-                       newCurrentSrcPtIndex <= newSrcTailPtIndex) {
-                        const BlkLit* tempBlk = (const BlkLit*) nspl;
-                        CFDEBUG(std::cout << "INFO: check memcopy blk zero size.." << std::endl;);
-                        assert(tempBlk->getBlkByteSize() == 0);
-                    }
-                } else if(nspl->getId() == SpatialLiteral::Kind::PT){
-                    if(newCurrentSrcPtIndex >= newSrcHeadPtIndex && 
-                       newCurrentSrcPtIndex <= newSrcTailPtIndex) {
-                        copiedSpatialPts.push_back(nspl);
-                    }
-                    newCurrentSrcPtIndex += 1;
-                } else {
-                    // do nothing
-                }
-
+                newPures = resultBytifiedPurePair.second;
             } else {
-                //do nothing
+                srcBytifiedMiddleList.push_back(spl);
             }
         }
+        for(const SpatialLiteral* bspl : srcBytifiedMiddleList){
+            if(SpatialLiteral::Kind::BLK == bspl->getId()){
+                assert(((const BlkLit*) bspl)->getBlkByteSize() == 0);
+            }
+        }
+
+        tempSrcRegion = new RegionClause(srcLeftList, srcBytifiedMiddleList, srcRightList, tempSrcMetaInfo, tempSrcRegion);
+        REGISTER_EXPRPTR(tempSrcRegion);
+        tempDstRegion = srcDstSame ? tempSrcRegion : tempDstRegion;
+        tempSrcMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempSrcRegion->getRegionMetaInfo());
+        tempDstMetaInfo = srcDstSame ? tempSrcMetaInfo : tempDstMetaInfo;
+
+
+        bool newIsSrcHeadInitialized  = tempSrcMetaInfo->isInitialized(srcOffset);
+        bool newIsSrcTailInitialized = tempSrcMetaInfo->isInitialized(srcOffset + copySize - 1);
+        assert(newIsSrcHeadInitialized && newIsSrcTailInitialized);
+        int newSrcHeadPtIndex = tempSrcMetaInfo->getInitializedPos(srcOffset).second;
+        int newSrcTailPtIndex = tempSrcMetaInfo->getInitializedPos(srcOffset + copySize - 1).second;
+
+        std::tuple<
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>
+        > newSelectOutSrcTuple = tempSrcRegion->selectOutSpLitList(SpatialLiteral::Kind::PT, newSrcHeadPtIndex,
+                                                                SpatialLiteral::Kind::PT, newSrcTailPtIndex);
+        newSrcLeftList = std::get<0>(newSelectOutSrcTuple);
+        newSrcMiddleList = std::get<1>(newSelectOutSrcTuple);
+        newSrcRightList = std::get<2>(newSelectOutSrcTuple);
+
+        tempSrcRegion = new RegionClause(newSrcLeftList, newSrcMiddleList, newSrcRightList, tempSrcMetaInfo, tempSrcRegion);
+        REGISTER_EXPRPTR(tempSrcRegion);
+        tempDstRegion = srcDstSame ? tempSrcRegion : tempDstRegion;
+        tempSrcMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempSrcRegion->getRegionMetaInfo());
+        tempDstMetaInfo = srcDstSame ? tempSrcMetaInfo : tempDstMetaInfo;
 
         CFDEBUG(std::cout << "INFO: src bytified ---" << std::endl;);
-        for(const SpatialLiteral* sbsl : srcBytifiedSpatial){
+        for(const SpatialLiteral* sbsl : tempSrcRegion->getSpatialLits()){
             sbsl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
         }
         CFDEBUG(std::cout << "INFO: copied ---" << std::endl;);
-        for(const SpatialLiteral* cpsl : copiedSpatialPts){
+        for(const SpatialLiteral* cpsl : newSrcMiddleList){
             cpsl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
         }
-
-
         CFDEBUG(std::cout << "INFO:--------------- END COPY --------------- " << std::endl;);
 
         CFDEBUG(std::cout << "INFO:--------------- BEGIN PASTE --------------- " << std::endl;);
         // whether head and tail of an copied area located in some pt 
         // TODOsh: make sure the tail offset computation is correct
-        bool isDstHeadInitialized = this->storeSplit->isInitialized(dstMallocName, dstOffset);
-        bool isDstTailInitialized = this->storeSplit->isInitialized(dstMallocName, dstOffset + copySize - 1);
-        int dstHeadPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset).second;
-        int dstHeadBlkIndex = isDstHeadInitialized ? -1 : this->storeSplit->getSplit(dstMallocName, dstOffset);
-        int dstTailPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset + copySize - 1).second;
-        int dstTailBlkIndex = isDstTailInitialized ? -1 : this->storeSplit->getSplit(dstMallocName, dstOffset + copySize - 1);
+        bool isDstHeadInitialized = tempDstMetaInfo->isInitialized(dstOffset);
+        bool isDstTailInitialized = tempDstMetaInfo->isInitialized(dstOffset + copySize - 1);
+        int dstHeadPtIndex = tempDstMetaInfo->getInitializedPos(dstOffset).second;
+        int dstHeadBlkIndex = isDstHeadInitialized ? -1 : tempDstMetaInfo->getSplit(dstOffset);
+        int dstTailPtIndex = tempDstMetaInfo->getInitializedPos(dstOffset + copySize - 1).second;
+        int dstTailBlkIndex = isDstTailInitialized ? -1 : tempDstMetaInfo->getSplit(dstOffset + copySize - 1);
 
         CFDEBUG(std::cout << "dst head initialized: " << isDstHeadInitialized << std::endl);
         CFDEBUG(std::cout << "dst tail initialized: " << isDstTailInitialized << std::endl);
         CFDEBUG(std::cout << "dst head pt index and blk index: " << dstHeadPtIndex << " " << dstHeadBlkIndex << std::endl);
         CFDEBUG(std::cout << "dst tail pt index and blk index : " << dstTailPtIndex << " " << dstTailBlkIndex << std::endl);
+        
+        const SpatialLiteral::Kind dstStartKind = isDstHeadInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::Kind::BLK;
+        const SpatialLiteral::Kind dstEndKind = isDstHeadInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::Kind::BLK;
+        int dstStartKindIndex  = isDstHeadInitialized ? dstHeadPtIndex: dstHeadBlkIndex;
+        int dstEndKindIndex  = isDstTailInitialized ? dstTailPtIndex: dstTailBlkIndex;
 
-        bool dstBeginCounting = false;
-        bool dstBeginBytifying = false;
-        int dstCurrentPtIndex = 1;
-        int dstCurrentBlkIndex = 1;
-        // the first pass to bytify all the predicates
-        for(const SpatialLiteral* spl : srcBytifiedSpatial){
-            // iterate over old symbolic heap and modify
-            if(SpatialLiteral::Kind::SPT == spl->getId()){
-                if(!spl->getBlkName().compare(dstMallocName)){
-                    dstBeginCounting = true;
-                } else {
-                    dstBeginCounting = false;
+
+        std::tuple<
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>
+        > selectOutDstTuple = tempDstRegion->selectOutSpLitList(dstStartKind, dstStartKindIndex,
+                                                                dstEndKind, dstEndKindIndex);
+
+        dstLeftList = std::get<0>(selectOutDstTuple);
+        dstRightList = std::get<2>(selectOutDstTuple);
+        dstMiddleList = std::get<1>(selectOutDstTuple);
+        std::list<const SpatialLiteral*> dstBytifiedMiddleList;
+
+        for(const SpatialLiteral* spl : dstMiddleList){
+            if(SpatialLiteral::Kind::BLK == spl->getId()){
+                std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPurePair = this->bytifyBlkPredicate(tempDstMetaInfo, dstRegionName, spl, newPures);
+                for(const SpatialLiteral* i : resultBytifiedPurePair.first){
+                    dstBytifiedMiddleList.push_back(i);
                 }
-            }
-            if(isDstHeadInitialized && dstCurrentPtIndex >= dstHeadPtIndex || 
-               !isDstHeadInitialized && dstCurrentBlkIndex >= dstHeadBlkIndex){
-                dstBeginBytifying = true;
-            }
-            if(isDstTailInitialized && dstCurrentPtIndex > dstTailPtIndex || 
-              !isDstTailInitialized && dstCurrentBlkIndex > dstTailBlkIndex){
-                dstBeginBytifying = false;
-            }
-            if(dstBeginCounting) {
-                if(SpatialLiteral::Kind::BLK == spl->getId()){
-                    if(dstBeginBytifying){
-                        std::pair<std::list<const SpatialLiteral*>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
-                        for(const SpatialLiteral* i : resultBytifiedPurePair.first){
-                            dstBytifiedSpatial.push_back(i);
-                        }
-                        newPure = resultBytifiedPurePair.second;
-                    } else {
-                        dstBytifiedSpatial.push_back(spl);
-                    }
-                    dstCurrentBlkIndex += 1;
-                } else if(SpatialLiteral::Kind::PT == spl->getId()){
-                    if(dstBeginBytifying){
-                        // const PtLit* oldPt = (const PtLit*) spl;
-                        // std::pair<const PtLit*, const Expr*> resultPtPurePair =  this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, newPure);
-                        // dstBytifiedSpatial.push_back(resultPtPurePair.first);
-                        // newPure = resultPtPurePair.second;
-                        dstBytifiedSpatial.push_back(spl);
-                    } else {
-                        dstBytifiedSpatial.push_back(spl);
-                    }
-                    dstCurrentPtIndex += 1;
-                } else {    
-                    dstBytifiedSpatial.push_back(spl);
-                }
+                newPures = resultBytifiedPurePair.second;
             } else {
-                dstBytifiedSpatial.push_back(spl);
+                dstBytifiedMiddleList.push_back(spl);
             }
         }
+
+        tempDstRegion = new RegionClause(dstLeftList, dstBytifiedMiddleList, dstRightList, tempDstMetaInfo, tempDstRegion);
+        REGISTER_EXPRPTR(tempSrcRegion);
+        tempSrcRegion = srcDstSame ? tempDstRegion : tempSrcRegion;
+        tempDstMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempDstRegion->getRegionMetaInfo());
+        tempSrcMetaInfo = srcDstSame ? tempDstMetaInfo : tempSrcMetaInfo;
+
+        bool newIsDstHeadInitialized = tempDstMetaInfo->isInitialized(dstOffset);
+        bool newIsDstTailInitialized = tempDstMetaInfo->isInitialized(dstOffset + copySize - 1);
+        assert(newIsDstHeadInitialized && newIsDstTailInitialized);
+        int newDstHeadPtIndex = tempDstMetaInfo->getInitializedPos(dstOffset).second;
+        int newDstTailPtIndex = tempDstMetaInfo->getInitializedPos(dstOffset + copySize - 1).second;
+
+        CFDEBUG(std::cout << "new srcheadPtIndex and srcTailPtIndex: " << newDstHeadPtIndex << " " << newDstTailPtIndex << std::endl;);
+        copiedSplList = newSrcMiddleList;
+        std::tuple<
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>
+        > newSelectOutDstTuple = tempDstRegion->selectOutSpLitList(SpatialLiteral::Kind::PT, newDstHeadPtIndex,
+                                                                   SpatialLiteral::Kind::PT, newDstTailPtIndex);
+        newDstLeftList = std::get<0>(newSelectOutDstTuple);
+        newDstRightList = std::get<2>(newSelectOutDstTuple);
+        newDstMiddleList = std::get<1>(newSelectOutDstTuple);
+
         CFDEBUG(std::cout << "INFO: dst bytified ---" << std::endl;);
-        for(const SpatialLiteral* dbsl : dstBytifiedSpatial){
+        for(const SpatialLiteral* dbsl : newDstMiddleList){
             dbsl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
         }
         
-        // rename all the ptr variable, add zero blk literals to the copiedVector
-        // to copy, first erase the target storeSplit, symbolicHeap 
-        // and compute the offset and modify the storeSplit
-        int newDstHeadPtIndex = this->storeSplit->getOffsetPos(dstMallocName, dstOffset).second;
-        int newDstTailPtIndex = this->storeSplit->getInitializedPos(dstMallocName, dstOffset + copySize - 1).second;
-        CFDEBUG(std::cout << "new srcheadPtIndex and srcTailPtIndex: " << newDstHeadPtIndex << " " << newDstTailPtIndex << std::endl;);
-        std::list<const SpatialLiteral*> leftLiterals;
-        std::list<const SpatialLiteral*> rightLiterals;
-        bool isLeft = true;
-        bool isRight = false;
-        bool nextRight = false;
-        assert(newDstHeadPtIndex <= newDstTailPtIndex);
-        int newCurrentDstPtIndex = 0;
-        bool newDstBeginCounting = false;
-         for(const SpatialLiteral* spl : dstBytifiedSpatial){
-            CFDEBUG(std::cout << "INFO: newCurrentDstPtIndex: " << newCurrentDstPtIndex << std::endl;);
-            // iterate over old symbolic heap and modify
-            if(SpatialLiteral::Kind::SPT == spl->getId()){
-                if(!spl->getBlkName().compare(dstMallocName)){
-                    newDstBeginCounting = true;
-                }
-            }
-            
-            if(newDstBeginCounting){
-                
-                
-                assert(!(isLeft && isRight));
 
-                if(SpatialLiteral::Kind::PT == spl->getId()){
-                    newCurrentDstPtIndex += 1;
-                }
-
-                if(newCurrentDstPtIndex ==  newDstHeadPtIndex){
-                    isLeft = false;
-                }
-                if(newCurrentDstPtIndex >  newDstTailPtIndex || 
-                   newCurrentDstPtIndex == newDstTailPtIndex && SpatialLiteral::Kind::PT != spl->getId()){
-                    isRight = true;
-                }
-            } 
-            if(isLeft){
-                leftLiterals.push_back(spl);
-            }
-            if(isRight){
-                rightLiterals.push_back(spl);
-            }
-            
-        }
-
+        CFDEBUG(std::cout << "INFO: Dst Region: " << dstRegionName << std::endl;)
         CFDEBUG(std::cout << "INFO: LEFT---" << std::endl;);
-        for(const SpatialLiteral* lsl : leftLiterals){
+        for(const SpatialLiteral* lsl : dstLeftList){
             lsl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
         }
         CFDEBUG(std::cout << "INFO: COPIED---" << std::endl;);
-        for(const SpatialLiteral* csl : copiedSpatialPts){
+        for(const SpatialLiteral* csl : copiedSplList){
             csl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
         }
         CFDEBUG(std::cout << "INFO: RIGHT---" << std::endl;);
-        for(const SpatialLiteral* rsl : rightLiterals){
+        for(const SpatialLiteral* rsl : dstRightList){
             rsl->print(std::cout);
             CFDEBUG(std::cout << " # ");
             CFDEBUG(std::cout << std::endl);
         }
 
 
-        // wipe the storeSplit interval [dstOffset, dstOffset + copySize)
-        this->storeSplit->wipeInterval(dstMallocName, dstOffset, dstOffset + copySize);
-        for(const SpatialLiteral* left : leftLiterals){
-            newSpatial.push_back(left);
-        }
+        // wipe the interval [dstOffset, dstOffset + copySize)
+        tempDstMetaInfo->wipeInterval(dstOffset, dstOffset + copySize);
         int cumulatedOffset = dstOffset;
-        for(const SpatialLiteral* spl : copiedSpatialPts){
-            assert(spl->getId() == SpatialLiteral::Kind::PT);
-            const PtLit* copiedPt = (const PtLit*) spl;
+        for(const SpatialLiteral* spl : copiedSplList){
+            if(spl->getId() == SpatialLiteral::Kind::PT){
+                const PtLit* copiedPt = (const PtLit*) spl;
             
-            int ptStepSize = copiedPt->getStepSize();
-            const VarExpr* toVar = (const VarExpr*) copiedPt->getTo();
-            const VarExpr* oldFromVar = (const VarExpr*) copiedPt->getFrom();
-            int fromStepSize = ptStepSize;
-            const VarExpr* freshFromVar = this->createAndRegisterFreshPtrVar(fromStepSize, dstMallocName, cumulatedOffset);
-            
-
-            const SpatialLiteral* newSetPt = this->createPtAccordingToMallocName(dstMallocName, freshFromVar, toVar, ptStepSize, dstCallStack);
-            const Expr* lit = Expr::lit((long long) ptStepSize);
-            REGISTER_EXPRPTR(lit);
-            const Expr* empBlkExpr = Expr::add(freshFromVar, lit);
-            REGISTER_EXPRPTR(empBlkExpr);
-            const SpatialLiteral* emptyBlk = this->createBlkAccordingToMallocName(dstMallocName, empBlkExpr, empBlkExpr, 0, dstCallStack);
-            this->storeSplit->addSplit(dstMallocName, cumulatedOffset);
-            this->storeSplit->addSplitLength(dstMallocName, cumulatedOffset, ptStepSize);
-            newSpatial.push_back(newSetPt);
-            newSpatial.push_back(emptyBlk);
-            cumulatedOffset += ptStepSize;
-        }
-        for(const SpatialLiteral* right : rightLiterals){
-            newSpatial.push_back(right);
+                int ptStepSize = copiedPt->getStepSize();
+                const VarExpr* toVar = (const VarExpr*) copiedPt->getTo();
+                const VarExpr* oldFromVar = (const VarExpr*) copiedPt->getFrom();
+                int fromStepSize = ptStepSize;
+                const VarExpr* freshFromVar = this->createAndRegisterFreshPtrVar(fromStepSize, dstRegionName, cumulatedOffset);
+                const SpatialLiteral* newSetPt = SpatialLiteral::pt(freshFromVar, toVar, ptStepSize);
+                tempDstMetaInfo->addSplit(cumulatedOffset);
+                tempDstMetaInfo->addSplitLength(cumulatedOffset, ptStepSize);
+                adaptedCopiedSplList.push_back(newSetPt);
+                cumulatedOffset += ptStepSize;
+            } else if(spl->getId() == SpatialLiteral::Kind::BLK){
+                const Expr* offsetLit = Expr::lit((long long)cumulatedOffset);
+                REGISTER_EXPRPTR(offsetLit);
+                const Expr* blkStart = Expr::add(dstVar, offsetLit);
+                REGISTER_EXPRPTR(blkStart);
+                const SpatialLiteral* emptyBlk = SpatialLiteral::blk(blkStart, blkStart, 0);
+                REGISTER_EXPRPTR(emptyBlk);
+                adaptedCopiedSplList.push_back(emptyBlk);
+            } else {
+                CFDEBUG(std::cout << "ERROR: memcpy this should not happen...." << std::endl);
+                assert(false);
+            } 
         }
         CFDEBUG(std::cout << "INFO:--------------- END PASTE --------------- " << std::endl;);
+        tempDstRegion = new RegionClause(newDstLeftList, adaptedCopiedSplList, newDstRightList, tempDstMetaInfo, tempDstRegion);
+        REGISTER_EXPRPTR(tempSrcRegion);
+        tempSrcRegion = srcDstSame ? tempDstRegion : tempSrcRegion;
 
+        const RegionClause* newSrcRegion = tempSrcRegion;
+        const RegionClause* newDstRegion = tempDstRegion;
 
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+        if(srcDstSame){
+            for(const RegionClause* r : sh->getRegions()){
+                if(!r->getRegionName().compare(dstRegionName)){
+                    newRegions.push_back(newDstRegion);
+                } else {
+                    newRegions.push_back(r);
+                }
+            }
+        } else {
+            for(const RegionClause* r : sh->getRegions()){
+                if(!r->getRegionName().compare(srcRegionName)){
+                    newRegions.push_back(newSrcRegion);
+                } else if(!r->getRegionName().compare(dstRegionName)){
+                    newRegions.push_back(newDstRegion);
+                } else {
+                    newRegions.push_back(r);
+                }
+            }
+        }
+
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
         newSH->print(std::cout);
         CFDEBUG(std::cout << std::endl;)
         return newSH;
@@ -1598,10 +1469,20 @@ namespace smack{
 
 
     SHExprPtr BlockExecutor::executeMemset(SHExprPtr sh, const CallStmt* stmt){
-        const Expr* newPure = sh->getPure();
-        std::list<const SpatialLiteral*> newSpatial;
+        // DONE: loadIndex refactored
+        std::list<const Expr*> newPures = sh->getPures();
+        std::list<const RegionClause*> newRegions;
 
-        
+        std::list<const SpatialLiteral*> targetLeftList;
+        std::list<const SpatialLiteral*> targetMiddleList;
+        std::list<const SpatialLiteral*> targetRightList;
+        std::list<const SpatialLiteral*> newTargetLeftList;
+        std::list<const SpatialLiteral*> newTargetMiddleList;
+        std::list<const SpatialLiteral*> newMemsetTargetMiddleList;
+        std::list<const SpatialLiteral*> newTargetRightList;
+
+
+
         const Expr* arg1Target = nullptr;
         const Expr* arg2Content = nullptr;
         const Expr* arg3Size = nullptr;
@@ -1621,17 +1502,14 @@ namespace smack{
             arg3Size = paramsVec[2];
         }
 
-
         // configuration of the target position
         const VarExpr* targetOrigVar = nullptr;
         const VarExpr* targetVar = nullptr;
         std::string targetOrigVarName;
         std::string targetVarName;
-        std::string targetMallocName;
+        std::string targetRegionName;
         int targetOffset = -1;
-        int targetBlkSize = -1;
-
-        std::list<std::string> targetCallStack;
+        int targetRegionSize = -1;
 
         if(arg1Target->isVar()){
             targetOrigVar = (const VarExpr*) arg1Target;
@@ -1640,41 +1518,42 @@ namespace smack{
             targetVarName = this->getUsedVarAndName(targetOrigVarName).second;
             assert(this->getVarType(targetVarName) == VarType::PTR || 
                    this->getVarType(targetVarName) == VarType::NIL);
-            targetMallocName = this->varEquiv->getBlkName(targetVarName);
+            targetRegionName = this->varEquiv->getRegionName(targetVarName);
+            CHECK_VALID_DEREF_FOR_BLK(targetRegionName);
             targetOffset = this->varEquiv->getOffset(targetVarName);
-            targetBlkSize = sh->getBlkSize(targetMallocName)->translateToInt(this->varEquiv).second;
+            targetRegionSize = sh->getRegionSize(targetRegionName);
         } else if(ExprType::FUNC == arg1Target->getType()){
             // target position is a ptr arithmetic
             const FunExpr* ptrArithFunc = (const FunExpr*) arg1Target;
             assert(this->isPtrArithFuncName(ptrArithFunc->name()));
-            std::pair<const VarExpr*, const Expr*> newTargetVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPure);
+            std::pair<const VarExpr*, std::list<const Expr*>> newTargetVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(ptrArithFunc, newPures);
             const VarExpr* freshTargetVar = newTargetVarPurePair.first;
-            newPure = newTargetVarPurePair.second;
+            newPures = newTargetVarPurePair.second;
             targetOrigVar = freshTargetVar;
             targetOrigVarName = freshTargetVar->name();
             targetVar = freshTargetVar;
             targetVarName = freshTargetVar->name();
             assert(this->getVarType(targetVarName) == VarType::PTR || 
                    this->getVarType(targetVarName) == VarType::NIL);
-            targetMallocName = this->varEquiv->getBlkName(targetVarName);
-
-            
+            targetRegionName = this->varEquiv->getRegionName(targetVarName);
+            CHECK_VALID_DEREF_FOR_BLK(targetRegionName);
+            targetOffset = this->varEquiv->getOffset(targetVarName);
+            targetRegionSize = sh->getRegionSize(targetRegionName);
         } else {
             CFDEBUG(std::cout << "ERROR: memset wrong target expr type, check" << std::endl;);
             assert(false);
             return sh;
         }
 
-        if(!targetMallocName.compare("$Null")){
-            SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::VALID_DEREF);
+        if(!targetRegionName.compare("$Null")){
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFERROR: memset to null region" << std::endl;);
             return newSH;
         }
-
-
-        const SpatialLiteral* targetSpt = sh->getRegionSpt(targetMallocName);
-        for(std::string s : targetSpt->getStackMembers()){
-            targetCallStack.push_back(s);
+        if(targetOffset < 0 || targetOffset > targetRegionSize){
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
+            CFDEBUG(std::cout << "INFERROR: memset out of bound")
+            return newSH;
         }
 
         if(stmt->getProc().find("$memset") == std::string::npos){
@@ -1692,11 +1571,9 @@ namespace smack{
                 callRhsVar
             );
             REGISTER_EXPRPTR(eq);
-            newPure = Expr::and_(
-                sh->getPure(),
-                newPure
-            );
+            newPures.push_back(eq);
         }
+
         // configuration of the memset content
         const VarExpr* contentOrigVar = nullptr;
         const VarExpr* contentVar = nullptr;
@@ -1716,11 +1593,7 @@ namespace smack{
             contentVarName = contentVar->name();
             const Expr* eq = Expr::eq(arg2Content, contentVar);
             REGISTER_EXPRPTR(eq);
-            newPure = Expr::and_(
-                newPure,
-                eq
-            );
-            REGISTER_EXPRPTR(newPure);
+            newPures.push_back(eq);
         }
         else {// this should not happen
             CFDEBUG(std::cout << "ERROR: This should not happen in memset content" << std::endl;);
@@ -1745,11 +1618,20 @@ namespace smack{
             CFDEBUG(std::cout << "ERROR: This should not happen in memset arg3Size" << std::endl;);
             return sh;
         }
+        
+        if(targetOffset + memsetLength > targetRegionSize){
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
+            CFDEBUG(std::cout << "INFERROR: memset out of bound")
+            return newSH;
+        }
+
+
+        const RegionClause* tempTargetRegion = sh->getRegion(targetRegionName);
+        RegionBlkSplitUtilPtr tempTargetMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempTargetRegion->getRegionMetaInfo());
 
         // erronous situations classified
-        bool isHeadPtSplitted = this->storeSplit->isInitialized(targetMallocName, targetOffset) && !this->storeSplit->getOffsetPos(targetMallocName, targetOffset).first;
-
-        bool isTailPtSplitted = this->storeSplit->isInitialized(targetMallocName, targetOffset + memsetLength) && !this->storeSplit->getOffsetPos(targetMallocName, targetOffset + memsetLength).first;
+        bool isHeadPtSplitted = tempTargetMetaInfo->isInitialized(targetOffset) && !tempTargetMetaInfo->getOffsetPos(targetOffset).first;
+        bool isTailPtSplitted = tempTargetMetaInfo->isInitialized(targetOffset + memsetLength) && !tempTargetMetaInfo->getOffsetPos(targetOffset + memsetLength).first;
 
         CFDEBUG(std::cout << "INFO: is memset head pt splitted: " << isHeadPtSplitted << std::endl;);
         CFDEBUG(std::cout << "INFO: is memset tail pt splitted: " << isTailPtSplitted << std::endl;);
@@ -1757,113 +1639,73 @@ namespace smack{
 
         
         CFDEBUG(std::cout << "INFO: -------------------- BEGIN MEMSET --------------------" << std::endl;);
-        bool isHeadInitialized = this->storeSplit->isInitialized(targetMallocName, targetOffset);
-        bool isTailInitialized = this->storeSplit->isInitialized(targetMallocName, targetOffset + memsetLength - 1);
-        int headPtIndex = this->storeSplit->getInitializedPos(targetMallocName, targetOffset).second;
-        int headBlkIndex = isHeadInitialized ? -1 : this->storeSplit->getSplit(targetMallocName, targetOffset);
-        int tailPtIndex = this->storeSplit->getInitializedPos(targetMallocName, targetOffset + memsetLength - 1).second;
-        int tailBlkIndex = isTailInitialized ? -1 : this->storeSplit->getSplit(targetMallocName, targetOffset + memsetLength - 1);
+        bool isHeadInitialized = tempTargetMetaInfo->isInitialized(targetOffset);
+        bool isTailInitialized = tempTargetMetaInfo->isInitialized(targetOffset + memsetLength - 1);
+        int headPtIndex = tempTargetMetaInfo->getInitializedPos(targetOffset).second;
+        int headBlkIndex = isHeadInitialized ? -1 : tempTargetMetaInfo->getSplit(targetOffset);
+        int tailPtIndex = tempTargetMetaInfo->getInitializedPos(targetOffset + memsetLength - 1).second;
+        int tailBlkIndex = isTailInitialized ? -1 : tempTargetMetaInfo->getSplit(targetOffset + memsetLength - 1);
 
         CFDEBUG(std::cout << "target head initialized: " << isHeadInitialized << std::endl;);
         CFDEBUG(std::cout << "target tail initialized: " << isTailInitialized << std::endl;);
         CFDEBUG(std::cout << "target head pt index and blk index: " << headPtIndex << " " << headBlkIndex << std::endl;);
         CFDEBUG(std::cout << "target tail pt index and blk index: " << tailPtIndex << " " << tailBlkIndex << std::endl;);
 
-        bool beginCounting = false;
-        bool beginBytifying = false;
-        int currentPtIndex = 1;
-        int currentBlkIndex = 1;
-        // bytify all the predicate
-        std::list<const SpatialLiteral*> bytifiedSpatial;
-        for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-            if(SpatialLiteral::Kind::SPT == spl->getId()){
-                if(!spl->getBlkName().compare(targetMallocName)){
-                    beginCounting = true;
-                } else {
-                    beginCounting = false;
-                }
-            }
-            if(isHeadInitialized && currentPtIndex >= headPtIndex || 
-               !isHeadInitialized && currentBlkIndex >= headBlkIndex){
-                beginBytifying = true;
-            }
-            if(isTailInitialized && currentPtIndex > tailPtIndex || 
-              !isTailInitialized && currentBlkIndex > tailBlkIndex){
-                beginBytifying = false;
-            }
 
-            if(beginCounting){
-                if(SpatialLiteral::Kind::BLK == spl->getId()){
-                    if(beginBytifying){
-                        std::pair<std::list<const SpatialLiteral*>, const Expr*> resultBytifiedPurePair = this->bytifyBlkPredicate(spl, newPure);
-                        for(const SpatialLiteral* i : resultBytifiedPurePair.first){
-                            bytifiedSpatial.push_back(i);
-                        }
-                        newPure = resultBytifiedPurePair.second;
-                    } else {
-                        bytifiedSpatial.push_back(spl);
-                    }
-                    currentBlkIndex += 1;
-                } else if(SpatialLiteral::Kind::PT == spl->getId()){
-                    bytifiedSpatial.push_back(spl);
-                    currentPtIndex += 1;
-                } else {
-                    bytifiedSpatial.push_back(spl);
-                }
-            } else {
-                bytifiedSpatial.push_back(spl);
-            }
+        SpatialLiteral::Kind targetStartKind = isHeadInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::BLK;
+        SpatialLiteral::Kind targetEndKind = isTailInitialized ? SpatialLiteral::PT : SpatialLiteral::BLK;
+        int targetStartIndex = isHeadInitialized ? headPtIndex : headBlkIndex;
+        int targetEndIndex = isTailInitialized ? tailPtIndex : tailBlkIndex;
 
+
+        std::tuple<
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>
+        > selectOutTuple = tempTargetRegion->selectOutSpLitList(targetStartKind, targetStartIndex,
+                                                                targetEndKind, targetEndIndex);
+        targetLeftList = std::get<0>(selectOutTuple);
+        targetRightList = std::get<2>(selectOutTuple);
+        targetMiddleList = std::get<1>(selectOutTuple);
+        std::list<const SpatialLiteral*> bytifiedTargetMiddleList;
+
+        for(const SpatialLiteral* spl : targetMiddleList){
+            if(spl->getId() == SpatialLiteral::Kind::BLK){
+                std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPurePair = this->bytifyBlkPredicate(tempTargetMetaInfo, targetRegionName, spl, newPures);
+                for(const SpatialLiteral* i : resultBytifiedPurePair.first){
+                    bytifiedTargetMiddleList.push_back(i);
+                }
+                newPures = resultBytifiedPurePair.second;
+            }
         }
+        
+        tempTargetRegion = new RegionClause(targetLeftList, bytifiedTargetMiddleList, targetRightList, tempTargetMetaInfo, tempTargetRegion);
+        REGISTER_EXPRPTR(tempTargetRegion);
+        tempTargetMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempTargetRegion->getRegionMetaInfo());
+
+
         // setting the corresponding sector
 
-
-        int newHeadPtIndex = this->storeSplit->getOffsetPos(targetMallocName, targetOffset).second;
-        int newTailPtIndex = this->storeSplit->getInitializedPos(targetMallocName, targetOffset + memsetLength - 1).second;
+        int newHeadPtIndex = tempTargetMetaInfo->getOffsetPos(targetOffset).second;
+        int newTailPtIndex = tempTargetMetaInfo->getInitializedPos(targetOffset + memsetLength - 1).second;
         CFDEBUG(std::cout << "new headPtIndex and tailPtIndex: " << newHeadPtIndex << " " << newTailPtIndex << std::endl;);
 
-        std::list<const SpatialLiteral*> newLeftSpatial;
-        std::list<const SpatialLiteral*> newRightSpatial;
-        bool isLeft = true;
-        bool isRight = false;
         assert(newHeadPtIndex <= newTailPtIndex);
-        bool newBeginCounting = false;
-        int newCurrentPtIndex = 0;
-        for(const SpatialLiteral* spl : bytifiedSpatial){
-            if(SpatialLiteral::Kind::SPT == spl->getId()
-               && !spl->getBlkName().compare(targetMallocName)){
-                newBeginCounting = true;
-            }
-            if(newBeginCounting){
-                assert(!(isLeft && isRight));
-                if(SpatialLiteral::Kind::PT == spl->getId()){
-                    newCurrentPtIndex  += 1;
-                } 
-                if(newCurrentPtIndex == newHeadPtIndex){
-                    isLeft = false;
-                }
-                if(newCurrentPtIndex > newTailPtIndex || 
-                   newCurrentPtIndex == newTailPtIndex && SpatialLiteral::Kind::PT != spl->getId()){
-                       isRight = true;
-                }
-            }
-            if(isLeft){
-                newLeftSpatial.push_back(spl);
-            }
-            if(isRight){
-                newRightSpatial.push_back(spl);
-            }
-        }
-        // wipe old storeSplit
-        this->storeSplit->wipeInterval(targetMallocName, targetOffset, targetOffset + memsetLength);
-        // add left
-        for(const SpatialLiteral* i : newLeftSpatial){
-            newSpatial.push_back(i);   
-        }
+        std::tuple<
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>
+        > newSelectOutTuple = tempTargetRegion->selectOutSpLitList(SpatialLiteral::Kind::PT, newHeadPtIndex,
+                                                                SpatialLiteral::Kind::PT, newTailPtIndex);
 
+        newTargetLeftList = std::get<0>(newSelectOutTuple);
+        newTargetRightList = std::get<2>(newSelectOutTuple);
+        newTargetMiddleList = std::get<1>(newSelectOutTuple);
+        // wipe old interval
+        tempTargetMetaInfo->wipeInterval(targetOffset, targetOffset + memsetLength);
         // add middle
         for(int i = 0; i < memsetLength; i++){
-            const VarExpr* newFromVar = this->createAndRegisterFreshPtrVar(1, targetMallocName, targetOffset + i);
+            const VarExpr* newFromVar = this->createAndRegisterFreshPtrVar(1, targetRegionName, targetOffset + i);
             const VarExpr* newToVar = contentVar;
             const Expr* lit1 = Expr::lit((long long)1);
             REGISTER_EXPRPTR(lit1);
@@ -1871,31 +1713,36 @@ namespace smack{
             REGISTER_EXPRPTR(add);
             const Expr* eq = Expr::eq(newFromVar, add);
             REGISTER_EXPRPTR(eq);
-            newPure = Expr::and_(
-                newPure,
-                eq
-            );
-            REGISTER_EXPRPTR(newPure);
+            newPures.push_back(eq);
             const Expr* lit2 = Expr::lit((long long)1);
             REGISTER_EXPRPTR(lit2);
             const Expr* empBlkExpr = Expr::add(newFromVar, lit2);
             REGISTER_EXPRPTR(empBlkExpr);
-            const SpatialLiteral* newPt = this->createPtAccordingToMallocName(targetMallocName, newFromVar, newToVar, 1, targetCallStack);
+            const SpatialLiteral* newPt = SpatialLiteral::pt(newFromVar, newToVar, 1);
+            REGISTER_EXPRPTR(newPt);
             
-            this->storeSplit->addSplit(targetMallocName, targetOffset + i);
-            this->storeSplit->addSplitLength(targetMallocName, targetOffset + i, 1);
-            newSpatial.push_back(newPt);
+            tempTargetMetaInfo->addSplit(targetOffset + i);
+            tempTargetMetaInfo->addSplitLength(targetOffset + i, 1);
+            newMemsetTargetMiddleList.push_back(newPt);
             if(i < memsetLength - 1){
-                const SpatialLiteral* newBlk = this->createBlkAccordingToMallocName(targetMallocName, empBlkExpr, empBlkExpr, 0, targetCallStack);
-                newSpatial.push_back(newBlk);
+                const SpatialLiteral* newBlk = SpatialLiteral::blk(empBlkExpr, empBlkExpr, 0);
+                newMemsetTargetMiddleList.push_back(newBlk);
             }
         }
 
-        // add right
-        for(const SpatialLiteral* i : newRightSpatial){
-            newSpatial.push_back(i);
+        tempTargetRegion = new RegionClause(newTargetLeftList, newMemsetTargetMiddleList, newTargetRightList, tempTargetMetaInfo, tempTargetRegion);
+        REGISTER_EXPRPTR(tempTargetRegion);
+        const RegionClause* newTargetRegion = tempTargetRegion;
+        
+        for(const RegionClause* r : sh->getRegions()){
+            if(!r->getRegionName().compare(targetRegionName)){
+                newRegions.push_back(newTargetRegion);
+            } else {
+                newRegions.push_back(r);
+            }
         }
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
         newSH->print(std::cout);
         CFDEBUG(std::cout << std::endl;);
         return newSH;
@@ -1905,38 +1752,15 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::executeUnintepreted
     (SHExprPtr sh, const CallStmt* stmt){
-        SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::UNKNOWN);
+        // DONE: loadIndex refactored
+        SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::UNKNOWN);
         return newSH;
-        // if(stmt->getReturns().size() > 0){
-        //     CFDEBUG(std::cout << "INFO: execute Unintepreted function. " << stmt->getProc() << std::endl;);
-        //     std::string retOrigVarName = stmt->getReturns().front();
-        //     const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
-        //     std::string retVarName = retVar->name();
-        //     std::pair<std::string, int> typeInfo = this->cfg->getVarDetailType(retOrigVarName);
-        //     const VarExpr* freshVar = this->varFactory->getFreshVar(typeInfo.second);
-        //     this->cfg->addVarType(freshVar->name(), "i" + std::to_string(typeInfo.second));
-
-        //     this->varEquiv->addNewName(freshVar->name());
-        //     this->varEquiv->linkName(retVarName, freshVar->name());
-
-        //     const Expr* newConj = Expr::eq(retVar, freshVar);
-        //     REGISTER_EXPRPTR(newConj);
-        //     const Expr* newPure = Expr::and_(sh->getPure(), newConj);
-        //     REGISTER_EXPRPTR(newPure);
-        //     SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
-        //     newSH->print(std::cout);
-        //     CFDEBUG(std::cout << std::endl;);
-        //     return newSH;
-        // } else {
-        //     return sh;  
-        // }
-        
     }
 
     SHExprPtr  
     BlockExecutor::executeMalloc
     (SHExprPtr sh, const CallStmt* stmt){
-        
+        // DONE: load index refactored
         std::string funcName = stmt->getProc();
         if(!funcName.compare("malloc")){
             std::string retOrigVarName = stmt->getReturns().front();
@@ -1950,56 +1774,41 @@ namespace smack{
                 this->varFactory->getNullVar()
             );
             REGISTER_EXPRPTR(pureConj);
-            const Expr* newPure = Expr::and_(
-                sh->getPure(),
-                pureConj
-            );
-            REGISTER_EXPRPTR(newPure);
+            std::list<const Expr*> newPures = sh->getPures();
+            std::list<const RegionClause*> newRegions = sh->getRegions();
+            newPures.push_back(pureConj);
 
             if(param->isVar()){
                 const VarExpr* paramOrigVar = (const VarExpr*)param;
                 std::string paramOrigVarName = paramOrigVar->name();
                 const VarExpr* paramVar = this->varFactory->getVar(paramOrigVarName);
                 std::string paramVarName = paramVar->name();
+
                 this->varEquiv->addNewName(retVarName);
-                this->varEquiv->addNewBlkName(retVarName);
+                this->varEquiv->addNewRegionName(retVarName);
                 this->varEquiv->addNewOffset(retVarName, 0);
-                this->varEquiv->setStructArrayPtr(retVarName, false);
-                this->storeSplit->createAxis(retVarName);
-                this->storeSplit->setMaxOffset(retVarName, paramVar->translateToInt(this->varEquiv).second);
-                
-                std::list<const SpatialLiteral *> newSpatialExpr;
-                for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                    newSpatialExpr.push_back(sp);
-                }
-                const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                    retVar,
-                    paramVar,
-                    retVarName,
-                    this->callStack
-                );
-                REGISTER_EXPRPTR(sizePt);
-                int blkSize = paramVar->translateToInt(this->varEquiv).second;
+                this->varEquiv->setStructArrayRegion(retVarName, false);
+
+                int regionSize = paramVar->translateToInt(this->varEquiv).second;
                 if(!paramVar->translateToInt(this->varEquiv).first){
                     CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized malloc" << std::endl;);
-                    SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                    SHExprPtr newSH = this->createErrLitSH(newPures, newRegions, ErrType::UNKNOWN);
                     return newSH;
                 }
-                const Expr* add = Expr::add(
-                        retVar,
-                        paramVar);
+                const Expr* add = Expr::add(retVar, paramVar);
                 REGISTER_EXPRPTR(add);
-                const SpatialLiteral* allocBlk = SpatialLiteral::blk(
-                    retVar,
-                    add,
-                    retVarName,
-                    blkSize,
-                    this->callStack
-                );
-                REGISTER_EXPRPTR(allocBlk);
-                newSpatialExpr.push_back(sizePt);
-                newSpatialExpr.push_back(allocBlk);
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                const SpatialLiteral* mallocBlk = SpatialLiteral::blk(retVar, add, regionSize);
+                REGISTER_EXPRPTR(mallocBlk);
+
+                std::list<const SpatialLiteral *> newSplList;
+                newSplList.push_back(mallocBlk);
+
+                const RegionClause* newRegion = new RegionClause(newSplList, retVar, paramVar, retVarName, regionSize, false);
+                REGISTER_EXPRPTR(newRegion);
+                assert(!sh->hasRegion(retVarName));
+                newRegions.push_back(newRegion);
+
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl)
                 return newSH;
@@ -2007,44 +1816,31 @@ namespace smack{
                 // the sizeExpr here must be a value expression containing no variables
                 const Expr* sizeExpr = param;
                 this->varEquiv->addNewName(retVarName);
-                this->varEquiv->addNewBlkName(retVarName);
+                this->varEquiv->addNewRegionName(retVarName);
                 this->varEquiv->addNewOffset(retVarName, 0);
-                this->varEquiv->setStructArrayPtr(retVarName, false);
-                this->storeSplit->createAxis(retVarName);
-                this->storeSplit->setMaxOffset(retVarName, sizeExpr->translateToInt(this->varEquiv).second);
+                this->varEquiv->setStructArrayRegion(retVarName, false);
 
-               
-                std::list<const SpatialLiteral*> newSpatialExpr;
-                for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                    newSpatialExpr.push_back(sp);
-                }
-                const SpatialLiteral* sizePt = SpatialLiteral::spt(
-                    this->varFactory->getVar(retOrigVarName),
-                    sizeExpr,
-                    retVarName,
-                    this->callStack
-                );
-                REGISTER_EXPRPTR(sizePt);
 
-                int blkSize = param->translateToInt(this->varEquiv).second;
+                int regionSize = param->translateToInt(this->varEquiv).second;
                 if(!param->translateToInt(this->varEquiv).first){
                     CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized malloc" << std::endl;);
-                    SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                    SHExprPtr newSH = this->createErrLitSH(newPures, newRegions, ErrType::UNKNOWN);
                     return newSH;
                 }
                 const Expr* add = Expr::add(retVar, sizeExpr);
                 REGISTER_EXPRPTR(add);
-                const SpatialLiteral* allocBlk = SpatialLiteral::blk(
-                    this->varFactory->getVar(retOrigVarName),
-                    add,
-                    retVarName,
-                    blkSize,
-                    this->callStack
-                );
-                REGISTER_EXPRPTR(allocBlk);
-                newSpatialExpr.push_back(sizePt);
-                newSpatialExpr.push_back(allocBlk);
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                const SpatialLiteral* mallocBlk = SpatialLiteral::blk(retVar, add, regionSize);
+                REGISTER_EXPRPTR(mallocBlk);
+
+                std::list<const SpatialLiteral*> newSplList;
+                newSplList.push_back(mallocBlk);
+
+                const RegionClause* newRegion = new RegionClause(newSplList, retVar, sizeExpr, retVarName, regionSize, false);
+                REGISTER_EXPRPTR(newRegion);
+                assert(!sh->hasRegion(retVarName));
+                newRegions.push_back(newRegion);
+
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
@@ -2062,6 +1858,7 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::executeFree
     (SHExprPtr sh, const CallStmt* stmt){
+        // DONE: loadIndex refactored
         // TODOsh: current use a attribute in spatial literal to store the information which spatial literals need to be freed.
         if(!stmt->getProc().compare("free_")){
             const Expr* arg1 = stmt->getParams().front();
@@ -2071,46 +1868,46 @@ namespace smack{
                 const VarExpr* freedVar = this->varFactory->getVarConsume(freedOrigVarName);
 
                 std::string allocVarName = this->varEquiv->getAllocName(freedVar->name());
-                std::string linkVarName = this->varEquiv->getBlkName(freedVar->name());
+                std::string linkVarName = this->varEquiv->getRegionName(freedVar->name());
                 CFDEBUG(std::cout << "Freed varname: " << freedVar->name() << std::endl);
                 CFDEBUG(std::cout << "Alloced varname: " << allocVarName << std::endl);
                 CFDEBUG(std::cout << "Linked Name: " << linkVarName << std::endl;);
 
 
-                if(this->varEquiv->isFreedName(linkVarName)){
-                    SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_FREE);
-                    CFDEBUG(std:: cout << "INFO: INVALID FREE" << std::endl;);
+                if(this->varEquiv->isFreedRegionName(linkVarName)){
+                    SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_FREE);
+                    CFDEBUG(std::cout << "INFO: INVALID FREE" << std::endl;);
                     return newSH;
                 }
                 if(linkVarName.compare(allocVarName)){
                     CFDEBUG(std:: cout << "INFO: INVALID FREE" << std::endl;);
                     if(this->varEquiv->getOffset(freedVar->name()) != 0){
                         // This means the freed variable is not an allocated location and error happens.
-                        SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_FREE);
+                        SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_FREE);
                         return newSH;
                     } else {
                         allocVarName = linkVarName;
                     }
                 }
-                if(this->varEquiv->isStructArrayPtr(linkVarName)){
+                if(this->varEquiv->isStructArrayRegion(linkVarName)){
                     CFDEBUG(std::cout << "INFO: FREE GLOBAL PTR, UNKNOWN" << std::endl;);
-                    SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::UNKNOWN);
+                    SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::UNKNOWN);
                     return newSH;
                 }
 
-                const Expr* newPure = sh->getPure();
-                std::list<const SpatialLiteral*> newSpatial;
-                for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                    if(!sp->getBlkName().compare(allocVarName)){
+                std::list<const Expr*> newPures = sh->getPures();
+                std::list<const RegionClause*> newRegions;
+
+                for(const RegionClause* r : sh->getRegions()){
+                    if(!r->getRegionName().compare(allocVarName)){
 
                     } else {
-                        newSpatial.push_back(sp);
+                        newRegions.push_back(r);
                     }
                 }
-                this->varEquiv->addNewFreedName(allocVarName);
+                this->varEquiv->addNewFreedRegionName(allocVarName);
 
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
@@ -2128,6 +1925,7 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::executeStore
     (SHExprPtr sh, const FunExpr* rhsFun){
+        // DONE: need double check, loadIndex refactored
         // symbolic execution rule for instruction: $store($M, dst, data)
         assert(rhsFun->name().find("$store") != std::string::npos);
         // fetch dst and data to arg1 and arg2 resp.
@@ -2144,8 +1942,9 @@ namespace smack{
         }
         CFDEBUG(std::cout << "STORE: arg1 " << arg1 << " arg2: " << arg2 << std::endl;);
         int offset = -1;
-        std::string mallocName;
-        int mallocBlkSize = -1;
+        std::string regionName;
+        const RegionClause* oldRegionClause = nullptr;
+        int regionSize = -1;
         const VarExpr* varArg1 = nullptr;
         const VarExpr* varOrigArg1 = nullptr;
         std::string varOrigiArg1Name;
@@ -2165,12 +1964,13 @@ namespace smack{
 
             // get the offset of the position to be stored in a malloced blk
             offset = this->varEquiv->getOffset(varArg1->name());
-            mallocName = this->varEquiv->getBlkName(varArg1->name());
+            regionName = this->varEquiv->getRegionName(varArg1->name());
 
             // check whether it is freed
-            CHECK_VALID_DEREF_FOR_BLK(mallocName);
+            CHECK_VALID_DEREF_FOR_BLK(regionName);
 
-            mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+            regionSize = sh->getRegionSize(regionName);
+
             if(varOrigArg1->name().find("$") == std::string::npos){
                 // if the stored position is represented by a non-global variable, step size later will use the type info obtained from cfg
                 useStoreFuncSize = true;
@@ -2181,25 +1981,24 @@ namespace smack{
         } else if(ExprType::FUNC == arg1->getType()){
             // The step size of struct and array is determined through the expression to find the location
             CFDEBUG(std::cout << "INFO: arg1 is funcexpr" << std::endl;);
-            const Expr* newPure = sh->getPure();
-            std::pair<const VarExpr*, const Expr*> newVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(arg1, newPure);
+            std::list<const Expr*> newPures = sh->getPures();
+            std::pair<const VarExpr*, std::list<const Expr*>> newVarPuresPair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(arg1, newPures);
+            const VarExpr* freshVar = newVarPuresPair.first;
+            newPures = newVarPuresPair.second;
 
-            const VarExpr* freshVar = newVarPurePair.first;
-            newPure = newVarPurePair.second;
             varArg1 = freshVar;
             varOrigArg1 = freshVar;
             varOrigiArg1Name = freshVar->name();
             varArg1Name = freshVar->name();
             offset = this->varEquiv->getOffset(varArg1->name());
-            mallocName = this->varEquiv->getBlkName(varArg1->name());
-
+            regionName = this->varEquiv->getRegionName(varArg1->name());
             // check whether it is freed
-            CHECK_VALID_DEREF_FOR_BLK(mallocName);
+            CHECK_VALID_DEREF_FOR_BLK(regionName);
 
-            mallocBlkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+            regionSize = sh->getRegionSize(regionName);
             // update the symbolic heap
             SHExprPtr oldSh = sh;
-            sh = std::make_shared<SymbolicHeapExpr>(newPure, oldSh->getSpatialExpr());
+            sh = std::make_shared<SymbolicHeapExpr>(newPures, oldSh->getRegions());
         } else {
             CFDEBUG(std::cout << "ERROR: stored arg1 not allowed situation" << std::endl;);
             return sh;
@@ -2212,7 +2011,7 @@ namespace smack{
         if(VarType::PTR == this->getVarType(varArg1Name) || VarType::NIL == this->getVarType(varArg1Name)){
 
         } else {
-            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+            SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: store data to a data variable represented address, INVALID DEREF.." << std::endl;);
             return newSH;
         }
@@ -2230,25 +2029,20 @@ namespace smack{
         assert(storedSize != 0);
         assert(storedSize > 0);
             
-        CFDEBUG(std::cout << "STORE: offset " << offset << " Blk size: " << mallocBlkSize << " storedSize: " << storedSize << std::endl;);
+        CFDEBUG(std::cout << "STORE: offset " << offset << " Blk size: " << regionSize << " storedSize: " << storedSize << std::endl;);
         // if the stored ptr is a nullptr, set inference error
-        if(!mallocName.compare("$Null")){
+        if(!regionName.compare("$Null")){
             // the symbolic heap is set to error
-            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+            SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: store null ptr" << std::endl;);
             return newSH;
         }
         // if the store is out of range, set inference error
-        if(offset >= mallocBlkSize || offset < 0){
+        if(offset >= regionSize || offset < 0){
             // the symbolic heap is set to error
-            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+            SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: out of range" << std::endl;);
             return newSH;
-        }
-
-        const SpatialLiteral* storeDstSpt = sh->getRegionSpt(mallocName);
-        for(std::string s : storeDstSpt->getStackMembers()){
-            storeDstCallStack.push_back(s);
         }
         // A. the position is initialized before: three situations 
         // 1. the store position is exactly some allocated offset:
@@ -2258,603 +2052,509 @@ namespace smack{
         // (2) this store only modify a part of previous store, then we convert the pointed to variable to bytelevel. 
             // -- a. the pt predicate is bytified: directly changing the bytified BytePt
             // -- b. the pt predicate is not bytified: make it bytified
-        /*----- (3) is not considered currently -----*/
         // (3) this store modify a continuous sequence of previous store. If the previous sequence is a sequence of char, then we combine these pt predicates into one.
         // 2. 
         // (1) the store position is not some allocated offset and it only modifies a part of previous store, then we convert the pointed to variable to bytelevel. 
-            // -- a. the pt predicate is bytified
+            // -- a. the pt predicate is bytified          
             // -- b. the pt predicate is not bytified
         // B. the position is not initialized before: two situations
         // Other situations are not considered yet
 
-        if(this->storeSplit->hasOffset(mallocName, offset) || this->storeSplit->isInitialized(mallocName, offset)){
-            
+
+        std::list<const Expr*> newPures = sh->getPures();
+        std::list<const RegionClause*> newRegions;
+        oldRegionClause = sh->getRegion(regionName);
+
+
+        if(oldRegionClause->getRegionMetaInfo()->hasOffset(offset) || oldRegionClause->getRegionMetaInfo()->isInitialized(offset)){
             CFDEBUG(std::cout << "INFO: store offset exists" << std::endl;);
-            std::pair<bool, int> posInfo = this->storeSplit->getOffsetPos(mallocName, offset);
+            const RegionClause* tempRegionClause = oldRegionClause;
+            RegionBlkSplitUtilPtr tempMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempRegionClause->getRegionMetaInfo());
+
+            // -------------- new things --------------
+            std::list<const SpatialLiteral*> newLeftList;
+            std::list<const SpatialLiteral*> newMiddleList;
+            std::list<const SpatialLiteral*> newRightList;
+            RegionBlkSplitUtilPtr newMetaInfo;
+            const RegionClause* newRegionClause;
+
+
+            std::pair<bool, int> posInfo = tempRegionClause->getRegionMetaInfo()->getOffsetPos(offset);
             if(posInfo.first){
                 // A.1 situation
                 assert(posInfo.first);
-                // the index of the pt predicate need to be modified 
                 int modifyIndex = posInfo.second;
-                // initialization for the new symbolic heap structure
-                const Expr* newPure = sh->getPure();
-                std::list<const SpatialLiteral*> newSpatial;
-                int currentIndex = 1;
 
-                // find the correct pt to modify into a new pt literal
-                for(const SpatialLiteral* i : sh->getSpatialExpr()){
-                    if(!i->getBlkName().compare(mallocName) &&
-                    SpatialLiteral::Kind::PT == i->getId() && 
-                    currentIndex == modifyIndex){
-                        // current index equals modify index -- we find the pt predicate to be modified 
-                        const PtLit* ptLiteral = (const PtLit*)i;
-                        /* get the stepSize of current store:
-                        1. can be obtained directed from getVarDetailType: which is maintained through ptr arithmetic parsing and frontend parsing
-                        2. otherwise it can only be used through previous parsed storeFuncSize
-                        */
-                        if(storedSize == ptLiteral->getStepSize()){
-                            // Situation A.1.(1)
-                            CFDEBUG(std::cout << "INFO: store situation A.1.(1)" << std::endl;);
-                            // use a fresh variable to represent the storedVar 
-                            const VarExpr* freshVar = this->varFactory->getFreshVar(storedSize);
-                            // discuss the stored expression:
-                            if(arg2->isVar()){
-                                // the stored expression is a variable
-                                const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
-                                std::string varOrigArg2Name = varOrigArg2->name();
-                                // obtain the var used
-                                const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
-                                std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
-                                // update the equivalent classes
-                                this->updateBindingsEqualVarAndRhsVar(freshVar, varArg2);
-                                // add type info of fresh variable according to the var type
-                                this->updateVarType(freshVar, varArg2, varArg2, storedSize);
-                                // update newPure
-                                const Expr* eq = Expr::eq(freshVar, varArg2);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            } else if(arg2->isValue()){
-                                // update the equivalent classes
-                                this->updateBindingsEqualVarAndRhsValue(freshVar, arg2);
-                                //add type info to cfg
-                                this->updateVarType(freshVar, arg2, arg2, storedSize);
-                                const Expr* eq = Expr::eq(freshVar, arg2);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            }  
-                            else {    
-                                // the stored expression is an arithmetic expression
-                                // it must be an arithmetic expression
-                                CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
-                                std::pair<const Expr*, bool> usedPair =  getUsedArithExprAndVar(freshVar, arg2);
-                                // compute the used expr
-                                const Expr* storedExpr = usedPair.first;
-                                assert(storedExpr != nullptr);
-                                bool isPtr = usedPair.second;
-                                // update the variable
-                                this->updateBindingsEqualVarAndRhsArithExpr(freshVar, arg2, storedExpr, isPtr);
-                                // add type info
-                                this->updateVarType(freshVar, arg2, storedExpr, storedSize);
+                std::tuple<
+                    std::list<const SpatialLiteral*>, 
+                    const SpatialLiteral*, 
+                    std::list<const SpatialLiteral*>
+                > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::PT, modifyIndex);
 
-                                // update new pure
-                                const Expr* eq = Expr::eq(freshVar, storedExpr);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            }
-
-                            if(!ptLiteral->isByteLevel()){
-                                // Situation A.1.(1).a
-                                const SpatialLiteral* newPt = this->createPtAccordingToMallocName(mallocName, ptLiteral->getFrom(), freshVar, ptLiteral->getStepSize(), storeDstCallStack);
-                                newSpatial.push_back(newPt);
-                                
-                            } else {
-                                // Situation A.1.(1).b
-                                // need to modify the low level pts besides the modification of high level
-                                std::pair<const PtLit*, const Expr*> newPtPurePair =  this->updateModifyBytifiedPtPredicateAndModifyHighLevelVar(ptLiteral, freshVar, newPure);
-                                const SpatialLiteral* newPt = newPtPurePair.first;
-                                newPure = newPtPurePair.second;
-                                newSpatial.push_back(newPt);
-                            }
-
-                        } else if(storedSize < ptLiteral->getStepSize()){
-                            // situation A.1.(2)
-                            CFDEBUG(std::cout << "INFO: store situation A.1.(2)" << std::endl;);
-                            // ------------ Discussion of stored variable or arithmetic:
-                            // It only modifies an initial part of the previous store, use freshStoredVar for a temp register
-                            const VarExpr* freshStoredVar = this->varFactory->getFreshVar(storedSize);
-                            if(arg2->isVar()){
-                                // the stored expression is a variable
-                                const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
-                                std::string varOrigArg2Name = varOrigArg2->name();
-                                // obtain the var used
-                                const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
-                                std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
-                                // update the equivalent classes
-                                this->updateBindingsEqualVarAndRhsVar(freshStoredVar, varArg2);
-                                // add type info of fresh variable according to the var type
-                                this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
-                                // update newPure
-                                const Expr* eq = Expr::eq(freshStoredVar, varArg2);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            } else if(arg2->isValue()){
-                                // update the equivalent classes
-                                this->updateBindingsEqualVarAndRhsValue(freshStoredVar, arg2);
-                                //add type info to cfg
-                                this->updateVarType(freshStoredVar, arg2, arg2, storedSize);
-                                const Expr* eq = Expr::eq(freshStoredVar, arg2);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            }  
-                            else {    
-                                // the stored expression is an arithmetic expression
-                                // it must be an arithmetic expression
-                                CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
-                                std::pair<const Expr*, bool> usedPair =  getUsedArithExprAndVar(freshStoredVar, arg2);
-                                // compute the used expr
-                                const Expr* storedExpr = usedPair.first;
-                                assert(storedExpr != nullptr);
-                                bool isPtr = usedPair.second;
-                                // update the variable
-                                this->updateBindingsEqualVarAndRhsArithExpr(freshStoredVar, arg2, storedExpr, isPtr);
-                                // add type info
-                                this->updateVarType(freshStoredVar, arg2, storedExpr, storedSize);
-                                // update new pure
-                                const Expr* eq = Expr::eq(freshStoredVar, storedExpr);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            }
-
-                            
-                            if(!ptLiteral->isByteLevel()){
-                                // b: the original pt predicate is not bytified, bytify the pt predicate
-                                // bytify the original pt
-                                std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, 0, storedSize, newPure);
-                                const SpatialLiteral* newPt = newPtPurePair.first;
-                                newPure = newPtPurePair.second;
-                                newSpatial.push_back(newPt);
-                            } else {
-                                // a: the originnal pt predicate is bytified, directly change the corresponding part
-                                std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateModifyBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, 0, storedSize, newPure);
-                                const SpatialLiteral* newPt = newPtPurePair.first;
-                                newPure = newPtPurePair.second;
-                                newSpatial.push_back(newPt);
-                            }
-                        } else {
-                            CFDEBUG(std::cout << "INFO: store situation A.1.(3)" << std::endl;);
-                            // situation A.1.(3), currently not considered
-                            // SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
-                            // CFDEBUG(std::cout << "INFO: situation A.1.(3), currently not considered" << std::endl;);
-                            // TODOsh: refactor later, currently the original loop is broken for a new one
-                            const VarExpr* freshStoredVar = this->varFactory->getFreshVar(storedSize);
-                            if(arg2->isVar()){
-                                const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
-                                std::string VarOrigArg2Name = varOrigArg2->name();
-                                const VarExpr* varArg2 = this->getUsedVarAndName(VarOrigArg2Name).first;
-                                std::string varArg2Name = this->getUsedVarAndName(VarOrigArg2Name).second;
-                                this->updateBindingsEqualVarAndRhsVar(freshStoredVar, varArg2);
-                                this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
-                                const Expr* eq = Expr::eq(
-                                    freshStoredVar,
-                                    varArg2
-                                );
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            } else if(arg2->isValue()){
-                                this->updateBindingsEqualVarAndRhsValue(freshStoredVar, arg2);
-                                this->updateVarType(freshStoredVar, arg2, arg2, storedSize);
-                                const Expr* eq = Expr::eq(freshStoredVar, arg2);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            } else {
-                                CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
-                                std::pair<const Expr*, bool> usedPair =  getUsedArithExprAndVar(freshStoredVar, arg2);
-                                const Expr* storedExpr = usedPair.first;
-                                assert(storedExpr != nullptr);
-                                bool isPtr = usedPair.second;
-                                this->updateBindingsEqualVarAndRhsArithExpr(freshStoredVar, arg2, storedExpr, isPtr);
-                                this->updateVarType(freshStoredVar, arg2, storedExpr, storedSize);
-                                const Expr* eq = Expr::eq(freshStoredVar, storedExpr);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            }
-                            // The above operations transfer the data to store to freshStoredVar
-                            bool isDstTailPtSplitted = this->storeSplit->isInitialized(mallocName, offset + storedSize) && !(this->storeSplit->getOffsetPos(mallocName, offset + storedSize)).first;
-                            if(isDstTailPtSplitted){
-                                CFDEBUG(std::cout << "ERROR: Does not support over store that split existing pt predcate yet.." << std::endl;);
-                                SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
-                                return newSH;
-                            }
-                            bool isDstTailInitialized = this->storeSplit->isInitialized(mallocName, offset + storedSize - 1); 
-                            assert(this->storeSplit->getOffsetPos(mallocName, offset).first);
-                            int dstHeadPtIndex = this->storeSplit->getOffsetPos(mallocName, offset).second;
-                            int dstTailPtIndex = -1;
-                            int dstTailBlkIndex = -1;
-
-                            std::list<const SpatialLiteral*> tempSpatial;
-                            std::list<const SpatialLiteral*> specialNewSpatial;
-                            std::list<const SpatialLiteral*> specialLeftSpatial;
-                            std::list<const SpatialLiteral*> specialRightSpatial;
-                            if(isDstTailInitialized){
-                                assert(this->storeSplit->getInitializedPos(mallocName, offset + storedSize - 1).first);
-                                dstTailPtIndex = this->storeSplit->getInitializedPos(mallocName, offset + storedSize - 1).second;
-                            } else { 
-                                // bytify the tail blk to make it ends with pt predicate
-                                dstTailBlkIndex = this->storeSplit->getSplit(mallocName, offset + storedSize - 1);
-                                bool beginTempCounting = false;
-                                int tempCurrentBlkIndex = 1;
-                                for(const SpatialLiteral* tsl : sh->getSpatialExpr()){
-                                    if(SpatialLiteral::Kind::SPT == tsl->getId()){
-                                        if(!tsl->getBlkName().compare(mallocName)){
-                                            beginTempCounting = true;
-                                        } else {
-                                            beginTempCounting = false;
-                                        }
-                                    } 
-
-                                    if(beginTempCounting){
-                                        if(SpatialLiteral::Kind::BLK == tsl->getId()){
-                                            if(tempCurrentBlkIndex == dstTailBlkIndex){
-                                                std::pair<std::list<const SpatialLiteral*>, const Expr*> resultBytifiedPair = this->bytifyBlkPredicate(tsl, newPure);
-                                                newPure = resultBytifiedPair.second;
-                                                for(const SpatialLiteral* bytified : resultBytifiedPair.first){
-                                                    tempSpatial.push_back(bytified);
-                                                }
-                                            } else {
-                                                tempSpatial.push_back(tsl);
-                                            }
-                                            tempCurrentBlkIndex += 1;
-                                        } else {
-                                            tempSpatial.push_back(tsl);
-                                        }
-                                    } else {
-                                        tempSpatial.push_back(tsl);
-                                    }
-                                }
-                                assert(this->storeSplit->getInitializedPos(mallocName, offset + storedSize - 1).first);
-                                dstTailPtIndex = this->storeSplit->getInitializedPos(mallocName, offset + storedSize - 1).second;
-                            }
-                            bool dstBeginCounting = false;
-                            bool dstBeginReplacing = false;
-                            bool dstBeginRight = false;
-                            int dstCurrentPtIndex = 1;
-                            
-                            for(const SpatialLiteral* ssl : sh->getSpatialExpr()){
-                                if(SpatialLiteral::Kind::SPT == ssl->getId()){
-                                    if(!ssl->getBlkName().compare(mallocName)){
-                                        dstBeginCounting = true;
-                                    } else {
-                                        dstBeginCounting = false;
-                                    }
-                                }
-                                if(dstCurrentPtIndex >= dstHeadPtIndex && SpatialLiteral::Kind::PT == ssl->getId()){
-                                    dstBeginReplacing = true;
-                                }
-                                if(dstCurrentPtIndex > dstTailPtIndex){
-                                    dstBeginReplacing = false;
-                                    dstBeginRight = true;
-                                }
-                                if(dstBeginCounting){
-                                    if(dstBeginReplacing){
-                                    // do nothing
-                                    } else {
-                                        if(dstBeginRight){
-                                            specialRightSpatial.push_back(ssl);
-                                        } else {
-                                            specialLeftSpatial.push_back(ssl);
-                                        }
-                                    }
-                                    if(SpatialLiteral::Kind::PT == ssl->getId()){
-                                        dstCurrentPtIndex += 1;
-                                    } 
-                                } else {
-                                    if(dstBeginRight){
-                                        specialRightSpatial.push_back(ssl);
-                                    } else {
-                                        specialLeftSpatial.push_back(ssl);
-                                    }
-                                }
-                            }
-
-                            this->storeSplit->wipeInterval(mallocName, offset, offset + storedSize);
-                            for(const SpatialLiteral* slsl : specialLeftSpatial){
-                                specialNewSpatial.push_back(slsl);
-                            }
-                            const SpatialLiteral* newStoredPt = this->createPtAccordingToMallocName(mallocName, varArg1, freshStoredVar, storedSize, storeDstCallStack);
-                            this->storeSplit->addSplit(mallocName, offset);
-                            this->storeSplit->addSplitLength(mallocName, offset, storedSize);
-                            specialNewSpatial.push_back(newStoredPt);
-                            REGISTER_EXPRPTR(newStoredPt);
-                            for(const SpatialLiteral* srsl : specialRightSpatial){
-                                specialNewSpatial.push_back(srsl);
-                            } 
-                            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, specialNewSpatial);
-                            newSH->print(std::cout);
-                            CFDEBUG(std::cout << std::endl;);
-                            return newSH;
-                        }
-                        currentIndex += 1;
-                    } 
-                    else if(!i->getBlkName().compare(mallocName) &&
-                        SpatialLiteral::Kind::PT == i->getId() && 
-                        currentIndex != modifyIndex) {
-                        newSpatial.push_back(i);
-                        currentIndex += 1;
-                    } else {
-                        newSpatial.push_back(i);
-                    }
-                }
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-                newSH->print(std::cout);
-                CFDEBUG(std::cout << std::endl;);
-                return newSH;
-            } else if(this->storeSplit->isInitialized(mallocName, offset)){
-                // A.2 situation
-                CFDEBUG(std::cout << "INFO: store offset is initialized" << std::endl;);
-                // use initialized pos to find the index of pt to be modified
-                std::pair<bool, int> posInfo =  this->storeSplit->getInitializedPos(mallocName, offset);
-
-                assert(posInfo.first);
-                // index to find the pt predicate to be modified
-                int modifyIndex = posInfo.second;
-                const Expr* newPure = sh->getPure();
-                std::list<const SpatialLiteral*> newSpatial;
-                int currentIndex = 1;
-                // get the prefix length and suffix length for the modification, the suffix length must be greater than the stored size
-                int prefixLength = this->storeSplit->getInitializedPrefixLength(mallocName, offset);
-                int suffixLength = this->storeSplit->getInitializedSuffixLength(mallocName, offset);
-                for(const SpatialLiteral* i : sh->getSpatialExpr()){
-                    if(!i->getBlkName().compare(mallocName) &&
-                    SpatialLiteral::Kind::PT == i->getId() && 
-                    currentIndex == modifyIndex){
-                        // current index equals modify index -- we find the pt predicate to be modified 
-                        const PtLit* ptLiteral = (const PtLit*)i;
-                        if(storedSize <= suffixLength){
-                            // Situation A.2.(1)
-                            CFDEBUG(std::cout << "INFO: store situation A.2.(1)" << std::endl;);
-                            // ------------ Discussion of  the stored variable or arithmetic:
-                            // It only modifies a part of the previous store, use freshStoredVar as
-                            // a temp variable to store value
-                            
-                            const VarExpr* freshStoredVar = this->varFactory->getFreshVar(storedSize);
-                            std::string freshVarTypeStr = "i";
-                            std::string arg2TypeStr = "i";
-                            if(arg2->isVar()){
-                                // the stored expression is a variable
-                                const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
-                                std::string varOrigArg2Name = varOrigArg2->name();
-                                // obtain the var used
-                                const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
-                                std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
-                                // update the equivalent classes
-                                this->updateBindingsEqualVarAndRhsVar(freshStoredVar, varArg2);
-                                // add type info of fresh variable according to the var type
-                                this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
-                                // update newPure
-                                const Expr* eq = Expr::eq(freshStoredVar, varArg2);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            } else if(arg2->isValue()){
-                                // update the equivalent classes
-                                this->updateBindingsEqualVarAndRhsValue(freshStoredVar, arg2);
-                                //add type info to cfg
-                                this->updateVarType(freshStoredVar, arg2, arg2, storedSize);
-                                const Expr* eq = Expr::eq(freshStoredVar, arg2);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            }  
-                            else {    
-                                // the stored expression is an arithmetic expression
-                                // it must be an arithmetic expression
-                                CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
-                                std::pair<const Expr*, bool> usedPair =  getUsedArithExprAndVar(freshStoredVar, arg2);
-                                // compute the used expr
-                                const Expr* storedExpr = usedPair.first;
-                                assert(storedExpr != nullptr);
-                                bool isPtr = usedPair.second;
-                                // update the variable
-                                this->updateBindingsEqualVarAndRhsArithExpr(freshStoredVar, arg2, storedExpr, isPtr);
-                                // add type info
-                                this->updateVarType(freshStoredVar, arg2, storedExpr, storedSize);
-
-                                // update new pure
-                                const Expr* eq = Expr::eq(freshStoredVar, storedExpr);
-                                REGISTER_EXPRPTR(eq);
-                                newPure = Expr::and_(newPure, eq);
-                                REGISTER_EXPRPTR(newPure);
-                            }
-
-
-                            // update the predicate 
-                            if(!ptLiteral->isByteLevel()){
-                                // Situation -- b: the pt predicate is not bytified
-                                // bytify the original pt
-                                std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, offset, storedSize, newPure);
-                                const SpatialLiteral* newPt = newPtPurePair.first;
-                                newPure = newPtPurePair.second;
-                                newSpatial.push_back(newPt);
-
-                            } else {
-                                // Situation -- a: the pt predicate is bytified 
-                                std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateModifyBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, offset, storedSize, newPure);
-                                const SpatialLiteral* newPt = newPtPurePair.first;
-                                newPure = newPtPurePair.second;
-                                newSpatial.push_back(newPt);
-                            }
-                        } else {
-                            CFDEBUG(std::cout << "ERROR: extreme situation, A.2 situation currently not considered.." << std::endl;);
-                            return sh;
-                        }
-                        currentIndex += 1;
-                    }
-                    else if(i->getBlkName().compare(mallocName) &&
-                        SpatialLiteral::Kind::PT == i->getId() && 
-                        currentIndex != modifyIndex){
-                        currentIndex += 1;
-                    } else {
-                        newSpatial.push_back(i);
-                    }
-                }
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-                newSH->print(std::cout);
-                CFDEBUG(std::cout << std::endl;);
-                return newSH;
-                
-            } else {
-                CFDEBUG(std::cout << "ERROR: store situation: this should not happen" << std::endl;);
-                assert(false);
-            }
-            
-        } else {
-            CFDEBUG(std::cout << "INFO: store situation A.3" << std::endl;);
-            CFDEBUG(std::cout << "INFO: new store offset" << std::endl;);
-            // if the position is not stored yet, create a new pt predicate to store it
-            // set offset to allocated in the storeSplit
-            int splitBlkIndex = this->storeSplit->addSplit(mallocName, offset);
-            assert(splitBlkIndex > 0);
-            CFDEBUG(std::cout << "malloc name: " << mallocName << " splitIndex: " << splitBlkIndex <<  std::endl);
-            int currentIndex = 1;
-            const Expr* newPure = sh->getPure();
-            std::list<const SpatialLiteral*> newSpatial;
-            // Find the correct blk predicate to break
-            for(const SpatialLiteral* i : sh->getSpatialExpr()){
-                if(!i->getBlkName().compare(mallocName) && 
-                    SpatialLiteral::Kind::BLK == i->getId() && 
-                    currentIndex == splitBlkIndex){
-                    const BlkLit* breakBlk = (const BlkLit*) i;
-                    // if the blk to break is empty, there is an error
-                    // if(breakBlk->isEmpty()){
-                    //     SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
-                    //     CFDEBUG(std::cout << "INFO: break empty blk" << std::endl;);
-                    //     return newSH;
-                    // }
-                    CFDEBUG(std::cout << "INFO: storedSize: " << offset << " " << storedSize << std::endl;);
-                    // add the split pos to length map to storeSplit
-                    this->storeSplit->addSplitLength(mallocName, offset, storedSize);
-                    // freshVar: variable pointed to
+                const PtLit* ptLiteral = (const PtLit*) std::get<1>(selectOutTuple);
+                const SpatialLiteral* newPtLiteral = nullptr;
+                if(storedSize == ptLiteral->getStepSize()){
+                    // Situation A.1.(1)
+                    CFDEBUG(std::cout << "INFO: store situation A.1.(1)" << std::endl;);
                     const VarExpr* freshVar = this->varFactory->getFreshVar(storedSize);
-                    std::string freshVarTypeStr = "i";
-                    std::string arg2TypeStr = "i";
-                    // discuss the stored variable or arithmetic expression
                     if(arg2->isVar()){
                         // the stored expression is a variable
                         const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
                         std::string varOrigArg2Name = varOrigArg2->name();
-                        // obtain the var used
                         const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
                         std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
-                        // update the equivalent classes
+
                         this->updateBindingsEqualVarAndRhsVar(freshVar, varArg2);
-                        // add type info of fresh variable according to the var type
                         this->updateVarType(freshVar, varArg2, varArg2, storedSize);
-                        // update newPure
+
                         const Expr* eq = Expr::eq(freshVar, varArg2);
                         REGISTER_EXPRPTR(eq);
-                        newPure = Expr::and_(newPure, eq);
-                        REGISTER_EXPRPTR(newPure);
+                        newPures.push_back(eq);
                     } else if(arg2->isValue()){
-                        // update the equivalent classes
                         this->updateBindingsEqualVarAndRhsValue(freshVar, arg2);
-                        //add type info to cfg
                         this->updateVarType(freshVar, arg2, arg2, storedSize);
+
                         const Expr* eq = Expr::eq(freshVar, arg2);
                         REGISTER_EXPRPTR(eq);
-                        newPure = Expr::and_(newPure, eq);
-                        REGISTER_EXPRPTR(newPure);
+                        newPures.push_back(eq);
                     }  
                     else {    
                         // the stored expression is an arithmetic expression
                         // it must be an arithmetic expression
                         CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
                         std::pair<const Expr*, bool> usedPair =  getUsedArithExprAndVar(freshVar, arg2);
-                        // compute the used expr
                         const Expr* storedExpr = usedPair.first;
                         assert(storedExpr != nullptr);
                         bool isPtr = usedPair.second;
-                        // update the variable
+                        
                         this->updateBindingsEqualVarAndRhsArithExpr(freshVar, arg2, storedExpr, isPtr);
-                        // add type info
                         this->updateVarType(freshVar, arg2, storedExpr, storedSize);
 
-                        // update new pure
                         const Expr* eq = Expr::eq(freshVar, storedExpr);
                         REGISTER_EXPRPTR(eq);
-                        newPure = Expr::and_(newPure, eq);
-                        REGISTER_EXPRPTR(newPure);
+                        newPures.push_back(eq);
                     }
-                    // modify the spatial literals
-                    
-                    // compute whether the left blk is empty after breaking the blk
-                    // bool leftEmpty = (this->computeArithmeticOffsetValue(varArg1) - this->computeArithmeticOffsetValue(breakBlk->getFrom()) == 0)? true : false;
-                    if(!(this->computeArithmeticOffsetValue(varArg1).first && this->computeArithmeticOffsetValue(breakBlk->getFrom()).first)){
-                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
-                        CFDEBUG(std::cout << "INFERUNKNOWN: Ptr arithmetic with variable.." << std::endl;);
-                        return newSH;
-                    }
-                    int leftBlkSize = this->computeArithmeticOffsetValue(varArg1).second - this->computeArithmeticOffsetValue(breakBlk->getFrom()).second;
-                    const SpatialLiteral* leftBlk = SpatialLiteral::gcBlk(
-                        breakBlk->getFrom(),
-                        varArg1,
-                        breakBlk->getBlkName(),
-                        leftBlkSize,
-                        storeDstCallStack
-                    );
-                    REGISTER_EXPRPTR(leftBlk);
-                    const SpatialLiteral* storedPt = this->createPtAccordingToMallocName(mallocName, varArg1, freshVar, storedSize, storeDstCallStack);
 
-                    CFDEBUG(std::cout << "Store type: " << arg2TypeStr << " Store stepsize: " << storedSize << std::endl;);
-                    long long size = storedSize;
-                    // bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
-                    const Expr* lit1 = Expr::lit(size);
-                    REGISTER_EXPRPTR(lit1);
-                    const Expr* add1 = Expr::add(varArg1, lit1);
-                    REGISTER_EXPRPTR(add1);
-                    if(!(this->computeArithmeticOffsetValue(breakBlk->getTo()).first && this->computeArithmeticOffsetValue(add1).first)){
-                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
-                        CFDEBUG(std::cout << "INFERUNKNOWN: Ptr arithmetic with variable.." << std::endl;);
-                        return newSH;
+                    if(!ptLiteral->isByteLevel()){
+                        // Situation A.1.(1).a
+                        newPtLiteral = SpatialLiteral::pt(ptLiteral->getFrom(), freshVar, ptLiteral->getStepSize());
+                        REGISTER_EXPRPTR(newPtLiteral);
+                    } else {
+                        // Situation A.1.(1).b
+                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair =  this->updateModifyBytifiedPtPredicateAndModifyHighLevelVar(ptLiteral, freshVar, newPures);
+                        newPtLiteral = newPtPurePair.first;
+                        newPures = newPtPurePair.second;
                     }
-                    int rightBlkSize = this->computeArithmeticOffsetValue(breakBlk->getTo()).second - this->computeArithmeticOffsetValue(add1).second;
-                    CFDEBUG(std::cout << "INFO: rightBlkSize " << rightBlkSize << std::endl;);
 
-                    const Expr* lit2 = Expr::lit(size);
-                    REGISTER_EXPRPTR(lit2);
-                    const Expr* add2 = Expr::add(varArg1, lit2);
-                    REGISTER_EXPRPTR(add2);
-                    const SpatialLiteral* rightBlk = SpatialLiteral::gcBlk(
-                        add2,
-                        breakBlk->getTo(),
-                        breakBlk->getBlkName(),
-                        rightBlkSize,
-                        storeDstCallStack
-                    );
-                    REGISTER_EXPRPTR(rightBlk);
-                    newSpatial.push_back(leftBlk);
-                    newSpatial.push_back(storedPt);
-                    newSpatial.push_back(rightBlk);
+                    // newMetaInfo 
+                    newMetaInfo = tempMetaInfo;
+                    // new region spList
+                    newLeftList = std::get<0>(selectOutTuple);
+                    newMiddleList.push_back(newPtLiteral);
+                    newRightList  = std::get<2>(selectOutTuple);
+                } else if(storedSize < ptLiteral->getStepSize()){
+                    // situation A.1.(2)
+                    CFDEBUG(std::cout << "INFO: store situation A.1.(2)" << std::endl;);
+                    const VarExpr* freshStoredVar = this->varFactory->getFreshVar(storedSize);
+                    if(arg2->isVar()){
+                        const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
+                        std::string varOrigArg2Name = varOrigArg2->name();
+                        const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
+                        std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
+
+                        this->updateBindingsEqualVarAndRhsVar(freshStoredVar, varArg2);
+                        this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
+
+                        const Expr* eq = Expr::eq(freshStoredVar, varArg2);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    } else if(arg2->isValue()){
+                        this->updateBindingsEqualVarAndRhsValue(freshStoredVar, arg2);
+                        this->updateVarType(freshStoredVar, arg2, arg2, storedSize);
+
+                        const Expr* eq = Expr::eq(freshStoredVar, arg2);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    }  
+                    else {    
+                        // the stored expression is an arithmetic expression
+                        CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
+                        std::pair<const Expr*, bool> usedPair = getUsedArithExprAndVar(freshStoredVar, arg2);
+                        const Expr* storedExpr = usedPair.first;
+                        assert(storedExpr != nullptr);
+                        bool isPtr = usedPair.second;
+
+                        this->updateBindingsEqualVarAndRhsArithExpr(freshStoredVar, arg2, storedExpr, isPtr);
+                        this->updateVarType(freshStoredVar, arg2, storedExpr, storedSize);
+
+                        const Expr* eq = Expr::eq(freshStoredVar, storedExpr);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    }
+
                     
-                    currentIndex += 1;
-                } else if(!i->getBlkName().compare(mallocName) && 
-                       SpatialLiteral::Kind::BLK == i->getId() && 
-                       currentIndex != splitBlkIndex){
-                    newSpatial.push_back(i);
-                    currentIndex += 1;
+                    if(!ptLiteral->isByteLevel()){
+                        // A.1.(2).b: the original pt predicate is not bytified, bytify the pt predicate
+                        // bytify the original pt
+                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndModifyPartial(regionName, ptLiteral, freshStoredVar, 0, storedSize, newPures);
+                        newPtLiteral = newPtPurePair.first;
+                        newPures = newPtPurePair.second;
+                    } else {
+                        // A.1.(2).a: the originnal pt predicate is bytified, directly change the corresponding part
+                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateModifyBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, 0, storedSize, newPures);
+                        newPtLiteral = newPtPurePair.first;
+                        newPures = newPtPurePair.second;
+                    }
+
+                    // newMetaInfo remains unchanged
+                    newMetaInfo = tempMetaInfo;
+                    // update region spList
+                    newLeftList = std::get<0>(selectOutTuple);
+                    newMiddleList.push_back(newPtLiteral);
+                    newRightList  = std::get<2>(selectOutTuple);
                 } else {
-                    newSpatial.push_back(i);
+                    CFDEBUG(std::cout << "INFO: store situation A.1.(3)" << std::endl;);
+                    // situation A.1.(3)
+                    // TODOsh: refactor later, currently the original loop is broken for a new one
+                    const VarExpr* freshStoredVar = this->varFactory->getFreshVar(storedSize);
+                    if(arg2->isVar()){
+                        const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
+                        std::string VarOrigArg2Name = varOrigArg2->name();
+                        const VarExpr* varArg2 = this->getUsedVarAndName(VarOrigArg2Name).first;
+                        std::string varArg2Name = this->getUsedVarAndName(VarOrigArg2Name).second;
+
+                        this->updateBindingsEqualVarAndRhsVar(freshStoredVar, varArg2);
+                        this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
+
+                        const Expr* eq = Expr::eq(
+                            freshStoredVar,
+                            varArg2
+                        );
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    } else if(arg2->isValue()){
+                        this->updateBindingsEqualVarAndRhsValue(freshStoredVar, arg2);
+                        this->updateVarType(freshStoredVar, arg2, arg2, storedSize);
+
+                        const Expr* eq = Expr::eq(freshStoredVar, arg2);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    } else {
+                        CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
+                        std::pair<const Expr*, bool> usedPair =  getUsedArithExprAndVar(freshStoredVar, arg2);
+                        const Expr* storedExpr = usedPair.first;
+                        assert(storedExpr != nullptr);
+                        bool isPtr = usedPair.second;
+
+                        this->updateBindingsEqualVarAndRhsArithExpr(freshStoredVar, arg2, storedExpr, isPtr);
+                        this->updateVarType(freshStoredVar, arg2, storedExpr, storedSize);
+
+                        const Expr* eq = Expr::eq(freshStoredVar, storedExpr);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    }
+                    // The above operations transfer the data to store to freshStoredVar
+                    bool isDstTailPtSplitted = 
+                      tempMetaInfo->isInitialized(offset + storedSize) && 
+                    !(tempMetaInfo->getOffsetPos(offset + storedSize).first);
+                    if(isDstTailPtSplitted){
+                        CFDEBUG(std::cout << "ERROR: Does not support over store that split existing pt predcate yet.." << std::endl;);
+                        SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
+                        return newSH;
+                    }
+                    bool isDstTailInitialized = tempMetaInfo->isInitialized(offset + storedSize - 1); 
+                    assert(tempMetaInfo->getOffsetPos(offset).first);
+                    int dstHeadPtIndex = tempMetaInfo->getOffsetPos(offset).second;
+                    int dstTailPtIndex = -1;
+                    int dstTailBlkIndex = -1;
+
+
+                    if(isDstTailInitialized){
+                        assert(tempMetaInfo->getInitializedPos(offset + storedSize - 1).first);
+                        dstTailPtIndex = tempMetaInfo->getInitializedPos(offset + storedSize - 1).second;
+
+                    } else { 
+                        // bytify the tail blk to make it ends with pt predicate
+                        dstTailBlkIndex = tempMetaInfo->getSplit(offset + storedSize - 1);
+
+                        std::tuple<
+                            std::list<const SpatialLiteral*>,
+                            const SpatialLiteral*,
+                            std::list<const SpatialLiteral*>
+                        > 
+                        selectOutTailBlk = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::BLK, dstTailBlkIndex);
+
+                        const SpatialLiteral* oldMiddleBlk = std::get<1>(selectOutTailBlk);
+                        std::list<const SpatialLiteral*> tempLeftList = std::get<0>(selectOutTailBlk);
+                        std::list<const SpatialLiteral*> tempRightList = std::get<2>(selectOutTailBlk);
+                        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPair = this->bytifyBlkPredicate(tempMetaInfo, regionName, oldMiddleBlk, newPures);
+                        std::list<const SpatialLiteral*> tempMiddleList = resultBytifiedPair.first;
+                        newPures = resultBytifiedPair.second;
+
+                        tempRegionClause = new RegionClause(tempLeftList, tempMiddleList, tempRightList, tempMetaInfo, tempRegionClause);
+                        REGISTER_EXPRPTR(tempRegionClause);
+                        tempMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempMetaInfo);
+
+                        assert(tempMetaInfo->getInitializedPos(offset + storedSize - 1).first);
+                        dstTailPtIndex = tempMetaInfo->getInitializedPos(offset + storedSize - 1).second;
+                    }
+
+                    std::tuple<
+                        std::list<const SpatialLiteral*>,
+                        std::list<const SpatialLiteral*>,
+                        std::list<const SpatialLiteral*>
+                    > selectOutTempTriplet = tempRegionClause->selectOutSpLitList(
+                        SpatialLiteral::Kind::PT, dstHeadPtIndex,
+                        SpatialLiteral::Kind::PT, dstTailPtIndex
+                    );
+
+                    newPtLiteral = SpatialLiteral::pt(varArg1, freshStoredVar, storedSize);
+                    REGISTER_EXPRPTR(newPtLiteral);
+
+                    tempMetaInfo->wipeInterval(offset, offset + storedSize);
+                    tempMetaInfo->addSplit(offset);
+                    tempMetaInfo->addSplitLength(offset, storedSize);
+
+                    newMetaInfo = tempMetaInfo;
+                    newLeftList = std::get<0>(selectOutTempTriplet);
+                    newRightList = std::get<2>(selectOutTempTriplet);
+                    newMiddleList.push_back(newPtLiteral);
+                }
+                
+                newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
+                REGISTER_EXPRPTR(newRegionClause);
+                for(const RegionClause* r : sh->getRegions()){
+                    if(!r->getRegionName().compare(regionName)){
+                        newRegions.push_back(newRegionClause);
+                    } else {
+                        newRegions.push_back(r);
+                    }
+                }
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
+                newSH->print(std::cout);
+                CFDEBUG(std::cout << std::endl;);
+                return newSH;
+            } else if(tempMetaInfo->isInitialized(offset)){
+                // A.2 situation
+                CFDEBUG(std::cout << "INFO: store offset is initialized" << std::endl;);
+                std::pair<bool, int> posInfo =  tempMetaInfo->getInitializedPos(offset);
+
+                assert(posInfo.first);
+                int modifyIndex = posInfo.second;
+
+                // get the prefix length and suffix length for the modification, the suffix length must be greater than the stored size
+                int prefixLength = tempMetaInfo->getInitializedPrefixLength(offset);
+                int suffixLength = tempMetaInfo->getInitializedSuffixLength(offset);
+
+                std::tuple<
+                std::list<const SpatialLiteral*>,
+                const SpatialLiteral*,
+                std::list<const SpatialLiteral*>
+                > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::PT, modifyIndex);
+
+                const PtLit* ptLiteral = (const PtLit*)std::get<1>(selectOutTuple);
+                const PtLit* newPtLiteral = nullptr;
+
+                if(storedSize <= suffixLength){
+                    // Situation A.2.(1)
+                    CFDEBUG(std::cout << "INFO: store situation A.2.(1)" << std::endl;);
+                    const VarExpr* freshStoredVar = this->varFactory->getFreshVar(storedSize);
+
+                    if(arg2->isVar()){
+                        const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
+                        std::string varOrigArg2Name = varOrigArg2->name();
+                        const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
+                        std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
+
+                        this->updateBindingsEqualVarAndRhsVar(freshStoredVar, varArg2);
+                        this->updateVarType(freshStoredVar, varArg2, varArg2, storedSize);
+
+                        const Expr* eq = Expr::eq(freshStoredVar, varArg2);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    } else if(arg2->isValue()){
+                        this->updateBindingsEqualVarAndRhsValue(freshStoredVar, arg2);
+                        this->updateVarType(freshStoredVar, arg2, arg2, storedSize);
+
+                        const Expr* eq = Expr::eq(freshStoredVar, arg2);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    }  
+                    else {    
+                        CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
+                        std::pair<const Expr*, bool> usedPair = getUsedArithExprAndVar(freshStoredVar, arg2);
+                        const Expr* storedExpr = usedPair.first;
+                        assert(storedExpr != nullptr);
+                        bool isPtr = usedPair.second;
+
+                        this->updateBindingsEqualVarAndRhsArithExpr(freshStoredVar, arg2, storedExpr, isPtr);
+                        this->updateVarType(freshStoredVar, arg2, storedExpr, storedSize);
+
+                        const Expr* eq = Expr::eq(freshStoredVar, storedExpr);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                    }
+
+
+                    // update the predicate 
+                    if(!ptLiteral->isByteLevel()){
+                        // Situation -- b: the pt predicate is not bytified
+                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndModifyPartial(regionName, ptLiteral, freshStoredVar, offset, storedSize, newPures);
+                        newPtLiteral = newPtPurePair.first;
+                        newPures = newPtPurePair.second;
+
+                    } else {
+                        // Situation -- a: the pt predicate is bytified 
+                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateModifyBytifiedPtPredicateAndModifyPartial(ptLiteral, freshStoredVar, offset, storedSize, newPures);
+                        newPtLiteral = newPtPurePair.first;
+                        newPures = newPtPurePair.second;
+                    }
+                    // newMetaInfo 
+                    newMetaInfo = tempMetaInfo;
+                    // new region spList
+                    newLeftList = std::get<0>(selectOutTuple);
+                    newMiddleList.push_back(newPtLiteral);
+                    newRightList  = std::get<2>(selectOutTuple);
+                } else {
+                    CFDEBUG(std::cout << "ERROR: extreme situation, A.2 situation currently not considered.." << std::endl;);
+                    return sh;
+                }
+                newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
+                REGISTER_EXPRPTR(newRegionClause);
+                for(const RegionClause* r : sh->getRegions()){
+                    if(!r->getRegionName().compare(regionName)){
+                        newRegions.push_back(newRegionClause);
+                    } else {
+                        newRegions.push_back(r);
+                    }
+                }
+                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
+                newSH->print(std::cout);
+                CFDEBUG(std::cout << std::endl;);
+                return newSH;
+            } else {
+                CFDEBUG(std::cout << "ERROR: store situation: this should not happen" << std::endl;);
+                assert(false);
+            }
+            
+        } else {
+            const RegionClause* tempRegionClause = oldRegionClause;
+            RegionBlkSplitUtilPtr tempMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempRegionClause->getRegionMetaInfo());
+
+            // -------------- new things --------------
+            std::list<const SpatialLiteral*> newLeftList;
+            std::list<const SpatialLiteral*> newMiddleList;
+            std::list<const SpatialLiteral*> newRightList;
+            RegionBlkSplitUtilPtr newMetaInfo;
+            const RegionClause* newRegionClause;
+
+            CFDEBUG(std::cout << "INFO: store situation A.3" << std::endl;);
+            CFDEBUG(std::cout << "INFO: new store offset" << std::endl;);
+            // if the position is not stored yet, create a new pt predicate to store it
+            // set offset to allocated in the metaInfo
+            int splitBlkIndex = tempMetaInfo->addSplit(offset);
+            assert(splitBlkIndex > 0);
+            CFDEBUG(std::cout << "malloc name: " << regionName << " splitIndex: " << splitBlkIndex <<  std::endl);
+
+            std::tuple<
+            std::list<const SpatialLiteral*>,
+            const SpatialLiteral*,
+            std::list<const SpatialLiteral*>
+            > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::BLK, splitBlkIndex);
+
+            const BlkLit* blkLiteral = (const BlkLit*)std::get<1>(selectOutTuple);
+
+            CFDEBUG(std::cout << "INFO: storedSize: " << offset << " " << storedSize << std::endl;);
+
+            tempMetaInfo->addSplitLength(offset, storedSize);
+            const VarExpr* freshVar = this->varFactory->getFreshVar(storedSize);
+            if(arg2->isVar()){
+                const VarExpr* varOrigArg2 = (const VarExpr*) arg2;
+                std::string varOrigArg2Name = varOrigArg2->name();
+                const VarExpr* varArg2 = this->getUsedVarAndName(varOrigArg2Name).first;
+                std::string varArg2Name = this->getUsedVarAndName(varOrigArg2Name).second;
+
+                this->updateBindingsEqualVarAndRhsVar(freshVar, varArg2);
+                this->updateVarType(freshVar, varArg2, varArg2, storedSize);
+
+                const Expr* eq = Expr::eq(freshVar, varArg2);
+                REGISTER_EXPRPTR(eq);
+                newPures.push_back(eq);
+            } else if(arg2->isValue()){
+                this->updateBindingsEqualVarAndRhsValue(freshVar, arg2);
+                this->updateVarType(freshVar, arg2, arg2, storedSize);
+
+                const Expr* eq = Expr::eq(freshVar, arg2);
+                REGISTER_EXPRPTR(eq);
+                newPures.push_back(eq);
+            }  
+            else {    
+                CFDEBUG(std::cout << "INFO: arg2 is a ptr arithmetic expression." << std::endl;);
+                std::pair<const Expr*, bool> usedPair = getUsedArithExprAndVar(freshVar, arg2);
+                const Expr* storedExpr = usedPair.first;
+                assert(storedExpr != nullptr);
+                bool isPtr = usedPair.second;
+
+                this->updateBindingsEqualVarAndRhsArithExpr(freshVar, arg2, storedExpr, isPtr);
+                this->updateVarType(freshVar, arg2, storedExpr, storedSize);
+
+                const Expr* eq = Expr::eq(freshVar, storedExpr);
+                REGISTER_EXPRPTR(eq);
+                newPures.push_back(eq);
+            }
+            // modify the spatial literals
+
+            if(!(this->computeArithmeticOffsetValue(varArg1).first && this->computeArithmeticOffsetValue(blkLiteral->getFrom()).first)){
+                SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
+                CFDEBUG(std::cout << "INFERUNKNOWN: Ptr arithmetic with variable.." << std::endl;);
+                return newSH;
+            }
+            int leftBlkSize = this->computeArithmeticOffsetValue(varArg1).second - this->computeArithmeticOffsetValue(blkLiteral->getFrom()).second;
+            const SpatialLiteral* leftBlk = SpatialLiteral::blk(blkLiteral->getFrom(), varArg1, leftBlkSize);
+            REGISTER_EXPRPTR(leftBlk);
+            const SpatialLiteral* storedPt = SpatialLiteral::pt(varArg1, freshVar, storedSize);
+            REGISTER_EXPRPTR(storedPt);
+
+            CFDEBUG(std::cout << "Store var: " << freshVar << " Store stepsize: " << storedSize << std::endl;);
+            long long size = storedSize;
+            // bool rightEmpty = (this->computeArithmeticOffsetValue(Expr::add(varArg1, Expr::lit(size))) - this->computeArithmeticOffsetValue(breakBlk->getTo()) == 0) ? true : false;
+            const Expr* lit1 = Expr::lit(size);
+            REGISTER_EXPRPTR(lit1);
+            const Expr* add1 = Expr::add(varArg1, lit1);
+            REGISTER_EXPRPTR(add1);
+            if(!(this->computeArithmeticOffsetValue(blkLiteral->getTo()).first && this->computeArithmeticOffsetValue(add1).first)){
+                SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
+                CFDEBUG(std::cout << "INFERUNKNOWN: Ptr arithmetic with variable.." << std::endl;);
+                return newSH;
+            }
+            int rightBlkSize = this->computeArithmeticOffsetValue(blkLiteral->getTo()).second - this->computeArithmeticOffsetValue(add1).second;
+            CFDEBUG(std::cout << "INFO: rightBlkSize " << rightBlkSize << std::endl;);
+
+            const Expr* lit2 = Expr::lit(size);
+            REGISTER_EXPRPTR(lit2);
+            const Expr* add2 = Expr::add(varArg1, lit2);
+            REGISTER_EXPRPTR(add2);
+            const SpatialLiteral* rightBlk = SpatialLiteral::blk(add2, blkLiteral->getTo(), rightBlkSize);
+            REGISTER_EXPRPTR(rightBlk);
+
+            newLeftList = std::get<0>(selectOutTuple);
+            newMiddleList.push_back(leftBlk);
+            newMiddleList.push_back(storedPt);
+            newMiddleList.push_back(rightBlk);
+            newRightList = std::get<2>(selectOutTuple);
+
+            newMetaInfo = tempMetaInfo;
+
+            newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
+            REGISTER_EXPRPTR(newRegionClause);
+            for(const RegionClause* r : sh->getRegions()){
+                if(!r->getRegionName().compare(regionName)){
+                    newRegions.push_back(newRegionClause);
+                } else {
+                    newRegions.push_back(r);
                 }
             }
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
@@ -2865,6 +2565,7 @@ namespace smack{
     BlockExecutor::executeLoad
     (SHExprPtr sh, std::string lhsVarName, std::string lhsVarOrigName, const FunExpr* rhsFun){ 
         assert(rhsFun->name().find("$load") != std::string::npos);
+        // DONE: loadIndex refactored
         // use ldPtr to store the position of load instruction
         const VarExpr* ldOrigPtr = nullptr;
         std::string ldOrigPtrName;
@@ -2874,26 +2575,25 @@ namespace smack{
         
         //std::string  lhsVarName = this->getUsedVarAndName(lhsVarOrigName).second;
         const Expr* loadedPosition = rhsFun->getArgs().back();
-        std::string mallocName;
-        int blkSize = -1;
+        std::string regionName;
+        int regionSize = -1;
         int loadedOffset = -1;
         int loadedSize = -1;
-
-        std::list<std::string> loadSrcCallStack;
+        
+        const RegionClause* oldRegionClause;
 
         if(loadedPosition->isVar()){
-            // if the loaded position is a variable
             CFDEBUG(std::cout << "INFO: load varexpr " << loadedPosition << std::endl;);
             ldOrigPtr = (const VarExpr*)loadedPosition;
             ldOrigPtrName = ldOrigPtr->name();
             ldPtr = this->getUsedVarAndName(ldOrigPtrName).first;
             ldPtrName = this->getUsedVarAndName(ldOrigPtrName).second;
-            mallocName = this->varEquiv->getBlkName(ldPtrName);
+            regionName = this->varEquiv->getRegionName(ldPtrName);
             
             // check whether it is freed
-            CHECK_VALID_DEREF_FOR_BLK(mallocName);
+            CHECK_VALID_DEREF_FOR_BLK(regionName);
             
-            blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+            regionSize = sh->getRegionSize(regionName);
             loadedOffset = this->varEquiv->getOffset(ldPtrName);
             CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
         } else if(loadedPosition->getType() == ExprType::FUNC){
@@ -2905,63 +2605,59 @@ namespace smack{
             if(this->isPtrArithFuncName(loadedPositionFunc->name())){
                 // compute the stepSize information of the variable
                 CFDEBUG(std::cout << "INFO: loadedPosition is funcexpr" << std::endl;);
-                const Expr* newPure = sh->getPure();
-                std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(loadedPositionFunc, newPure);
+                std::list<const Expr*> newPures = sh->getPures();
+                std::pair<const VarExpr*, std::list<const Expr*>>  newLoadedVarPurePair = this->updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(loadedPositionFunc, newPures);
                 const VarExpr* freshLoadedVar =  newLoadedVarPurePair.first;
-                newPure =  newLoadedVarPurePair.second;
+                newPures =  newLoadedVarPurePair.second;
 
                 ldOrigPtr = freshLoadedVar;
                 ldPtr = freshLoadedVar;
                 ldOrigPtrName = freshLoadedVar->name();
                 ldPtrName = freshLoadedVar->name();
-                mallocName = this->varEquiv->getBlkName(ldPtrName);
+                regionName = this->varEquiv->getRegionName(ldPtrName);
+                CHECK_VALID_DEREF_FOR_BLK(regionName);
 
-                // check whether it is freed
-                CHECK_VALID_DEREF_FOR_BLK(mallocName);
-
-                blkSize = sh->getBlkSize(mallocName)->translateToInt(this->varEquiv).second;
+                regionSize = sh->getRegionSize(regionName);
                 loadedOffset = this->varEquiv->getOffset(ldPtrName);
                 CFDEBUG(std::cout << "INFO: Load " << ldPtrName << " to " << lhsVarName << std::endl;);
-                
-                // update the symbolic heap
-                SHExprPtr oldSh = sh;
-                sh = std::make_shared<SymbolicHeapExpr>(newPure, oldSh->getSpatialExpr());
+                sh = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
+            } else {
+                CFDEBUG(std::cout << "ERROR: UNSOLVED loaded position function " << loadedPositionFunc << std::endl;);
             }
         } else {
             CFDEBUG(std::cout << "ERROR: UNSOLVED loaded position type " << loadedPosition << std::endl;);
         }
 
-        if(VarType::PTR == this->getVarType(ldPtrName) || VarType::NIL == this->getVarType(ldPtrName)){
-
-        } else {
-            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+        if(!(VarType::PTR == this->getVarType(ldPtrName) || VarType::NIL == this->getVarType(ldPtrName))){
+            SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: load a unintialized memory, INVALID DEREF.." << std::endl;);
             return newSH;
         }
+
         int stepSize = this->getStepSizeOfPtrVar(ldPtrName);
         loadedSize = this->parseLoadFuncSize(rhsFun->name());
-        
-        if(!mallocName.compare("$Null")){
-            // the symbolic heap is set to error
-            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+        if(!regionName.compare("$Null")){
+            SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: load null ptr" << std::endl;);
             return newSH;
         }
-        if(loadedOffset >= blkSize || loadedOffset + loadedSize > blkSize || loadedOffset < 0){
-            // If the ptr offset is overflow
-            // the symbolic heap is set to error
-            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF);
+        if(loadedOffset >= regionSize || loadedOffset + loadedSize > regionSize || loadedOffset < 0){
+            SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF);
             CFDEBUG(std::cout << "INFO: loadedOffset out of range" << std::endl;);
             return newSH;
         }
 
 
-        const SpatialLiteral* loadSrcSpt = sh->getRegionSpt(mallocName);
-        for(std::string s : loadSrcSpt->getStackMembers()){
-            loadSrcCallStack.push_back(s);
-        }
+        // const SpatialLiteral* loadSrcSpt = sh->getRegionSpt(regionName);
+        // for(std::string s : loadSrcSpt->getStackMembers()){
+        //     loadSrcCallStack.push_back(s);
+        // }
 
-        CFDEBUG(std::cout << "INFO: loadedOffset: " << loadedOffset << " blkSize " << blkSize << " loadedSize " << loadedSize << std::endl;);
+        std::list<const Expr*> newPures = sh->getPures();
+        std::list<const RegionClause*> newRegions;
+        oldRegionClause = sh->getRegion(regionName);
+
+        CFDEBUG(std::cout << "INFO: loadedOffset: " << loadedOffset << " blkSize " << regionSize << " loadedSize " << loadedSize << std::endl;);
         // B.1.(1): the loaded is an exact load
         // B.1.(2): the loaded position has an offset, but the loadedSize  <  the stepSize of pt predicate
         // B.3.(2).1: the loaded position has an offset, but the loadedSize >  the stepSize of pt predicate
@@ -2969,193 +2665,189 @@ namespace smack{
         // B.3.(2).2: the loaded position is initialized, but not an offset. THe loadedSize + loadedPos > ptOffset + stepSize
         // B.3.(1): the loaded position is not initialized, [offset, offset + length) lies in some blk.
         // B.3.(2).3: the loaded position is not initalized, [offset, offset + length) covers some pt predicate
-        if(this->storeSplit->hasOffset(mallocName, loadedOffset) || this->storeSplit->isInitialized(mallocName, loadedOffset)){
-            // spt * blk * pt * blk * pt
-            //              1          2
-            //              2*1+1      2*2+1
-            const Expr* newPure = sh->getPure();
-            std::list<const SpatialLiteral*> newSpatial;
+        if(oldRegionClause->getRegionMetaInfo()->hasOffset(loadedOffset) || oldRegionClause->getRegionMetaInfo()->isInitialized(loadedOffset)){
+            
+            const RegionClause* tempRegionClause = oldRegionClause;
+            RegionBlkSplitUtilPtr tempMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempRegionClause->getRegionMetaInfo());
 
-            std::pair<bool, int> posResult = this->storeSplit->getOffsetPos(
-                mallocName,
-                loadedOffset
-            );
+            // -------------- new things --------------
+            std::list<const SpatialLiteral*> newLeftList;
+            std::list<const SpatialLiteral*> newMiddleList;
+            std::list<const SpatialLiteral*> newRightList;
+            RegionBlkSplitUtilPtr newMetaInfo;
+            const RegionClause* newRegionClause;
+
+            std::pair<bool, int> posResult = tempMetaInfo->getOffsetPos(loadedOffset);
+            CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
             if(posResult.first){    
                 // Situation B.1
-                if(this->storeSplit->getInitializedLength(mallocName, loadedOffset) >= loadedSize ){
-                    int ptLength = this->storeSplit->getInitializedPos(mallocName, loadedOffset).second;
+                if(tempMetaInfo->getInitializedLength(loadedOffset) >= loadedSize ){
+                    int ptLength = tempMetaInfo->getInitializedPos(loadedOffset).second;
                     int loadIndex = posResult.second;
-                    // start counting pt when we enter the blk & pts that created by the correct malloc function
-                    bool startCounting = false;
-                    // increase index by 1 when counting is started 
-                    int countIndex = 1;
-                    for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-                        if(SpatialLiteral::Kind::SPT == spl->getId()){
-                            const SizePtLit* sizePt = (const SizePtLit*) spl;
-                            if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
-                                startCounting = true;
-                            } else {
-                                startCounting = false;
-                            }
-                        }
-                        if(startCounting) {
-                            if(SpatialLiteral::Kind::PT == spl->getId()){
-                                if(countIndex == loadIndex){
-                                    // find the correct index and load the content out
-                                    const PtLit* pt = (const PtLit*) spl;
-                                    // toExpr should be a variable
-                                    const Expr* toExprOrig = pt->getTo();
-                                    const VarExpr* toExprOrigVar = (const VarExpr*) toExprOrig;
-                                    const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
-                                    CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
-                                    if(loadedSize == this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
-                                        // Situation B.1.(1)
-                                        this->updateBindingsEqualVarAndRhsVar(lhsVar, toExprVar);
-                                        this->updateVarType(lhsVar, toExprVar, toExprVar);
-                                        const Expr* eq1 = Expr::eq(lhsVar, toExprVar);
-                                        REGISTER_EXPRPTR(eq1);
-                                        newPure = Expr::and_(newPure, eq1);
-                                        REGISTER_EXPRPTR(newPure);
-                                        const Expr* eq2 =  Expr::eq(lhsVar, toExprVar);
-                                        REGISTER_EXPRPTR(eq2);
-                                        const Expr* newPure = Expr::and_(sh->getPure(), eq2);
-                                        newSpatial.push_back(spl);
-                                    } else if(loadedSize < this->storeSplit->getInitializedLength(mallocName, loadedOffset)){
-                                        // Situation B.1.(2)
-                                        if(pt->isByteLevel()){
-                                            std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, 0, loadedSize, newPure);
-                                            this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                            this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                            newPure =  newLoadedVarPurePair.second;
-                                            const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                            REGISTER_EXPRPTR(eq);
-                                            newPure = Expr::and_(newPure, eq);
-                                            REGISTER_EXPRPTR(newPure);
-                                            newSpatial.push_back(spl);  
-                                        } else {
-                                            std::pair<const PtLit*, const Expr*> newPtPurePair =    this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
-                                            const PtLit* newPt = newPtPurePair.first;
-                                            newSpatial.push_back(newPt);
-                                            newPure = newPtPurePair.second;
-                                            std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(newPt, 0, loadedSize, newPure);
-                                            this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                            newPure =  newLoadedVarPurePair.second;
-                                            this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                            const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                            REGISTER_EXPRPTR(eq);
-                                            newPure = Expr::and_(newPure, eq);
-                                            REGISTER_EXPRPTR(newPure);
-                                        }
-                                    } else {
-                                        CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
-                                        newSpatial.push_back(spl);
-                                    }
-                                } else {
-                                    newSpatial.push_back(spl);
-                                }
-                                countIndex += 1;
-                            } else {
-                                newSpatial.push_back(spl);
-                            }
+
+                    std::tuple<
+                    std::list<const SpatialLiteral*>,
+                    const SpatialLiteral*,
+                    std::list<const SpatialLiteral*>
+                    > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::PT, loadIndex);
+
+                    // find the correct index and load the content out
+                    const PtLit* ptLiteral = (const PtLit*)std::get<1>(selectOutTuple);
+                    const PtLit* newPtLiteral = nullptr;
+                    // toExpr should be a variable
+                    const Expr* toExprOrig = ptLiteral->getTo();
+                    const VarExpr* toExprOrigVar = (const VarExpr*) toExprOrig;
+                    const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
+                    CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
+                    if(loadedSize == tempMetaInfo->getInitializedLength(loadedOffset)){
+                        // Situation B.1.(1)
+                        this->updateBindingsEqualVarAndRhsVar(lhsVar, toExprVar);
+                        this->updateVarType(lhsVar, toExprVar, toExprVar);
+
+                        const Expr* eq1 = Expr::eq(lhsVar, toExprVar);
+                        REGISTER_EXPRPTR(eq1);
+                        newPures.push_back(eq1);
+                        const Expr* eq2 =  Expr::eq(lhsVar, toExprVar);
+                        REGISTER_EXPRPTR(eq2);
+                        newPures.push_back(eq2);
+                        newPtLiteral = ptLiteral;
+                    } else if(loadedSize < tempMetaInfo->getInitializedLength(loadedOffset)){
+                        // Situation B.1.(2)
+                        if(ptLiteral->isByteLevel()){
+                            std::pair<const VarExpr*, std::list<const Expr*>> newLoadedVarPurePair = this->updateLoadBytifiedPtPredicatePartial(ptLiteral, 0, loadedSize, newPures);
+
+                            this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                            this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+
+                            newPures =  newLoadedVarPurePair.second;
+                            const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                            REGISTER_EXPRPTR(eq);
+                            newPures.push_back(eq);
+                            newPtLiteral = ptLiteral;
                         } else {
-                            newSpatial.push_back(spl);
+                            std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(regionName, ptLiteral, newPures);
+                            newPtLiteral = newPtPurePair.first;
+                            newPures = newPtPurePair.second;
+                            std::pair<const VarExpr*, std::list<const Expr*>>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(newPtLiteral, 0, loadedSize, newPures);
+
+                            this->updateBindingsEqualVarAndRhsVar(lhsVar, newLoadedVarPurePair.first);
+                            newPures =  newLoadedVarPurePair.second;
+                            this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+
+                            const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                            REGISTER_EXPRPTR(eq);
+                            newPures.push_back(eq);
                         }
+                    } else {
+                        CFDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
+                        assert(false);
                     }
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-                    newSH->print(std::cout);
-                    CFDEBUG(std::cout << std::endl;);
-                    return newSH;
+
+                    newLeftList = std::get<0>(selectOutTuple);
+                    newMiddleList.push_back(newPtLiteral);
+                    newRightList = std::get<2>(selectOutTuple);
+
+                    newMetaInfo = tempMetaInfo;
+                    newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
+                    REGISTER_EXPRPTR(newRegionClause);
                 } else {
                     // Situation B.3.(2).1
                 
                     CFDEBUG(std::cout << "INFO: Situation 3.(2).1 currently not support, to be added later" << std::endl;)
-                    CFDEBUG(std::cout << "INFO: Initialized length: " << this->storeSplit->getInitializedLength(mallocName, loadedOffset) << " loaded size: " << loadedSize << std::endl;);
-                    SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                    CFDEBUG(std::cout << "INFO: Initialized length: " << tempMetaInfo->getInitializedLength(loadedOffset) << " loaded size: " << loadedSize << std::endl;);
+                    SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
                     return newSH;
                 } 
-            } else if(this->storeSplit->isInitialized(mallocName, loadedOffset)){
+            } else if(tempMetaInfo->isInitialized(loadedOffset)){
                 // Situation B.2
-                if (loadedSize <= this->storeSplit->getInitializedSuffixLength(mallocName, loadedOffset)){
+                if (loadedSize <= tempMetaInfo->getInitializedSuffixLength(loadedOffset)){
                     // Situation B.2.(1)
-                    // start counting the spatial literal when we enter the blk & pts that created by the correct malloc function
-                    int prefixLength = this->storeSplit->getInitializedPrefixLength(mallocName, loadedOffset);
+                    int prefixLength = tempMetaInfo->getInitializedPrefixLength(loadedOffset);
                     int loadIndex = posResult.second;
-                    bool startCounting = false;
-                    // increase index by 1 when counting is started 
-                    int countIndex = 1;
-                    for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-                        if(SpatialLiteral::Kind::SPT == spl->getId()){
-                            const SizePtLit* sizePt = (const SizePtLit*) spl;
-                            if(!sizePt->getBlkName().compare(this->varEquiv->getBlkName(ldPtrName))){
-                                startCounting = true;
-                            } else {
-                                startCounting = false;
-                            }
-                        }
-                        if(startCounting){
-                            if(SpatialLiteral::Kind::PT == spl->getId()){
-                                if(countIndex == loadIndex){
-                                    // find the correct index and load the content out
-                                    const PtLit* pt = (const PtLit*) spl;
-                                    assert(pt->getTo()->isVar());
-                                    const VarExpr* toExprOrigVar = (const VarExpr*)pt->getTo();
-                                    const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
-                                    CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
-                                    if(pt->isByteLevel()){
-                                        std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                        this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                        this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                        newPure =  newLoadedVarPurePair.second;
-                                        const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                        REGISTER_EXPRPTR(eq);
-                                        newPure = Expr::and_(newPure, eq);
-                                        REGISTER_EXPRPTR(newPure);
-                                        newSpatial.push_back(spl);
-                                    } else {
-                                        std::pair<const PtLit*, const Expr*> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(pt, newPure);
-                                        newSpatial.push_back(newPtPurePair.first);
-                                        newPure = newPtPurePair.second;
-                                        std::pair<const VarExpr*, const Expr*>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(pt, prefixLength, loadedSize, newPure);
-                                        this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
-                                        this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
-                                        newPure =  newLoadedVarPurePair.second;
-                                        const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
-                                        REGISTER_EXPRPTR(eq);
-                                        newPure = Expr::and_(newPure, eq);
-                                        REGISTER_EXPRPTR(newPure);
-                                    }
-                                } else {
-                                    newSpatial.push_back(spl);
-                                }
-                                countIndex += 1;
-                            } else {
-                                newSpatial.push_back(spl);
-                            }
-                        } else {
-                            newSpatial.push_back(spl);
-                        }
+                    
+                    std::tuple<
+                        std::list<const SpatialLiteral*>,
+                        const SpatialLiteral*,
+                        std::list<const SpatialLiteral*>
+                    > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::PT, loadIndex);
+
+                    // find the correct index and load the content out
+                    const PtLit* ptLiteral = (const PtLit*) std::get<1>(selectOutTuple);
+                    const PtLit* newPtLiteral = nullptr;
+
+
+                    assert(ptLiteral->getTo()->isVar());
+                    const VarExpr* toExprOrigVar = (const VarExpr*)(ptLiteral->getTo());
+                    const VarExpr* toExprVar = this->getUsedVarAndName(toExprOrigVar->name()).first;
+
+                    CFDEBUG(std::cout << "INFO: loaded expr: " << toExprVar << std::endl;);
+                    if(ptLiteral->isByteLevel()){
+                        std::pair<const VarExpr*, std::list<const Expr*>>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(ptLiteral, prefixLength, loadedSize, newPures);
+
+                        this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                        this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+
+                        newPures =  newLoadedVarPurePair.second;
+                        const Expr* eq = Expr::eq(lhsVar,  newLoadedVarPurePair.first);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
+                        newPtLiteral = ptLiteral;
+                    } else {
+                        std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(regionName, ptLiteral, newPures);
+                        newPtLiteral = newPtPurePair.first;
+                        newPures = newPtPurePair.second;
+                        std::pair<const VarExpr*, std::list<const Expr*>>  newLoadedVarPurePair =  this->updateLoadBytifiedPtPredicatePartial(ptLiteral, prefixLength, loadedSize, newPures);
+
+                        this->updateBindingsEqualVarAndRhsVar(lhsVar,  newLoadedVarPurePair.first);
+                        this->updateVarType(lhsVar, newLoadedVarPurePair.first, newLoadedVarPurePair.first);
+
+                        newPures =  newLoadedVarPurePair.second;
+                        const Expr* eq = Expr::eq(lhsVar, newLoadedVarPurePair.first);
+                        REGISTER_EXPRPTR(eq);
+                        newPures.push_back(eq);
                     }
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
-                    newSH->print(std::cout);
-                    CFDEBUG(std::cout << std::endl;);
-                    return newSH;
+                    newLeftList = std::get<0>(selectOutTuple);
+                    newMiddleList.push_back(newPtLiteral);
+                    newRightList = std::get<2>(selectOutTuple);
+
+                    newMetaInfo = tempMetaInfo;
+                    newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
+                    REGISTER_EXPRPTR(newRegionClause);
                 } else {
                     // Situation B.3.(2).2
-
+                    CFDEBUG(std::cout << "INFO: Load Situation B.3.(2).2 currently not considered." << std::endl;)
+                    SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
+                    return newSH;
                 }
             } else {
                 CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);
                 assert(false);
             }
-            CFDEBUG(std::cout << "loadPosResult: " << posResult.first << " " << posResult.second << std::endl;);
-        } else if(!this->storeSplit->isInitialized(mallocName, loadedOffset)) {
-            //  Use fresh variable for the nondeterministic value
-            //  and modify the value of the original one 
+            for(const RegionClause* r : sh->getRegions()){
+                if(!r->getRegionName().compare(regionName)){
+                    newRegions.push_back(newRegionClause);
+                } else {
+                    newRegions.push_back(r);
+                }
+            }
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
+            newSH->print(std::cout);
+            CFDEBUG(std::cout << std::endl;);
+            return newSH;
+        
+        } else if(!oldRegionClause->getRegionMetaInfo()->isInitialized(loadedOffset)) {
+            // Situation B.3 (Partial)
+            const RegionClause* tempRegionClause = oldRegionClause;
+            RegionBlkSplitUtilPtr tempMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempRegionClause->getRegionMetaInfo());
+
+            // -------------- new things --------------
+            std::list<const SpatialLiteral*> newLeftList;
+            std::list<const SpatialLiteral*> newMiddleList;
+            std::list<const SpatialLiteral*> newRightList;
+            RegionBlkSplitUtilPtr newMetaInfo;
+            const RegionClause* newRegionClause;
             CFDEBUG(std::cout << "WARNING: LOAD Not intialized memory... "  << std::endl;);
-            // compute the loaded byteSize
-            const Expr* newPure = sh->getPure();
-            std::list<const SpatialLiteral*> newSpatial;
-            
+
             if(stepSize == 0){
                 loadedSize = this->parseLoadFuncSize(rhsFun->name());
             } else {
@@ -3164,65 +2856,68 @@ namespace smack{
             CFDEBUG(std::cout << "load size: " << loadedSize << std::endl;);
             assert(loadedSize > 0);
 
-            if(this->storeSplit->computeCoveredNumOfPts(mallocName, loadedOffset, loadedSize) == 0){
+            if(tempMetaInfo->computeCoveredNumOfPts(loadedOffset, loadedSize) == 0){
                 // Situation B.3.(1)
                 // regard the unintialized region as data variable
                 const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(loadedSize);
+
                 const Expr* eq = Expr::eq(freshPtVar, lhsVar);
                 REGISTER_EXPRPTR(eq);
-                newPure = Expr::and_(newPure, eq);
-                REGISTER_EXPRPTR(newPure);
-                int splitBlkIndex = this->storeSplit->addSplit(mallocName, loadedOffset);
-                                    this->storeSplit->addSplitLength(mallocName, loadedOffset, loadedSize);
-                int currentIndex = 1;
-                for(const SpatialLiteral* i : sh->getSpatialExpr()){
-                    if(!i->getBlkName().compare(mallocName) &&
-                              currentIndex == splitBlkIndex &&
-                        SpatialLiteral::Kind::BLK == i->getId()
-                    ){
-                        // the blk to break is found
-                        const BlkLit* breakBlk = (const BlkLit*) i;
-                        // if(breakBlk->isEmpty()){
-                        //     SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
-                        //     CFDEBUG(std::cout << "INFO: break empty blk" << std::endl;);
-                        //     return newSH;
-                        // }
+                newPures.push_back(eq);
 
-                        std::list<const SpatialLiteral*> splittedResult = this->splitBlkByCreatingPt(mallocName, ldPtr, freshPtVar, loadedSize, breakBlk);
-                        for(const SpatialLiteral* splsp : splittedResult){
-                            newSpatial.push_back(splsp);
-                        }
-                        currentIndex += 1;
-                    } else if(!i->getBlkName().compare(mallocName) && 
-                           SpatialLiteral::Kind::BLK == i->getId() && 
-                                     currentIndex != splitBlkIndex
-                    ){
-                        newSpatial.push_back(i);
-                        currentIndex += 1;
-                    } 
-                    else {
-                        newSpatial.push_back(i);
-                    }
-                }
-            } else if(this->storeSplit->computeCoveredNumOfPts(mallocName, loadedOffset, loadedSize) > 0){
+                int splitBlkIndex = tempMetaInfo->addSplit(loadedOffset);
+                                    tempMetaInfo->addSplitLength(loadedOffset, loadedSize);
+
+                std::tuple<
+                    std::list<const SpatialLiteral*>,
+                    const SpatialLiteral*,
+                    std::list<const SpatialLiteral*>
+                > selectOutTuple = tempRegionClause->selectOutSpLit(SpatialLiteral::Kind::BLK, splitBlkIndex);
+
+                const BlkLit* blkLiteral = (const BlkLit*) std::get<1>(selectOutTuple);
+
+                std::list<const SpatialLiteral*> splittedResult = this->splitBlkByCreatingPt(tempMetaInfo, ldPtr, freshPtVar, loadedSize, blkLiteral);
+                
+                newLeftList = std::get<0>(selectOutTuple);
+                newMiddleList = splittedResult;
+                newRightList = std::get<2>(selectOutTuple);
+
+                newMetaInfo = tempMetaInfo;
+                newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
+                REGISTER_EXPRPTR(newRegionClause);
+            } else if(tempMetaInfo->computeCoveredNumOfPts(loadedOffset, loadedSize) > 0){
                 // Situation B.3.(2).2
+                CFDEBUG(std::cout << "INFO: Load Situation B.3.(2).2 currently not considered." << std::endl;)
+                SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
+                return newSH;
             } else {
                 CFDEBUG(std::cout << "ERROR: load compute covered num of pts error" << std::endl;);
+                assert(false);
             }
-            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+
+            for(const RegionClause* r : sh->getRegions()){
+                if(!r->getRegionName().compare(regionName)){
+                    newRegions.push_back(newRegionClause);
+                } else {
+                    newRegions.push_back(r);
+                }
+            }
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
-        } else if(!this->storeSplit->hasName(mallocName)){  
+        } else if(sh->getRegion(regionName) == nullptr){  
             CFDEBUG(std::cout << "ERROR: Alloc name store split not get !!" << std::endl;);
             return sh;
         } else {
             CFDEBUG(std::cout << "ERROR: This should not happen !!" << std::endl;);
+            assert(false);
             return sh;
         }
     }
 
     SHExprPtr BlockExecutor::executeTime(SHExprPtr sh, const CallStmt* stmt) {
+        //DONE: loadIndex refactored
         CFDEBUG(std::cout << "INFO: execute Time func" << std::endl;);
         std::string retOrigName = stmt->getReturns().front();
         const VarExpr* retVar = this->varFactory->useVar(retOrigName);
@@ -3234,9 +2929,9 @@ namespace smack{
         const VarExpr* timeVar = this->createAndRegisterFreshDataVar(4);
         const Expr* eq = Expr::eq(retVar, timeVar);
         REGISTER_EXPRPTR(eq);
-        const Expr* newPure = Expr::and_(sh->getPure(), eq);
-        REGISTER_EXPRPTR(newPure);
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, sh->getSpatialExpr());
+        std::list<const Expr*> newPures = sh->getPures();
+        newPures.push_back(eq);
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
         newSH->print(std::cout);
         CFDEBUG(std::cout << std::endl;);
         return newSH;
@@ -3291,6 +2986,7 @@ namespace smack{
     SHExprPtr  
     BlockExecutor::executeAlloc
     (SHExprPtr sh, const CallStmt* stmt){
+        // DONE: loadIndex refactored
         // example of the instruction
         // 1. call $p1 = $alloc($mul.ref(4, $i2))
         // 2. call $p2 = $alloc($mul.ref(40, $zext.i32.i64(1)))
@@ -3303,6 +2999,9 @@ namespace smack{
             const Expr* param = stmt->getParams().front();
             assert(ExprType::FUNC == param->getType());
             const FunExpr* multiFuncExpr = (const FunExpr*) param;
+
+            std::list<const Expr*> newPures = sh->getPures();
+            std::list<const RegionClause*> newRegions = sh->getRegions();
             if(!multiFuncExpr->name().compare("$mul.ref")){
                 const Expr* multiArg1 = multiFuncExpr->getArgs().front();
                 const Expr* multiArg2 = multiFuncExpr->getArgs().back();
@@ -3312,44 +3011,30 @@ namespace smack{
                     const Expr* lengthExpr = Expr::multiply(multiArg1, multiArg2);
                     REGISTER_EXPRPTR(lengthExpr);
                     this->varEquiv->addNewName(retVarName);
-                    this->varEquiv->addNewBlkName(retVarName);
+                    this->varEquiv->addNewRegionName(retVarName);
                     this->varEquiv->addNewOffset(retVarName, 0);
-                    this->varEquiv->setStructArrayPtr(retVarName, true);
-                    this->storeSplit->createAxis(retVarName);
-                    this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
-                    const Expr* newPure = sh->getPure();
-                    std::list<const SpatialLiteral *> newSpatialExpr;
-                    for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                        newSpatialExpr.push_back(sp);
-                    }
-                    const SpatialLiteral* sizePt = SpatialLiteral::gcSpt(
-                        retVar,
-                        lengthExpr,
-                        retVarName,
-                        this->callStack
-                    );
-                    REGISTER_EXPRPTR(sizePt);
-                    int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
+                    this->varEquiv->setStructArrayRegion(retVarName, true);
 
+                    int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
                     if(!lengthExpr->translateToInt(this->varEquiv).first){
                         CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized alloc" << std::endl;);
-                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        SHExprPtr newSH = this->createErrLitSH(newPures, newRegions, ErrType::UNKNOWN);
                         return newSH;
                     }
                     const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
-                    const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
-                        retVar,
-                        add,
-                        retVarName,
-                        allocSize,
-                        this->callStack
-                    );
+                    const SpatialLiteral* allocBlk = SpatialLiteral::blk(retVar, add, allocSize);
                     REGISTER_EXPRPTR(allocBlk);
+                    std::list<const SpatialLiteral*> newSplList;
+                    newSplList.push_back(allocBlk);
 
-                    newSpatialExpr.push_back(sizePt);
-                    newSpatialExpr.push_back(allocBlk);
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                    const RegionClause* newRegion = new RegionClause(newSplList, retVar, lengthExpr, retVarName, allocSize, true, this->callStack);
+                    REGISTER_EXPRPTR(newRegion);
+                    assert(!sh->hasRegion(retVarName));
+                    newRegions.push_back(newRegion);
+
+
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl)
                     return newSH;
@@ -3362,43 +3047,29 @@ namespace smack{
                     const Expr* lengthExpr = Expr::multiply(multiArg1, multiArg2Var);
                     REGISTER_EXPRPTR(lengthExpr);
                     this->varEquiv->addNewName(retVarName);
-                    this->varEquiv->addNewBlkName(retVarName);
+                    this->varEquiv->addNewRegionName(retVarName);
                     this->varEquiv->addNewOffset(retVarName, 0);
-                    this->varEquiv->setStructArrayPtr(retVarName, true);
-                    this->storeSplit->createAxis(retVarName);
-                    this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
-                    const Expr* newPure = sh->getPure();
-                    std::list<const SpatialLiteral *> newSpatialExpr;
-                    for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                        newSpatialExpr.push_back(sp);
-                    }
-                    const SpatialLiteral* sizePt = SpatialLiteral::gcSpt(
-                        retVar,
-                        lengthExpr,
-                        retVarName,
-                        this->callStack
-                    ); 
-                    REGISTER_EXPRPTR(sizePt);
+                    this->varEquiv->setStructArrayRegion(retVarName, true);
+            
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
                     if(!lengthExpr->translateToInt(this->varEquiv).first){
                         CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized alloc" << std::endl;);
-                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        SHExprPtr newSH = this->createErrLitSH(newPures, newRegions, ErrType::UNKNOWN);
                         return newSH;
                     }
                     const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
-                    const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
-                        retVar,
-                        add,
-                        retVarName,
-                        allocSize,
-                        this->callStack
-                    );
+                    const SpatialLiteral* allocBlk = SpatialLiteral::blk(retVar, add, allocSize);
                     REGISTER_EXPRPTR(allocBlk);
+                    std::list<const SpatialLiteral*> newSplList;
+                    newSplList.push_back(allocBlk);
 
-                    newSpatialExpr.push_back(sizePt);
-                    newSpatialExpr.push_back(allocBlk);
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                    const RegionClause* newRegion = new RegionClause(newSplList, retVar, lengthExpr, retVarName, allocSize, true, this->callStack);
+                    REGISTER_EXPRPTR(newRegion);
+                    assert(!sh->hasRegion(retVarName));
+                    newRegions.push_back(newRegion);
+
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl)
                     return newSH;
@@ -3408,42 +3079,29 @@ namespace smack{
                     assert(multiArg2FunExpr->getArgs().back()->translateToInt(this->varEquiv).second == 1);
                     const Expr* lengthExpr = multiArg1;
                     this->varEquiv->addNewName(retVarName);
-                    this->varEquiv->addNewBlkName(retVarName);
+                    this->varEquiv->addNewRegionName(retVarName);
                     this->varEquiv->addNewOffset(retVarName, 0);
-                    this->varEquiv->setStructArrayPtr(retVarName, true);
-                    this->storeSplit->createAxis(retVarName);
-                    this->storeSplit->setMaxOffset(retVarName, lengthExpr->translateToInt(this->varEquiv).second);
-                    const Expr* newPure = sh->getPure();
-                    std::list<const SpatialLiteral *> newSpatialExpr;
-                    for(const SpatialLiteral* sp : sh->getSpatialExpr()){
-                        newSpatialExpr.push_back(sp);
-                    }
-                    const SpatialLiteral* sizePt = SpatialLiteral::gcSpt(
-                        retVar,
-                        lengthExpr,
-                        retVarName,
-                        this->callStack
-                    ); 
+                    this->varEquiv->setStructArrayRegion(retVarName, true);
+
                     int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
                     if(!lengthExpr->translateToInt(this->varEquiv).first){
                         CFDEBUG(std::cout << "INFO: UNKNOWN situation: parameterized alloc" << std::endl;);
-                        SHExprPtr newSH = this->createErrLitSH(newPure, ErrType::UNKNOWN);
+                        SHExprPtr newSH = this->createErrLitSH(newPures, newRegions, ErrType::UNKNOWN);
                         return newSH;
                     }
                     const Expr* add = Expr::add(retVar, lengthExpr);
                     REGISTER_EXPRPTR(add);
-                    const SpatialLiteral* allocBlk = SpatialLiteral::gcBlk(
-                        retVar,
-                        add,
-                        retVarName,
-                        allocSize,
-                        this->callStack
-                    );
+                    const SpatialLiteral* allocBlk = SpatialLiteral::blk(retVar, add, allocSize);
                     REGISTER_EXPRPTR(allocBlk);
+                    std::list<const SpatialLiteral*> newSplList;
+                    newSplList.push_back(allocBlk);
 
-                    newSpatialExpr.push_back(sizePt);
-                    newSpatialExpr.push_back(allocBlk);
-                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatialExpr);
+                    const RegionClause* newRegion = new RegionClause(newSplList, retVar, lengthExpr, retVarName, allocSize, true, this->callStack);
+                    REGISTER_EXPRPTR(newRegion);
+                    assert(!sh->hasRegion(retVarName));
+                    newRegions.push_back(newRegion);
+
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
                     newSH->print(std::cout);
                     CFDEBUG(std::cout << std::endl)
                     return newSH;
@@ -3466,6 +3124,7 @@ namespace smack{
     SHExprPtr
     BlockExecutor::executeCalloc
     (SHExprPtr sh, const CallStmt* stmt) {
+        // DONE: loadIndex refactored
         // call $p = calloc(n, s)
         // allocate a memory for an array of n objects of s size
         // and initializes it to all zero
@@ -3474,60 +3133,53 @@ namespace smack{
         const Expr* num = stmt->getParams().front();
         const Expr* size = stmt->getParams().back();
         // get number of object
-        if(num->isValue()) {
-            
-        } else {
+        if(!num->isValue()) {
             CFDEBUG(std::cout<< "WARNING: Unsupported num type" << std::endl;);
             return nullptr;
         }
         // get size of each object
         if(size->isValue()) {
-            
-        } else {
             CFDEBUG(std::cout<< "WARNING: Unsupported size type" << std::endl;);
             return nullptr;
         }
+        std::list<const Expr*> newPures = sh->getPures();
+        std::list<const RegionClause*> newRegions = sh->getRegions();
+
         CFDEBUG(std::cout << "INFO: allocate an array to " << retOrigVarName << std::endl;);
-        CFDEBUG(std::cout << "ARRAY: " << num << " objects of " << size << " size for each one" << std::endl;);
+        CFDEBUG(std::cout << "INFO: array " << num << " objects of " << size << " size for each one" << std::endl;);
         const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
         const std::string retVarName = retVar->name();
         this->varEquiv->addNewName(retVarName);
-        this->varEquiv->addNewBlkName(retVarName);
+        this->varEquiv->addNewRegionName(retVarName);
         this->varEquiv->addNewOffset(retVarName, 0);
-        this->varEquiv->setStructArrayPtr(retVarName, false);
-        this->storeSplit->createAxis(retVarName);
+        this->varEquiv->setStructArrayRegion(retVarName, false);
+
         const Expr* lengthExpr = Expr::multiply(num, size);
+        int callocSize = lengthExpr->translateToInt(this->varEquiv).second;
         REGISTER_EXPRPTR(lengthExpr);
-        this->storeSplit->setMaxOffset(
-            retVarName,
-            lengthExpr->translateToInt(this->varEquiv).second);
-        const SpatialLiteral* sizePt = SpatialLiteral::spt(
-            retVar,
-            lengthExpr,
-            retVarName,
-            this->callStack
-        );
-        REGISTER_EXPRPTR(sizePt);
+        
         const Expr* add = Expr::add(retVar, lengthExpr);
         REGISTER_EXPRPTR(add);
-        int allocSize = lengthExpr->translateToInt(this->varEquiv).second;
-        const SpatialLiteral* blk = SpatialLiteral::blk(
-            retVar,
-            add,
-            retVarName,
-            allocSize,
-            this->callStack
-        );
+        const SpatialLiteral* blk = SpatialLiteral::blk(retVar, add, callocSize);
         REGISTER_EXPRPTR(blk);
-        std::pair<std::list<const SpatialLiteral*>, const Expr*>
-        newSplAndPure = this->bytifyForCalloc(blk, sh->getPure());
-        std::list<const SpatialLiteral*> newSpatial = sh->getSpatialExpr();
-        const Expr* newPure = newSplAndPure.second;
-        REGISTER_EXPRPTR(newPure);
-        newSpatial.push_back(sizePt);
-        for(auto nsp : newSplAndPure.first)
-            newSpatial.push_back(nsp);
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+        std::list<const SpatialLiteral*> tempSplList;
+        tempSplList.push_back(blk);
+
+        const RegionClause* tempRegion = new RegionClause(tempSplList, retVar, lengthExpr, retVarName, callocSize, false);
+        REGISTER_EXPRPTR(tempRegion);
+        RegionBlkSplitUtilPtr tempMetaInfo = std::make_shared<RegionBlkSplitUtil>(tempRegion->getRegionMetaInfo());
+        std::string tempRegionName = tempRegion->getRegionName();
+
+        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> newSplListAndPure = this->bytifyForCalloc(tempMetaInfo, tempRegionName, blk, newPures);
+        std::list<const SpatialLiteral*> newSplList = newSplListAndPure.first;
+        newPures = newSplListAndPure.second;
+        RegionBlkSplitUtilPtr newMetaInfo = tempMetaInfo;
+        const RegionClause* newRegion = new RegionClause(newSplList, newMetaInfo, tempRegion);
+        REGISTER_EXPRPTR(newRegion);
+        assert(!sh->hasRegion(retVarName));
+        newRegions.push_back(newRegion);
+
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
         newSH->print(std::cout);
         CFDEBUG(std::cout << std::endl)
         return newSH;
@@ -3550,6 +3202,7 @@ namespace smack{
     SHExprPtr 
     BlockExecutor::executeStmt
     (SHExprPtr currSH, const Stmt* stmt){
+        // DONE: loadIndex refactored
         this->varEquiv->debugPrint();
         CFDEBUG(std::cout << "INFO: executing for stmt: " << std::endl);
         if(FULL_DEBUG && OPEN_EXECUTION_PATH){
@@ -3557,26 +3210,33 @@ namespace smack{
         CFDEBUG(std::cout << std::endl);
         }
         if(FULL_DEBUG && OPEN_STORE_SPLIT){
-            this->storeSplit->print();
+            for(const RegionClause* r : currSH->getRegions()){
+                r->getRegionMetaInfo()->print();
+            }
         }
         this->printCallStack();
 
-        if(currSH->isError()){
-            const SpatialLiteral* sp = currSH->getSpatialExpr().front();
-            assert(SpatialLiteral::Kind::ERR == sp->getId());
-            const ErrorLit* errlit = (const ErrorLit*) sp;
-            if(errlit->isFresh()){
-                CFDEBUG(std::cout << "INFO: execute error.." << std::endl;);
-                std::list<const SpatialLiteral*> newSpatial;
-                const SpatialLiteral* sp = SpatialLiteral::errlit(false, errlit->getReason());
-                REGISTER_EXPRPTR(sp);
-                newSpatial.push_back(sp);
-                SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(currSH->getPure(), newSpatial);
-                newSH->print(std::cout);
-                return newSH;
-            } else {
-                return currSH;
+        std::list<const RegionClause*> newErrRegions;
+        if(currSH->hasError()){
+            CFDEBUG(std::cout << "INFO: execute error.." << std::endl;);
+            for(const RegionClause* r : currSH->getRegions()){
+                if(!r->isErrorClause()){
+                    newErrRegions.push_back(r);
+                } else {
+                    const ErrorClause* oldErrClause = (const ErrorClause*) r;
+                    if(oldErrClause->isFresh()){
+                        const ErrorClause* newErrClause = new ErrorClause(oldErrClause);
+                        REGISTER_EXPRPTR(newErrClause);
+                        newErrRegions.push_back(newErrClause);
+                    } else {
+                        const ErrorClause* newErrClause = oldErrClause;
+                        newErrRegions.push_back(newErrClause);
+                    }
+                }
             }
+            SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(currSH->getPures(), newErrRegions);
+            newSH->print(std::cout);
+            return newSH;
         }
 
         if(Stmt::CALL == stmt->getKind()){
@@ -3601,13 +3261,12 @@ namespace smack{
 
     // -------------------- General Interface -------------------
     std::pair<ExecutionStatePtr, StatementList> BlockExecutor::execute(ExecutionStatePtr previousExecState){
+        // DONE: loadIndex refactored
         SHExprPtr previousSH = previousExecState->getSH();
         // Initialize the equivalent class for allocation
         this->varEquiv = previousExecState->getVarEquiv();
         // Initialize the varFactory class for variable remembering
         this->varFactory = previousExecState->getVarFactory();
-        // Initialize store splitter
-        this->storeSplit = previousExecState->getStoreSplit();
         // Initialize callStack
         this->callStack = previousExecState->getCallStack();
         // Initialize memtrack utils
@@ -3622,11 +3281,11 @@ namespace smack{
             newStmts.push_back(i);
             SHExprPtr newSH = this->executeStmt(currSH, i);
             newStmts.push_back(Stmt::symbheap(newSH));
-            auto const pure = newSH->getPure();
+            auto const pure = newSH->getPures();
             currSH = newSH;
         }
 
-        ExecutionStatePtr resultExecState = std::make_shared<ExecutionState>(currSH, this->varEquiv, this->varFactory, this->storeSplit, this->callStack, this->src2IRVar, this->globalStaticVars);
+        ExecutionStatePtr resultExecState = std::make_shared<ExecutionState>(currSH, this->varEquiv, this->varFactory, this->callStack, this->src2IRVar, this->globalStaticVars);
         return std::pair<ExecutionStatePtr, StatementList>(resultExecState, newStmts);
     }
 
@@ -3637,8 +3296,6 @@ namespace smack{
         this->varEquiv = initialExecState->getVarEquiv();
         // Initialize the varFactory class for variable remembering
         this->varFactory = initialExecState->getVarFactory();
-        // Initialize store splitter
-        this->storeSplit = initialExecState->getStoreSplit();
         // Initialize stack
         this->callStack = initialExecState->getCallStack();
         // Initialize memtrack utils
@@ -3647,12 +3304,13 @@ namespace smack{
 
         SHExprPtr newSH = this->executeGlobal(previousSH);
 
-        ExecutionStatePtr resultExecState =  std::make_shared<ExecutionState>(newSH, this->varEquiv, this->varFactory, this->storeSplit, this->callStack, this->src2IRVar, this->globalStaticVars);
+        ExecutionStatePtr resultExecState =  std::make_shared<ExecutionState>(newSH, this->varEquiv, this->varFactory, this->callStack, this->src2IRVar, this->globalStaticVars);
         return  resultExecState;
     }
 
     // ---------------- Execution Utilities
     VarType BlockExecutor::getVarType(std::string varName){
+        // DONE: loadIndex refactored
         // varName is used varname
         if(!varName.compare("$Null")){
             return VarType::NIL;
@@ -3668,6 +3326,7 @@ namespace smack{
     }
 
     int BlockExecutor::getBitwidthOfDataVar(std::string varName){
+        // DONE: loadIndex refactored
         // varName is used varname
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
         assert(VarType::DATA == this->getVarType(varName));
@@ -3677,6 +3336,7 @@ namespace smack{
     }
 
     int BlockExecutor::getStepSizeOfPtrVar(std::string varName){
+        // DONE: loadIndex refactored
         // varName is used varname
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
         assert(VarType::PTR == this->getVarType(varName) || 
@@ -3687,12 +3347,14 @@ namespace smack{
     }
 
     void BlockExecutor::setDataVarBitwidth(std::string varName, int bitWidth){
+        // DONE: loadIndex refactored
         // varName is used varname
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
         this->cfg->addVarType(varOrigName, "i" + std::to_string(bitWidth));
     }
 
     void BlockExecutor::setPtrVarStepSize(std::string varName, int stepSize){
+        // DONE: loadIndex refactored
         // varName is used varname
         std::string varOrigName = this->varFactory->getOrigVarName(varName);
         this->cfg->addVarType(varOrigName, "ref" + std::to_string(stepSize * 8));
@@ -3700,6 +3362,7 @@ namespace smack{
 
 
     void BlockExecutor::updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs, int storedSize){
+        // DONE: loadIndex refactored
         // lhs and rhs are both used var
         if(rhs->isVar()){
             const VarExpr* rhsVar = (const VarExpr*) rhs;
@@ -3816,6 +3479,7 @@ namespace smack{
 
     void BlockExecutor::updateBindingsEqualVarAndRhsVar(const VarExpr* lhsVar, const Expr* rhsVar){
         assert(rhsVar->isVar());
+        // DONE: loadIndex refactored
         // lhs and rhs are both used vars
         const VarExpr* rhsUsedVar = (const VarExpr*) rhsVar;
 
@@ -3826,9 +3490,9 @@ namespace smack{
 
         // update the equivalent classes
         this->varEquiv->linkName(lhsUsedVarName, rhsUsedVarName);
-        if( this->varEquiv->hasBlkName(rhsUsedVarName)){
+        if( this->varEquiv->hasRegionName(rhsUsedVarName)){
             assert(VarType::PTR == this->getVarType(rhsUsedVarName) || VarType::NIL == this->getVarType(rhsUsedVarName));
-            this->varEquiv->linkBlkName(lhsUsedVarName, rhsUsedVarName);
+            this->varEquiv->linkRegionName(lhsUsedVarName, rhsUsedVarName);
         }
         if(this->varEquiv->getOffset(rhsUsedVarName) >= 0){
             assert(VarType::PTR == this->getVarType(rhsUsedVarName) || VarType::NIL == this->getVarType(rhsUsedVarName));
@@ -3840,6 +3504,7 @@ namespace smack{
     }
 
     void BlockExecutor::updateBindingsEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal){
+        // DONE: loadIndex refactored
         assert(rhsVal->isValue());
         // lhs var is used var
         this->varEquiv->addNewName(lhsVar->name());
@@ -3850,6 +3515,7 @@ namespace smack{
     }
 
     void BlockExecutor::updateBindingsEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr,  const Expr* storedExpr, bool isPtr){
+        // DONE: loadIndex refactored
         // var and expressions are used, rhsExpr is old expression,  storedExpr is new expression
         if(!isPtr){
             this->varEquiv->addNewName(lhsVar->name());
@@ -3868,8 +3534,8 @@ namespace smack{
 
             int extractedRhsPtrArithStepSize = this->parsePtrArithmeticStepSize(rhsExpr);
             this->varEquiv->addNewName(lhsVar->name());
-            if(this->varEquiv->hasBlkName(extractedRhsVar->name())){
-                this->varEquiv->linkBlkName(lhsVar->name(), extractedRhsVar->name());
+            if(this->varEquiv->hasRegionName(extractedRhsVar->name())){
+                this->varEquiv->linkRegionName(lhsVar->name(), extractedRhsVar->name());
             }
             if(this->varEquiv->getOffset(extractedRhsVar->name()) >= 0){
                 this->varEquiv->addNewOffset(lhsVar->name(), rhsPtrArithmeticOffset);
@@ -3883,11 +3549,12 @@ namespace smack{
     }
 
 
-    std::pair<const PtLit*, const Expr*> 
+    std::pair<const PtLit*, std::list<const Expr*>> 
     BlockExecutor::updateCreateBytifiedPtPredicateAndEqualHighLevelVar
-    (const PtLit* oldPt, const Expr* oldPure){
+    (std::string oldRegionName, const PtLit* oldPt, std::list<const Expr*> oldPures){
+        // DONE: loadIndex refactored
         assert(!oldPt->isByteLevel());
-        const Expr* resultPure = oldPure;
+        std::list<const Expr*> resultPures = oldPures;
         std::vector<const BytePt*> bytifiedPts;
         for(int i = 0; i < oldPt->getStepSize(); i++){
             const Expr* lit = Expr::lit((long long)i);
@@ -3896,71 +3563,32 @@ namespace smack{
             REGISTER_EXPRPTR(bptFromExpr);
             const VarExpr* fromVar = (const VarExpr*)(oldPt->getFrom());
             int offset = this->varEquiv->getOffset(fromVar->name());
-            CFDEBUG(std::cout << "old pt blkname: " << oldPt->getBlkName() << " offset: " << offset << std::endl;)
-            const VarExpr* bptFrom = this->createAndRegisterFreshPtrVar(1, oldPt->getBlkName(), offset + i);
+            CFDEBUG(std::cout << "old pt blkname: " << oldRegionName << " offset: " << offset << std::endl;)
+            const VarExpr* bptFrom = this->createAndRegisterFreshPtrVar(1, oldRegionName, offset + i);
             const VarExpr* bptTo = this->createAndRegisterFreshDataVar(1);
             const Expr* eq = Expr::eq(bptFrom, bptFromExpr);
             REGISTER_EXPRPTR(eq);
-            resultPure = Expr::and_(resultPure, eq);
-            REGISTER_EXPRPTR(resultPure);
+            resultPures.push_back(eq);
             const BytePt* bpt = SpatialLiteral::bytePt(bptFrom, bptTo);
             REGISTER_EXPRPTR(bpt);
             bytifiedPts.push_back(bpt);
         }
         const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(bytifiedPts, oldPt->getTo());
-        resultPure = Expr::and_(
-            resultPure,
-            equalConstraint
-        );
-        REGISTER_EXPRPTR(resultPure);
-        std::list<std::string> tempCallStack;
-        for(std::string s : oldPt->getStackMembers()){
-            tempCallStack.push_back(s);
-        }
-        std::string mallocName = oldPt->getBlkName();
+        resultPures.push_back(equalConstraint);
         
-        const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName
-                                         (mallocName, oldPt->getFrom(), oldPt->getTo(), oldPt->getStepSize(), bytifiedPts, tempCallStack));
-        return {resultPt, resultPure};
-    }
-
-    std::pair<const PtLit*, const Expr*> 
-    BlockExecutor::updateCreateBytifiedPtPredicateAndModifyHighLevelVar
-    (const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure){
-        std::pair<const PtLit*, const Expr*> tempPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, oldPure);
-        const Expr* resultPure = tempPtPurePair.second;
-        std::vector<const BytePt*> oldBytifiedPts = tempPtPurePair.first->getBytifiedPts();
-        assert(oldBytifiedPts.size() == tempPtPurePair.first->getStepSize());
-        std::vector<const BytePt*> newBytifiedPts;
-        for(const BytePt* bpt : oldBytifiedPts){
-            // rearrange the symbolic heap
-            const VarExpr* newBySizeVar = this->createAndRegisterFreshDataVar(1);
-            const BytePt* cnbpt = SpatialLiteral::bytePt(bpt->getFrom(), newBySizeVar);
-            REGISTER_EXPRPTR(cnbpt);
-            newBytifiedPts.push_back(cnbpt);
-        }
-        
-        const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, storedVar);
-        resultPure = Expr::and_(
-            resultPure,
-            equalConstraint
-        );
-        REGISTER_EXPRPTR(resultPure);
-        std::list<std::string> tempCallStack;
-        for(std::string s : oldPt->getStackMembers()){
-            tempCallStack.push_back(s);
-        }
-        const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts, tempCallStack));
-        return {resultPt, resultPure};
+        const PtLit* resultPt = (const PtLit*) SpatialLiteral::pt(oldPt->getFrom(), oldPt->getTo(), oldPt->getStepSize(), bytifiedPts);
+        REGISTER_EXPRPTR(resultPt);
+        return {resultPt, resultPures};
     }
 
 
-    std::pair<const PtLit*, const Expr*> 
+    std::pair<const PtLit*, std::list<const Expr*>> 
     BlockExecutor::updateCreateBytifiedPtPredicateAndModifyPartial
-    (const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, const Expr* oldPure){
-        std::pair<const PtLit*, const Expr*> tempPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldPt, oldPure);
+    (std::string oldRegionName, const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, std::list<const Expr*> oldPures){
+        // DONE: loadIndex refactored
+        std::pair<const PtLit*, std::list<const Expr*>> tempPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(oldRegionName, oldPt, oldPures);
         const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(oldPt->getStepSize());
-        const Expr* resultPure = tempPtPurePair.second;
+        std::list<const Expr*> resultPures = tempPtPurePair.second;
         std::vector<const BytePt*> oldBytifiedPts = tempPtPurePair.first->getBytifiedPts();
         assert(offset + length <= oldPt->getStepSize());
         std::vector<const BytePt*> newBytifiedPts;
@@ -3979,33 +3607,23 @@ namespace smack{
             computeBytifiedPts.push_back(cnbpt);
         }
         const Expr* modifyEqualConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(computeBytifiedPts, modifyVar);
-        resultPure = Expr::and_(
-            resultPure,
-            modifyEqualConstraint
-        );
-        REGISTER_EXPRPTR(resultPure);
+        resultPures.push_back(modifyEqualConstraint);
 
         const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, freshPtVar);
-        resultPure = Expr::and_(
-            resultPure,
-            equalConstraint
-        );
-        REGISTER_EXPRPTR(resultPure);
+        resultPures.push_back(equalConstraint);
 
-        std::list<std::string> tempCallStack;
-        for(std::string s : oldPt->getStackMembers()){
-            tempCallStack.push_back(s);
-        }
-        const PtLit* resultPt = (const PtLit*) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts, tempCallStack));
-        return {resultPt, resultPure};
+        const PtLit* resultPt = (const PtLit*) SpatialLiteral::pt(oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts);
+        REGISTER_EXPRPTR(resultPt);
+        return {resultPt, resultPures};
     }
 
-    std::pair<const PtLit*, const Expr*> 
+    std::pair<const PtLit*,  std::list<const Expr*>> 
     BlockExecutor::updateModifyBytifiedPtPredicateAndModifyHighLevelVar
-    (const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure){
+    (const PtLit* oldPt, const VarExpr* storedVar, std::list<const Expr*> oldPures){
+        // DONE: loadIndex refactored
         assert(oldPt->isByteLevel());
         const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(oldPt->getStepSize());
-        const Expr* resultPure = oldPure;
+        std::list<const Expr*> resultPures = oldPures;
         std::vector<const BytePt*> oldBytifiedPts = oldPt->getBytifiedPts();
         assert(oldBytifiedPts.size() == oldPt->getStepSize());
         std::vector<const BytePt*> newBytifiedPts;
@@ -4016,23 +3634,17 @@ namespace smack{
             newBytifiedPts.push_back(nbpt);
         }
         const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, storedVar);
-        resultPure = Expr::and_(
-            resultPure,
-            equalConstraint
-        );
-        REGISTER_EXPRPTR(resultPure);
-        std::list<std::string> tempCallStack;
-        for(std::string s : oldPt->getStackMembers()){
-            tempCallStack.push_back(s);
-        }
-        const PtLit* resultPt = (const PtLit*)(this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts, tempCallStack));
-        return {resultPt, resultPure};
+        resultPures.push_back(equalConstraint);
+        const PtLit* resultPt =  (const PtLit*) SpatialLiteral::pt(oldPt->getFrom(), storedVar, oldPt->getStepSize(), newBytifiedPts);
+        REGISTER_EXPRPTR(resultPt);
+        return {resultPt, resultPures};
     }
 
 
-    std::pair<const PtLit*, const Expr*> BlockExecutor::updateModifyBytifiedPtPredicateAndModifyPartial(const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, const Expr* oldPure){
+    std::pair<const PtLit*, std::list<const Expr*>> BlockExecutor::updateModifyBytifiedPtPredicateAndModifyPartial(const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, std::list<const Expr*> oldPures){
+        // DONE: loadIndex refactored
         const VarExpr* freshPtVar = this->createAndRegisterFreshDataVar(oldPt->getStepSize());
-        const Expr* resultPure = oldPure;
+        std::list<const Expr*> resultPures = oldPures;
         
         std::vector<const BytePt*> oldBytifiedPts = oldPt->getBytifiedPts();
         std::vector<const BytePt*> newBytifiedPts;
@@ -4055,33 +3667,42 @@ namespace smack{
 
         const Expr* equalConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(newBytifiedPts, freshPtVar);
 
-        resultPure = Expr::and_(
-            resultPure,
-            modifyEqualConstraint
-        );
-        REGISTER_EXPRPTR(resultPure);
-
-        resultPure = Expr::and_(
-            resultPure,
-            modifyEqualConstraint
-        );
-        REGISTER_EXPRPTR(resultPure);
-        std::list<std::string> tempCallStack;
-        for(std::string s : oldPt->getStackMembers()){
-            tempCallStack.push_back(s);
-        }
-        const PtLit* resultPt = (const PtLit* ) (this->createBPtAccodingToMallocName(oldPt->getBlkName(), oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts, tempCallStack));
-        return {resultPt, resultPure};
+        resultPures.push_back(modifyEqualConstraint);
+        // TODO: WRONG
+        resultPures.push_back(equalConstraint);
+        const PtLit* resultPt = (const PtLit*) SpatialLiteral::pt(oldPt->getFrom(), freshPtVar, oldPt->getStepSize(), newBytifiedPts);
+        REGISTER_EXPRPTR(resultPt);
+        return {resultPt, resultPures};
     }
 
 
-    std::pair<const VarExpr*, const Expr*> 
+    // std::pair<const RegionClause*, std::list<const Expr*>> BlockExecutor::updateBytifyBlkPredicate(const RegionClause* oldRegion, int blkCountIndex, std::list<const Expr*> oldPures){
+    //     // DONE: loadIndex refactored
+    //     std::list<const Expr*> resultPures = oldPures;
+    //     std::tuple<
+    //         std::list<const SpatialLiteral*>,
+    //         const SpatialLiteral*,
+    //         std::list<const SpatialLiteral*>
+    //     > 
+    //     selectOutTailBlk = oldRegionClause->selectOutSpLit(SpatialLiteral::Kind::BLK, blkCountIndex);
+
+    //     const SpatialLiteral* oldMiddleBlk = std::get<1>(selectOutTailBlk);
+    //     std::list<const SpatialLiteral*> tempLeftList = std::get<0>(selectOutTailBlk);
+    //     std::list<const SpatialLiteral*> tempRightList = std::get<2>(selectOutTailBlk);
+    //     std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedPair = this->bytifyBlkPredicate(oldMiddleBlk, resultPures);
+    //     std::list<const SpatialLiteral*> tempMiddleList = resultBytifiedPair.first;
+    //     resultPures = resultBytifiedPair.second;
+    // }
+
+
+    std::pair<const VarExpr*, std::list<const Expr*>>
     BlockExecutor::updateLoadBytifiedPtPredicatePartial
-    (const PtLit* pt, int offset, int length, const Expr* oldPure){
+    (const PtLit* pt, int offset, int length, std::list<const Expr*> oldPures){
+        // DONE: loadIndex refactored
         assert(pt->isByteLevel());
         const VarExpr* freshLoadedVar = this->createAndRegisterFreshDataVar(length);
         std::vector<const BytePt*> bytifiedPts = pt->getBytifiedPts();
-        const Expr* resultPure = oldPure;
+        std::list<const Expr*> resultPures = oldPures;
         std::vector<const BytePt*> loadedPts;
         for(int i = 0; i < pt->getStepSize(); i++){
             if(i >= offset && i < offset + length){
@@ -4089,12 +3710,8 @@ namespace smack{
             }
         }
         const Expr* loadedEqualConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(loadedPts, freshLoadedVar);
-        resultPure = Expr::and_(
-            resultPure,
-            loadedEqualConstraint
-        );
-        REGISTER_EXPRPTR(resultPure);
-        return {freshLoadedVar, resultPure};
+        resultPures.push_back(loadedEqualConstraint);
+        return {freshLoadedVar, resultPures};
     }
         
 
@@ -4105,6 +3722,7 @@ namespace smack{
     const Expr* 
     BlockExecutor::genConstraintEqualityBytifiedPtsAndHighLevelExpr
     (std::vector<const BytePt*> bytifiedPts, const Expr* highLevelExpr){
+        // DONE: loadIndex refactored
         const Expr* computedSum = this->computeValueOfBytifiedPtsSequence(bytifiedPts);
         const Expr* result = Expr::eq(computedSum, highLevelExpr);
         REGISTER_EXPRPTR(result);
@@ -4136,6 +3754,7 @@ namespace smack{
     
 
     std::pair<const VarExpr*, std::string> BlockExecutor::getUsedVarAndName(std::string origVarName){
+        // DONE: loadIndex refactored
         // obtain the used var if it is used..
         const VarExpr* usedVar = this->varFactory->getVarConsume(origVarName);
         std::string usedVarName = usedVar->name();
@@ -4144,14 +3763,16 @@ namespace smack{
 
 
     std::pair<const VarExpr*, std::string> BlockExecutor::useVarAndName(std::string origVarName){
+        // DONE: loadIndex refactored
         const VarExpr* newUsedVar = this->varFactory->useVar(origVarName);
         std::string newUsedVarName = newUsedVar->name();
         return {newUsedVar, newUsedVarName};
     }
 
-    std::pair<const VarExpr*, const Expr*> BlockExecutor::updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, const Expr* oldPure){
+    std::pair<const VarExpr*, std::list<const Expr*>> BlockExecutor::updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, std::list<const Expr*> oldPures){
+        // DONE: loadIndex refactored
         assert(ExprType::FUNC == arg->getType());
-        const Expr* resultPure = oldPure;
+        std::list<const Expr*> resultPures = oldPures;
         const FunExpr* arithFuncExpr = (const FunExpr*) arg;
         int extractedStepSize = this->parsePtrArithmeticStepSize(arg);
         const VarExpr* freshVar = this->varFactory->getFreshVar(PTR_BYTEWIDTH);
@@ -4163,9 +3784,8 @@ namespace smack{
         CFDEBUG(std::cout << "INFO: extracted size: " << extractedStepSize << std::endl;)
         const Expr* eq = Expr::eq(freshVar, parsedUsedExpr.first);
         REGISTER_EXPRPTR(eq);
-        resultPure = Expr::and_(resultPure,eq);
-        REGISTER_EXPRPTR(resultPure);
-        return {freshVar, resultPure};
+        resultPures.push_back(eq);
+        return {freshVar, resultPures};
     }
 
     std::pair<const Expr*, bool> 
@@ -4190,6 +3810,7 @@ namespace smack{
     const VarExpr* 
     BlockExecutor::createAndRegisterFreshDataVar
     (int size){
+        // DONE: loadIndex refactored
         CFDEBUG(std::cout << "INFO: create fresh data var " << size << std::endl;);
         const VarExpr* freshVar = this->varFactory->getFreshVar(size);
         this->cfg->addVarType(freshVar->name(), "i" + std::to_string(8 * size));
@@ -4201,19 +3822,20 @@ namespace smack{
     void
     BlockExecutor::registerDataVar
     (const VarExpr* usedDataVar){
+        // DONE: loadIndex refactored
         assert(this->getVarType(usedDataVar->name()) == VarType::DATA);
         this->varEquiv->addNewName(usedDataVar->name());
     }
 
     const VarExpr* 
     BlockExecutor::createAndRegisterFreshPtrVar
-    (int stepSize, std::string mallocName, int offset){
-        
-        CFDEBUG(std::cout << "INFO: create fresh ptr var " << stepSize << " " <<  mallocName << " " << offset << std::endl;);
+    (int stepSize, std::string regionName, int offset){
+        // DONE: loadIndex refactored        
+        CFDEBUG(std::cout << "INFO: create fresh ptr var " << stepSize << " " <<  regionName << " " << offset << std::endl;);
         const VarExpr* freshVar = this->varFactory->getFreshVar(PTR_BYTEWIDTH);
         this->cfg->addVarType(freshVar->name(), "ref" + std::to_string(8 * stepSize));
         this->varEquiv->addNewName(freshVar->name());
-        this->varEquiv->linkBlkName(freshVar->name(), mallocName);
+        this->varEquiv->linkRegionName(freshVar->name(), regionName);
         this->varEquiv->addNewOffset(freshVar->name(), offset);
         return freshVar;
     }
@@ -4221,59 +3843,22 @@ namespace smack{
 
     void
     BlockExecutor::registerPtrVar
-    (const VarExpr* usedPtrVar, std::string mallocName, int offset){
+    (const VarExpr* usedPtrVar, std::string regionName, int offset){
         assert(this->getVarType(usedPtrVar->name()) == VarType::PTR || 
                this->getVarType(usedPtrVar->name()) == VarType::NIL);
         if(this->getVarType(usedPtrVar->name()) == VarType::NIL){
             this->varEquiv->addNewName(usedPtrVar->name());
-            this->varEquiv->linkBlkName(usedPtrVar->name(), this->varFactory->getNullVar()->name());
+            this->varEquiv->linkRegionName(usedPtrVar->name(), this->varFactory->getNullVar()->name());
             this->varEquiv->addNewOffset(usedPtrVar->name(), this->varEquiv->getOffset(this->varFactory->getNullVar()->name()));
         } else {
             this->varEquiv->addNewName(usedPtrVar->name());
-            this->varEquiv->linkBlkName(usedPtrVar->name(), mallocName);
+            this->varEquiv->linkRegionName(usedPtrVar->name(), regionName);
             this->varEquiv->addNewOffset(usedPtrVar->name(), offset);
         }
     }
 
-
-
-    const SpatialLiteral* 
-    BlockExecutor::createPtAccordingToMallocName
-    (std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::list<std::string> tempStack){
-        if(this->varEquiv->isStructArrayPtr(mallocName)){
-            return SpatialLiteral::gcPt(from, to, mallocName, stepSize, tempStack);
-        } else {
-            return SpatialLiteral::pt(from, to, mallocName, stepSize, tempStack);
-        }
-    }
-
-    const SpatialLiteral* 
-    BlockExecutor::createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize,std::vector<const BytePt*> bytifiedPts, std::list<std::string> tempStack){
-        const SpatialLiteral* sp = nullptr;
-        if(this->varEquiv->isStructArrayPtr(mallocName)){
-            sp = SpatialLiteral::gcPt(from, to, mallocName, stepSize, bytifiedPts, tempStack);
-        } else {
-            sp = SpatialLiteral::pt(from, to, mallocName, stepSize, bytifiedPts, tempStack);
-        }
-        REGISTER_EXPRPTR(sp);
-        return sp;
-    }
-
-    const SpatialLiteral* 
-    BlockExecutor::createBlkAccordingToMallocName
-    (std::string mallocName, const Expr* from, const Expr* to, int byteSize, std::list<std::string> tempStack){
-        const SpatialLiteral* sp = nullptr;
-        if(this->varEquiv->isStructArrayPtr(mallocName)){
-            sp = SpatialLiteral::gcBlk(from, to, mallocName, byteSize, tempStack);
-        } else {
-            sp = SpatialLiteral::blk(from, to, mallocName, byteSize, tempStack);
-        }
-        REGISTER_EXPRPTR(sp);
-        return sp;
-    }
-
-
-    std::list<const SpatialLiteral*> BlockExecutor::splitBlkByCreatingPt(std::string mallocName, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk){
+    std::list<const SpatialLiteral*> BlockExecutor::splitBlkByCreatingPt(RegionBlkSplitUtilPtr metaInfo, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk){
+        // DONE: loadIndex refactored
         assert(oldBlk->getId() == SpatialLiteral::Kind::BLK);
         const BlkLit* oldBlkLit = (const BlkLit*) oldBlk;
         const Expr* oldBlkFrom = oldBlkLit->getFrom();
@@ -4287,20 +3872,19 @@ namespace smack{
                this->getVarType(from->name()) == VarType::NIL);
         int ptFromOffset = this->varEquiv->getOffset(from->name());
         assert(ptFromOffset >= oldBlkFromOffset && ptFromOffset < oldBlkToOffset);
-        this->storeSplit->addSplit(mallocName, ptFromOffset);
-        this->storeSplit->addSplitLength(mallocName, ptFromOffset, stepSize);
-        std::list<std::string> splitCallStack;
-        for(std::string s : oldBlk->getStackMembers()){
-            splitCallStack.push_back(s);
-        }
+        metaInfo->addSplit(ptFromOffset);
+        metaInfo->addSplitLength(ptFromOffset, stepSize);
         std::list<const SpatialLiteral*> resultList;
-        const SpatialLiteral* leftBlk = this->createBlkAccordingToMallocName(mallocName, oldBlkFrom, from, ptFromOffset - oldBlkFromOffset, splitCallStack);
-        const SpatialLiteral* createdPt = this->createPtAccordingToMallocName(mallocName, from, to, stepSize, splitCallStack);
+        const SpatialLiteral* leftBlk = SpatialLiteral::blk(oldBlkFrom, from, ptFromOffset - oldBlkFromOffset);
+        REGISTER_EXPRPTR(leftBlk);
+        const SpatialLiteral* createdPt = SpatialLiteral::pt(from, to, stepSize);
+        REGISTER_EXPRPTR(createdPt);
         const Expr* lit = Expr::lit((long long) stepSize);
         REGISTER_EXPRPTR(lit);
         const Expr* add = Expr::add(from, lit);
         REGISTER_EXPRPTR(add);
-        const SpatialLiteral* rightBlk = this->createBlkAccordingToMallocName(mallocName, add, oldBlkTo, oldBlkToOffset - ptFromOffset - stepSize, splitCallStack);
+        const SpatialLiteral* rightBlk = SpatialLiteral::blk(add, oldBlkTo, oldBlkToOffset - ptFromOffset - stepSize);
+        REGISTER_EXPRPTR(rightBlk);
         resultList.push_back(leftBlk);
         resultList.push_back(createdPt);
         resultList.push_back(rightBlk);
@@ -4308,24 +3892,23 @@ namespace smack{
     }
 
 
-    std::pair<std::list<const SpatialLiteral*>, const Expr*> BlockExecutor::bytifyBlkPredicate(const SpatialLiteral* oldBlk, const Expr* oldPure){
+    std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> BlockExecutor::bytifyBlkPredicate(RegionBlkSplitUtilPtr metaInfoPtr, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures){
+        // DONE: loadIndex refactored
         assert(oldBlk->getId() == SpatialLiteral::Kind::BLK);
         std::list<const SpatialLiteral*> resultPredicateList;
         std::list<const SpatialLiteral*> splittedTriplet;
-        const Expr* resultPure = oldPure;
-        std::string mallocName = oldBlk->getBlkName();
+        std::list<const Expr*> resultPures = oldPures;
         const BlkLit* tempRhsBlk = (const BlkLit*) oldBlk;
         while(tempRhsBlk->getBlkByteSize() != 0){
             const Expr* tempFrom = tempRhsBlk->getFrom();
             assert(!this->computeArithmeticOffsetValue(tempFrom).first);
             int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom).second;
-            const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, mallocName, fromVarOffset);
+            const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, regionName, fromVarOffset);
             const Expr* eq = Expr::eq(tempFrom, fromVar);
             REGISTER_EXPRPTR(eq);
-            resultPure = Expr::and_(resultPure, eq);
-            REGISTER_EXPRPTR(resultPure);
+            resultPures.push_back(eq);
             const VarExpr* toVar = this->createAndRegisterFreshDataVar(1);
-            splittedTriplet = this->splitBlkByCreatingPt(mallocName, fromVar, toVar, 1, tempRhsBlk);
+            splittedTriplet = this->splitBlkByCreatingPt(metaInfoPtr, fromVar, toVar, 1, tempRhsBlk);
             assert(3 == splittedTriplet.size());
             resultPredicateList.push_back(splittedTriplet.front()); splittedTriplet.pop_front();
             resultPredicateList.push_back(splittedTriplet.front()); splittedTriplet.pop_front();
@@ -4333,36 +3916,20 @@ namespace smack{
         }
         resultPredicateList.push_back(tempRhsBlk);
         if(FULL_DEBUG && OPEN_STORE_SPLIT){
-            this->storeSplit->print();
+            metaInfoPtr->print();
         }
-        return {resultPredicateList, resultPure};
+        return {resultPredicateList, resultPures};
     }
-
-
-    int BlockExecutor::getMaxRegionLength(SHExprPtr sh){
-        int max = -1;
-        for(const SpatialLiteral* spl : sh->getSpatialExpr()){
-            if(spl->getId() == SpatialLiteral::Kind::SPT){
-                const SizePtLit* spt = (const SizePtLit*) spl;
-                assert(spt->getSize()->translateToInt(this->varEquiv).first);
-                int tempVal = spt->getSize()->translateToInt(this->varEquiv).second; 
-                if(tempVal > max){
-                    max = tempVal;
-                }
-            }
-        }
-        return max;
-    }
-
 
     bool BlockExecutor::isMemcopyOverlapping(const VarExpr* srcVar, const VarExpr* dstVar, int copySize){
+        // DONE: loadIndex refactored
         // srcVar and dstVar are used vars
         assert(copySize >= 0);
         assert(VarType::PTR == this->getVarType(srcVar->name()) ||
                VarType::PTR == this->getVarType(dstVar->name()));
-        std::string srcVarMallocName = this->varEquiv->getBlkName(srcVar->name());
-        std::string dstvarMallocName = this->varEquiv->getBlkName(dstVar->name());
-        if(srcVarMallocName.compare(dstvarMallocName)){
+        std::string srcVarRegionName = this->varEquiv->getRegionName(srcVar->name());
+        std::string dstVarRegionName = this->varEquiv->getRegionName(dstVar->name());
+        if(srcVarRegionName.compare(dstVarRegionName)){
             return false;
         }
         assert(this->computeArithmeticOffsetValue(srcVar).first);
@@ -4378,42 +3945,49 @@ namespace smack{
     }
  
 
-    SHExprPtr BlockExecutor::createErrLitSH(const Expr* newPure, ErrType errType){
-        std::list<const SpatialLiteral*> newSpatial;
-        const SpatialLiteral* errlit = SpatialLiteral::errlit(true, errType);
+    SHExprPtr BlockExecutor::createErrLitSH(std::list<const Expr*> newPures, std::list<const RegionClause *> oldRegions, ErrType errType){
+        // DONE: loadIndex refactored
+        // spl literal
+        std::list<const RegionClause*> emptyOldRegions;
+        const ErrorLit* errlit = (const ErrorLit*)SpatialLiteral::errlit(true, errType);
         REGISTER_EXPRPTR(errlit);
-        newSpatial.push_back(errlit);
-        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPure, newSpatial);
+        // region
+        const ErrorClause* newRegion = new ErrorClause(errlit);
+        REGISTER_EXPRPTR(newRegion);
+        // new regionList
+        std::list<const RegionClause*> newRegions = emptyOldRegions;
+        newRegions.push_back(newRegion);
+        // new SH
+        SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, newRegions);
         newSH->print(std::cout);
-        CFDEBUG(std::cout << std::endl;)
+        CFDEBUG(std::cout << std::endl;);
         CFDEBUG(std::cout << "INFERROR: type " << errType << std::endl;);
         return newSH;
     }
 
-    std::pair<std::list<const SpatialLiteral*>, const Expr*> BlockExecutor::bytifyForCalloc(const SpatialLiteral* oldBlk, const Expr* oldPure) {
+    std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> BlockExecutor::bytifyForCalloc(RegionBlkSplitUtilPtr metaInfo, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures) {
+        // DONE: loadIndex refactored
         assert(oldBlk->getId() == SpatialLiteral::Kind::BLK);
         std::list<const SpatialLiteral*> resultPredicateList;
         std::list<const SpatialLiteral*> splittedTriplet;
-        const Expr* resultPure = oldPure;
-        std::string mallocName = oldBlk->getBlkName();
+        std::list<const Expr*> resultPures = oldPures;
         const BlkLit* tempRhsBlk = (const BlkLit*) oldBlk;
+
         while(tempRhsBlk->getBlkByteSize() != 0){
             const Expr* tempFrom = tempRhsBlk->getFrom();
             assert(!this->computeArithmeticOffsetValue(tempFrom).first);
             int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom).second;
-            const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, mallocName, fromVarOffset);
+            const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, regionName, fromVarOffset);
             const Expr* eq = Expr::eq(tempFrom, fromVar);
             REGISTER_EXPRPTR(eq);
-            resultPure = Expr::and_(resultPure, eq);
-            REGISTER_EXPRPTR(resultPure);
+            resultPures.push_back(eq);
             const VarExpr* toVar = this->createAndRegisterFreshDataVar(1);
             const Expr* zero = Expr::lit((long long)0);
             REGISTER_EXPRPTR(zero);
             const Expr* eq0 = Expr::eq(toVar, zero);
             REGISTER_EXPRPTR(eq0);
-            resultPure = Expr::and_(resultPure, eq0);
-            REGISTER_EXPRPTR(resultPure);
-            splittedTriplet = this->splitBlkByCreatingPt(mallocName, fromVar, toVar, 1, tempRhsBlk);
+            resultPures.push_back(eq0);
+            splittedTriplet = this->splitBlkByCreatingPt(metaInfo, fromVar, toVar, 1, tempRhsBlk);
             assert(3 == splittedTriplet.size());
             resultPredicateList.push_back(splittedTriplet.front()); splittedTriplet.pop_front();
             resultPredicateList.push_back(splittedTriplet.front()); splittedTriplet.pop_front();
@@ -4421,9 +3995,9 @@ namespace smack{
         }
         resultPredicateList.push_back(tempRhsBlk);
         if(FULL_DEBUG && OPEN_STORE_SPLIT){
-            this->storeSplit->print();
+            metaInfo->print();
         }
-        return {resultPredicateList, resultPure};
+        return {resultPredicateList, resultPures};
     }
 
 }

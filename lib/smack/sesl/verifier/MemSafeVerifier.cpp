@@ -1,5 +1,5 @@
 #include "smack/sesl/verifier/MemSafeVerifier.h"
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Debug.h"
 #include "smack/Prelude.h"
 #include "smack/Regions.h"
@@ -74,12 +74,13 @@ namespace smack {
 
             mainGraph->initPathVarType();
             const Expr* boolTrue = Expr::lit(true);
+            REGISTER_EXPRPTR(boolTrue);
             // initial list of spatial lits
-            std::list<const SpatialLiteral*> splist;
-            const SpatialLiteral* emp = SpatialLiteral::emp();
-            splist.push_back(emp);
+            std::list<const Expr*> initPures;
+            std::list<const RegionClause*> initRegions;
+            initPures.push_back(boolTrue);
             // initialization for the symbolic heap
-            SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(boolTrue, splist);
+            SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(initPures, initRegions);
             //---------------------- initialization of auxillaries
             // Initialize the equivalent class for 
             // initialization for the symbolic heap
@@ -87,15 +88,13 @@ namespace smack {
             VarEquivPtr allocEquiv = std::make_shared<VarEquiv>();
             // Initialize the varFactory class for variable         remembering
             VarFactoryPtr varFac = std::make_shared<VarFactory>();
-            // Initialize store splitter
-            StoreSplitterPtr storeSplit = std::make_shared<StoreSplitter>();
             // Initialize call Stack
             std::list<std::string> callStack;
             // Initialize memtrack utils
             std::map<std::string, std::string> src2IRVar;
             std::set<std::string> globalStaticVars;
 
-            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, storeSplit, callStack, src2IRVar, globalStaticVars);
+            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, callStack, src2IRVar, globalStaticVars);
             // initialization of the execution initial state over
             // Initialize a CFGExecutor
             SHExprPtr currSH = initSH;
@@ -120,6 +119,7 @@ namespace smack {
             
             //std::cout << std::endl;
             bool pathFeasible = checker->checkPathFeasibility();
+            // STOP HER
             bool memLeakSafeSat = checker->checkCurrentMemLeak(currExecState, mainGraph, pathFeasible).first;
             bool infErrorSafeSat = checker->checkInferenceError(pathFeasible).first;
             if(!memLeakSafeSat || !infErrorSafeSat){
@@ -168,27 +168,30 @@ namespace smack {
     }
 
     std::set<std::string> MemSafeChecker::getRootVarsForMemtrackAnalysis(ExecutionStatePtr state, CFGPtr cfg) {
+        // DONE: loadIndex refactored
         std::set<std::string> rootVars;
         for(auto rootVar : state->obtainMemtrackRootSet()) {
-            std::string blkName = state->getVarEquiv()->getBlkName(rootVar);
-            rootVars.insert(blkName);
+            std::string regionName = state->getVarEquiv()->getRegionName(rootVar);
+            rootVars.insert(regionName);
         }
         for(auto globalVar : cfg->getConstDecls()) {
             std::string varName = globalVar->getName();
-            rootVars.insert(state->getVarEquiv()->getBlkName(varName + "_bb0"));
+            rootVars.insert(state->getVarEquiv()->getRegionName(varName + "_bb0"));
         }
         return rootVars;
     }
 
     std::vector<std::string> MemSafeChecker::getSuccessorsForMemtrackAnalysis(ExecutionStatePtr state, std::string u) {
+        // DONE: loadIndex refactored
         std::vector<std::string> successors;
         int u_offset = state->getVarEquiv()->getOffset(u);
-        std::string u_blk = state->getVarEquiv()->getBlkName(u);
-        bool inRegion = false;
-        for(auto spl : state->getSH()->getSpatialExpr()) {
-            if(spl->getId() == SpatialLiteral::Kind::SPT &&
-               spl->getBlkName() == u_blk) inRegion = true;
-            if(inRegion && spl->getId() == SpatialLiteral::Kind::PT) {
+        std::string u_region = state->getVarEquiv()->getRegionName(u);
+        const RegionClause* region = state->getSH()->getRegion(u_region);
+        if(region == nullptr){
+            return successors;
+        }
+        for(auto spl : region->getSpatialLits()) {
+            if(spl->getId() == SpatialLiteral::Kind::PT) {
                 const PtLit* pt = (const PtLit*) spl;
                 const Expr* from = pt->getFrom();
                 const Expr* to = pt->getTo();
@@ -200,13 +203,12 @@ namespace smack {
                         state->getVarEquiv()->getAllocName(var->name()));
                 }
             }
-            if(spl->getId() == SpatialLiteral::Kind::SPT &&
-               spl->getBlkName() != u_blk) inRegion = false;
         }
         return successors;
     }
 
     bool MemSafeChecker::checkMemTrack(ExecutionStatePtr state, CFGPtr cfg) {
+        // DONE: loadIndex refactored
         std::queue<std::string> workList;
         std::map<std::string, bool> hasVisited;
         std::map<std::string, bool> tracked;
@@ -225,19 +227,23 @@ namespace smack {
                 workList.push(v);
             }
         }
-        for(auto spl : state->getSH()->getSpatialExpr())
-            if(spl->getId() == SpatialLiteral::Kind::SPT &&
-                !tracked[spl->getBlkName()])
+        for(auto region : state->getSH()->getRegions()) {
+            if(!tracked[region->getRegionName()])
                 return false;
+        }
         return true;
     }
 
     std::pair<bool, int> MemSafeChecker::checkCurrentMemLeak(ExecutionStatePtr state, CFGPtr mainGraph, bool pathFeasible){
+        // DONE: loadIndex refactored
         if(!pathFeasible){
             //DEBUG_WITH_COLOR(std::cout << "CHECK: Satisfied, path condition false!" << std::endl, color::green);
             return {true, 0};
         } else {
             SHExprPtr heapSH = this->extractHeapSymbolicHeap(this->finalSH, state);
+            if(this->finalSH->hasError()){
+                return {true, 0};
+            }
             this->trans->setSymbolicHeapHExpr(heapSH);
             this->trans->translate();
             z3::expr premise = this->trans->getFinalExpr();
@@ -258,13 +264,10 @@ namespace smack {
                 DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: MemLeak!!!" << std::endl;, color::red);
                 std::set<std::string> blknamesRemained;
                 // gather all the blknames
-                for(const SpatialLiteral* spl : state->getSH()->getSpatialExpr()){
-                    if(spl->getId() != SpatialLiteral::Kind::EMP 
-                    || spl->getId() != SpatialLiteral::Kind::ERR){
-                        if(!state->getVarEquiv()->isStructArrayPtr(spl->getBlkName()) && 
-                            blknamesRemained.find(spl->getBlkName()) == blknamesRemained.end()){
-                            blknamesRemained.insert(spl->getBlkName());
-                        }
+                for(const RegionClause* r : state->getSH()->getRegions()){
+                    if(!state->getVarEquiv()->isStructArrayRegion(r->getRegionName()) && 
+                        blknamesRemained.find(r->getRegionName()) == blknamesRemained.end()){
+                        blknamesRemained.insert(r->getRegionName());
                     }
                 }
                 std::string prp = SmackOptions::prp.getValue();
@@ -281,39 +284,12 @@ namespace smack {
                     errType = UNKNOWN;
                 }
                 return {false, errType};
-                // for(std::string unusedName : state->getVarFactory()->getUnusedNames()){
-                //     std::string unusedOrigName = state->getVarFactory()->getOrigVarName(unusedName);
-                //     std::pair<std::string, int> sizeInfo = mainGraph->getVarDetailType(unusedOrigName);
-                //     if(!sizeInfo.first.compare("ref")){
-                //         std::string unusedBlkName = state->getVarEquiv()->getBlkName(unusedName);
-                //         if(state->getVarEquiv()->getOffset(unusedName) == 0 &&
-                //            blknamesRemained.find(unusedBlkName) != blknamesRemained.end()){
-                //             continue;
-                //         } else {
-                //             std::string prp = SmackOptions::prp.getValue();
-                //             if(prp.find("memcleanup") != std::string::npos){
-                //                 DEBUG_WITH_COLOR(std::cout << "LEAK: CHECKUNKNOWN!!!" << std::endl;, color::yellow);
-                //                 return {false, UNKNWN};
-                //             } else {
-                //                 DEBUG_WITH_COLOR(std::cout << "LEAK: Memtrack!!!" << std::endl;, color::red);
-                //                 return {false, MEMTRACK};
-                //             }
-                //         }
-                //     }
-                // }
-                // std::string prp = SmackOptions::prp.getValue();
-                // if(prp.find("memcleanup") != std::string::npos){
-                //     DEBUG_WITH_COLOR(std::cout << "LEAK: CHECKUNKNOWN!!!" << std::endl;, color::yellow);
-                //     return {false, UNKNWN};
-                // } else {
-                //     DEBUG_WITH_COLOR(std::cout << "LEAK: Memcleanup!!!" << std::endl;, color::red);
-                //     return {false, MEMCLEAN};
-                // }
             }   
         }
     }
 
     std::pair<bool, const Stmt*> MemSafeChecker::checkInferenceError(bool pathFeasible){
+        // DONE: loadIndex refactored
         if(!pathFeasible){
             //DEBUG_WITH_COLOR(std::cout << "CHECK: Inference check pass! Path condition unsat..." << std::endl;, color::green);
             return std::pair<bool, const Stmt*>(true, nullptr);
@@ -322,22 +298,21 @@ namespace smack {
             for(const Stmt* s : this->stmts){
                 if(Stmt::Kind::SH == s->getKind()){
                     const SHStmt* shs = (const SHStmt*) s;
-                    if(SpatialLiteral::Kind::ERR == 
-                        shs->getSymbHeap()->getSpatialExpr().front()->getId()){
-                            
-                            const ErrorLit* err = (const ErrorLit*)(shs->getSymbHeap()->getSpatialExpr().front());
-                            if(err->getReason() == ErrType::UNKNOWN){
-                                DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: Inference unknown:" << err->getReasonStr() << std::endl;, color::yellow);
-                                previous->print(std::cout);
-                                std::cout << std::endl;
-                                return std::pair<bool, const Stmt*>(false, previous);
-                            } else {
-                                DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: Inference error:" << err->getReasonStr() << std::endl;, color::red);
-                                previous->print(std::cout);
-                                std::cout << std::endl;
-                                return std::pair<bool, const Stmt*>(false, previous);
-                            }
+                    if(shs->getSymbHeap()->hasError()){
+                        assert(shs->getSymbHeap()->getErrorReason().first);
+                        ErrType errorType = shs->getSymbHeap()->getErrorReason().second;
+                        if(errorType == ErrType::UNKNOWN){
+                            DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: Inference unknown:" << shs->getSymbHeap()->getErrorReasonStr() << std::endl;, color::yellow);
+                            previous->print(std::cout);
+                            std::cout << std::endl;
+                            return std::pair<bool, const Stmt*>(false, previous);
+                        } else {
+                            DEBUG_WITH_COLOR(std::cout << "CHECKFAILED: Inference error:" << shs->getSymbHeap()->getErrorReasonStr() << std::endl;, color::red);
+                            previous->print(std::cout);
+                            std::cout << std::endl;
+                            return std::pair<bool, const Stmt*>(false, previous);
                         }
+                    }
                 }
                 previous = s;
             }
@@ -348,6 +323,7 @@ namespace smack {
 
 
     bool MemSafeChecker::checkPathFeasibility(){
+        // DONE: loadIndex refactored
         CFDEBUG(std::cout << "BEGIN PATH FEASIBILITY CHECK ----------------------------" << std::endl;);
         const SHStmt* previousSH = nullptr;
         const Stmt* current =  nullptr;
@@ -393,15 +369,15 @@ namespace smack {
 
 
     SHExprPtr MemSafeChecker::extractHeapSymbolicHeap(SHExprPtr originalSH, ExecutionStatePtr state){
-        std::list<const SpatialLiteral*> heapSpatial;
-        for(const SpatialLiteral* sp : originalSH->getSpatialExpr()){
-            if(state->getVarEquiv()->isStructArrayPtr(sp->getBlkName())){
+        std::list<const RegionClause*> heapRegions;
+        for(const RegionClause* sp : originalSH->getRegions()){
+            if(state->getVarEquiv()->isStructArrayRegion(sp->getRegionName())){
 
             } else {
-                heapSpatial.push_back(sp);
+                heapRegions.push_back(sp);
             }
         }
-        SHExprPtr heapSH = std::make_shared<SymbolicHeapExpr>(originalSH->getPure(), heapSpatial);
+        SHExprPtr heapSH = std::make_shared<SymbolicHeapExpr>(originalSH->getPures(), heapRegions);
         return heapSH;   
     }
 }

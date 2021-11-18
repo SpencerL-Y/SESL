@@ -21,33 +21,38 @@ namespace smack{
     }
 
     void TransToZ3::translatePure() {
-        const Expr* pExprPtr = shExpr->getPure();
+        // DONE: loadIndex refactored
+        std::list<const Expr*> pures = shExpr->getPures();
+        z3::expr resultPure = z3Ctx->bool_val(true);
         CDEBUG(std::cout << "======center test: in pure translate process=======\n";)
-        z3::expr exp = pExprPtr->translateToZ3(*z3Ctx, cfg, varFac, varBounder);
-        CDEBUG(std::cout << exp.to_string() << std::endl; pExprPtr->print(cout); cout << "\n";)
-        pure = exp;
+        for(const Expr* e : pures){
+            z3::expr exp = e->translateToZ3(*z3Ctx, cfg, varFac, varBounder);
+            CDEBUG(std::cout << exp.to_string() << std::endl; e->print(cout); cout << "\n";)
+            resultPure = (resultPure && exp);
+        }
+        pure = resultPure;
     }
 
     void TransToZ3::translateSpatial() {
-        std::list<const SpatialLiteral*> spatialList = shExpr->getSpatialExpr();
-        CDEBUG(std::cout << "======center test: in spatial translate process======\n");
-        z3::expr_vector z3SpatialAtoms(*z3Ctx);
-        bool hasSpatials = false;
-        for(const SpatialLiteral* sp : spatialList){
-            if(hasSpatials && SpatialLiteral::Kind::EMP == sp->getId()){
-                continue;
+        // DONE: loadIndex refactored
+        std::list<const RegionClause*> regionsList = shExpr->getRegions();
+        if(regionsList.size() == 0){
+            // if the region is empty, return empty
+            spatial = slah_api::newEmp(*z3Ctx);
+            return;
+        } else {
+            CDEBUG(std::cout << "======center test: in regions translate process======\n");
+            z3::expr_vector z3RegionExps(*z3Ctx);
+            for(const RegionClause* r : regionsList){
+                z3::expr z3sp = r->translateToZ3(*z3Ctx, cfg, varFac, varBounder);
+                z3RegionExps.push_back(z3sp);
             }
-            z3::expr z3sp = sp->translateToZ3(*z3Ctx, cfg, varFac, varBounder);
-            z3SpatialAtoms.push_back(z3sp);
-            hasSpatials = true;
+            z3::expr exp = slah_api::newSep(z3RegionExps);
+            CDEBUG(std::cout << "=====center test: final spatial expresssion=====" << std::endl;)
+            CDEBUG(std::cout << exp.to_string() << std::endl; )
+            spatial = exp;
         }
-        if(!hasSpatials){
-            z3SpatialAtoms.push_back(slah_api::newEmp(*z3Ctx));
-        }
-        z3::expr exp = slah_api::newSep(z3SpatialAtoms);
-        CDEBUG(std::cout << "=====center test: final spatial expresssion=====" << std::endl;)
-        CDEBUG(std::cout << exp.to_string() << std::endl; )
-        spatial = exp;
+        
     }
 
     void TransToZ3::translate() {

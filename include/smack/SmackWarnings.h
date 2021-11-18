@@ -5,7 +5,7 @@
 #ifndef SMACKWARNINGS_H
 #define SMACKWARNINGS_H
 
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/Support/CommandLine.h"
 

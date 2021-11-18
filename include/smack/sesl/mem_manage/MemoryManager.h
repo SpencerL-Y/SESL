@@ -2,7 +2,7 @@
 #include <iostream>
 #include <set>
 
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 
 #ifndef MEMORYMANAGER_H
 #define MEMORYMANAGER_H

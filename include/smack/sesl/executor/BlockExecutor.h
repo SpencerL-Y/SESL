@@ -8,11 +8,11 @@
 #include <regex>
 #include <stack>
 #include <string>
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "llvm/IR/DebugInfo.h"
 #include "smack/AddTiming.h"
 #include "smack/Debug.h"
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/sesl/executor/ExecutionState.h"
 #include "smack/sesl/mem_manage/MemoryManager.h"
 #include "smack/sesl/executor/VarEquiv.h"
@@ -41,13 +41,12 @@ namespace smack{
 
         // An abstract state for execution includes:
         // (p,SHExprPtr)
-        // auxillary information: varEquiv, varFactory and storeSplit
+        // auxillary information: varEquiv, varFactory
 
         Program* program;
         Block* currentBlock;
         VarEquivPtr varEquiv;
         VarFactoryPtr varFactory;
-        StoreSplitterPtr storeSplit;
         std::list<std::string> callStack;
         // for memtrack
         std::map<std::string, std::string> IROrigVar2Src;
@@ -59,8 +58,8 @@ namespace smack{
         // << HIGH LEVEL METHODS >>
         const VarExpr* createAndRegisterFreshDataVar(int size);
         void registerDataVar(const VarExpr* usedDataVar);
-        const VarExpr* createAndRegisterFreshPtrVar(int stepSize, std::string mallocName, int offset);
-        void registerPtrVar(const VarExpr* usedPtrVar, std::string mallocName, int offset);
+        const VarExpr* createAndRegisterFreshPtrVar(int stepSize, std::string regionName, int offset);
+        void registerPtrVar(const VarExpr* usedPtrVar, std::string regionName, int offset);
         bool isPtrVar(std::string name);
         VarType getVarType(std::string varName);
         int getBitwidthOfDataVar(std::string varName);
@@ -109,35 +108,37 @@ namespace smack{
         int parseStoreFuncSize(std::string funcName);
         int parseLoadFuncSize(std::string funcName);
         // ------------------ Symbolic Heap Utilities
-        SHExprPtr createErrLitSH(const Expr* newPure, ErrType errType);
+        SHExprPtr createErrLitSH(std::list<const Expr*> newPures, std::list<const RegionClause *> oldRegions, ErrType errType);
 
-        const SpatialLiteral* createPtAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::list<std::string> tempCallStack);
-        const SpatialLiteral* createBPtAccodingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int stepSize, std::vector<const BytePt*> bytifiedPts, std::list<std::string> tempCallStack);
-        const SpatialLiteral* createBlkAccordingToMallocName(std::string mallocName, const Expr* from, const Expr* to, int byteSize, std::list<std::string> tempCallStack);
-        std::list<const SpatialLiteral*> splitBlkByCreatingPt(std::string mallocName, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
-        std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyBlkPredicate(const SpatialLiteral* oldBlk, const Expr* oldPure);
-        std::pair<std::list<const SpatialLiteral*>, const Expr*> bytifyForCalloc(const SpatialLiteral* oldBlk, const Expr* oldPure);
+        std::list<const SpatialLiteral*> splitBlkByCreatingPt(RegionBlkSplitUtilPtr metaInfo, const VarExpr* from, const VarExpr* to, int stepSize, const SpatialLiteral* oldBlk);
+        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyBlkPredicate(RegionBlkSplitUtilPtr metaInfo, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures);
+        std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> bytifyForCalloc(RegionBlkSplitUtilPtr metaInfo, std::string regionName, const SpatialLiteral* oldBlk, std::list<const Expr*> oldPures);
         // special cases
-        int getMaxRegionLength(SHExprPtr sh);
 
         // ----------------- Bytelevel Utilities
         bool isMemcopyOverlapping(const VarExpr* srcVar, const VarExpr* dstVar, int copySize);
 
         // ------------------ Execution Utilities
-        // commomly used utilities
+        // commonly used utilities
         // << HIGH LEVEL METHODS>>
         
-        std::pair<const VarExpr*, const Expr*> updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, const Expr* oldPure);
+        std::pair<const VarExpr*, std::list<const Expr*>> updateExecStateCreateAndRegisterFreshPtrVarForPtrArithmetic(const Expr* arg, std::list<const Expr*> oldPures);
         
         // bytelevel operations for store
-        std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndEqualHighLevelVar(const PtLit* oldPt, const Expr* oldPure);
-        std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure);
-        std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndModifyPartial(const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, const Expr* oldPure);
-        std::pair<const PtLit*, const Expr*> updateModifyBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure);
-        std::pair<const PtLit*, const Expr*> updateModifyBytifiedPtPredicateAndModifyPartial(const PtLit* pt, const VarExpr* modifyVar, int offset, int length, const Expr* oldPure);
+        std::pair<const PtLit*, std::list<const Expr*>> updateCreateBytifiedPtPredicateAndEqualHighLevelVar(std::string oldRegionName, const PtLit* oldPt, std::list<const Expr*> oldPures);
+        
+        // std::pair<const PtLit*, const Expr*> updateCreateBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, const Expr* oldPure);
+        std::pair<const PtLit*, std::list<const Expr*>> updateCreateBytifiedPtPredicateAndModifyPartial(std::string oldRegionName, const PtLit* oldPt, const VarExpr* modifyVar, int offset, int length, std::list<const Expr*> oldPures);
+        
+        std::pair<const PtLit*, std::list<const Expr*>> updateModifyBytifiedPtPredicateAndModifyHighLevelVar(const PtLit* oldPt, const VarExpr* storedVar, std::list<const Expr*> oldPures);
+        
+        std::pair<const PtLit*, std::list<const Expr*>> updateModifyBytifiedPtPredicateAndModifyPartial(const PtLit* pt, const VarExpr* modifyVar, int offset, int length, std::list<const Expr*> oldPures);
+
+        // std::pair<const RegionClause*, std::list<const Expr*>> updateBytifyBlkPredicate(const RegionClause* oldRegion, int blkCountIndex, std::list<const Expr*> oldPures);
+
         
         // bytelevel operations for load
-        std::pair<const VarExpr*, const Expr*> updateLoadBytifiedPtPredicatePartial(const PtLit* oldPt, int offset, int length, const Expr* oldPure);
+        std::pair<const VarExpr*, std::list<const Expr*>> updateLoadBytifiedPtPredicatePartial(const PtLit* oldPt, int offset, int length, std::list<const Expr*> oldPures);
         
         void updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs, int storedSize);
         void updateVarType(const VarExpr* lhsVar, const Expr* rhs, const Expr* usedRhs);
@@ -213,7 +214,6 @@ namespace smack{
         void setBlock(StatePtr cb){ currentBlock = cb->getStateBlock(); }
         VarEquivPtr getVarEquiv() { return varEquiv;}
         VarFactoryPtr getVarFactory() { return varFactory;}
-        StoreSplitterPtr getStoreSplit() { return storeSplit;}
         std::list<std::string> getCallStack() { return callStack;}
 
         void printCallStack(){ 
@@ -229,9 +229,10 @@ namespace smack{
     #define REGISTER_EXPRPTR(ptr) \
         BlockExecutor::ExprMemoryManager->registerPointer(ptr)
 
-    #define CHECK_VALID_DEREF_FOR_BLK(blk) \
-        if(this->varEquiv->isFreedName(blk)){ \
-            SHExprPtr newSH = this->createErrLitSH(sh->getPure(), ErrType::VALID_DEREF); \
+    #define CHECK_VALID_DEREF_FOR_BLK(regionName) \
+        if(this->varEquiv->isFreedRegionName(regionName) ||\
+           !regionName.compare("$Null")){ \
+            SHExprPtr newSH = this->createErrLitSH(sh->getPures(), sh->getRegions(), ErrType::VALID_DEREF); \
             CFDEBUG(std::cout << "INFO: INVALID DEREF " << std::endl;); \
             return newSH; \
         }

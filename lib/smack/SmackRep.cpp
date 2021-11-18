@@ -8,7 +8,7 @@
 #include "smack/SmackOptions.h"
 #include "smack/VectorOperations.h"
 
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Debug.h"
 #include "smack/Naming.h"
 #include "smack/Regions.h"

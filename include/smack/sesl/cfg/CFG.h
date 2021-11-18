@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <unistd.h>
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "CFGState.h"
 #include "CFGEdge.h"
 #include <memory>

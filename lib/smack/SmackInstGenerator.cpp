@@ -3,7 +3,7 @@
 //
 #define DEBUG_TYPE "smack-inst-gen"
 #include "smack/SmackInstGenerator.h"
-#include "smack/BoogieAst.h"
+#include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Debug.h"
 #include "smack/Naming.h"
 #include "smack/SmackOptions.h"

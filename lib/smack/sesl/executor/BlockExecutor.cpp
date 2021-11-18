@@ -212,6 +212,7 @@ namespace smack{
                 );
                 REGISTER_EXPRPTR(varEquality);
                 std::list<const Expr*> newPures = sh->getPures();
+                newPures.push_back(varEquality);
                 SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);

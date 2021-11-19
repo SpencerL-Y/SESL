@@ -4,7 +4,7 @@ SESL is a tool built for memory safety checking. The memory safety errors under 
 
 Separation logic is brought up by [John C. Reynolds](https://en.wikipedia.org/wiki/John_C._Reynolds) in [this paper](https://www.cs.cmu.edu/~jcr/seplogic.pdf) as an extension of Hoare's logic. Compared with the latter, separation logic provides a good support, in syntax and semantic, for dealing with configurations with heap and complex data structures. Within the tool, we utilize array separation logic(ASL) to encode configurations. ASL is an extension of separation logic supporting spatial predicates like `blk(a,b)` which can encode a uninitialized allocated memory conveniently. SESL use the separation logic library [compSPEN](https://link.springer.com/chapter/10.1007%2F978-3-319-40229-1_36) to check the entailments of array speration logic formula.
 
-SESL is constructed based on the state-of-the-art tool [SMACK](https://smackers.github.io/), which provides an extensible fronted for parsing programs into LLVM IR and then translates to Boogie IVL.
+SESL is constructed based on the state-of-the-art tool [SMACK](https://smackers.github.io/), which provides an extensible frontend for parsing programs into LLVM IR and then translates to Boogie IVL.
 
 
 ## Download and Installation

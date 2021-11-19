@@ -64,8 +64,8 @@ Institute of Software, China Academy of Sciences
 - [Yutian Zhu](https://github.com/zhuyutian57)
 - [Zongxin Liu](https://github.com/lzx-center) 
 - Wanyun Su
-- Zhilin Wu
-- Lijun Zhang
+- [Zhilin Wu](http://lcs.ios.ac.cn/~wuzl/)
+- [Lijun Zhang](https://iscasmc.ios.ac.cn/?page_id=148)
 
 ### Contact
 - EMAIL: lixie19[AT]ios[DOT]ac[DOT]cn

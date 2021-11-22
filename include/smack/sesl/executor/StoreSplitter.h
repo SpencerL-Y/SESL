@@ -41,6 +41,7 @@
             void setMaxOffset(int max);
             std::pair<bool, int> getOffsetPos(int offset);
             std::pair<bool, int> getInitializedPos(int offset);
+            std::pair<int, int> getSegmentPos(int offset, int length);
             int getInitializedLength(int offset);
             int getInitializedSuffixLength(int offset);
             int getInitializedPrefixLength(int offset);

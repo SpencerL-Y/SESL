@@ -914,6 +914,14 @@ namespace smack {
         selectOutSpLitList
         (SpatialLiteral::Kind startKind, int startSelectIndex, 
          SpatialLiteral::Kind endKind, int endSelectIndex) const;
+        
+        std::tuple<
+            std::list<const SpatialLiteral*>, 
+            std::list<const SpatialLiteral*>, 
+            std::list<const SpatialLiteral*>
+        > 
+        selectOutSpLitList
+        (int offset, int length) const;
 
         
         // utils

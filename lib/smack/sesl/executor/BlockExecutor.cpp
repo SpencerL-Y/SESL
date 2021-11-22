@@ -2815,9 +2815,60 @@ namespace smack{
                     REGISTER_EXPRPTR(newRegionClause);
                 } else {
                     // Situation B.3.(2).2
-                    CFDEBUG(std::cout << "INFO: Load Situation B.3.(2).2 currently not considered." << std::endl;)
-                    SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
-                    return newSH;
+                    // CFDEBUG(std::cout << "INFO: Load Situation B.3.(2).2 currently not considered." << std::endl;);
+                    // tempMetaInfo->print();
+                    std::tuple<
+                        std::list<const SpatialLiteral*>, 
+                        std::list<const SpatialLiteral*>, 
+                        std::list<const SpatialLiteral*>
+                    > selectOutTuple = tempRegionClause->selectOutSpLitList(loadedOffset, loadedSize);
+                    // std::cout << "left: \n";
+                    // for(auto spl : std::get<0>(selectOutTuple)) std::cout << spl << std::endl;
+                    // std::cout << "selected: \n";
+                    // for(auto spl : std::get<1>(selectOutTuple)) std::cout << spl << std::endl;
+                    // std::cout << "rigth: \n";
+                    // for(auto spl : std::get<2>(selectOutTuple)) std::cout << spl << std::endl;
+                    // std::cout << "==============================\n";
+                    for(const SpatialLiteral* spl : std::get<1>(selectOutTuple)){
+                        if(SpatialLiteral::Kind::BLK == spl->getId()) {
+                            std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedFormula = this->bytifyBlkPredicate(tempMetaInfo, regionName, spl, newPures);
+                            for(const SpatialLiteral* spl : resultBytifiedFormula.first){
+                                newMiddleList.push_back(spl);
+                            }
+                            newPures = resultBytifiedFormula.second;
+                        } else {
+                            const PtLit* ptLiteral = (const PtLit*) spl;
+                            std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(regionName, ptLiteral, newPures);
+                            newMiddleList.push_back(newPtPurePair.first);
+                            newPures = newPtPurePair.second;
+                        }
+                    }
+                    // std::cout << "==============================\n";
+                    newLeftList = std::get<0>(selectOutTuple);
+                    newRightList = std::get<2>(selectOutTuple);
+                    // find the head pt variable
+                    const VarExpr* eqVar = nullptr;
+                    for(auto spl : newMiddleList) {
+                        if(spl->getId() == SpatialLiteral::Kind::BLK) continue;
+                        const PtLit* pt = (const PtLit*) spl;
+                        for(auto byPt : pt->getBytifiedPts()) {
+                            const VarExpr* from = (const VarExpr*)byPt->getFrom();
+                            if(loadedOffset == this->getVarEquiv()->getOffset(from->name())) {
+                                eqVar = from; break;
+                            }
+                        }
+                        if(eqVar != nullptr) break;
+                    }
+                    const Expr* eq = Expr::eq(lhsVar, eqVar);
+                    REGISTER_EXPRPTR(eq);
+                    this->updateBindingsEqualVarAndRhsVar(lhsVar, eqVar);
+                    
+                    newPures.push_back(eq);
+                    newMetaInfo = tempMetaInfo;
+                    newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
+                    REGISTER_EXPRPTR(newRegionClause);
+                    // SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
+                    // return newSH;
                 }
             } else {
                 CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);
@@ -3901,7 +3952,7 @@ namespace smack{
         const BlkLit* tempRhsBlk = (const BlkLit*) oldBlk;
         while(tempRhsBlk->getBlkByteSize() != 0){
             const Expr* tempFrom = tempRhsBlk->getFrom();
-            assert(!this->computeArithmeticOffsetValue(tempFrom).first);
+            assert(this->computeArithmeticOffsetValue(tempFrom).first);
             int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom).second;
             const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, regionName, fromVarOffset);
             const Expr* eq = Expr::eq(tempFrom, fromVar);

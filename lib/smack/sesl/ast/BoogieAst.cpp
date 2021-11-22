@@ -1419,6 +1419,27 @@ namespace smack {
         return {leftSplList, selectedList, rightSplList};
     }
     
+    std::tuple<
+        std::list<const SpatialLiteral*>, 
+        std::list<const SpatialLiteral*>, 
+        std::list<const SpatialLiteral*>
+    >
+    RegionClause::selectOutSpLitList
+    (int offset, int length) const {
+        std::list<const SpatialLiteral *> leftSplList;
+        std::list<const SpatialLiteral *> selectedList;
+        std::list<const SpatialLiteral *> rightSplList;
+        std::pair<int, int> seg = regionMetaInfo->getSegmentPos(offset, length);
+        int i = 0;
+        for(const SpatialLiteral* spl : this->spatialLits) {
+            if(i < seg.first) leftSplList.push_back(spl);
+            else if(i <= seg.second) selectedList.push_back(spl);
+            else rightSplList.push_back(spl);
+            i++;
+        }
+        return {leftSplList, selectedList, rightSplList};
+    }
+
     // utils
     bool 
     RegionClause::containGcFuncName
@@ -1455,13 +1476,13 @@ namespace smack {
     void 
     RegionClause::print(std::ostream& os) const {
         if(FULL_DEBUG && OPEN_SH){
-        os << "[Region:" << this->regionName << "] # ";
+        os << "[Region:" << this->regionName << "] # \n";
         for(const SpatialLiteral* spl : this->spatialLits){
             spl->print(os);
-            os << " # ";
+            os << " # \n";
             
         }
-        os << "[RegionEnd:" << this->regionName << "]";
+        os << "[RegionEnd:" << this->regionName << "]\n";
         }
     }
 

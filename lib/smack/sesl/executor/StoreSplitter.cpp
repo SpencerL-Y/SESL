@@ -150,6 +150,29 @@ namespace smack
         return std::pair<bool, int>(false, 0);
     }
 
+    std::pair<int, int> RegionBlkSplitUtil::getSegmentPos(int offset, int length) {
+        int L = offset, R = offset + length - 1;
+        std::pair<int, int> seg = {-1, -1};
+        int l = 0, r = this->splitAxis[0];
+        if(l <= L && L < r) seg.first = 1;
+        if(l <= R && R < r) seg.second = 1; 
+        for(int i = 0; i < this->splitAxis.size(); i++) {
+            l = this->splitAxis[i];
+            r = l + this->offsetPosToSize[l];
+            if(l <= L && L < r) seg.first = i * 2 + 1;
+            if(l <= R && R < r) seg.second = i * 2 + 1;
+            l = r;
+            if(i == this->splitAxis.size() - 1) {
+                r = this->getMaxOffset();
+            } else {
+                r = this->splitAxis[i + 1];
+            }
+            if(l <= L && L < r) seg.first = (i + 1) * 2;
+            if(l <= R && R < r) seg.second = (i + 1) * 2;
+        }
+        return seg;
+    }
+
 
     int RegionBlkSplitUtil::getInitializedLength(int offset){
         return this->offsetPosToSize[offset];

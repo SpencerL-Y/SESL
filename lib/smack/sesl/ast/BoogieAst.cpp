@@ -1416,6 +1416,7 @@ namespace smack {
                 endKindCount += 1;
             }
         }
+        return {leftSplList, selectedList, rightSplList};
     }
     
     // utils

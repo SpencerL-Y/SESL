@@ -1441,8 +1441,8 @@ namespace smack {
 
         const SpatialLiteral::Kind startKind = isHeadInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::BLK;
         const SpatialLiteral::Kind endKind = isTailInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::Kind::BLK;
-        int startKindIndex = isHeadInitialized : headPtIndex : headBlkIndex;
-        int endKindIndex = isTailInitialized : tailPtIndex : tailBlkIndex;
+        int startKindIndex = isHeadInitialized ? headPtIndex : headBlkIndex;
+        int endKindIndex = isTailInitialized ? tailPtIndex : tailBlkIndex;
 
         std::tuple <
             std::list<const SpatialLiteral*>,

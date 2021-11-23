@@ -2815,20 +2815,15 @@ namespace smack{
                     REGISTER_EXPRPTR(newRegionClause);
                 } else {
                     // Situation B.3.(2).2
-                    // CFDEBUG(std::cout << "INFO: Load Situation B.3.(2).2 currently not considered." << std::endl;);
-                    // tempMetaInfo->print();
+                    CFDEBUG(std::cout << "INFO: Load Situation B.3.(2).2" << std::endl;);
                     std::tuple<
                         std::list<const SpatialLiteral*>, 
                         std::list<const SpatialLiteral*>, 
                         std::list<const SpatialLiteral*>
                     > selectOutTuple = tempRegionClause->selectOutSpLitList(loadedOffset, loadedSize);
-                    // std::cout << "left: \n";
-                    // for(auto spl : std::get<0>(selectOutTuple)) std::cout << spl << std::endl;
-                    // std::cout << "selected: \n";
-                    // for(auto spl : std::get<1>(selectOutTuple)) std::cout << spl << std::endl;
-                    // std::cout << "rigth: \n";
-                    // for(auto spl : std::get<2>(selectOutTuple)) std::cout << spl << std::endl;
-                    // std::cout << "==============================\n";
+
+                    newLeftList = std::get<0>(selectOutTuple);
+                    newRightList = std::get<2>(selectOutTuple);
                     for(const SpatialLiteral* spl : std::get<1>(selectOutTuple)){
                         if(SpatialLiteral::Kind::BLK == spl->getId()) {
                             std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedFormula = this->bytifyBlkPredicate(tempMetaInfo, regionName, spl, newPures);
@@ -2843,32 +2838,28 @@ namespace smack{
                             newPures = newPtPurePair.second;
                         }
                     }
-                    // std::cout << "==============================\n";
-                    newLeftList = std::get<0>(selectOutTuple);
-                    newRightList = std::get<2>(selectOutTuple);
-                    // find the head pt variable
-                    const VarExpr* eqVar = nullptr;
-                    for(auto spl : newMiddleList) {
+
+                    assert(tempMetaInfo->isInitialized(loadedOffset));
+                    // get the prefix length of a loaded position in a pt predicate
+                    int loadedOffsetPrefixLength = tempMetaInfo->getInitializedPrefixLength(loadedOffset);
+                    std::vector<const BytePt*> loadedBytes;
+                    int byteNum = 0;
+                    for(const SpatialLiteral* spl : newMiddleList){
                         if(spl->getId() == SpatialLiteral::Kind::BLK) continue;
+                        if(byteNum >= loadedSize) break;
+                        assert(spl->getId() == SpatialLiteral::Kind::PT);
                         const PtLit* pt = (const PtLit*) spl;
-                        for(auto byPt : pt->getBytifiedPts()) {
-                            const VarExpr* from = (const VarExpr*)byPt->getFrom();
-                            if(loadedOffset == this->getVarEquiv()->getOffset(from->name())) {
-                                eqVar = from; break;
-                            }
+                        for(const BytePt* byPt : pt->getBytifiedPts()){
+                            if(byteNum >= loadedSize) break;
+                            loadedBytes.push_back(byPt);
                         }
-                        if(eqVar != nullptr) break;
                     }
-                    const Expr* eq = Expr::eq(lhsVar, eqVar);
-                    REGISTER_EXPRPTR(eq);
-                    this->updateBindingsEqualVarAndRhsVar(lhsVar, eqVar);
+                    const Expr* loadedEqConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(loadedBytes, lhsVar);
                     
-                    newPures.push_back(eq);
+                    newPures.push_back(loadedEqConstraint);
                     newMetaInfo = tempMetaInfo;
                     newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
                     REGISTER_EXPRPTR(newRegionClause);
-                    // SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
-                    // return newSH;
                 }
             } else {
                 CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);

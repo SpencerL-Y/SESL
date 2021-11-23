@@ -2843,15 +2843,20 @@ namespace smack{
                     // get the prefix length of a loaded position in a pt predicate
                     int loadedOffsetPrefixLength = tempMetaInfo->getInitializedPrefixLength(loadedOffset);
                     std::vector<const BytePt*> loadedBytes;
-                    int byteNum = 0;
+                    int loadedByteNum = 0;
+                    int bytePtCount = 0;
                     for(const SpatialLiteral* spl : newMiddleList){
                         if(spl->getId() == SpatialLiteral::Kind::BLK) continue;
-                        if(byteNum >= loadedSize) break;
+                        if(loadedByteNum >= loadedSize) break;
                         assert(spl->getId() == SpatialLiteral::Kind::PT);
                         const PtLit* pt = (const PtLit*) spl;
                         for(const BytePt* byPt : pt->getBytifiedPts()){
-                            if(byteNum >= loadedSize) break;
-                            loadedBytes.push_back(byPt);
+                            if(loadedByteNum >= loadedSize) break;
+                            if(bytePtCount >= loadedOffsetPrefixLength){
+                                loadedBytes.push_back(byPt);
+                                loadedByteNum += 1;
+                            }
+                            bytePtCount += 1;
                         }
                     }
                     const Expr* loadedEqConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(loadedBytes, lhsVar);

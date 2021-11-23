@@ -1426,18 +1426,30 @@ namespace smack {
     >
     RegionClause::selectOutSpLitList
     (int offset, int length) const {
-        std::list<const SpatialLiteral *> leftSplList;
-        std::list<const SpatialLiteral *> selectedList;
-        std::list<const SpatialLiteral *> rightSplList;
-        std::pair<int, int> seg = regionMetaInfo->getSegmentPos(offset, length);
-        int i = 0;
-        for(const SpatialLiteral* spl : this->spatialLits) {
-            if(i < seg.first) leftSplList.push_back(spl);
-            else if(i <= seg.second) selectedList.push_back(spl);
-            else rightSplList.push_back(spl);
-            i++;
-        }
-        return {leftSplList, selectedList, rightSplList};
+        assert(offset >= 0 && length >= 0);
+        bool isHeadInitialized = this->regionMetaInfo->isInitialized(offset);
+        bool isTailInitialized = this->regionMetaInfo->isInitialized(offset + length - 1);
+        int headPtIndex = this->regionMetaInfo->getInitializedPos(offset).second;
+        int headBlkIndex = isHeadInitialized ? -1 : this->regionMetaInfo->getSplit(offset);
+        int tailPtIndex = this->regionMetaInfo->getInitializedPos(offset + length - 1).second;
+        int tailBlkIndex = isTailInitialized ? -1 : this->regionMetaInfo->getSplit(offset + length - 1);
+
+        CFDEBUG(std::cout << "INFO: selectOut head initialized: " << isHeadInitialized << std::endl;);
+        CFDEBUG(std::cout << "INFO: selectOut tail initailized: " << isTailInitialized << std::endl;);
+        CFDEBUG(std::cout << "INFO: head pt index and blk index: " << headPtIndex << " " << headBlkIndex << std::endl);
+        CFDEBUG(std::cout << "INFO: tail pt index and blk index : " << tailPtIndex << " " << tailBlkIndex << std::endl);
+
+        const SpatialLiteral::Kind startKind = isHeadInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::BLK;
+        const SpatialLiteral::Kind endKind = isTailInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::Kind::BLK;
+        int startKindIndex = isHeadInitialized : headPtIndex : headBlkIndex;
+        int endKindIndex = isTailInitialized : tailPtIndex : tailBlkIndex;
+
+        std::tuple <
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>
+        >  selectOutTuple = this->selectOutSpLitList(startKind, startKindIndex, endKind, endKindIndex);
+        return selectOutTuple;
     }
 
     // utils
@@ -1476,13 +1488,13 @@ namespace smack {
     void 
     RegionClause::print(std::ostream& os) const {
         if(FULL_DEBUG && OPEN_SH){
-        os << "[Region:" << this->regionName << "] # \n";
+        os << "[Region:" << this->regionName << "] # ";
         for(const SpatialLiteral* spl : this->spatialLits){
             spl->print(os);
-            os << " # \n";
+            os << " # ";
             
         }
-        os << "[RegionEnd:" << this->regionName << "]\n";
+        os << "[RegionEnd:" << this->regionName << "]";
         }
     }
 

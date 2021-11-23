@@ -1419,6 +1419,39 @@ namespace smack {
         return {leftSplList, selectedList, rightSplList};
     }
     
+    std::tuple<
+        std::list<const SpatialLiteral*>, 
+        std::list<const SpatialLiteral*>, 
+        std::list<const SpatialLiteral*>
+    >
+    RegionClause::selectOutSpLitList
+    (int offset, int length) const {
+        assert(offset >= 0 && length >= 0);
+        bool isHeadInitialized = this->regionMetaInfo->isInitialized(offset);
+        bool isTailInitialized = this->regionMetaInfo->isInitialized(offset + length - 1);
+        int headPtIndex = this->regionMetaInfo->getInitializedPos(offset).second;
+        int headBlkIndex = isHeadInitialized ? -1 : this->regionMetaInfo->getSplit(offset);
+        int tailPtIndex = this->regionMetaInfo->getInitializedPos(offset + length - 1).second;
+        int tailBlkIndex = isTailInitialized ? -1 : this->regionMetaInfo->getSplit(offset + length - 1);
+
+        CFDEBUG(std::cout << "INFO: selectOut head initialized: " << isHeadInitialized << std::endl;);
+        CFDEBUG(std::cout << "INFO: selectOut tail initailized: " << isTailInitialized << std::endl;);
+        CFDEBUG(std::cout << "INFO: head pt index and blk index: " << headPtIndex << " " << headBlkIndex << std::endl);
+        CFDEBUG(std::cout << "INFO: tail pt index and blk index : " << tailPtIndex << " " << tailBlkIndex << std::endl);
+
+        const SpatialLiteral::Kind startKind = isHeadInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::BLK;
+        const SpatialLiteral::Kind endKind = isTailInitialized ? SpatialLiteral::Kind::PT : SpatialLiteral::Kind::BLK;
+        int startKindIndex = isHeadInitialized ? headPtIndex : headBlkIndex;
+        int endKindIndex = isTailInitialized ? tailPtIndex : tailBlkIndex;
+
+        std::tuple <
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>,
+            std::list<const SpatialLiteral*>
+        >  selectOutTuple = this->selectOutSpLitList(startKind, startKindIndex, endKind, endKindIndex);
+        return selectOutTuple;
+    }
+
     // utils
     bool 
     RegionClause::containGcFuncName

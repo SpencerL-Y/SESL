@@ -2815,9 +2815,51 @@ namespace smack{
                     REGISTER_EXPRPTR(newRegionClause);
                 } else {
                     // Situation B.3.(2).2
-                    CFDEBUG(std::cout << "INFO: Load Situation B.3.(2).2 currently not considered." << std::endl;)
-                    SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
-                    return newSH;
+                    CFDEBUG(std::cout << "INFO: Load Situation B.3.(2).2" << std::endl;);
+                    std::tuple<
+                        std::list<const SpatialLiteral*>, 
+                        std::list<const SpatialLiteral*>, 
+                        std::list<const SpatialLiteral*>
+                    > selectOutTuple = tempRegionClause->selectOutSpLitList(loadedOffset, loadedSize);
+
+                    newLeftList = std::get<0>(selectOutTuple);
+                    newRightList = std::get<2>(selectOutTuple);
+                    for(const SpatialLiteral* spl : std::get<1>(selectOutTuple)){
+                        if(SpatialLiteral::Kind::BLK == spl->getId()) {
+                            std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedFormula = this->bytifyBlkPredicate(tempMetaInfo, regionName, spl, newPures);
+                            for(const SpatialLiteral* spl : resultBytifiedFormula.first){
+                                newMiddleList.push_back(spl);
+                            }
+                            newPures = resultBytifiedFormula.second;
+                        } else {
+                            const PtLit* ptLiteral = (const PtLit*) spl;
+                            std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(regionName, ptLiteral, newPures);
+                            newMiddleList.push_back(newPtPurePair.first);
+                            newPures = newPtPurePair.second;
+                        }
+                    }
+
+                    assert(tempMetaInfo->isInitialized(loadedOffset));
+                    // get the prefix length of a loaded position in a pt predicate
+                    int loadedOffsetPrefixLength = tempMetaInfo->getInitializedPrefixLength(loadedOffset);
+                    std::vector<const BytePt*> loadedBytes;
+                    int byteNum = 0;
+                    for(const SpatialLiteral* spl : newMiddleList){
+                        if(spl->getId() == SpatialLiteral::Kind::BLK) continue;
+                        if(byteNum >= loadedSize) break;
+                        assert(spl->getId() == SpatialLiteral::Kind::PT);
+                        const PtLit* pt = (const PtLit*) spl;
+                        for(const BytePt* byPt : pt->getBytifiedPts()){
+                            if(byteNum >= loadedSize) break;
+                            loadedBytes.push_back(byPt);
+                        }
+                    }
+                    const Expr* loadedEqConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(loadedBytes, lhsVar);
+                    
+                    newPures.push_back(loadedEqConstraint);
+                    newMetaInfo = tempMetaInfo;
+                    newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
+                    REGISTER_EXPRPTR(newRegionClause);
                 }
             } else {
                 CFDEBUG(std::cout << "ERROR: this should not happen load situation.." << std::endl;);
@@ -3901,7 +3943,7 @@ namespace smack{
         const BlkLit* tempRhsBlk = (const BlkLit*) oldBlk;
         while(tempRhsBlk->getBlkByteSize() != 0){
             const Expr* tempFrom = tempRhsBlk->getFrom();
-            assert(!this->computeArithmeticOffsetValue(tempFrom).first);
+            assert(this->computeArithmeticOffsetValue(tempFrom).first);
             int fromVarOffset = this->computeArithmeticOffsetValue(tempFrom).second;
             const VarExpr* fromVar = this->createAndRegisterFreshPtrVar(1, regionName, fromVarOffset);
             const Expr* eq = Expr::eq(tempFrom, fromVar);

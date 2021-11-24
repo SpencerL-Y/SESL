@@ -2913,7 +2913,6 @@ namespace smack{
                     }
                     const Expr* loadedEqConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(loadedBytes, lhsVar);
                     // TODOsh: EMERGENT CHECK WHETHER var equivlant link needs to be updated. also for B.3.(2).1
-                    newPures.push_back(loadedEqConstraint);
                     newMetaInfo = tempMetaInfo;
                     newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
                     REGISTER_EXPRPTR(newRegionClause);

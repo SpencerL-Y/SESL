@@ -2860,7 +2860,7 @@ namespace smack{
                         }
                     }
                     const Expr* loadedEqConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(loadedBytes, lhsVar);
-                    
+                    REGISTER_EXPRPTR(loadedEqConstraint);
                     newPures.push_back(loadedEqConstraint);
                     newMetaInfo = tempMetaInfo;
                     newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);

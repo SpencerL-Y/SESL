@@ -2753,10 +2753,57 @@ namespace smack{
                 } else {
                     // Situation B.3.(2).1
                 
-                    CFDEBUG(std::cout << "INFO: Situation 3.(2).1 currently not support, to be added later" << std::endl;)
+                    CFDEBUG(std::cout << "INFO: Situation B.3.(2).1 " << std::endl;)
                     CFDEBUG(std::cout << "INFO: Initialized length: " << tempMetaInfo->getInitializedLength(loadedOffset) << " loaded size: " << loadedSize << std::endl;);
-                    SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::UNKNOWN);
-                    return newSH;
+
+                    std::tuple<
+                        std::list<const SpatialLiteral*>,
+                        std::list<const SpatialLiteral*>,
+                        std::list<const SpatialLiteral*>
+                    > selectOutTuple = tempRegionClause->selectOutSpLitList(loadedOffset, loadedSize);
+                    newLeftList = std::get<0>(selectOutTuple);
+                    newRightList = std::get<2>(selectOutTuple);
+
+                    std::list<const SpatialLiteral*> oldMiddleList = std::get<1>(selectOutTuple);
+                    for(const SpatialLiteral* spl : oldMiddleList){
+                        if(SpatialLiteral::Kind::BLK == spl->getId()){
+                            std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> blkBytifiedResult = this->bytifyBlkPredicate(tempMetaInfo, regionName, spl, newPures);
+                            newPures = blkBytifiedResult.second;
+                            for(const SpatialLiteral* bspl : blkBytifiedResult.first){
+                                newMiddleList.push_back(bspl)
+                            }
+                        } else {
+                            const PtLit* ptLiteral = (const PtLit*) spl;
+                            if(ptLiteral->isByteLevel()){
+                                newMiddleList.push_back(ptLiteral);
+                            } else {
+                                std::pair<const PtLit*, std::list<const SpatialLiteral*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar (regionName, ptLiteral, newPures);
+                                newMiddleList.push_back(newPtPurePair.first);
+                                newPures = newPtPurePair.second;
+                            }
+                        }
+                    }
+                    int loadedByteNum = 0;
+                    std::vector<const BytePt*> loadedBytes;
+                    for(const SpatialLiteral* bspl : newMiddleList){
+                        if(SpatialLiteral::Kind::BLK == bspl->getId()) continue;
+                        if(loadedByteNum >= loadedSize) break;
+                        assert(SpatialLiteral::Kind::PT == bspl->getId());
+                        const PtLit* pt = (const PtLit*) bspl;
+                        assert(pt->isByteLevel());
+                        for(const BytePt* bytePt : pt->getBytifiedPts()){
+                            if(loadedByteNum >= loadedSize) break;
+                            loadedBytes.push_back(bytePt);
+                            loadedByteNum += 1;
+                        }
+                    }
+
+                    const Expr* loadedEqConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(loadedBytes, lhsVar);
+                    newPures.push_back(loadedEqConstraint);
+
+                    newMetaInfo = tempMetaInfo;
+                    newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);
+                    REGISTER_EXPRPTR(newRegionClause);
                 } 
             } else if(tempMetaInfo->isInitialized(loadedOffset)){
                 // Situation B.2
@@ -2827,15 +2874,19 @@ namespace smack{
                     for(const SpatialLiteral* spl : std::get<1>(selectOutTuple)){
                         if(SpatialLiteral::Kind::BLK == spl->getId()) {
                             std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> resultBytifiedFormula = this->bytifyBlkPredicate(tempMetaInfo, regionName, spl, newPures);
-                            for(const SpatialLiteral* spl : resultBytifiedFormula.first){
-                                newMiddleList.push_back(spl);
+                            for(const SpatialLiteral* bspl : resultBytifiedFormula.first){
+                                newMiddleList.push_back(bspl);
                             }
                             newPures = resultBytifiedFormula.second;
                         } else {
                             const PtLit* ptLiteral = (const PtLit*) spl;
-                            std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(regionName, ptLiteral, newPures);
-                            newMiddleList.push_back(newPtPurePair.first);
-                            newPures = newPtPurePair.second;
+                            if(ptLiteral->isByteLevel()){
+                                newMiddleList.push_back(ptLiteral);
+                            } else {
+                                std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar(regionName, ptLiteral, newPures);
+                                newMiddleList.push_back(newPtPurePair.first);
+                                newPures = newPtPurePair.second;
+                            }
                         }
                     }
 
@@ -2845,22 +2896,23 @@ namespace smack{
                     std::vector<const BytePt*> loadedBytes;
                     int loadedByteNum = 0;
                     int bytePtCount = 0;
-                    for(const SpatialLiteral* spl : newMiddleList){
-                        if(spl->getId() == SpatialLiteral::Kind::BLK) continue;
+                    for(const SpatialLiteral* bspl : newMiddleList){
+                        if(bspl->getId() == SpatialLiteral::Kind::BLK) continue;
                         if(loadedByteNum >= loadedSize) break;
-                        assert(spl->getId() == SpatialLiteral::Kind::PT);
-                        const PtLit* pt = (const PtLit*) spl;
-                        for(const BytePt* byPt : pt->getBytifiedPts()){
+                        assert(bspl->getId() == SpatialLiteral::Kind::PT);
+                        const PtLit* pt = (const PtLit*) bspl;
+                        assert(pt->isByteLevel());
+                        for(const BytePt* bytePt : pt->getBytifiedPts()){
                             if(loadedByteNum >= loadedSize) break;
                             if(bytePtCount >= loadedOffsetPrefixLength){
-                                loadedBytes.push_back(byPt);
+                                loadedBytes.push_back(bytePt);
                                 loadedByteNum += 1;
                             }
                             bytePtCount += 1;
                         }
                     }
                     const Expr* loadedEqConstraint = this->genConstraintEqualityBytifiedPtsAndHighLevelExpr(loadedBytes, lhsVar);
-                    
+                    // TODOsh: EMERGENT CHECK WHETHER var equivlant link needs to be updated. also for B.3.(2).1
                     newPures.push_back(loadedEqConstraint);
                     newMetaInfo = tempMetaInfo;
                     newRegionClause = new RegionClause(newLeftList, newMiddleList, newRightList, newMetaInfo, tempRegionClause);

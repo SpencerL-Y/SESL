@@ -2770,14 +2770,14 @@ namespace smack{
                             std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> blkBytifiedResult = this->bytifyBlkPredicate(tempMetaInfo, regionName, spl, newPures);
                             newPures = blkBytifiedResult.second;
                             for(const SpatialLiteral* bspl : blkBytifiedResult.first){
-                                newMiddleList.push_back(bspl)
+                                newMiddleList.push_back(bspl);
                             }
                         } else {
                             const PtLit* ptLiteral = (const PtLit*) spl;
                             if(ptLiteral->isByteLevel()){
                                 newMiddleList.push_back(ptLiteral);
                             } else {
-                                std::pair<const PtLit*, std::list<const SpatialLiteral*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar (regionName, ptLiteral, newPures);
+                                std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar (regionName, ptLiteral, newPures);
                                 newMiddleList.push_back(newPtPurePair.first);
                                 newPures = newPtPurePair.second;
                             }

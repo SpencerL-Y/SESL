@@ -369,7 +369,8 @@ namespace smack{
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
-            } else { 
+            } else if(rhs->isValue()){
+                CFDEBUG(std::cout << "INFO: RHS is value"  << std::endl;);
                 this->varEquiv->addNewName(lhsVarName);
                 const Expr* rhsExpr = rhs;
                 auto computeIntResult = rhs->translateToInt(this->varEquiv);
@@ -392,6 +393,59 @@ namespace smack{
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
+            } else { 
+                CFDEBUG(std::cout << "INFO: rhs expression type: " << rhs->getType() << std::endl;);
+                this->varEquiv->addNewName(lhsVarName);
+                if(ExprType::ITE == rhs->getType()){
+                    const IfThenElseExpr* rhsExpr = (const IfThenElseExpr*) rhs;
+                    const Expr* iteCond = rhsExpr->getCond();
+                    const Expr* trueValue = rhsExpr->getTrueValue();
+                    const Expr* falseValue = rhsExpr->getFalseValue();
+
+
+                    // ITE only occurs when both are constant
+                    assert(trueValue->isValue() && falseValue->isValue());
+                    this->updateVarType(lhsVar, trueValue, trueValue);
+                    const Expr* iteConstraint = Expr::or_(
+                        Expr::and_(
+                            iteCond,
+                            Expr::eq(lhsVar, trueValue)
+                        ),
+                        Expr::and_(
+                            Expr::not_(iteCond),
+                            Expr::eq(lhsVar, falseValue)
+                        )
+                    );
+
+                    REGISTER_EXPRPTR(iteConstraint);
+                    std::list<const Expr*> newPures = sh->getPures();
+                    newPures.push_back(iteConstraint);
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
+                    CFDEBUG(std::cout << std::endl);
+                    return newSH;
+                } else {
+                    const Expr* rhsExpr = rhs;
+                    auto computeIntResult = rhs->translateToInt(this->varEquiv);
+                    if(computeIntResult.first){
+                        this->varEquiv->addNewVal(lhsVarName, computeIntResult.second);
+                    } else {
+                        CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
+                        assert(false);
+                    }
+                    this->updateVarType(lhsVar, rhsExpr, rhsExpr);
+
+                    const Expr* eq = Expr::eq(
+                        lhsVar,
+                        rhs
+                    );
+                    REGISTER_EXPRPTR(eq);
+                    std::list<const Expr*> newPures = sh->getPures();
+                    newPures.push_back(eq);
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
+                    newSH->print(std::cout);
+                    CFDEBUG(std::cout << std::endl;);
+                    return newSH;
+                }
             }
         }
     
@@ -3542,7 +3596,7 @@ namespace smack{
             std::string lhsUsedVarName = lhsVar->name();
             std::string rhsUsedVarName = rhsVar->name();
             std::string lhsOrigVarName = this->varFactory->getOrigVarName(lhsUsedVarName);
-            this->cfg->addVarType(lhsOrigVarName, "i64");
+            this->cfg->addVarType(lhsOrigVarName, "i" + std::to_string(8 * PTR_BYTEWIDTH));
         } else {
             // rhs is original arithmetic expression
             assert(ExprType::FUNC == rhs->getType());

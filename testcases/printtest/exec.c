@@ -22,18 +22,29 @@
 //     return 0;
 
 // }
-int main(){
 
-    int *j = (int*)malloc(16);
+// load extreme situation
 
-    *(j + 1) = 10;
+// int main(){
 
-    char *m = (char*)(j + 1);
+//     int *j = (int*)malloc(16);
 
-    int *loadPtr = (int*)(m + 1);
+//     *(j + 1) = 10;
 
-    int load = *loadPtr;
+//     char *m = (char*)(j + 1);
 
-    return 0;
+//     int *loadPtr = (int*)(m + 1);
+
+//     int load = *loadPtr;
+
+//     return 0;
     
+// }
+
+// if then else
+
+int main(){
+    int a = __VERIFIER_nondet_int() > 0? 20 : 10;
+    int *j = malloc(a);
+    return 0;
 }

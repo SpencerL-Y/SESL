@@ -398,7 +398,8 @@ namespace smack{
                 this->varEquiv->addNewName(lhsVarName);
                 if(ExprType::ITE == rhs->getType()){
                     const IfThenElseExpr* rhsExpr = (const IfThenElseExpr*) rhs;
-                    const Expr* iteCond = rhsExpr->getCond();
+                    const Expr* iteOrigCond = rhsExpr->getCond();
+                    const Expr* iteCond = this->getUsedExpr(iteOrigCond);
                     const Expr* trueValue = rhsExpr->getTrueValue();
                     const Expr* falseValue = rhsExpr->getFalseValue();
 
@@ -2098,6 +2099,8 @@ namespace smack{
             CFDEBUG(std::cout << "INFO: out of range" << std::endl;);
             return newSH;
         }
+
+        
         // A. the position is initialized before: three situations 
         // 1. the store position is exactly some allocated offset:
         // (1) this store is exactly the size of previous stepSize, then we update the value pointed to. 
@@ -2115,10 +2118,14 @@ namespace smack{
         // Other situations are not considered yet
 
 
+        oldRegionClause = sh->getRegion(regionName);
         std::list<const Expr*> newPures = sh->getPures();
         std::list<const RegionClause*> newRegions;
-        oldRegionClause = sh->getRegion(regionName);
-
+        if(offset + storedSize >= oldRegionClause->getRegionSize()){
+            CFDEBUG(std::cout << "INFERROR: store exceeds the region, invalid deref" << std::endl;);
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
+            return newSH;
+        }
 
         if(oldRegionClause->getRegionMetaInfo()->hasOffset(offset) || oldRegionClause->getRegionMetaInfo()->isInitialized(offset)){
             CFDEBUG(std::cout << "INFO: store offset exists" << std::endl;);
@@ -2308,6 +2315,7 @@ namespace smack{
                         newPures.push_back(eq);
                     }
                     // The above operations transfer the data to store to freshStoredVar
+
                     bool isDstTailPtSplitted = 
                       tempMetaInfo->isInitialized(offset + storedSize) && 
                     !(tempMetaInfo->getOffsetPos(offset + storedSize).first);
@@ -3957,6 +3965,30 @@ namespace smack{
             return {nullptr, false};
         }
     }
+
+
+    const Expr* 
+    BlockExecutor::getUsedExpr(const Expr* originExpr){
+        if(originExpr->isVar()){
+            const VarExpr* origVar = (const VarExpr*) originExpr;
+            std::string origVarName = origVar->name();
+            return this->varFactory->getVarConsume(origVarName);
+        } else if(originExpr->isValue()){
+            return originExpr;
+        } else {
+            // only be binary expressions
+            assert(originExpr->getType() == ExprType::BIN);
+            const BinExpr* oldBin = (const BinExpr*) originExpr;
+            const Expr* newBin = new BinExpr(
+                oldBin->getOp(), 
+                this->getUsedExpr(oldBin->getLhs()),
+                this->getUsedExpr(oldBin->getRhs())
+            );
+            REGISTER_EXPRPTR(newBin);
+            return newBin;
+        }
+    }
+    
 
     
     const VarExpr* 

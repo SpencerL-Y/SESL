@@ -94,6 +94,7 @@ namespace smack{
         std::pair<const Expr*, bool> getUsedArithExprAndVar(const VarExpr* lhsVar, const Expr* originExpr);
         int parsePtrArithmeticStepSize(const Expr* expression);
         std::pair<bool, int> computeArithmeticOffsetValue(const Expr* expression);
+        const Expr* getUsedExpr(const Expr* originExpr);
         //  <<< LOW LEVEL METHODS >>> 
         const Expr* parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName);
         const Expr* parseVarArithmeticExpr(const Expr* arithExpr);

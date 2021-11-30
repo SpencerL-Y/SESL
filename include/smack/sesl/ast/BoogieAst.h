@@ -547,6 +547,12 @@ namespace smack {
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
+        const Expr* getCond() const { return this->cond;}
+
+        const Expr* getTrueValue() const {return this->trueValue;}
+
+        const Expr* getFalseValue() const {return this->falseValue;}
+
         ExprType getType() const { return ExprType::ITE; }
 
         bool isVar() const { return false; }

@@ -35,6 +35,10 @@ namespace smack {
         CFGUtil cfgUtil(program);
         CFGPtr mainGraph = cfgUtil.getMainCFG();
         StatePtr state = mainGraph->getEntryState();
+        std::cout << "-------------PRINT CFG-----------" << std::endl;
+        // mainGraph->printCFG();
+        std::cout << "-------------PRINT STATE INFO-----------" << std::endl;
+        // mainGraph->printStateInfo();
         // std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
         // Block* block = state->getStateBlock();
         // std::cout << "Block stmt num: " << block->getStatements().size() << std::endl;
@@ -55,6 +59,7 @@ namespace smack {
             cd->print(std::cout);
         }
         }
+
         std::cout << "-------------------- EXECUTE AND CHECK --------------------" << std::endl;
         int bugNotFound = true;
         for(ExecutionPath p : cfgExec.getExecPathVec()){
@@ -338,7 +343,7 @@ namespace smack {
                     callStmt->getProc().find("free") != std::string::npos || 
                     callStmt->getProc().find("boogie_si_record") != std::string::npos && callStmt->getAttrs().size() > 0 && !callStmt->getAttrs().front()->getName().compare("call_end")){
                     this->trans->setSymbolicHeapHExpr(previousSH->getSymbHeap());
-                    //std::cout << previousSH->getSymbHeap() << std::endl;
+                    CFDEBUG(std::cout << "CHECKING: FORMULA\n" <<  previousSH->getSymbHeap() << std::endl);
                     this->trans->translate();
                     z3::expr tempFormula = this->trans->getFinalExpr();
                     z3::check_result pathCond = slah_api::checkSat(tempFormula);

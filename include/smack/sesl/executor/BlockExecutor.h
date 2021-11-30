@@ -94,6 +94,7 @@ namespace smack{
         std::pair<const Expr*, bool> getUsedArithExprAndVar(const VarExpr* lhsVar, const Expr* originExpr);
         int parsePtrArithmeticStepSize(const Expr* expression);
         std::pair<bool, int> computeArithmeticOffsetValue(const Expr* expression);
+        const Expr* getUsedExpr(const Expr* originExpr);
         //  <<< LOW LEVEL METHODS >>> 
         const Expr* parsePtrArithmeticExpr(const Expr* arithExpr, std::string lhsName);
         const Expr* parseVarArithmeticExpr(const Expr* arithExpr);
@@ -154,15 +155,16 @@ namespace smack{
 
         // --------------------- Execution for initialization
         SHExprPtr executeGlobal(SHExprPtr sh);
-        // --------------------- Execution for instructions
 
+        // --------------------- Execution for assignment
         SHExprPtr executeAssign(SHExprPtr sh, const Stmt* stmt);
 
         SHExprPtr executeAssignSingle(SHExprPtr sh, const Expr* lhs, const Expr* rhs);
 
-        SHExprPtr executeAssume(SHExprPtr sh, const Stmt* stmt);
-
+        // --------------------- Execution for call stmt
         SHExprPtr executeCall(SHExprPtr sh, const Stmt* callstmt);
+
+        // ------ different kinds of RHS calls
 
         SHExprPtr executeFuncCallStack(SHExprPtr sh, const CallStmt* callstmt);
 
@@ -184,20 +186,18 @@ namespace smack{
 
         SHExprPtr executeTime(SHExprPtr sh, const CallStmt* stmt);
 
-        SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
-
         SHExprPtr executeLoad(SHExprPtr sh, std::string lhsVarName, std::string lhsVarOrigName, const FunExpr* rhsFun);
 
         SHExprPtr executeStore(SHExprPtr sh, const FunExpr* rhsFun);
+        
+        // --------------------- Execution for Assumption
+        SHExprPtr executeAssume(SHExprPtr sh, const Stmt* stmt);
 
+        // --------------------- Execution for Cast
+        SHExprPtr executeCast(SHExprPtr sh, const Stmt* stmt);
+
+        // --------------------- Execution for Other stmt
         SHExprPtr executeOther(SHExprPtr sh, const Stmt* stmt);
-
-        //----------------------- Execution for library functions
-
-
-
-        SHExprPtr executeMemset(SHExprPtr sh, const FunExpr* rhsFun);
-
 
 
         // symbolic execution for current stmt and results in and symbolic heap.

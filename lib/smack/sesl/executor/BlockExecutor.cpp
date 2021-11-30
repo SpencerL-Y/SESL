@@ -369,7 +369,8 @@ namespace smack{
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
-            } else { 
+            } else if(rhs->isValue()){
+                CFDEBUG(std::cout << "INFO: RHS is value"  << std::endl;);
                 this->varEquiv->addNewName(lhsVarName);
                 const Expr* rhsExpr = rhs;
                 auto computeIntResult = rhs->translateToInt(this->varEquiv);
@@ -392,6 +393,60 @@ namespace smack{
                 newSH->print(std::cout);
                 CFDEBUG(std::cout << std::endl;);
                 return newSH;
+            } else { 
+                CFDEBUG(std::cout << "INFO: rhs expression type: " << rhs->getType() << std::endl;);
+                this->varEquiv->addNewName(lhsVarName);
+                if(ExprType::ITE == rhs->getType()){
+                    const IfThenElseExpr* rhsExpr = (const IfThenElseExpr*) rhs;
+                    const Expr* iteOrigCond = rhsExpr->getCond();
+                    const Expr* iteCond = this->getUsedExpr(iteOrigCond);
+                    const Expr* trueValue = rhsExpr->getTrueValue();
+                    const Expr* falseValue = rhsExpr->getFalseValue();
+
+
+                    // ITE only occurs when both are constant
+                    assert(trueValue->isValue() && falseValue->isValue());
+                    this->updateVarType(lhsVar, trueValue, trueValue);
+                    const Expr* iteConstraint = Expr::or_(
+                        Expr::and_(
+                            iteCond,
+                            Expr::eq(lhsVar, trueValue)
+                        ),
+                        Expr::and_(
+                            Expr::not_(iteCond),
+                            Expr::eq(lhsVar, falseValue)
+                        )
+                    );
+
+                    REGISTER_EXPRPTR(iteConstraint);
+                    std::list<const Expr*> newPures = sh->getPures();
+                    newPures.push_back(iteConstraint);
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
+                    CFDEBUG(std::cout << std::endl);
+                    return newSH;
+                } else {
+                    const Expr* rhsExpr = rhs;
+                    auto computeIntResult = rhs->translateToInt(this->varEquiv);
+                    if(computeIntResult.first){
+                        this->varEquiv->addNewVal(lhsVarName, computeIntResult.second);
+                    } else {
+                        CFDEBUG(std::cout << "INFO: cannot compute int value.." << std::endl;);
+                        assert(false);
+                    }
+                    this->updateVarType(lhsVar, rhsExpr, rhsExpr);
+
+                    const Expr* eq = Expr::eq(
+                        lhsVar,
+                        rhs
+                    );
+                    REGISTER_EXPRPTR(eq);
+                    std::list<const Expr*> newPures = sh->getPures();
+                    newPures.push_back(eq);
+                    SHExprPtr newSH = std::make_shared<SymbolicHeapExpr>(newPures, sh->getRegions());
+                    newSH->print(std::cout);
+                    CFDEBUG(std::cout << std::endl;);
+                    return newSH;
+                }
             }
         }
     
@@ -923,7 +978,8 @@ namespace smack{
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;)
             return newSH;
-        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_INT)){
+        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_INT) || 
+                  !stmt->getProc().compare(SVNaming::SV_NONDET_UINT)){
             std::string retOrigVarName = stmt->getReturns().front();
             const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
             std::string retVarName = retVar->name();
@@ -944,7 +1000,8 @@ namespace smack{
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
-        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_LONG)) {
+        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_LONG) || 
+                  !stmt->getProc().compare(SVNaming::SV_NONDET_ULONG)) {
             std::string retOrigVarName = stmt->getReturns().front();
             const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
             std::string retVarName = retVar->name();
@@ -2044,6 +2101,8 @@ namespace smack{
             CFDEBUG(std::cout << "INFO: out of range" << std::endl;);
             return newSH;
         }
+
+        
         // A. the position is initialized before: three situations 
         // 1. the store position is exactly some allocated offset:
         // (1) this store is exactly the size of previous stepSize, then we update the value pointed to. 
@@ -2061,10 +2120,14 @@ namespace smack{
         // Other situations are not considered yet
 
 
+        oldRegionClause = sh->getRegion(regionName);
         std::list<const Expr*> newPures = sh->getPures();
         std::list<const RegionClause*> newRegions;
-        oldRegionClause = sh->getRegion(regionName);
-
+        if(offset + storedSize > oldRegionClause->getRegionSize()){
+            CFDEBUG(std::cout << "INFERROR: store exceeds the region, invalid deref" << std::endl;);
+            SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
+            return newSH;
+        }
 
         if(oldRegionClause->getRegionMetaInfo()->hasOffset(offset) || oldRegionClause->getRegionMetaInfo()->isInitialized(offset)){
             CFDEBUG(std::cout << "INFO: store offset exists" << std::endl;);
@@ -2254,6 +2317,7 @@ namespace smack{
                         newPures.push_back(eq);
                     }
                     // The above operations transfer the data to store to freshStoredVar
+
                     bool isDstTailPtSplitted = 
                       tempMetaInfo->isInitialized(offset + storedSize) && 
                     !(tempMetaInfo->getOffsetPos(offset + storedSize).first);
@@ -2770,14 +2834,14 @@ namespace smack{
                             std::pair<std::list<const SpatialLiteral*>, std::list<const Expr*>> blkBytifiedResult = this->bytifyBlkPredicate(tempMetaInfo, regionName, spl, newPures);
                             newPures = blkBytifiedResult.second;
                             for(const SpatialLiteral* bspl : blkBytifiedResult.first){
-                                newMiddleList.push_back(bspl)
+                                newMiddleList.push_back(bspl);
                             }
                         } else {
                             const PtLit* ptLiteral = (const PtLit*) spl;
                             if(ptLiteral->isByteLevel()){
                                 newMiddleList.push_back(ptLiteral);
                             } else {
-                                std::pair<const PtLit*, std::list<const SpatialLiteral*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar (regionName, ptLiteral, newPures);
+                                std::pair<const PtLit*, std::list<const Expr*>> newPtPurePair = this->updateCreateBytifiedPtPredicateAndEqualHighLevelVar (regionName, ptLiteral, newPures);
                                 newMiddleList.push_back(newPtPurePair.first);
                                 newPures = newPtPurePair.second;
                             }
@@ -3228,13 +3292,16 @@ namespace smack{
         // and initializes it to all zero
         assert(!stmt->getProc().compare("calloc"));
         const std::string retOrigVarName = stmt->getReturns().front();
-        const Expr* num = stmt->getParams().front();
+        const Expr* numExpr = stmt->getParams().front();
         const Expr* size = stmt->getParams().back();
         // get number of object
-        if(!num->isValue()) {
+        if(!numExpr->translateToInt(this->varEquiv).first) {
             CFDEBUG(std::cout<< "WARNING: Unsupported num type" << std::endl;);
             return nullptr;
-        }
+        } 
+        const Expr* num = Expr::lit((long long) numExpr->translateToInt(this->varEquiv).second);
+        REGISTER_EXPRPTR(num);
+
         // get size of each object
         if(size->isValue()) {
             CFDEBUG(std::cout<< "WARNING: Unsupported size type" << std::endl;);
@@ -3542,7 +3609,7 @@ namespace smack{
             std::string lhsUsedVarName = lhsVar->name();
             std::string rhsUsedVarName = rhsVar->name();
             std::string lhsOrigVarName = this->varFactory->getOrigVarName(lhsUsedVarName);
-            this->cfg->addVarType(lhsOrigVarName, "i64");
+            this->cfg->addVarType(lhsOrigVarName, "i" + std::to_string(8 * PTR_BYTEWIDTH));
         } else {
             // rhs is original arithmetic expression
             assert(ExprType::FUNC == rhs->getType());
@@ -3627,7 +3694,10 @@ namespace smack{
             assert(VarType::PTR == this->getVarType(extractedRhsVar->name()) ||
                    VarType::NIL == this->getVarType(extractedRhsVar->name())
             );
-            assert(this->computeArithmeticOffsetValue(storedExpr).first);
+            if(!this->computeArithmeticOffsetValue(storedExpr).first){
+                CFDEBUG(std::cout << "INFO: UNSOLVED offset value computation, maybe symbolic" << std::endl;);
+                assert(false);
+            }
             int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr).second;
 
             int extractedRhsPtrArithStepSize = this->parsePtrArithmeticStepSize(rhsExpr);
@@ -3903,6 +3973,30 @@ namespace smack{
             return {nullptr, false};
         }
     }
+
+
+    const Expr* 
+    BlockExecutor::getUsedExpr(const Expr* originExpr){
+        if(originExpr->isVar()){
+            const VarExpr* origVar = (const VarExpr*) originExpr;
+            std::string origVarName = origVar->name();
+            return this->varFactory->getVarConsume(origVarName);
+        } else if(originExpr->isValue()){
+            return originExpr;
+        } else {
+            // only be binary expressions
+            assert(originExpr->getType() == ExprType::BIN);
+            const BinExpr* oldBin = (const BinExpr*) originExpr;
+            const Expr* newBin = new BinExpr(
+                oldBin->getOp(), 
+                this->getUsedExpr(oldBin->getLhs()),
+                this->getUsedExpr(oldBin->getRhs())
+            );
+            REGISTER_EXPRPTR(newBin);
+            return newBin;
+        }
+    }
+    
 
     
     const VarExpr* 

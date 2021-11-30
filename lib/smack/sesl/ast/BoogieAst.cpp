@@ -471,10 +471,10 @@ namespace smack {
                 os << "==>";
                 break;
             case Or:
-                os << "||";
+                os << "\\/";
                 break;
             case And:
-                os << "&&";
+                os << "/\\";
                 break;
             case Eq:
                 os << "==";
@@ -1113,7 +1113,8 @@ namespace smack {
         return clonedExpr;
     }
 
-    z3::expr IfThenElseExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
+    z3::expr IfThenElseExpr::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {\
+        // TODO: EMERGENT translation incorrect
         auto res = ((cond->translateToZ3(z3Ctx, cfg, varFac, varBounder) and trueValue->translateToZ3(z3Ctx, cfg, varFac, varBounder)) or
                     (not cond->translateToZ3(z3Ctx, cfg, varFac, varBounder) and falseValue->translateToZ3(z3Ctx, cfg, varFac, varBounder)));
     }

@@ -999,7 +999,8 @@ namespace smack{
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;);
             return newSH;
-        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_LONG)) {
+        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_LONG) || 
+                  !stmt->getProc().compare(SVNaming::SV_NONDET_ULONG)) {
             std::string retOrigVarName = stmt->getReturns().front();
             const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
             std::string retVarName = retVar->name();

@@ -2122,7 +2122,7 @@ namespace smack{
         oldRegionClause = sh->getRegion(regionName);
         std::list<const Expr*> newPures = sh->getPures();
         std::list<const RegionClause*> newRegions;
-        if(offset + storedSize >= oldRegionClause->getRegionSize()){
+        if(offset + storedSize > oldRegionClause->getRegionSize()){
             CFDEBUG(std::cout << "INFERROR: store exceeds the region, invalid deref" << std::endl;);
             SHExprPtr newSH = this->createErrLitSH(newPures, sh->getRegions(), ErrType::VALID_DEREF);
             return newSH;

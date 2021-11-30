@@ -978,7 +978,8 @@ namespace smack{
             newSH->print(std::cout);
             CFDEBUG(std::cout << std::endl;)
             return newSH;
-        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_INT)){
+        } else if(!stmt->getProc().compare(SVNaming::SV_NONDET_INT) || 
+                  !stmt->getProc().compare(SVNaming::SV_NONDET_UINT)){
             std::string retOrigVarName = stmt->getReturns().front();
             const VarExpr* retVar = this->varFactory->useVar(retOrigVarName);
             std::string retVarName = retVar->name();
@@ -3291,13 +3292,20 @@ namespace smack{
         // and initializes it to all zero
         assert(!stmt->getProc().compare("calloc"));
         const std::string retOrigVarName = stmt->getReturns().front();
-        const Expr* num = stmt->getParams().front();
+        const Expr* numExpr = stmt->getParams().front();
         const Expr* size = stmt->getParams().back();
         // get number of object
-        if(!num->isValue()) {
+        if(!numExpr->isValue() && !numExpr->translateToInt(this->varEquiv).first) {
             CFDEBUG(std::cout<< "WARNING: Unsupported num type" << std::endl;);
             return nullptr;
-        }
+        } 
+        const Expr* num = numExpr;
+        if(!numExpr->isValue()){
+            const IntLit* origNum = (const IntLit*) numExpr;
+            num = Expr::lit((long long) origNum->getVal());
+            REGISTER_EXPRPTR(num);
+        } 
+
         // get size of each object
         if(size->isValue()) {
             CFDEBUG(std::cout<< "WARNING: Unsupported size type" << std::endl;);
@@ -3690,7 +3698,10 @@ namespace smack{
             assert(VarType::PTR == this->getVarType(extractedRhsVar->name()) ||
                    VarType::NIL == this->getVarType(extractedRhsVar->name())
             );
-            assert(this->computeArithmeticOffsetValue(storedExpr).first);
+            if(!this->computeArithmeticOffsetValue(storedExpr).first){
+                CFDEBUG(std::cout << "INFO: UNSOLVED offset value computation, maybe symbolic" << std::endl;);
+                assert(false);
+            }
             int rhsPtrArithmeticOffset = this->computeArithmeticOffsetValue(storedExpr).second;
 
             int extractedRhsPtrArithStepSize = this->parsePtrArithmeticStepSize(rhsExpr);

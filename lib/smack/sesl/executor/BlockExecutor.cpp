@@ -3295,16 +3295,12 @@ namespace smack{
         const Expr* numExpr = stmt->getParams().front();
         const Expr* size = stmt->getParams().back();
         // get number of object
-        if(!numExpr->isValue() && !numExpr->translateToInt(this->varEquiv).first) {
+        if(!numExpr->translateToInt(this->varEquiv).first) {
             CFDEBUG(std::cout<< "WARNING: Unsupported num type" << std::endl;);
             return nullptr;
         } 
-        const Expr* num = numExpr;
-        if(!numExpr->isValue()){
-            const IntLit* origNum = (const IntLit*) numExpr;
-            num = Expr::lit((long long) origNum->getVal());
-            REGISTER_EXPRPTR(num);
-        } 
+        const Expr* num = Expr::lit((long long) numExpr->translateToInt(this->varEquiv).second);
+        REGISTER_EXPRPTR(num);
 
         // get size of each object
         if(size->isValue()) {

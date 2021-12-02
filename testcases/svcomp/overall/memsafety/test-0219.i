@@ -678,6 +678,7 @@ static void l1_insert(struct L1 **list)
         abort();
     do
         l2_insert(&item->l2);
+     // !!!!! BUG HERE: Parameter, maybe it is a bug of SMACK...
     while (__VERIFIER_nondet_int());
     item->next = *list;
     *list = item;

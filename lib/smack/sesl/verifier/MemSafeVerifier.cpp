@@ -343,7 +343,7 @@ namespace smack {
                     callStmt->getProc().find("free") != std::string::npos || 
                     callStmt->getProc().find("boogie_si_record") != std::string::npos && callStmt->getAttrs().size() > 0 && !callStmt->getAttrs().front()->getName().compare("call_end")){
                     this->trans->setSymbolicHeapHExpr(previousSH->getSymbHeap());
-                    CFDEBUG(std::cout << "CHECKING: FORMULA\n" <<  previousSH->getSymbHeap() << std::endl);
+                    // CFDEBUG(std::cout << "CHECKING: FORMULA\n" <<  previousSH->getSymbHeap() << std::endl);
                     this->trans->translate();
                     z3::expr tempFormula = this->trans->getFinalExpr();
                     z3::check_result pathCond = slah_api::checkSat(tempFormula);

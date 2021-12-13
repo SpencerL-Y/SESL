@@ -60,12 +60,16 @@ Notice: `<input_file>` indicates source file(`.c` or `.i`).
 
 ## Authors and Affliation
 Institute of Software, China Academy of Sciences
-- [Xie Li](https://github.com/SpencerL-Y)
+- [Xie Li](https://tis.ios.ac.cn/?page_id=1873)
 - [Yutian Zhu](https://github.com/zhuyutian57)
-- [Zongxin Liu](https://github.com/lzx-center) 
+- [Zongxin Liu](https://tis.ios.ac.cn/?page_id=2270) 
 - Wanyun Su
 - [Zhilin Wu](http://lcs.ios.ac.cn/~wuzl/)
 - [Lijun Zhang](https://iscasmc.ios.ac.cn/?page_id=148)
 
 ### Contact
 - EMAIL: lixie19[AT]ios[DOT]ac[DOT]cn
+
+## SV-COMP
+
+SESL is attending the 11th [SV-COMP](https://sv-comp.sosy-lab.org/2022/) and competes on the **MemorySafety** track

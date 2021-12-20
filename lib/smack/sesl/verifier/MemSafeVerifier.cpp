@@ -78,14 +78,9 @@ namespace smack {
             }
 
             mainGraph->initPathVarType();
-            const Expr* boolTrue = Expr::lit(true);
-            REGISTER_EXPRPTR(boolTrue);
             // initial list of spatial lits
             std::list<const Expr*> initPures;
             std::list<const RegionClause*> initRegions;
-            initPures.push_back(boolTrue);
-            // initialization for the symbolic heap
-            SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(initPures, initRegions);
             //---------------------- initialization of auxillaries
             // Initialize the equivalent class for 
             // initialization for the symbolic heap
@@ -98,6 +93,10 @@ namespace smack {
             // Initialize memtrack utils
             std::map<std::string, std::string> src2IRVar;
             std::set<std::string> globalStaticVars;
+
+            initPures = this->getInitializedPures(varFac);
+            // initialization for the symbolic heap
+            SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(initPures, initRegions);
 
             ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, callStack, src2IRVar, globalStaticVars);
             // initialization of the execution initial state over
@@ -152,6 +151,21 @@ namespace smack {
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;
 
         return false;
+    }
+
+    std::list<const Expr*> MemSafeVerifier::getInitializedPures(VarFactoryPtr vf) {
+        std::list<const Expr*> resultList;
+        const Expr* boolTrue = Expr::lit(true);
+        REGISTER_EXPRPTR(boolTrue);
+        const Expr* zero = Expr::lit((long long) 0);
+        REGISTER_EXPRPTR(zero);
+        const Expr* nullZero = Expr::eq(
+            vf->getNullVar(),
+            zero
+        );
+        REGISTER_EXPRPTR(nullZero);
+        resultList.push_back(nullZero);
+        return resultList;
     }
 
     MemSafeChecker::MemSafeChecker(std::shared_ptr<TransToZ3> trans, StatementList& stmtList, SHExprPtr fsh){

@@ -25,6 +25,7 @@ namespace smack
         virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
 
         ExecutionPath getViolationPath(){ return this->violationPath;}
+        std::list<const Expr*> getInitializedPures(VarFactoryPtr vf);
 
     };
     class TransToZ3;
@@ -47,7 +48,7 @@ namespace smack
             bool checkPathFeasibility();
             // Return value: checkResult, Error Stmt
             std::pair<bool, const Stmt*> checkProperty(SHExprPtr property);
-            SHExprPtr extractHeapSymbolicHeap(SHExprPtr originalSH, ExecutionStatePtr state);
+            SHExprPtr extractHeapSymbolicHeap(SHExprPtr originalSH, ExecutionStatePtr state); 
     };
     typedef std::shared_ptr<MemSafeChecker> MemSafeCheckerPtr;
 

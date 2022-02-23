@@ -111,7 +111,7 @@ namespace smack {
     // if no successor: print path and pop current bb state to find other path;
     // else: if no loop, increase path; else, print path with duplicate bb state and pop current bb state.
     //center Modify: use unorderd_set to mark if the block was visited
-    void CFG::printCFG(const std::string &start, bool fresh) {
+    void CFG::printCFGPath(const std::string &start, bool fresh) {
         static vector<std::string> path;
         static unordered_set<std::string> is_visited;
         if (fresh) {
@@ -145,16 +145,45 @@ namespace smack {
                     cout << endl;
                     continue;
                 }
-                printCFG(to.first, false);
+                printCFGPath(to.first, false);
             }
         }
         path.pop_back();
         is_visited.erase(start);
     }
 
-    void CFG::printCFG() {
+
+    void CFG::printCFG(){
+        cout << "Begin printing cfg..." << endl;
+        cout << "--------------------------States Information--------------------------" << endl;
+        for(StatePtr statePtr : this->getStates()){
+            cout << "--------------------------[State]" << statePtr->getBlockName() << endl;
+            auto scc = SCCNumber[statePtr->getBlockName()];
+            cout << "[Scc Info]" << "sccId: " <<  scc << "stateNumInScc: " << sccGroupNum[scc] << endl;
+            cout << "[Stmt Info]" << endl;
+            Block* stateStmtsBlock = statePtr->getStateBlock();
+            for(const Stmt* stmt : stateStmtsBlock->getStatements()){
+                stmt->print(std::cout); cout << endl;
+            }
+        }
+        cout << "--------------------------Edges Information--------------------------" << endl;
+        for(StatePtr statePtr : this->getStates()){
+            for(auto edgePair : statePtr->getEdges()){
+                cout << "[Edge]" << " from: " << statePtr->getBlockName() << " to: " << edgePair.first << endl;
+                cout << " guard: ";
+                if(edgePair.second->getGuard().getStmt() != nullptr){
+                    edgePair.second->getGuard().getStmt()->print(std::cout);
+                } else {
+                    cout << "<null>" << endl;
+                }
+                cout << "[EdgeEnd]" << std::endl;
+            }
+        }
+    }
+
+    void CFG::printCFGPath() {
         cout << getEntryBlockName() << endl;
-        printCFG(getEntryBlockName(), true);
+        printCFGPath(getEntryBlockName(), true);
     }
 
     std::vector<StatePtr> CFG::getStates() {

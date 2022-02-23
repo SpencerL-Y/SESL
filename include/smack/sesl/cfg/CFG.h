@@ -47,7 +47,7 @@ namespace smack
         std::string entryBlockName;
         bool containLoop = false;
         void topologicalSort();
-        void printCFG(const std::string& start, bool fresh = true);
+        void printCFGPath(const std::string& start, bool fresh = true);
         void generateTypeInfo();
         // SCC related
         std::unordered_map<std::string, int> dfn, low, inStack, SCCNumber;
@@ -78,6 +78,7 @@ namespace smack
         StatePtr getState(const std::string& blockName, Block* block = nullptr);
         StatePtr createState(Block* block);
         static EdgePtr createEdge(const StatePtr& fromState, const StatePtr& toState);
+        void printCFGPath();
         void printCFG();
         void printSCCNumber();
         void printStateInfo();

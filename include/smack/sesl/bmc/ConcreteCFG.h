@@ -12,39 +12,56 @@
 namespace smack
 {
     class ConcreteAction {
+        public:
+            enum ActType {
+                NULLSTMT,
+                ASSERT,
+                ASSUME,
+                MALLOC,
+                FREE,
+                OTHERPROC,
+                LOAD,
+                STORE,
+                COMMONASSIGN,
+                OTHER
+            };
         private:
             const Stmt* stmt;
+            ActType actType;
         public:
-            ConcreteAction(const Stmt* s) : stmt(s) {
-                //TODO: add classification for different actions
-            }
-            const Stmt* getStmt() const;
+            ConcreteAction(const Stmt* s);
+            
+            bool hasStmt() {return (stmt == nullptr) ? false : true;}
+            const Stmt* getStmt() const {return this->stmt;};
     };
-    typedef std::shared_ptr<ConcreteAction> concreteActionPtr;
+    typedef std::shared_ptr<ConcreteAction> ConcreteActionPtr;
 
     class ConcreteEdge {
         private:
             int fromVertex;
             int toVertex;
-            concreteActionPtr action;
+            ConcreteActionPtr action;
         public:
-            ConcreteEdge(int from, int to, concreteActionPtr act) : fromVertex(from), toVertex(to), action(act) {}
+            ConcreteEdge(int from, int to, ConcreteActionPtr act) : fromVertex(from), toVertex(to), action(act) {}
 
-            ConcreteEdge(int from, int to, const Stmt* s) : fromVertex(from), toVertex(to) {
-                // TODO: find a way to add concreteAction
-            }
+            ConcreteEdge(int from, int to, const Stmt* s);
             int getFromVertex(){ return this->fromVertex;}
             int getToVertex() {return this->toVertex;}
-            concreteActionPtr getAction() { return this->action;}
+            ConcreteActionPtr getAction() { return this->action;}
+
+            void print();
     };
     
-    typedef std::shared_ptr<ConcreteEdge> concreteEdgePtr;
+    typedef std::shared_ptr<ConcreteEdge> ConcreteEdgePtr;
 
     class ConcreteCFG {
         private:
             int vertexNum;
-            std::list<concreteEdgePtr> concreteEdges;
+            std::list<ConcreteEdgePtr> concreteEdges;
+            std::unordered_map<std::string, int> nameToConcreteState;
         public:
+            ConcreteCFG(CFGPtr origCfg);
+            void printConcreteCFG();
     };
 
     

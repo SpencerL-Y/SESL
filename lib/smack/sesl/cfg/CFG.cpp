@@ -154,13 +154,13 @@ namespace smack {
 
 
     void CFG::printCFG(){
-        cout << "Begin printing cfg..." << endl;
+        cout << "INFO: Begin printing cfg..." << endl;
         cout << "--------------------------States Information--------------------------" << endl;
         for(StatePtr statePtr : this->getStates()){
             cout << "--------------------------[State]" << statePtr->getBlockName() << endl;
             auto scc = SCCNumber[statePtr->getBlockName()];
-            cout << "[Scc Info]" << "sccId: " <<  scc << "stateNumInScc: " << sccGroupNum[scc] << endl;
-            cout << "[Stmt Info]" << endl;
+            cout << "INFO: [Scc Info]" << "sccId: " <<  scc << "stateNumInScc: " << sccGroupNum[scc] << endl;
+            cout << "INFO: [Stmt Info]" << endl;
             Block* stateStmtsBlock = statePtr->getStateBlock();
             for(const Stmt* stmt : stateStmtsBlock->getStatements()){
                 stmt->print(std::cout); cout << endl;
@@ -169,14 +169,14 @@ namespace smack {
         cout << "--------------------------Edges Information--------------------------" << endl;
         for(StatePtr statePtr : this->getStates()){
             for(auto edgePair : statePtr->getEdges()){
-                cout << "[Edge]" << " from: " << statePtr->getBlockName() << " to: " << edgePair.first << endl;
-                cout << " guard: ";
+                cout << "INFO: [Edge]" << " from: " << statePtr->getBlockName() << " to: " << edgePair.first << endl;
+                cout << "INFO:  guard: ";
                 if(edgePair.second->getGuard().getStmt() != nullptr){
                     edgePair.second->getGuard().getStmt()->print(std::cout);
                 } else {
-                    cout << "<null>" << endl;
+                    cout << "INFO: <null>" << endl;
                 }
-                cout << "[EdgeEnd]" << std::endl;
+                cout << "INFO: [EdgeEnd]" << std::endl;
             }
         }
     }

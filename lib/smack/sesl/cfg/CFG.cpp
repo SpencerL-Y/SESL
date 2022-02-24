@@ -170,13 +170,13 @@ namespace smack {
         for(StatePtr statePtr : this->getStates()){
             for(auto edgePair : statePtr->getEdges()){
                 cout << "INFO: [Edge]" << " from: " << statePtr->getBlockName() << " to: " << edgePair.first << endl;
-                cout << "INFO:  guard: ";
+                cout << "guard: ";
                 if(edgePair.second->getGuard().getStmt() != nullptr){
                     edgePair.second->getGuard().getStmt()->print(std::cout);
                 } else {
-                    cout << "INFO: <null>" << endl;
+                    cout << "<null>" << endl;
                 }
-                cout << "INFO: [EdgeEnd]" << std::endl;
+                cout << "[EdgeEnd]" << std::endl;
             }
         }
     }

@@ -63,6 +63,7 @@ namespace smack
             ConcreteCFG(CFGPtr origCfg);
             void printConcreteCFG();
     };
+    typedef std::shared_ptr<ConcreteCFG> ConcreteCFGPtr;
 
     
 

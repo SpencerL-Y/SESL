@@ -51,92 +51,92 @@ namespace smack {
         }
         }
 
-        // std::cout << "-------------------- EXECUTE AND CHECK --------------------" << std::endl;
-        // int bugNotFound = true;
-        // for(ExecutionPath p : cfgExec.getExecPathVec()){
-        //     if(FULL_DEBUG && OPEN_EXECUTION_PATH){
-        //     std::cout << "--------------------BEGIN SYMBOLIC EXECUTION FOR ONE PATH--------------------" << std::endl;
-        //     // initialization of the execution initial stat
-        //     //---------------------- initializatio of SH
-        //     // initial pure formula 
-        //     std::cout << "PRINT PATH: " << std::endl;
-        //     for(StatePtr s : p.getExePath()){
-        //         for(const Stmt* stmt : s->getStateBlock()->getStatements()){
-        //             stmt->print(std::cout);
-        //             std::cout << std::endl;
-        //         }
-        //     }
-        //     }
+        std::cout << "-------------------- EXECUTE AND CHECK --------------------" << std::endl;
+        int bugNotFound = true;
+        for(ExecutionPath p : cfgExec.getExecPathVec()){
+            if(FULL_DEBUG && OPEN_EXECUTION_PATH){
+            std::cout << "--------------------BEGIN SYMBOLIC EXECUTION FOR ONE PATH--------------------" << std::endl;
+            // initialization of the execution initial stat
+            //---------------------- initializatio of SH
+            // initial pure formula 
+            std::cout << "PRINT PATH: " << std::endl;
+            for(StatePtr s : p.getExePath()){
+                for(const Stmt* stmt : s->getStateBlock()->getStatements()){
+                    stmt->print(std::cout);
+                    std::cout << std::endl;
+                }
+            }
+            }
 
-        //     mainGraph->initPathVarType();
-        //     // initial list of spatial lits
-        //     std::list<const Expr*> initPures;
-        //     std::list<const RegionClause*> initRegions;
-        //     //---------------------- initialization of auxillaries
-        //     // Initialize the equivalent class for 
-        //     // initialization for the symbolic heap
-        //     // initialization for the symbolic heap
-        //     VarEquivPtr allocEquiv = std::make_shared<VarEquiv>();
-        //     // Initialize the varFactory class for variable         remembering
-        //     VarFactoryPtr varFac = std::make_shared<VarFactory>();
-        //     // Initialize call Stack
-        //     std::list<std::string> callStack;
-        //     // Initialize memtrack utils
-        //     std::map<std::string, std::string> src2IRVar;
-        //     std::set<std::string> globalStaticVars;
+            mainGraph->initPathVarType();
+            // initial list of spatial lits
+            std::list<const Expr*> initPures;
+            std::list<const RegionClause*> initRegions;
+            //---------------------- initialization of auxillaries
+            // Initialize the equivalent class for 
+            // initialization for the symbolic heap
+            // initialization for the symbolic heap
+            VarEquivPtr allocEquiv = std::make_shared<VarEquiv>();
+            // Initialize the varFactory class for variable         remembering
+            VarFactoryPtr varFac = std::make_shared<VarFactory>();
+            // Initialize call Stack
+            std::list<std::string> callStack;
+            // Initialize memtrack utils
+            std::map<std::string, std::string> src2IRVar;
+            std::set<std::string> globalStaticVars;
 
-        //     initPures = this->getInitializedPures(varFac);
-        //     // initialization for the symbolic heap
-        //     SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(initPures, initRegions);
+            initPures = this->getInitializedPures(varFac);
+            // initialization for the symbolic heap
+            SHExprPtr initSH = std::make_shared<SymbolicHeapExpr>(initPures, initRegions);
 
-        //     ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, callStack, src2IRVar, globalStaticVars);
-        //     // initialization of the execution initial state over
-        //     // Initialize a CFGExecutor
-        //     SHExprPtr currSH = initSH;
-        //     ExecutionStatePtr  currExecState = initialExecState;
-        //     StatementList finalStmts;
-        //     BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, mainGraph, state, IROrigVar2Src);
-        //     currExecState = be->initializeExec(currExecState);
-        //     for(StatePtr s : p.getExePath()){
-        //         be->setBlock(s);
-        //         std::pair<ExecutionStatePtr,StatementList> result = be->execute(currExecState);
-        //         currExecState = result.first;
-        //         currSH = currExecState->getSH();
-        //         for(const Stmt* s : result.second){
-        //             finalStmts.push_back(s);
-        //         }
-        //     }
-        //     z3::context ctx;
-        //     auto trans = std::make_shared<smack::TransToZ3> (ctx, currSH, mainGraph, varFac);
-        //     trans->translate();
+            ExecutionStatePtr initialExecState = std::make_shared<ExecutionState>(initSH, allocEquiv, varFac, callStack, src2IRVar, globalStaticVars);
+            // initialization of the execution initial state over
+            // Initialize a CFGExecutor
+            SHExprPtr currSH = initSH;
+            ExecutionStatePtr  currExecState = initialExecState;
+            StatementList finalStmts;
+            BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, mainGraph, state, IROrigVar2Src);
+            currExecState = be->initializeExec(currExecState);
+            for(StatePtr s : p.getExePath()){
+                be->setBlock(s);
+                std::pair<ExecutionStatePtr,StatementList> result = be->execute(currExecState);
+                currExecState = result.first;
+                currSH = currExecState->getSH();
+                for(const Stmt* s : result.second){
+                    finalStmts.push_back(s);
+                }
+            }
+            z3::context ctx;
+            auto trans = std::make_shared<smack::TransToZ3> (ctx, currSH, mainGraph, varFac);
+            trans->translate();
 
-        //     MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans, finalStmts, currSH);
+            MemSafeCheckerPtr checker = std::make_shared<MemSafeChecker>(trans, finalStmts, currSH);
             
-        //     //std::cout << std::endl;
-        //     bool pathFeasible = checker->checkPathFeasibility();
-        //     // STOP HER
-        //     bool memLeakSafeSat = checker->checkCurrentMemLeak(currExecState, mainGraph, pathFeasible).first;
-        //     bool infErrorSafeSat = checker->checkInferenceError(pathFeasible).first;
-        //     if(!memLeakSafeSat || !infErrorSafeSat){
-        //         std::cout << "INFO: BUG FOUND, STOP EXCUTION" << std::endl;
-        //         this->violationPath = p;
-        //         bugNotFound = false;
-        //         break;
-        //     }
-        //     BlockExecutor::ExprMemoryManager->clearMemory();
-        //     mainGraph->clearPathVarType();
-        //     if(FULL_DEBUG && OPEN_EXECUTION_PATH){
-        //     std::cout << "--------------------END SYMBOLIC EXECUTION FOR ONE PATH--------------------" << std::endl;
-        //     }
-        // }
-        // if(bugNotFound){
-        //     DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: all path went through" << std::endl, color::yellow);
-        //     // if(mainGraph->hasLoop()){
-        //     //     DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: all path went through" << std::endl, color::yellow);
-        //     // } else {
-        //     //     DEBUG_WITH_COLOR(std::cout << "CHECK: TRUE" << std::endl, color::green);
-        //     // }
-        // }
+            //std::cout << std::endl;
+            bool pathFeasible = checker->checkPathFeasibility();
+            // STOP HER
+            bool memLeakSafeSat = checker->checkCurrentMemLeak(currExecState, mainGraph, pathFeasible).first;
+            bool infErrorSafeSat = checker->checkInferenceError(pathFeasible).first;
+            if(!memLeakSafeSat || !infErrorSafeSat){
+                std::cout << "INFO: BUG FOUND, STOP EXCUTION" << std::endl;
+                this->violationPath = p;
+                bugNotFound = false;
+                break;
+            }
+            BlockExecutor::ExprMemoryManager->clearMemory();
+            mainGraph->clearPathVarType();
+            if(FULL_DEBUG && OPEN_EXECUTION_PATH){
+            std::cout << "--------------------END SYMBOLIC EXECUTION FOR ONE PATH--------------------" << std::endl;
+            }
+        }
+        if(bugNotFound){
+            DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: all path went through" << std::endl, color::yellow);
+            // if(mainGraph->hasLoop()){
+            //     DEBUG_WITH_COLOR(std::cout << "CHECKUNKNOWN: all path went through" << std::endl, color::yellow);
+            // } else {
+            //     DEBUG_WITH_COLOR(std::cout << "CHECK: TRUE" << std::endl, color::green);
+            // }
+        }
 
         
         std::cout << "-----------------END MEMSAFE ANALYSIS---------------" << std::endl;

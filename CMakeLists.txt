@@ -159,6 +159,8 @@ add_library(smackTranslator STATIC
         include/smack/sesl/cfg/CFGUtils.h
         include/smack/sesl/cfg/ProcManager.h
         include/smack/sesl/bmc/ConcreteCFG.h
+        include/smack/sesl/bmc/BMCVCGen.h
+        include/smack/sesl/verifier/BMCMemSafeVerifier.h
         include/tinyxml/tinyxml2.h
   lib/smack/AddTiming.cpp
   lib/smack/sesl/ast/BoogieAst.cpp
@@ -205,6 +207,8 @@ add_library(smackTranslator STATIC
         lib/smack/sesl/cfg/CFGUtils.cpp
         lib/smack/sesl/bmc/ConcreteCFG.cpp
         lib/smack/sesl/witness/ViolationPathGen.cpp
+        lib/smack/sesl/bmc/BMCVCGen.cpp
+        lib/smack/sesl/verifier/BMCMemSafeVerifier.cpp
         lib/tinyxml/tinyxml2.cpp
   )
 

@@ -1,3 +1,7 @@
+// Author: Xie Li
+// Institute: ISCAS
+// 24/2/2022
+
 #include "smack/sesl/bmc/ConcreteCFG.h"
 #include <iostream>
 
@@ -50,7 +54,7 @@ namespace smack
                 BMCDEBUG(std::cout << "WARNING: Stmt Kind parsing not support: " << s->getKind() << std::endl;);
                 this->actType = ActType::OTHER;
             }
-            }
+        }
         
     }
 
@@ -64,8 +68,12 @@ namespace smack
 
     void ConcreteEdge::print(){
         std::cout << "INFO: [Edge " + std::to_string(this->fromVertex) + " --> " + std::to_string(this->toVertex) + "] " << std::endl;
-        this->action->getStmt()->print(std::cout);
-        std::endl; 
+        if(this->action->getStmt() != nullptr){
+            this->action->getStmt()->print(std::cout);
+        } else {
+            std::cout << "<null>";;
+        }
+        std::cout << std::endl; 
     }
 
     ConcreteCFG::ConcreteCFG(CFGPtr origCfg) {
@@ -97,9 +105,9 @@ namespace smack
         for(StatePtr statePtr : origCfg->getStates()){
             for(auto destEdgePair : statePtr->getEdges()){
                 std::string fromBlockName = statePtr->getBlockName();
-                std::string fromKey = fromBlockName + "_entry";
+                std::string fromKey = fromBlockName + "_exit";
                 std::string toBlockName = destEdgePair.first;
-                std::string toKey = toBlockName + "_exit";
+                std::string toKey = toBlockName + "_entry";
                 int from = this->nameToConcreteState[fromKey];
                 int to = this->nameToConcreteState[toKey];
                 const Stmt* actionStmt = destEdgePair.second->getGuard().getStmt();

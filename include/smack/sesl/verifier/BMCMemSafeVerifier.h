@@ -16,15 +16,13 @@ namespace smack
             virtual bool runOnModule(llvm::Module &m); 
             virtual llvm::StringRef getPassName() const {return "BMCMemSafeVerifier";}
             virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
-
-        
     };
 
     class BoundedModelChecker {
         private:
 
         public:
-            BoundedModelChecker(/*TODO: add arguments: vcGenerator and boundedModelChecker*/) {}
+            BoundedModelChecker(/*TODO: add arguments: vcGenerator and refinedCFG*/) {}
             bool checkPathFeasibility(int length);
             bool checkMemSafeProperty();
             bool checkValidDeref();

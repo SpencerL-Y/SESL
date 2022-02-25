@@ -63,8 +63,14 @@ namespace smack
             int vertexNum;
             std::list<ConcreteEdgePtr> concreteEdges;
             std::unordered_map<std::string, int> nameToConcreteState;
+            std::unordered_map<std::string, std::string> varType;
+            std::vector<ConstDecl*> constDelcs;
         public:
-            ConcreteCFG(CFGPtr origCfg);
+            ConcreteCFG(
+                CFGPtr origCfg, 
+                std::unordered_map<std::string, std::string> vt,
+                std::vector<ConstDecl*> cds
+            );
             void printConcreteCFG();
     };
     typedef std::shared_ptr<ConcreteCFG> ConcreteCFGPtr;
@@ -75,8 +81,11 @@ namespace smack
     class BMCRefinedCFG {
         private:
             int vertexNum;
+            std::list<ConcreteEdgePtr> refinedEdges;
+            std::unordered_map<std::string, std::string> refinedVarType;
         public:
-            BMCRefinedCFG(ConcreteCFGPtr conCfg);
+            // TODOsh: use Stmt Formatter when constructing BMCRefinedCFG
+            BMCRefinedCFG(ConcreteCFGPtr conCfg, std::unordered_map<std::string, std::string> concreteVT);
 
     };
 

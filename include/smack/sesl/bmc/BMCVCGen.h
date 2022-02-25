@@ -14,7 +14,7 @@ namespace smack
     class BMCVCGen {
         private:
             z3::context z3Ctx;
-            BMCRefinedCFGPtr conCfg;
+            BMCRefinedCFGPtr refCfg;
             std::set<z3::expr> normalFormVariables;
             std::set<z3::expr> conCfgVariables;
             std::set<z3::expr> trUtilVariables;
@@ -22,9 +22,9 @@ namespace smack
             int regionNum;
             int pointsToNum;
         public:
-            BMCVCGen(BMCRefinedCFGPtr ccfg, int regNum, int ptNum) : conCfg(ccfg), regionNum(regNum), pointsToNum(ptNum) {
+            BMCVCGen(BMCRefinedCFGPtr rcfg, int regNum, int ptNum) : refCfg(rcfg), regionNum(regNum), pointsToNum(ptNum) {
                 // TODO: need to imple:
-                //1. obtain conCfgVariables from ccfg
+                //1. obtain conCfgVariables from refinedCFG
                 //2. create trUtilVariables
                 //3. create normalFormVariables 
             }

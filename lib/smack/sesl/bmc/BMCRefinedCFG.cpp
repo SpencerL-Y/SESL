@@ -76,7 +76,13 @@ namespace smack
         std::cout << std::endl; 
     }
 
-    ConcreteCFG::ConcreteCFG(CFGPtr origCfg) {
+    ConcreteCFG::ConcreteCFG(
+        CFGPtr origCfg,
+        std::unordered_map<std::string, std::string> vt,
+        std::vector<ConstDecl*> cds
+    ) {
+        this->varType = vt;
+        this->constDelcs = cds;
         // Construct the concrete cfg from original one
         this->vertexNum = 0;
         int stateId = 0;
@@ -124,5 +130,15 @@ namespace smack
         for(ConcreteEdgePtr edge : this->concreteEdges){
             edge->print();
         }
+        std::cout << "INFO: ----------- VarTypes: " << std::endl;
+        for(auto varTypePair : this->varType){
+            std::cout << varTypePair.first + " " + varTypePair.second << std::endl;
+        }
+        std::cout << "INFO: ----------- ConstDecls: " << std::endl;
+        for(ConstDecl* cd : this->constDelcs){
+            cd->print(std::cout);
+        }
+        std::cout << std::endl;
+        
     }
 } // namespace smack

@@ -66,6 +66,7 @@ namespace smack
         void printVarInfo();
         explicit CFG(ProcDecl* procDecl = nullptr);
         explicit CFG(ProcDecl* procDecl, std::string entryBlock);
+        std::unordered_map<std::string, std::string> getVarTypes() {return this->varType;}
         std::string getVarType(std::string varName);
         std::string getGlobalVarType(std::string varName);
         std::pair<std::string, int> getVarDetailType(std::string varName);

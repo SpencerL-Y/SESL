@@ -8,7 +8,7 @@
 #include "smack/sesl/cfg/CFGUtils.h"
 #include "smack/SmackOptions.h"
 #include "smack/sesl/bmc/BMCVCGen.h"
-#include "smack/sesl/bmc/ConcreteCFG.h"
+#include "smack/sesl/bmc/BMCRefinedCFG.h"
 
 namespace smack
 {

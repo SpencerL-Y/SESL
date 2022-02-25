@@ -1,11 +1,14 @@
-#ifndef CONCRETECFG_H
-#define CONCRETECFG_H
+#ifndef BMCREFINEDCFG_H
+#define BMCREFINEDCFG_H
+
 #include <map>
 #include <string>
 #include <unistd.h>
 #include <iostream>
 #include <memory>
-#include <smack/sesl/cfg/CFG.h>
+#include "smack/sesl/cfg/CFG.h"
+#include "smack/sesl/bmc/StmtFormatter.h"
+
 
 // ConcreteCFG is the cfg whose vertices are only control location and all statements are put on the label of edges 
 
@@ -56,6 +59,7 @@ namespace smack
 
     class ConcreteCFG {
         private:
+            //TODOsh: add set of variables in the data of ConcreteCFG
             int vertexNum;
             std::list<ConcreteEdgePtr> concreteEdges;
             std::unordered_map<std::string, int> nameToConcreteState;
@@ -64,8 +68,19 @@ namespace smack
             void printConcreteCFG();
     };
     typedef std::shared_ptr<ConcreteCFG> ConcreteCFGPtr;
-
     
+
+    // BMCRefinedCFG is obtained after all stmts on the edges are formatted by the StmtFormatter
+
+    class BMCRefinedCFG {
+        private:
+            int vertexNum;
+        public:
+            BMCRefinedCFG(ConcreteCFGPtr conCfg);
+
+    };
+
+    typedef std::shared_ptr<BMCRefinedCFG> BMCRefinedCFGPtr;
 
 } // namespace smack
 

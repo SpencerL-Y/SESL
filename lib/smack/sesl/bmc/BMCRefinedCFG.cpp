@@ -2,7 +2,7 @@
 // Institute: ISCAS
 // 24/2/2022
 
-#include "smack/sesl/bmc/ConcreteCFG.h"
+#include "smack/sesl/bmc/BMCRefinedCFG.h"
 #include <iostream>
 
 namespace smack

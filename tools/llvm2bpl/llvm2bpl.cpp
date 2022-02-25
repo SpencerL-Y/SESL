@@ -42,7 +42,9 @@
 #include "smack/SplitAggregateValue.h"
 #include "smack/VerifierCodeMetadata.h"
 #include "smack/sesl/verifier/MemSafeVerifier.h"
+#include "smack/sesl/verifier/BMCMemSafeVerifier.h"
 #include "smack/sesl/witness/ViolationPathGen.h"
+
 #include "utils/Devirt.h"
 #include "utils/InitializePasses.h"
 #include "utils/MergeGEP.h"
@@ -275,10 +277,14 @@ int main(int argc, char **argv) {
       check(EC.message());
     F->keep();
     files.push_back(F);
-    // TODOsh: currently the symbolic execution is in this pass
+
     pass_manager.add(new smack::SmackModuleGenerator());
-    pass_manager.add(new smack::MemSafeVerifier());
-    pass_manager.add(new smack::ViolationPathGen(OriginFilePass));
+    // TODOsh: add an argument to adjust the engine used
+    // Symbolic Execution Engine
+    // pass_manager.add(new smack::MemSafeVerifier());
+    // pass_manager.add(new smack::ViolationPathGen(OriginFilePass));
+    // BMC Verification Engine
+    pass_manager.add(new smack::BMCMemSafeVerifier());
     pass_manager.add(new smack::BplFilePrinter(F->os()));
   }
 

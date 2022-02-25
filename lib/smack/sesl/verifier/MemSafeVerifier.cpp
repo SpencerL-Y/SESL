@@ -36,18 +36,9 @@ namespace smack {
         CFGPtr mainGraph = cfgUtil.getMainCFG();
         StatePtr state = mainGraph->getEntryState();
         std::cout << "-------------PRINT CFG-----------" << std::endl;
-        // mainGraph->printCFG();
-        std::cout << "-------------PRINT STATE INFO-----------" << std::endl;
-        // mainGraph->printStateInfo();
-        // std::cout << "=========== PRINT THE DETAILED STMTs" << std::endl;
-        // Block* block = state->getStateBlock();
-        // std::cout << "Block stmt num: " << block->getStatements().size() << std::endl;
-        // for(auto i : block->getStatements()){
-        //     i->print(std::cout);
-        //     std::cout << std::endl;
-        // }
-        // std::cout << "=========== END PRINT THE DETAILED STMTs" << std::endl;
-
+        mainGraph->printCFG();
+        std::cout << std::endl;
+        std::cout << "-------------PRINT CFG END-----------" << std::endl;
         CFGExecutor cfgExec(mainGraph);
         cfgExec.generatePathByUpperBound();
 //        cfgExec.printPath();

@@ -50,49 +50,61 @@
 // }
 
 
-static void *calloc_model(size_t nmemb, size_t size) {
-    void *ptr = malloc(nmemb * size);
-    return memset(ptr, 0, nmemb * size);
-}
-extern int __VERIFIER_nondet_int(void);
-struct L2 {
-    void *proto;
-    struct L2 *next;
-};
-struct L1 {
-    struct L1 *next;
-    struct L2 *l2;
-};
-static void l2_insert(struct L2 **list)
-{
-    struct L2 *item = calloc_model(1U, sizeof *item);
-    item->proto = malloc(119U);
-    item->next = *list;
-    *list = item;
-}
-static void l2_destroy(struct L2 *list)
-{
-    do {
-        struct L2 *next = list->next;
-        free(list->proto);
-        free(list);
-        list = next;
+// static void *calloc_model(size_t nmemb, size_t size) {
+//     void *ptr = malloc(nmemb * size);
+//     return memset(ptr, 0, nmemb * size);
+// }
+// extern int __VERIFIER_nondet_int(void);
+// struct L2 {
+//     void *proto;
+//     struct L2 *next;
+// };
+// struct L1 {
+//     struct L1 *next;
+//     struct L2 *l2;
+// };
+// static void l2_insert(struct L2 **list)
+// {
+//     struct L2 *item = calloc_model(1U, sizeof *item);
+//     item->proto = malloc(119U);
+//     item->next = *list;
+//     *list = item;
+// }
+// static void l2_destroy(struct L2 *list)
+// {
+//     do {
+//         struct L2 *next = list->next;
+//         free(list->proto);
+//         free(list);
+//         list = next;
+//     }
+//     while (list);
+// }
+// static void l1_insert(struct L1 **list)
+// {
+//     struct L1 *item = calloc_model(1U, sizeof *item);
+//         l2_insert(&item->l2);
+//     item->next = *list;
+//     *list = item;
+// }
+// int main()
+// {
+//     static struct L1 *list;
+//         l1_insert(&list);
+//         struct L1 *next = list->next;
+//         l2_destroy(list->l2);
+//         free(list);
+//         list = next;
+// }
+
+int main(){
+    int i = 0;
+    int *j[5];
+    for(int i = 0; i < 5; i ++){
+        j[i] = malloc(i * sizeof(int) + 1);
     }
-    while (list);
-}
-static void l1_insert(struct L1 **list)
-{
-    struct L1 *item = calloc_model(1U, sizeof *item);
-        l2_insert(&item->l2);
-    item->next = *list;
-    *list = item;
-}
-int main()
-{
-    static struct L1 *list;
-        l1_insert(&list);
-        struct L1 *next = list->next;
-        l2_destroy(list->l2);
-        free(list);
-        list = next;
+    for(int k = 0; k < 5; k ++){
+        free(j[k]);
+    }
+    return 0;
 }

@@ -23,6 +23,7 @@
 #define OPEN_VIOLATION_PATH 0
 #define OPEN_EXECUTION_PATH 0
 #define OPEN_STORE_SPLIT 0
+#define OPEN_BMC_DEBUG 1
 
 const bool hasColor = true;
 
@@ -39,6 +40,15 @@ const bool hasColor = true;
 
 #define CFDEBUG(X) do {\
     if (FULL_DEBUG && OPEN_CFDEBUG) {\
+        if (hasColor)   std::cout<<"\033[34m";\
+        X;             \
+        if (hasColor)   \
+            std::cout<<"\033[0m";\
+    }\
+} while(false);
+
+#define BMCDEBUG(X) do {\
+    if (FULL_DEBUG && OPEN_BMC_DEBUG) {\
         if (hasColor)   std::cout<<"\033[34m";\
         X;             \
         if (hasColor)   \

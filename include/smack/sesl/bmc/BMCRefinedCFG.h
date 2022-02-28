@@ -36,6 +36,7 @@ namespace smack
             
             bool hasStmt() {return (stmt == nullptr) ? false : true;}
             const Stmt* getStmt() const {return this->stmt;};
+            ConcreteAction::ActType getActType() {return this->actType;}
     };
     typedef std::shared_ptr<ConcreteAction> ConcreteActionPtr;
 
@@ -54,24 +55,55 @@ namespace smack
 
             void print();
     };
-    
+
     typedef std::shared_ptr<ConcreteEdge> ConcreteEdgePtr;
+
+    class RefinedAction {
+        private:
+            const Expr* arg1;
+            const Expr* arg2;
+            const Expr* arg3;
+            ConcreteAction::ActType actType;
+        public:
+            RefinedAction(ConcreteAction::ActType at, const Expr* arg1, const Expr* arg2, const Expr* arg3) : actType(at), arg1(arg1), arg2(arg2), arg3(arg3){}
+            const Expr* getArg1(){return arg1;}
+            const Expr* getArg2(){return arg2;}
+            const Expr* getArg3(){return arg3;}
+            ConcreteAction::ActType getActType(){return this->actType;}
+    };
+
+    typedef std::shared_ptr<RefinedAction> RefinedActionPtr;
+
+    class RefinedEdge {
+        private:
+            int from;
+            int to;
+            RefinedActionPtr refinedAction;
+        public:
+            RefinedEdge(RefinedActionPtr rfa, int from, int to) : refinedAction(rfa), from(from), to(to) {}
+            int getFrom(){return this->from;}
+            int getTo(){return this->to;}
+            RefinedActionPtr getRefinedAction(){return this->refinedAction;}
+    };
+    
+    typedef std::shared_ptr<RefinedEdge> RefinedEdgePtr;
 
     class ConcreteCFG {
         private:
-            //TODOsh: add set of variables in the data of ConcreteCFG
             int vertexNum;
             std::list<ConcreteEdgePtr> concreteEdges;
             std::unordered_map<std::string, int> nameToConcreteState;
-            std::unordered_map<std::string, std::string> varType;
+            std::unordered_map<std::string, std::string> varTypes;
             std::vector<ConstDecl*> constDelcs;
         public:
             ConcreteCFG(
                 CFGPtr origCfg, 
+                // variable types
                 std::unordered_map<std::string, std::string> vt,
                 std::vector<ConstDecl*> cds
             );
             void printConcreteCFG();
+            std::unordered_map<std::string, std::string> getVarTypes();
     };
     typedef std::shared_ptr<ConcreteCFG> ConcreteCFGPtr;
     
@@ -86,6 +118,7 @@ namespace smack
         public:
             // TODOsh: use Stmt Formatter when constructing BMCRefinedCFG
             BMCRefinedCFG(ConcreteCFGPtr conCfg, std::unordered_map<std::string, std::string> concreteVT);
+            void printRefinedCFG();
 
     };
 

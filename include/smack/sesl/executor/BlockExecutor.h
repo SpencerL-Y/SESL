@@ -54,6 +54,7 @@ namespace smack{
         std::set<std::string> globalStaticVars;
         CFGPtr cfg;
 
+        public:
         // ------------------ Variable Utilities
         // << HIGH LEVEL METHODS >>
         const VarExpr* createAndRegisterFreshDataVar(int size);
@@ -148,7 +149,7 @@ namespace smack{
         void updateBindingsEqualVarAndRhsValue(const VarExpr* lhsVar, const Expr* rhsVal);
         void updateBindingsEqualVarAndRhsArithExpr(const VarExpr* lhsVar, const Expr* rhsExpr, const Expr* storedExpr, bool isPtr);   
 
-    public:
+        // Execution Semantics
         static MemoryManagerPtr ExprMemoryManager;
 
         BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb, std::map<std::string, std::string> IR2Src) : program(p), cfg(cfgPtr), IROrigVar2Src(IR2Src) {this->setBlock(cb); this->cfg->addVarType("$Null", "ref64");}

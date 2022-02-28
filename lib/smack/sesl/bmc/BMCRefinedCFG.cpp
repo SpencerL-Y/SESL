@@ -81,7 +81,7 @@ namespace smack
         std::unordered_map<std::string, std::string> vt,
         std::vector<ConstDecl*> cds
     ) {
-        this->varType = vt;
+        this->varTypes = vt;
         this->constDelcs = cds;
         // Construct the concrete cfg from original one
         this->vertexNum = 0;
@@ -131,7 +131,7 @@ namespace smack
             edge->print();
         }
         std::cout << "INFO: ----------- VarTypes: " << std::endl;
-        for(auto varTypePair : this->varType){
+        for(auto varTypePair : this->varTypes){
             std::cout << varTypePair.first + " " + varTypePair.second << std::endl;
         }
         std::cout << "INFO: ----------- ConstDecls: " << std::endl;

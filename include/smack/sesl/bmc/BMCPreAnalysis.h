@@ -7,7 +7,7 @@
 #include "smack/sesl/cfg/CFG.h"
 
 
-// TODOsh: BMCPreAnalysis has two functionalities:
+// TODObmc: BMCPreAnalysis has two functionalities:
 // 1. determine the minimum level of size of the program
 // 2. compute the size of RgionNF and BlkNF
 namespace smack

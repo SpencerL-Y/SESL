@@ -22,7 +22,7 @@ namespace smack
         private:
 
         public:
-            BoundedModelChecker(/*TODO: add arguments: vcGenerator and refinedCFG*/) {}
+            BoundedModelChecker(/*TODObmc: add arguments: vcGenerator and refinedCFG*/) {}
             bool checkPathFeasibility(int length);
             bool checkMemSafeProperty();
             bool checkValidDeref();

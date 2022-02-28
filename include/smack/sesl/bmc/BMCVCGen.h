@@ -23,7 +23,7 @@ namespace smack
             int pointsToNum;
         public:
             BMCVCGen(BMCRefinedCFGPtr rcfg, int regNum, int ptNum) : refCfg(rcfg), regionNum(regNum), pointsToNum(ptNum) {
-                // TODOsh: need to imple:
+                // TODObmc: need to imple:
                 //1. obtain conCfgVariables from refinedCFG
                 //2. create trUtilVariables
                 //3. create normalFormVariables 

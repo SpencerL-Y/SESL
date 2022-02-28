@@ -2,6 +2,7 @@
 #define STMTFORMATTER_H
 
 #include <stdlib.h>
+#include <vector>
 #include "smack/sesl/ast/BoogieAst.h"
 #include "smack/sesl/mem_manage/MemoryManager.h"
 // StmtFormatter's major functionality:
@@ -14,15 +15,33 @@ namespace smack
     class StmtFormatter
     {
     private:
-        // Assume arg1 extraction
+        // assume stmt parsing
+        std::list<RefinedActionPtr> resolveAssumeStmt(const AssumeStmt* ass);
         const Expr* parseCondition(const Expr* origCond);
+
+        // assign stmt parsing
+        std::list<RefinedActionPtr> resolveSingleAssignStmt(const AssignStmt* assign);
+        // TODObmc: watch out the order to push to the new list
+        std::list<RefinedActionPtr> resolveBundleAssignStmts(std::list<const Expr*> lhsList, std::list<const Expr*> rhsList);
+        // TODObmc: imple
+        bool isUnaryPtrCastFuncName(std::string funcName);
+        bool isPtrArithFunction(std::string funcName);
+        bool isUnaryAssignFuncName(std::string funcName);
+        bool isBinaryArithFuncName(std::string funcName);
+        bool isStoreLoadFuncName(std::string funcName);
+        bool isUnaryBooleanFuncName(std::string funcName);
+        bool isBinaryBooleanFuncName(std::string funcName);
+        
+        // call stmt parsing
+        std::list<RefinedActionPtr> resolveCallStmt(const CallStmt* callStmt);
+        bool isNoSideEffectFuncName(std::string procName);
     public:
 
         static MemoryManagerPtr ExprMemoryManager;
 
         StmtFormatter();
 
-        RefinedEdge convert(ConcreteEdgePtr origEdge);
+        RefinedEdgePtr  convert(ConcreteEdgePtr origEdge);
 
     };
     #define REGISTER_EXPRPTR(ptr) \

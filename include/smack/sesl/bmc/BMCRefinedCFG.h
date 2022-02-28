@@ -78,12 +78,12 @@ namespace smack
         private:
             int from;
             int to;
-            RefinedActionPtr refinedAction;
+            std::vector<RefinedActionPtr> refinedAction;
         public:
-            RefinedEdge(RefinedActionPtr rfa, int from, int to) : refinedAction(rfa), from(from), to(to) {}
+            RefinedEdge(std::vector<RefinedActionPtr> rfa, int from, int to) : refinedAction(rfa), from(from), to(to) {}
             int getFrom(){return this->from;}
             int getTo(){return this->to;}
-            RefinedActionPtr getRefinedAction(){return this->refinedAction;}
+            std::vector<RefinedActionPtr> getRefinedAction(){return this->refinedAction;}
     };
     
     typedef std::shared_ptr<RefinedEdge> RefinedEdgePtr;
@@ -116,7 +116,7 @@ namespace smack
             std::list<ConcreteEdgePtr> refinedEdges;
             std::unordered_map<std::string, std::string> refinedVarType;
         public:
-            // TODOsh: use Stmt Formatter when constructing BMCRefinedCFG
+            // TODObmc: use Stmt Formatter when constructing BMCRefinedCFG
             BMCRefinedCFG(ConcreteCFGPtr conCfg, std::unordered_map<std::string, std::string> concreteVT);
             void printRefinedCFG();
 

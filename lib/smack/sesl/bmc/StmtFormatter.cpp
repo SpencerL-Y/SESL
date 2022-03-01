@@ -129,17 +129,66 @@ namespace smack
                 arg2 =  this->parseVarArithmeticExpr(rhsFun);
                 RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
                 resultList.push_back(refinedAct);
+                return resultList;
             } else if(this->isStoreLoadFuncName(rhsFun->name())){
                 if(this->isStoreFuncName(rhsFun->name())){
+                    const Expr* origStoreDst = nullptr;
+                    const Expr* origStoreData = nullptr;
+                    int i = 0;
+                    for(const Expr* temp : rhsFun->getArgs()){
+                        if(i == 1){
+                            origStoreDst = temp;
+                        } else if(i == 2){
+                            origStoreData = temp;
+                        }
+                    }
                     
-                } else if(this->isLoadFuncName(rhsFun->name())){
+                    // simplify for arg1
+                    if(origStoreDst->isVar()){
+                        arg1 = origStoreDst;
+                    } else if(ExprType::FUNC == origStoreDst->getType()){
+                        arg1 = this->parsePtrArithmeticExpr(origStoreDst);
+                    } else {
+                        BMCDEBUG(std::cout << "ERROR: stored dst not allowed: " << origStoreDst << std::endl; );
+                        return resultList;
+                    }
 
+                    // simplify for arg2
+                    if(origStoreData->isVar() || origStoreData->isValue()){
+                        arg2 = origStoreData;
+                    } else if(ExprType::FUNC == origStoreData->getType()){
+                        arg2 = this->parseArithmeticExpr(origStoreData);
+                    } else {
+                        BMCDEBUG(std::cout << "ERROR: stored data not allowed: " << origStoreData << std::endl;);
+                        return resultList;
+                    }
+                    RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::STORE, arg1, arg2, arg3);
+                    resultList.push_back(refinedAct);
+                    return resultList;
+
+                } else if(this->isLoadFuncName(rhsFun->name())){
+                    assert(lhs->isVar());
+                    const Expr* origLoadDst = lhs;
+                    const Expr* origLoadSrc = rhsFun->getArgs().back();
+                    arg1 = origLoadDst;
+                    if(origLoadSrc->isVar()){
+                        arg2 = origLoadSrc;
+                    } else if(origLoadSrc->getType() == ExprType::FUNC){
+                        arg2 = this->parseVarArithmeticExpr(origLoadSrc);
+                    } else {
+                        BMCDEBUG(std::cout << "ERROR: unsolved load src: " << origLoadSrc << std::endl;);
+                        return resultList;
+                    }
+                    RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::LOAD, arg1, arg2, arg3);
+                    resultList.push_back(refinedAct);
+                    return resultList;
                 } else {
                     BMCDEBUG(std::cout << "ERROR: this should not happen.." << std::endl;);
                     return resultList;
                 }
             } else if(this->isUnaryBooleanFuncName(rhsFun->name())){
                 //TODObmc: add implementation
+                // STOP HERE
             } else if(this->isBinaryBooleanFuncName(rhsFun->name())){
 
             } else {
@@ -208,6 +257,7 @@ namespace smack
 
     const Expr* StmtFormatter::parsePtrArithmeticExpr(const Expr* origArithExpr){
         // TODObmc: imple
+        // Distinguish  the case where the function is not a ptr arithmetic
     }
 
     bool StmtFormatter::isUnaryAssignFuncName(std::string funcName){
@@ -234,6 +284,7 @@ namespace smack
 
     const Expr* StmtFormatter::parseVarArithmeticExpr(const Expr* origArithExpr){
         // TODObmc: imple
+        // Distinguish the case that it is not var arithemtic expression
     }
 
     bool StmtFormatter::isStoreLoadFuncName(std::string funcName){
@@ -259,6 +310,12 @@ namespace smack
         } else {
             return false;
         }
+    }
+
+
+    const Expr* parseArithmeticExpr(const Expr* origArithExpr){
+        // TODObmc: imple
+        // parse arithmetic according to the type
     }
 
     bool StmtFormatter::isUnaryBooleanFuncName(std::string funcName){

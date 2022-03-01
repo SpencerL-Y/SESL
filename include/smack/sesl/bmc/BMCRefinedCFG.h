@@ -7,7 +7,6 @@
 #include <iostream>
 #include <memory>
 #include "smack/sesl/cfg/CFG.h"
-#include "smack/sesl/bmc/StmtFormatter.h"
 
 
 // ConcreteCFG is the cfg whose vertices are only control location and all statements are put on the label of edges 

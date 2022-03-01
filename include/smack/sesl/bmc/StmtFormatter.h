@@ -5,6 +5,7 @@
 #include <vector>
 #include "smack/sesl/ast/BoogieAst.h"
 #include "smack/sesl/mem_manage/MemoryManager.h"
+#include "smack/sesl/bmc/BMCRefinedCFG.h"
 // StmtFormatter's major functionality:
 // convert the intruction on concreteCFG into a well-formatted arithmetic expression,
 // which can be later used to generate verification condition.
@@ -33,6 +34,7 @@ namespace smack
         bool isStoreLoadFuncName(std::string funcName);
         bool isStoreFuncName(std::string funcName);
         bool isLoadFuncName(std::string funcName);
+        const Expr* parseArithmeticExpr(const Expr* origArithExpr);
         bool isUnaryBooleanFuncName(std::string funcName);
         bool isBinaryBooleanFuncName(std::string funcName);
         
@@ -48,7 +50,7 @@ namespace smack
 
         StmtFormatter();
 
-        RefinedEdgePtr  convert(ConcreteEdgePtr origEdge);
+        RefinedEdgePtr convert(ConcreteEdgePtr origEdge);
 
     };
     #define REGISTER_EXPRPTR(ptr) \

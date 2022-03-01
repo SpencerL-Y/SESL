@@ -25,16 +25,23 @@ namespace smack
         std::list<RefinedActionPtr> resolveBundleAssignStmts(std::list<const Expr*> lhsList, std::list<const Expr*> rhsList);
         // TODObmc: imple
         bool isUnaryPtrCastFuncName(std::string funcName);
-        bool isPtrArithFunction(std::string funcName);
+        bool isPtrArithFuncName(std::string funcName);
+        const Expr* parsePtrArithmeticExpr(const Expr* origArithExpr);
         bool isUnaryAssignFuncName(std::string funcName);
         bool isBinaryArithFuncName(std::string funcName);
+        const Expr* parseVarArithmeticExpr(const Expr* origArithExpr);
         bool isStoreLoadFuncName(std::string funcName);
+        bool isStoreFuncName(std::string funcName);
+        bool isLoadFuncName(std::string funcName);
         bool isUnaryBooleanFuncName(std::string funcName);
         bool isBinaryBooleanFuncName(std::string funcName);
         
         // call stmt parsing
         std::list<RefinedActionPtr> resolveCallStmt(const CallStmt* callStmt);
         bool isNoSideEffectFuncName(std::string procName);
+
+        // assert stmt parsing
+        std::list<RefinedActionPtr> resolveAssertStmt(const AssertStmt* assertStmt);
     public:
 
         static MemoryManagerPtr ExprMemoryManager;

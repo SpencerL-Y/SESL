@@ -188,9 +188,6 @@ namespace smack{
                     return newSH;
                 } else {
                     // TODOsh: later there might be pointer arithmetic here.
-                    CFDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
-                    CFDEBUG(std::cout << "LHS TYPE: " << lhs->getType() << std::endl);
-                    CFDEBUG(std::cout << "RHS TYPE: " << rhs->getType() << std::endl); 
                     return sh;
                 }
             } else if(this->isPtrArithFuncName(rhsFun->name())){

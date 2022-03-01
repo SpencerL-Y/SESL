@@ -13,35 +13,42 @@ namespace smack
         BMCDEBUG(std::cout << "INFO: StmtFormatter converting..." << std::endl;);
         const Stmt* origStmt = origEdge->getAction()->getStmt();
         ConcreteAction::ActType type = origEdge->getAction()->getActType();
-        BMCDEBUG(std::cout << "origStmt: " << std::endl; origStmt->print(std::cout););
+        if(origStmt != nullptr){
+            BMCDEBUG(std::cout << "origStmt: " << std::endl; origStmt->print(std::cout););
+        }
         BMCDEBUG(std::cout << "ActType: " << type << std::endl;)
 
         std::list<RefinedActionPtr> actionList;
         // for each concrete action: 
         // parse the original stmt accordingly and extract arg1, arg2 and arg3 for each stmt
         // there is possibility that a concret edge will result in a refinededge with a list of refinedActions
-
-        if(origStmt->getKind() == Stmt::Kind::ASSUME){
-            const AssumeStmt* ass = (const AssumeStmt*) origStmt;
-            actionList = this->resolveAssumeStmt(ass);
-        } else if(origStmt->getKind() == Stmt::Kind::ASSIGN){
-            const AssignStmt* assign = (const AssignStmt*) origStmt;
-            if(assign->getLhs().size() == 1){
-                actionList = this->resolveSingleAssignStmt(assign);
-            } else {
-                std::list<const Expr*> lhsList = assign->getLhs();
-                std::list<const Expr*> rhsList = assign->getRhs();
-                assert(lhsList.size() == rhsList.size());
-                actionList = this->resolveBundleAssignStmts(lhsList, rhsList);
-            }
-        } else if(origStmt->getKind() == Stmt::Kind::CALL){
-            const CallStmt* call = (const CallStmt*) origStmt;
-            actionList = this->resolveCallStmt(call);
-        } else if(origStmt->getKind() == Stmt::Kind::ASSERT){
-            
+        if(origStmt == nullptr){
+            assert(ConcreteAction::ActType::NULLSTMT == type);
         } else {
-
+            if(origStmt->getKind() == Stmt::Kind::ASSUME){
+                const AssumeStmt* ass = (const AssumeStmt*) origStmt;
+                actionList = this->resolveAssumeStmt(ass);
+            } else if(origStmt->getKind() == Stmt::Kind::ASSIGN){
+                const AssignStmt* assign = (const AssignStmt*) origStmt;
+                if(assign->getLhs().size() == 1){
+                    actionList = this->resolveSingleAssignStmt(assign);
+                } else {
+                    std::list<const Expr*> lhsList = assign->getLhs();
+                    std::list<const Expr*> rhsList = assign->getRhs();
+                    assert(lhsList.size() == rhsList.size());
+                    actionList = this->resolveBundleAssignStmts(lhsList, rhsList);
+                }
+            } else if(origStmt->getKind() == Stmt::Kind::CALL){
+                const CallStmt* call = (const CallStmt*) origStmt;
+                actionList = this->resolveCallStmt(call);
+            } else if(origStmt->getKind() == Stmt::Kind::ASSERT){
+                const AssertStmt* assertStmt = (const AssertStmt*) origStmt;
+                actionList = this->resolveAssertStmt(assertStmt);
+            } else {
+                assert(ConcreteAction::ActType::OTHER == type);
+            }
         }
+        
 
         BMCDEBUG(std::cout << "Conversion Result: " << std::endl;);
         
@@ -84,22 +91,55 @@ namespace smack
     // --------- assign stmt parsing
 
     std::list<RefinedActionPtr> StmtFormatter::resolveSingleAssignStmt(const AssignStmt* assign){
+        const Expr* arg1 = nullptr;
+        const Expr* arg2 = nullptr;
+        const Expr* arg3 = nullptr;
+        std::list<RefinedActionPtr> resultList;
+
         const Expr* rhs = assign->getRhs().front();
         const Expr* lhs = assign->getLhs().front();
         if(ExprType::FUNC == rhs->getType()){
             const FunExpr* rhsFun = (const FunExpr*)rhs;
             if(this->isUnaryPtrCastFuncName(rhsFun->name())){
-                //TODObmc: add implementation
-            } else if(this->isPtrArithFunction(rhsFun->name())){
-
+                arg1 = lhs;
+                arg2 = rhsFun->getArgs().front();
+                if(!arg2->isVar()){
+                    BMCDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
+                    BMCDEBUG(std::cout << "LHS TYPE: " << lhs->getType() << std::endl);
+                    BMCDEBUG(std::cout << "RHS TYPE: " << rhs->getType() << std::endl); 
+                    return resultList;
+                }
+                RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                resultList.push_back(refinedAct);
+                return resultList;
+            } else if(this->isPtrArithFuncName(rhsFun->name())){
+                arg1 = lhs;
+                arg2 = this->parsePtrArithmeticExpr(rhsFun);
+                RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                resultList.push_back(refinedAct);
+                return resultList;
             } else if(this->isUnaryAssignFuncName(rhsFun->name())){
-
+                arg1 = lhs;
+                arg2 = rhsFun->getArgs().front();
+                RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                resultList.push_back(refinedAct);
+                return resultList;
             } else if(this->isBinaryArithFuncName(rhsFun->name())){
-
+                arg1 = lhs;
+                arg2 =  this->parseVarArithmeticExpr(rhsFun);
+                RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                resultList.push_back(refinedAct);
             } else if(this->isStoreLoadFuncName(rhsFun->name())){
+                if(this->isStoreFuncName(rhsFun->name())){
+                    
+                } else if(this->isLoadFuncName(rhsFun->name())){
 
+                } else {
+                    BMCDEBUG(std::cout << "ERROR: this should not happen.." << std::endl;);
+                    return resultList;
+                }
             } else if(this->isUnaryBooleanFuncName(rhsFun->name())){
-
+                //TODObmc: add implementation
             } else if(this->isBinaryBooleanFuncName(rhsFun->name())){
 
             } else {
@@ -124,7 +164,7 @@ namespace smack
                 const FunExpr* rhsFun = (const FunExpr*)tempRhs;
                 if(this->isUnaryPtrCastFuncName(rhsFun->name())){
                     //TODObmc: add implementation
-                } else if(this->isPtrArithFunction(rhsFun->name())){
+                } else if(this->isPtrArithFuncName(rhsFun->name())){
 
                 } else if(this->isUnaryAssignFuncName(rhsFun->name())){
 
@@ -149,31 +189,106 @@ namespace smack
     }
 
     bool StmtFormatter::isUnaryPtrCastFuncName(std::string funcName){
-        // TODObmc: add implementation
+        if(!funcName.compare("$bitcast.ref.ref")){
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    bool StmtFormatter::isPtrArithFunction(std::string funcName){
-        // TODObmc: add implementation
+    bool StmtFormatter::isPtrArithFuncName(std::string funcName){
+        if(funcName.find("$add.ref") != std::string::npos||
+           funcName.find("$mul.ref") != std::string::npos||
+           funcName.find("$sub.ref") != std::string::npos){
+                return true;
+           } else {
+                return false;
+           }
+    }
+
+    const Expr* StmtFormatter::parsePtrArithmeticExpr(const Expr* origArithExpr){
+        // TODObmc: imple
     }
 
     bool StmtFormatter::isUnaryAssignFuncName(std::string funcName){
-        // TODObmc: add implementation
+        if(funcName.find("$zext") != std::string::npos ||
+           funcName.find("$sext") != std::string::npos ||
+           funcName.find("$trunc") != std::string::npos){
+            return true;
+        } else {
+            return false;
+        }
     }
 
     bool StmtFormatter::isBinaryArithFuncName(std::string funcName){
-        // TODObmc: add implementation
+        if(funcName.find("$add") != std::string::npos||
+           funcName.find("$sub") != std::string::npos||
+           funcName.find("$mul") != std::string::npos||
+           funcName.find("$sdiv") != std::string::npos||
+           funcName.find("$udiv") != std::string::npos){
+                return true;
+           } else {
+                return false;
+           }
+    }
+
+    const Expr* StmtFormatter::parseVarArithmeticExpr(const Expr* origArithExpr){
+        // TODObmc: imple
     }
 
     bool StmtFormatter::isStoreLoadFuncName(std::string funcName){
-        // TODObmc: add implementation
+        if(funcName.find("$store") != std::string::npos ||
+           funcName.find("$load") != std::string::npos){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool StmtFormatter::isStoreFuncName(std::string funcName){
+        if(funcName.find("$store") != std::string::npos){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool StmtFormatter::isLoadFuncName(std::string funcName){
+        if(funcName.find("$load") != std::string::npos){
+            return true;
+        } else {
+            return false;
+        }
     }
 
     bool StmtFormatter::isUnaryBooleanFuncName(std::string funcName){
-        // TODObmc: add implementation
+        if(funcName.find("$not") != std::string::npos){
+            return true;
+        } else {
+            return false;
+        }
+        return false;
     }
 
     bool StmtFormatter::isBinaryBooleanFuncName(std::string funcName){
-        // TODObmc: add implementation
+        if(funcName.find("$and") != std::string::npos ||
+           funcName.find("$or") != std::string::npos ||
+           funcName.find("$xor") != std::string::npos ||
+           funcName.find("$nand") != std::string::npos ||
+           funcName.find("$ule") != std::string::npos ||
+           funcName.find("$ult") != std::string::npos ||
+           funcName.find("$uge") != std::string::npos ||
+           funcName.find("$ugt") != std::string::npos ||
+           funcName.find("$sle") != std::string::npos ||
+           funcName.find("$slt") != std::string::npos ||
+           funcName.find("$sge") != std::string::npos ||
+           funcName.find("$sgt") != std::string::npos ||
+           funcName.find("$eq") != std::string::npos ||
+           funcName.find("$ne") != std::string::npos){
+            return true;
+        } else {
+            return false;
+        }
     }
     
     // --------- call stmt parsing
@@ -205,6 +320,14 @@ namespace smack
         else {
             BMCDEBUG(std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl);
         }
+    }
+
+    // --------- assert stmt parsing
+
+    std::list<RefinedActionPtr> StmtFormatter::resolveAssertStmt(const AssertStmt* assertStmt){
+        const Expr* arg1 = nullptr;
+        const Expr* arg2 = nullptr;
+        const Expr* arg3 = nullptr;
     }
 
 } // namespace smack

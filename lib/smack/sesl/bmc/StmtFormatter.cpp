@@ -201,7 +201,6 @@ namespace smack
                 resultList.push_back(refinedAct);
                 return resultList;
             } else if(this->isBinaryBooleanFuncName(rhsFun->name())){
-                //TODObmc: add implementation
                 arg1 = lhs;
                 arg2 = this->parseBinaryBooleanExpr(rhsFun);
                 RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
@@ -210,12 +209,14 @@ namespace smack
             } else {
                 BMCDEBUG(std::cout << "INFO: UNSOLVED FUNCEXPR CASE !!! " << std::endl;);
                 BMCDEBUG(std::cout <<  "FUNC NAME: " << rhsFun->name() << std::endl); 
+                return resultList;
             }
         } else {
             arg1 = lhs;
             arg2 = rhs;
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
             resultList.push_back(refinedAct);
+            return resultList;
         }
     }
 
@@ -224,36 +225,128 @@ namespace smack
         assert(numOfAssign > 0);
         std::list<const Expr*> leftList = lhsList;
         std::list<const Expr*> rightList = rhsList;
+        std::list<RefinedActionPtr> resultList;
         for(int i = 0; i < numOfAssign; i++){
             const Expr* tempLhs = leftList.front();
             const Expr* tempRhs = rightList.front();
 
+            const Expr* arg1 = nullptr;
+            const Expr* arg2 = nullptr;
+            const Expr* arg3 = nullptr;
+
             if(ExprType::FUNC == tempRhs->getType()){
                 const FunExpr* rhsFun = (const FunExpr*)tempRhs;
                 if(this->isUnaryPtrCastFuncName(rhsFun->name())){
-                    //TODObmc: add implementation
+                    arg1 = tempLhs;
+                    arg2 = rhsFun->getArgs().front();
+                    if(!arg2->isVar()){
+                        BMCDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
+                        BMCDEBUG(std::cout << "LHS TYPE: " << tempLhs->getType() << std::endl);
+                        BMCDEBUG(std::cout << "RHS TYPE: " << tempLhs->getType() << std::endl); 
+                        assert(false);
+                    }
+                RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                resultList.push_back(refinedAct);
                 } else if(this->isPtrArithFuncName(rhsFun->name())){
-
+                    arg1 = tempLhs;
+                    arg2 = this->parsePtrArithmeticExpr(rhsFun);
+                    RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                    resultList.push_back(refinedAct);
                 } else if(this->isUnaryAssignFuncName(rhsFun->name())){
-
+                    arg1 = tempLhs;
+                    arg2 = rhsFun->getArgs().front();
+                    RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                    resultList.push_back(refinedAct);
                 } else if(this->isBinaryArithFuncName(rhsFun->name())){
-
+                    arg1 = tempLhs;
+                    arg2 =  this->parseVarArithmeticExpr(rhsFun);
+                    RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                    resultList.push_back(refinedAct);
                 } else if(this->isStoreLoadFuncName(rhsFun->name())){
+                    if(this->isStoreFuncName(rhsFun->name())){
+                        const Expr* origStoreDst = nullptr;
+                        const Expr* origStoreData = nullptr;
+                        int i = 0;
+                        for(const Expr* temp : rhsFun->getArgs()){
+                            if(i == 1){
+                                origStoreDst = temp;
+                            } else if(i == 2){
+                                origStoreData = temp;
+                            }
+                        }
 
+                        // simplify for arg1
+                        if(origStoreDst->isVar()){
+                            arg1 = origStoreDst;
+                        } else if(ExprType::FUNC == origStoreDst->getType()){
+                            arg1 = this->parsePtrArithmeticExpr(origStoreDst);
+                        } else {
+                            BMCDEBUG(std::cout << "ERROR: stored dst not allowed: " << origStoreDst << std::endl; );
+                            assert(false);
+                        }
+
+                        // simplify for arg2
+                        if(origStoreData->isVar() || origStoreData->isValue()){
+                            arg2 = origStoreData;
+                        } else if(ExprType::FUNC == origStoreData->getType()){
+                            const FunExpr* funExpr = (const FunExpr*) origStoreData;
+                            if(this->isPtrArithFuncName(funExpr->name())){
+                                arg2 = this->parsePtrArithmeticExpr(origStoreData);
+                            } else if(this->isBinaryArithFuncName(funExpr->name())){    
+                                arg2 = this->parseVarArithmeticExpr(origStoreData);
+                            } else {
+                                BMCDEBUG(std::cout << "ERROR: currently does not support the store data: " << origStoreData << std::endl;);
+                                assert(false);
+                            }
+                        } else {
+                            BMCDEBUG(std::cout << "ERROR: stored data not allowed: " << origStoreData << std::endl;);
+                            assert(false);
+                        }
+                        RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::STORE, arg1, arg2, arg3);
+                        resultList.push_back(refinedAct);
+                    } else if(this->isLoadFuncName(rhsFun->name())){
+                        assert(tempLhs->isVar());
+                        const Expr* origLoadDst = tempLhs;
+                        const Expr* origLoadSrc = rhsFun->getArgs().back();
+                        arg1 = origLoadDst;
+                        if(origLoadSrc->isVar()){
+                            arg2 = origLoadSrc;
+                        } else if(origLoadSrc->getType() == ExprType::FUNC){
+                            arg2 = this->parseVarArithmeticExpr(origLoadSrc);
+                        } else {
+                            BMCDEBUG(std::cout << "ERROR: unsolved load src: " << origLoadSrc << std::endl;);
+                            assert(false);
+                        }
+                        RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::LOAD, arg1, arg2, arg3);
+                        resultList.push_back(refinedAct);
+                    } else {
+                        BMCDEBUG(std::cout << "ERROR: this should not happen.." << std::endl;);
+                        assert(false);
+                    }
                 } else if(this->isUnaryBooleanFuncName(rhsFun->name())){
-
+                    arg1 = tempLhs;
+                    arg2 = this->parseUnaryBooleanExpr(rhsFun);
+                    RefinedActionPtr refinedAct =   std::make_shared<RefinedAction>   (ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                    resultList.push_back(refinedAct);
                 } else if(this->isBinaryBooleanFuncName(rhsFun->name())){
-
+                    arg1 = tempLhs;
+                    arg2 = this->parseBinaryBooleanExpr(rhsFun);
+                    RefinedActionPtr refinedAct =   std::make_shared<RefinedAction>   (ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                    resultList.push_back(refinedAct);
                 } else {
                     BMCDEBUG(std::cout << "INFO: UNSOLVED FUNCEXPR CASE !!! " << std::endl;);
                     BMCDEBUG(std::cout <<  "FUNC NAME: " << rhsFun->name() << std::endl); 
                 }
             } else {
-                // TODObmc: add implementation
+                arg1 = tempLhs;
+                arg2 = tempRhs;
+                RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                resultList.push_back(refinedAct);
             }
             leftList.pop_front();
             rightList.pop_front();
         }
+        return resultList;
     }
 
     bool StmtFormatter::isUnaryPtrCastFuncName(std::string funcName){

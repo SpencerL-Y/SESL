@@ -567,8 +567,11 @@ namespace smack
 
     std::list<RefinedActionPtr> StmtFormatter::resolveCallStmt(const CallStmt* call){
         // TODObmc: add implementation
+        const Expr* arg1 = nullptr;
+        const Expr* arg2 = nullptr;
+        const Expr* arg3 = nullptr;
         if(!call->getProc().compare("malloc")){
-
+            // use a set to denote the malloc variables and free variables for detection that whether free is a valid one..
         } else if(!call->getProc().compare("free_")){
 
         } else if(!call->getProc().compare("$alloc")){

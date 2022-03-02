@@ -157,7 +157,15 @@ namespace smack
                     if(origStoreData->isVar() || origStoreData->isValue()){
                         arg2 = origStoreData;
                     } else if(ExprType::FUNC == origStoreData->getType()){
-                        arg2 = this->parseArithmeticExpr(origStoreData);
+                        const FunExpr* funExpr = (const FunExpr*) origStoreData;
+                        if(this->isPtrArithFuncName(funExpr->name())){
+                            arg2 = this->parsePtrArithmeticExpr(origStoreData);
+                        } else if(this->isBinaryArithFuncName(funExpr->name())){    
+                            arg2 = this->parseVarArithmeticExpr(origStoreData);
+                        } else {
+                            BMCDEBUG(std::cout << "ERROR: currently does not support the store data: " << origStoreData << std::endl;);
+                            return resultList;
+                        }
                     } else {
                         BMCDEBUG(std::cout << "ERROR: stored data not allowed: " << origStoreData << std::endl;);
                         return resultList;
@@ -187,16 +195,27 @@ namespace smack
                     return resultList;
                 }
             } else if(this->isUnaryBooleanFuncName(rhsFun->name())){
-                //TODObmc: add implementation
-                // STOP HERE
+                arg1 = lhs;
+                arg2 = this->parseUnaryBooleanExpr(rhsFun);
+                RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                resultList.push_back(refinedAct);
+                return resultList;
             } else if(this->isBinaryBooleanFuncName(rhsFun->name())){
-
+                //TODObmc: add implementation
+                arg1 = lhs;
+                arg2 = this->parseBinaryBooleanExpr(rhsFun);
+                RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+                resultList.push_back(refinedAct);
+                return resultList;
             } else {
                 BMCDEBUG(std::cout << "INFO: UNSOLVED FUNCEXPR CASE !!! " << std::endl;);
                 BMCDEBUG(std::cout <<  "FUNC NAME: " << rhsFun->name() << std::endl); 
             }
         } else {
-            // TODObmc: add implementation
+            arg1 = lhs;
+            arg2 = rhs;
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
         }
     }
 
@@ -258,6 +277,42 @@ namespace smack
     const Expr* StmtFormatter::parsePtrArithmeticExpr(const Expr* origArithExpr){
         // TODObmc: imple
         // Distinguish  the case where the function is not a ptr arithmetic
+        if(origArithExpr->getType() == FUNC){
+            const FunExpr* ptrArithFun = (const FunExpr*) origArithExpr;
+            assert(this->isPtrArithFuncName(ptrArithFun->name()));
+            const Expr* resultExpr = NULL;
+            const Expr* funArg1 = ptrArithFun->getArgs().front();
+            const Expr* funArg2  = ptrArithFun->getArgs().back();
+            resultExpr = this->parseBinaryArithmeticExpression( 
+                ptrArithFun->name(), 
+                this->parsePtrArithmeticExpr(funArg1), 
+                this->parsePtrArithmeticExpr(funArg2)
+            );
+            return resultExpr;
+        } else {
+            return origArithExpr;
+        }
+        
+    }
+
+
+    const Expr* StmtFormatter::parseBinaryArithmeticExpression(std::string name, const Expr* left, const Expr* right){
+        const Expr* result = nullptr;
+        if(name.find("$add") != std::string::npos){
+            result = Expr::add(left, right);
+        } else if(name.find("$sub") != std::string::npos){
+            result = Expr::substract(left, right);
+        } else if(name.find("$mul") != std::string::npos){
+            result = Expr::multiply(left, right);
+        } else if(name.find("$sdiv") != std::string::npos 
+               || name.find("$udiv") != std::string::npos){
+            result = Expr::divide(left, right);
+        } else {
+            CFDEBUG(std::cout << "ERROR: UNKNWON BINARY ARITHMETIC FUNCTION");
+            return NULL;
+        }
+        REGISTER_EXPRPTR(result);
+        return result;
     }
 
     bool StmtFormatter::isUnaryAssignFuncName(std::string funcName){
@@ -284,7 +339,21 @@ namespace smack
 
     const Expr* StmtFormatter::parseVarArithmeticExpr(const Expr* origArithExpr){
         // TODObmc: imple
-        // Distinguish the case that it is not var arithemtic expression
+        if(ExprType::FUNC == origArithExpr->getType()){
+            const FunExpr* funExpr = (const FunExpr*) origArithExpr;
+            assert(this->isBinaryArithFuncName(funExpr->name()));
+            const Expr* resultExpr = NULL;
+            const Expr* funArg1 = funExpr->getArgs().front();
+            const Expr* funArg2 = funExpr->getArgs().back();
+            resultExpr = this->parseBinaryArithmeticExpression(
+                funExpr->name(),
+                this->parseVarArithmeticExpr(funArg1),
+                this->parseVarArithmeticExpr(funArg2)
+            );
+            return resultExpr;
+        } else {
+            return origArithExpr;
+        }
     }
 
     bool StmtFormatter::isStoreLoadFuncName(std::string funcName){
@@ -313,11 +382,6 @@ namespace smack
     }
 
 
-    const Expr* parseArithmeticExpr(const Expr* origArithExpr){
-        // TODObmc: imple
-        // parse arithmetic according to the type
-    }
-
     bool StmtFormatter::isUnaryBooleanFuncName(std::string funcName){
         if(funcName.find("$not") != std::string::npos){
             return true;
@@ -325,6 +389,22 @@ namespace smack
             return false;
         }
         return false;
+    }
+
+    const Expr* StmtFormatter::parseUnaryBooleanExpr(const Expr* origBoolExpr){
+        assert(origBoolExpr->getType() == ExprType::FUNC);
+        const Expr* result = nullptr;
+        const FunExpr* origFun = (const FunExpr*) origBoolExpr;
+        std::string funcName = origFun->name();
+        const Expr* inner = origFun->getArgs().front();
+        if(funcName.find("$not") != std::string::npos){
+            result = Expr::not_(this->parseCondition(inner));
+        } else {
+            BMCDEBUG(std::cout << "ERROR: UNKNOWN unary boolean expression: " << origFun << std::endl;);
+            return NULL;
+        }
+        REGISTER_EXPRPTR(result);
+        return result;
     }
 
     bool StmtFormatter::isBinaryBooleanFuncName(std::string funcName){
@@ -347,6 +427,48 @@ namespace smack
             return false;
         }
     }
+
+    const Expr* StmtFormatter::parseBinaryBooleanExpr(const Expr* origBoolExpr){
+        assert(origBoolExpr->getType() == ExprType::FUNC);\
+        const FunExpr* origFunExpr = (const FunExpr*) origBoolExpr;
+        std::string funcName = origFunExpr->name();
+        const Expr* origArg1 = origFunExpr->getArgs().front();
+        const Expr* origArg2 = origFunExpr->getArgs().back();
+
+        const Expr* finalLhs = origArg1;
+        const Expr* finalRhs = origArg2;
+
+
+        const Expr* result = nullptr;
+        if(funcName.find("$and") != std::string::npos){
+            result = Expr::and_(finalLhs, finalRhs);
+        } else if(funcName.find("$or") != std::string::npos){
+            result = Expr::or_(finalLhs, finalRhs);
+        } else if(funcName.find("$xor") != std::string::npos){
+            result = Expr::xor_(finalLhs, finalRhs);
+        } else if(funcName.find("$ule") != std::string::npos ||
+                funcName.find("$sle") != std::string::npos){
+            result = Expr::le(finalLhs, finalRhs);
+        } else if(funcName.find("$ult") != std::string::npos || 
+                funcName.find("$slt") != std::string::npos){
+            result = Expr::lt(finalLhs, finalRhs);
+        } else if(funcName.find("$uge") != std::string::npos ||
+                funcName.find("$sge") != std::string::npos){
+            result = Expr::ge(finalLhs, finalRhs);
+        } else if(funcName.find("$ugt") != std::string::npos ||
+                funcName.find("$sgt") != std::string::npos){
+            result = Expr::gt(finalLhs, finalRhs);
+        } else if(funcName.find("$eq") != std::string::npos) {
+            result = Expr::eq(finalLhs, finalRhs);
+        } else if(funcName.find("$ne") != std::string::npos){
+            result = Expr::neq(finalLhs, finalRhs);
+        } else {
+            BMCDEBUG(std::cout << "ERROR: UNSOLVED Boolean Expression Name: "  << funcName << std::endl;);
+            return NULL;
+        }
+        REGISTER_EXPRPTR(result);
+        return result;
+    }   
     
     // --------- call stmt parsing
 

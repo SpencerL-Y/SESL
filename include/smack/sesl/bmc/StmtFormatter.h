@@ -34,9 +34,11 @@ namespace smack
         bool isStoreLoadFuncName(std::string funcName);
         bool isStoreFuncName(std::string funcName);
         bool isLoadFuncName(std::string funcName);
-        const Expr* parseArithmeticExpr(const Expr* origArithExpr);
+        const Expr* parseBinaryArithmeticExpression(std::string funcName, const Expr* left, const Expr* right);
         bool isUnaryBooleanFuncName(std::string funcName);
+        const Expr* parseUnaryBooleanExpr(const Expr* origBoolExpr);
         bool isBinaryBooleanFuncName(std::string funcName);
+        const Expr* parseBinaryBooleanExpr(const Expr* origBoolExpr);
         
         // call stmt parsing
         std::list<RefinedActionPtr> resolveCallStmt(const CallStmt* callStmt);

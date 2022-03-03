@@ -142,6 +142,7 @@ namespace smack
                         } else if(i == 2){
                             origStoreData = temp;
                         }
+                        i++;
                     }
                     
                     // simplify for arg1
@@ -273,6 +274,7 @@ namespace smack
                             } else if(i == 2){
                                 origStoreData = temp;
                             }
+                            i++;
                         }
 
                         // simplify for arg1
@@ -648,6 +650,16 @@ namespace smack
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3);
             resultList.push_back(refinedAct);
             return resultList;
+        }
+    }
+
+    bool StmtFormatter::isNoSideEffectFuncName(std::string name){
+        if (name.find("abort") != std::string::npos ||
+            name.find("srand") != std::string::npos ||
+            name.find("print") != std::string::npos){
+            return true;
+        } else {
+            return false;
         }
     }
 

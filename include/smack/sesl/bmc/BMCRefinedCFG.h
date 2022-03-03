@@ -13,6 +13,7 @@
 
 namespace smack
 {
+
     class ConcreteAction {
         public:
             enum ActType {
@@ -79,12 +80,12 @@ namespace smack
         private:
             int from;
             int to;
-            std::vector<RefinedActionPtr> refinedAction;
+            std::vector<RefinedActionPtr> refinedActions;
         public:
-            RefinedEdge(std::vector<RefinedActionPtr> rfa, int from, int to) : refinedAction(rfa), from(from), to(to) {}
+            RefinedEdge(std::vector<RefinedActionPtr> rfa, int from, int to) : refinedActions(rfa), from(from), to(to) {}
             int getFrom(){return this->from;}
             int getTo(){return this->to;}
-            std::vector<RefinedActionPtr> getRefinedAction(){return this->refinedAction;}
+            std::vector<RefinedActionPtr> getRefinedActions(){return this->refinedActions;}
             void print();
     };
     
@@ -105,7 +106,9 @@ namespace smack
                 std::vector<ConstDecl*> cds
             );
             void printConcreteCFG();
-            std::unordered_map<std::string, std::string> getVarTypes();
+            std::unordered_map<std::string, std::string> getVarTypes(){return this->varTypes;};
+            int getVertexNum(){return this->vertexNum;}
+            std::list<ConcreteEdgePtr> getConcreteEdges(){return this->concreteEdges;}
     };
     typedef std::shared_ptr<ConcreteCFG> ConcreteCFGPtr;
     
@@ -115,11 +118,11 @@ namespace smack
     class BMCRefinedCFG {
         private:
             int vertexNum;
-            std::list<ConcreteEdgePtr> refinedEdges;
-            std::unordered_map<std::string, std::string> refinedVarType;
+            std::list<RefinedEdgePtr> refinedEdges;
+            std::unordered_map<std::string, std::string> refinedVarTypes;
         public:
             // TODObmc: use Stmt Formatter when constructing BMCRefinedCFG
-            BMCRefinedCFG(ConcreteCFGPtr conCfg, std::unordered_map<std::string, std::string> concreteVT);
+            BMCRefinedCFG(ConcreteCFGPtr conCfg);
             void printRefinedCFG();
 
     };

@@ -3,6 +3,7 @@
 // 24/2/2022
 
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
+#include "smack/sesl/bmc/StmtFormatter.h"
 #include <iostream>
 
 namespace smack
@@ -164,10 +165,60 @@ namespace smack
     }
 
     void RefinedAction::print(){
-        std::cout << "RefinedAction: " << 
+        std::cout << "RefinedAction: ";
+        ConcreteAction::printActType(this->getActType());
+        std::cout << " ARG1: ";
+        if(this->arg1 != nullptr){
+            this->arg1->print(std::cout);
+        } else {
+            std::cout << " <NULL>";
+        }
+
+        std::cout << " ARG2: ";
+        if(this->arg2 != nullptr){
+            this->arg2->print(std::cout);
+        } else {
+            std::cout << " <NULL>";
+        }
+
+        std::cout << " ARG1: ";
+        if(this->arg3 != nullptr){
+            this->arg3->print(std::cout);
+        } else {
+            std::cout << " <NULL>";
+        }
     }
 
     void RefinedEdge::print(){
+        std::cout << "INFO: [Edge] " << this->getFrom() << " ---> " << this->getTo() << std::endl;
+        std::cout << "INFO: [Actions]" << std::endl;
+        for(RefinedActionPtr act : this->refinedActions){
+            act->print();
+        }
+    }
 
+    BMCRefinedCFG::BMCRefinedCFG(ConcreteCFGPtr conCfg){
+        StmtFormatterPtr formatter = std::make_shared<StmtFormatter>();
+        // TODObmc: this should be problematic since variables appears not only restricts in the cfg vars, but also constDecls
+        this->refinedVarTypes = conCfg->getVarTypes();
+        this->vertexNum = conCfg->getVertexNum();
+        for(ConcreteEdgePtr conEdge : conCfg->getConcreteEdges()){
+            RefinedEdgePtr refinedEdge = formatter->convert(conEdge);
+            this->refinedEdges.push_back(refinedEdge);
+        }
+    }   
+    
+    void BMCRefinedCFG::printRefinedCFG(){
+        std::cout << "INFO: -------------- Print Refined CFG" << std::endl;
+        std::cout << "INFO: ----------- Num of Vertices: " << this->vertexNum << std::endl;
+        std::cout << "INFO: -----------  Edges: " << std::endl;
+        for(RefinedEdgePtr edge : this->refinedEdges){
+            edge->print();
+        }
+        std::cout << "INFO: ----------- VarTypes: " << std::endl;
+        for(auto varTypePair : this->refinedVarTypes){
+            std::cout << varTypePair.first + " " + varTypePair.second << std::endl;
+        }
+        std::cout << std::endl;
     }
 } // namespace smack

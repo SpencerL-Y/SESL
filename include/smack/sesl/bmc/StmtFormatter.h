@@ -39,9 +39,9 @@ namespace smack
         const Expr* parseUnaryBooleanExpr(const Expr* origBoolExpr);
         bool isBinaryBooleanFuncName(std::string funcName);
         const Expr* parseBinaryBooleanExpr(const Expr* origBoolExpr);
-        
         // call stmt parsing
         std::vector<RefinedActionPtr> resolveCallStmt(const CallStmt* callStmt);
+        
         bool isNoSideEffectFuncName(std::string procName);
 
         // assert stmt parsing
@@ -50,11 +50,14 @@ namespace smack
 
         static MemoryManagerPtr ExprMemoryManager;
 
-        StmtFormatter();
+        StmtFormatter(){};
 
         RefinedEdgePtr convert(ConcreteEdgePtr origEdge);
 
     };
+
+    typedef  std::shared_ptr<StmtFormatter> StmtFormatterPtr;
+
     #define REGISTER_EXPRPTR(ptr) \
         StmtFormatter::ExprMemoryManager->registerPointer(ptr)
 } // namespace smack

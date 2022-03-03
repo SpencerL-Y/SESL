@@ -55,7 +55,29 @@ namespace smack
                 this->actType = ActType::OTHER;
             }
         }
-        
+    }
+
+
+    void  ConcreteAction::printActType(ConcreteAction::ActType actType){
+        if(actType == ActType::ASSERT){
+            std::cout << "ASSERT\t";
+        } else if(actType == ActType::ASSUME){
+            std::cout << "ASSUME\t";
+        } else if(actType == ActType::COMMONASSIGN){
+            std::cout << "ASSIGN\t";
+        } else if(actType == ActType::FREE){
+            std::cout << "FREE\t";
+        } else if(actType == ActType::LOAD){
+            std::cout << "LOAD\t";
+        } else if(actType == ActType::MALLOC){
+            std::cout << "MALLOC\t";
+        } else if(actType == ActType::OTHER){
+            std::cout << "OTHER\t";
+        } else if(actType == ActType::OTHERPROC){
+            std::cout << "OTHERPROC\t";
+        } else if(actType == ActType::STORE){
+            std::cout << "STORE\t";
+        }
     }
 
     ConcreteEdge::ConcreteEdge(int from, int to, const Stmt* s) {
@@ -139,6 +161,13 @@ namespace smack
             cd->print(std::cout);
         }
         std::cout << std::endl;
-        
+    }
+
+    void RefinedAction::print(){
+        std::cout << "RefinedAction: " << 
+    }
+
+    void RefinedEdge::print(){
+
     }
 } // namespace smack

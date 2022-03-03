@@ -1155,7 +1155,7 @@ namespace smack {
                 : Stmt(ASSERT), expr(e), attrs(ax) {}
 
         void print(std::ostream &os) const;
-
+        const Expr* getExpr() const {return this->expr;};
         virtual const Stmt* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         static bool classof(const Stmt *S) { return S->getKind() == ASSERT; }

@@ -17,13 +17,13 @@ namespace smack
     {
     private:
         // assume stmt parsing
-        std::list<RefinedActionPtr> resolveAssumeStmt(const AssumeStmt* ass);
+        std::vector<RefinedActionPtr> resolveAssumeStmt(const AssumeStmt* ass);
         const Expr* parseCondition(const Expr* origCond);
 
         // assign stmt parsing
-        std::list<RefinedActionPtr> resolveSingleAssignStmt(const AssignStmt* assign);
+        std::vector<RefinedActionPtr> resolveSingleAssignStmt(const AssignStmt* assign);
         // TODObmc: watch out the order to push to the new list
-        std::list<RefinedActionPtr> resolveBundleAssignStmts(std::list<const Expr*> lhsList, std::list<const Expr*> rhsList);
+        std::vector<RefinedActionPtr> resolveBundleAssignStmts(std::list<const Expr*> lhsList, std::list<const Expr*> rhsList);
         // TODObmc: imple
         bool isUnaryPtrCastFuncName(std::string funcName);
         bool isPtrArithFuncName(std::string funcName);
@@ -41,11 +41,11 @@ namespace smack
         const Expr* parseBinaryBooleanExpr(const Expr* origBoolExpr);
         
         // call stmt parsing
-        std::list<RefinedActionPtr> resolveCallStmt(const CallStmt* callStmt);
+        std::vector<RefinedActionPtr> resolveCallStmt(const CallStmt* callStmt);
         bool isNoSideEffectFuncName(std::string procName);
 
         // assert stmt parsing
-        std::list<RefinedActionPtr> resolveAssertStmt(const AssertStmt* assertStmt);
+        std::vector<RefinedActionPtr> resolveAssertStmt(const AssertStmt* assertStmt);
     public:
 
         static MemoryManagerPtr ExprMemoryManager;

@@ -36,6 +36,7 @@ namespace smack
             bool hasStmt() {return (stmt == nullptr) ? false : true;}
             const Stmt* getStmt() const {return this->stmt;};
             ConcreteAction::ActType getActType() {return this->actType;}
+            static void printActType(ConcreteAction::ActType actType);
     };
     typedef std::shared_ptr<ConcreteAction> ConcreteActionPtr;
 
@@ -69,6 +70,7 @@ namespace smack
             const Expr* getArg2(){return arg2;}
             const Expr* getArg3(){return arg3;}
             ConcreteAction::ActType getActType(){return this->actType;}
+            void print();
     };
 
     typedef std::shared_ptr<RefinedAction> RefinedActionPtr;
@@ -83,6 +85,7 @@ namespace smack
             int getFrom(){return this->from;}
             int getTo(){return this->to;}
             std::vector<RefinedActionPtr> getRefinedAction(){return this->refinedAction;}
+            void print();
     };
     
     typedef std::shared_ptr<RefinedEdge> RefinedEdgePtr;

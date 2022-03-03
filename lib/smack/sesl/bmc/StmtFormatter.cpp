@@ -18,7 +18,10 @@ namespace smack
         }
         BMCDEBUG(std::cout << "ActType: " << type << std::endl;)
 
-        std::list<RefinedActionPtr> actionList;
+        std::vector<RefinedActionPtr> actionList;
+        int from = origEdge->getFromVertex();
+        int to = origEdge->getToVertex();
+
         // for each concrete action: 
         // parse the original stmt accordingly and extract arg1, arg2 and arg3 for each stmt
         // there is possibility that a concret edge will result in a refinededge with a list of refinedActions
@@ -48,20 +51,19 @@ namespace smack
                 assert(ConcreteAction::ActType::OTHER == type);
             }
         }
-        
 
-        BMCDEBUG(std::cout << "Conversion Result: " << std::endl;);
-        
+        RefinedEdgePtr refinedEdge = std::make_shared<RefinedEdge>(actionList, from, to);
+        return refinedEdge;
     }
 
     // --------- assume stmt parsing
     
-    std::list<RefinedActionPtr> StmtFormatter::resolveAssumeStmt(const AssumeStmt* ass){
+    std::vector<RefinedActionPtr> StmtFormatter::resolveAssumeStmt(const AssumeStmt* ass){
         const Expr* arg1 = this->parseCondition(ass->getExpr());
         const Expr* arg2 = nullptr;
         const Expr* arg3 = nullptr;
         RefinedActionPtr action = std::make_shared<RefinedAction>(ConcreteAction::ASSUME, arg1, arg2, arg3);
-        std::list<RefinedActionPtr> newList;
+        std::vector<RefinedActionPtr> newList;
         newList.push_back(action);
         return newList;
     }
@@ -90,11 +92,11 @@ namespace smack
 
     // --------- assign stmt parsing
 
-    std::list<RefinedActionPtr> StmtFormatter::resolveSingleAssignStmt(const AssignStmt* assign){
+    std::vector<RefinedActionPtr> StmtFormatter::resolveSingleAssignStmt(const AssignStmt* assign){
         const Expr* arg1 = nullptr;
         const Expr* arg2 = nullptr;
         const Expr* arg3 = nullptr;
-        std::list<RefinedActionPtr> resultList;
+        std::vector<RefinedActionPtr> resultList;
 
         const Expr* rhs = assign->getRhs().front();
         const Expr* lhs = assign->getLhs().front();
@@ -107,7 +109,6 @@ namespace smack
                     BMCDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
                     BMCDEBUG(std::cout << "LHS TYPE: " << lhs->getType() << std::endl);
                     BMCDEBUG(std::cout << "RHS TYPE: " << rhs->getType() << std::endl); 
-                    return resultList;
                 }
                 RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
                 resultList.push_back(refinedAct);
@@ -150,7 +151,7 @@ namespace smack
                         arg1 = this->parsePtrArithmeticExpr(origStoreDst);
                     } else {
                         BMCDEBUG(std::cout << "ERROR: stored dst not allowed: " << origStoreDst << std::endl; );
-                        return resultList;
+                        arg1 = origStoreData;
                     }
 
                     // simplify for arg2
@@ -164,11 +165,11 @@ namespace smack
                             arg2 = this->parseVarArithmeticExpr(origStoreData);
                         } else {
                             BMCDEBUG(std::cout << "ERROR: currently does not support the store data: " << origStoreData << std::endl;);
-                            return resultList;
+                            arg2 = origStoreData;
                         }
                     } else {
                         BMCDEBUG(std::cout << "ERROR: stored data not allowed: " << origStoreData << std::endl;);
-                        return resultList;
+                        arg2 = origStoreData;
                     }
                     RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::STORE, arg1, arg2, arg3);
                     resultList.push_back(refinedAct);
@@ -185,7 +186,7 @@ namespace smack
                         arg2 = this->parseVarArithmeticExpr(origLoadSrc);
                     } else {
                         BMCDEBUG(std::cout << "ERROR: unsolved load src: " << origLoadSrc << std::endl;);
-                        return resultList;
+                        arg2 = origLoadSrc;
                     }
                     RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::LOAD, arg1, arg2, arg3);
                     resultList.push_back(refinedAct);
@@ -220,12 +221,12 @@ namespace smack
         }
     }
 
-    std::list<RefinedActionPtr> StmtFormatter::resolveBundleAssignStmts(std::list<const Expr*> lhsList, std::list<const Expr*> rhsList){
+    std::vector<RefinedActionPtr> StmtFormatter::resolveBundleAssignStmts(std::list<const Expr*> lhsList, std::list<const Expr*> rhsList){
         int numOfAssign = lhsList.size();
         assert(numOfAssign > 0);
         std::list<const Expr*> leftList = lhsList;
         std::list<const Expr*> rightList = rhsList;
-        std::list<RefinedActionPtr> resultList;
+        std::vector<RefinedActionPtr> resultList;
         for(int i = 0; i < numOfAssign; i++){
             const Expr* tempLhs = leftList.front();
             const Expr* tempRhs = rightList.front();
@@ -243,7 +244,6 @@ namespace smack
                         BMCDEBUG(std::cout << "UNSOLVED ASSIGN CASE !!!!!" << std::endl);
                         BMCDEBUG(std::cout << "LHS TYPE: " << tempLhs->getType() << std::endl);
                         BMCDEBUG(std::cout << "RHS TYPE: " << tempLhs->getType() << std::endl); 
-                        assert(false);
                     }
                 RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3);
                 resultList.push_back(refinedAct);
@@ -282,7 +282,7 @@ namespace smack
                             arg1 = this->parsePtrArithmeticExpr(origStoreDst);
                         } else {
                             BMCDEBUG(std::cout << "ERROR: stored dst not allowed: " << origStoreDst << std::endl; );
-                            assert(false);
+                            arg1 = origStoreDst;
                         }
 
                         // simplify for arg2
@@ -300,7 +300,7 @@ namespace smack
                             }
                         } else {
                             BMCDEBUG(std::cout << "ERROR: stored data not allowed: " << origStoreData << std::endl;);
-                            assert(false);
+                            arg2 = origStoreData;
                         }
                         RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::STORE, arg1, arg2, arg3);
                         resultList.push_back(refinedAct);
@@ -315,7 +315,7 @@ namespace smack
                             arg2 = this->parseVarArithmeticExpr(origLoadSrc);
                         } else {
                             BMCDEBUG(std::cout << "ERROR: unsolved load src: " << origLoadSrc << std::endl;);
-                            assert(false);
+                            arg2 = origLoadSrc;
                         }
                         RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::LOAD, arg1, arg2, arg3);
                         resultList.push_back(refinedAct);
@@ -336,6 +336,7 @@ namespace smack
                 } else {
                     BMCDEBUG(std::cout << "INFO: UNSOLVED FUNCEXPR CASE !!! " << std::endl;);
                     BMCDEBUG(std::cout <<  "FUNC NAME: " << rhsFun->name() << std::endl); 
+                    assert(false);
                 }
             } else {
                 arg1 = tempLhs;
@@ -565,44 +566,105 @@ namespace smack
     
     // --------- call stmt parsing
 
-    std::list<RefinedActionPtr> StmtFormatter::resolveCallStmt(const CallStmt* call){
+    std::vector<RefinedActionPtr> StmtFormatter::resolveCallStmt(const CallStmt* call){
         // TODObmc: add implementation
         const Expr* arg1 = nullptr;
         const Expr* arg2 = nullptr;
         const Expr* arg3 = nullptr;
+
+        std::vector<RefinedActionPtr> resultList;
         if(!call->getProc().compare("malloc")){
             // use a set to denote the malloc variables and free variables for detection that whether free is a valid one..
+            std::string retVarName = call->getReturns().front();
+            const Expr* retVar = Expr::lit(retVarName);
+            REGISTER_EXPRPTR(retVar);
+            const Expr* mallocParam = call->getParams().front();
+            if(mallocParam->isVar() || mallocParam->isValue()){
+                arg1 = retVar;
+                arg2 = mallocParam;
+            } else {
+                BMCDEBUG(std::cout << "ERROR: malloc param should not be function" << std::endl;);
+                arg1 = retVar;
+                arg2 = mallocParam;
+            }
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::MALLOC, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
+            return resultList;
         } else if(!call->getProc().compare("free_")){
-
+            const Expr* freeParam = call->getParams().front();
+            if(freeParam->isVar() || freeParam->isValue()){
+                arg1 = freeParam;
+            } else {
+                BMCDEBUG(std::cout << "ERROR: Free param not a var or value" << std::endl;);
+                arg1 = freeParam;
+            }
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::MALLOC, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
+            return resultList;
         } else if(!call->getProc().compare("$alloc")){
-            
+            //TODObmc
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
+            return resultList;
         } else if(!call->getProc().compare("calloc")) {
-            
+            //TODObmc
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
+            return resultList;
         } else if(call->getProc().find("__VERIFIER") != std::string::npos){
-            
+            //TODObmc
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
+            return resultList;
         } else if(call->getProc().find("$memcpy") != std::string::npos || call->getProc().find("memcpy") != std::string::npos ){
-            
+            //TODObmc
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
+            return resultList;
         } else if(call->getProc().find("$memset") != std::string::npos || call->getProc().find("memset") != std::string::npos){
-            
+            //TODObmc
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
+            return resultList;
         } else if(call->getProc().find("time") != std::string::npos) {
-            
+            //TODObmc
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
+            return resultList;
         } else if(call->getProc().find("boogie_si_record") != std::string::npos){
-            
+            //TODObmc
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
+            return resultList;
         } 
         else if(this->isNoSideEffectFuncName(call->getProc())) {
-            
+            //TODObmc
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
+            return resultList;
         } 
         else {
             BMCDEBUG(std::cout << "INFO: UNsolved proc call: " << call->getProc() << std::endl);
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3);
+            resultList.push_back(refinedAct);
+            return resultList;
         }
     }
 
     // --------- assert stmt parsing
 
-    std::list<RefinedActionPtr> StmtFormatter::resolveAssertStmt(const AssertStmt* assertStmt){
+    std::vector<RefinedActionPtr> StmtFormatter::resolveAssertStmt(const AssertStmt* assertStmt){
         const Expr* arg1 = nullptr;
         const Expr* arg2 = nullptr;
         const Expr* arg3 = nullptr;
+
+        std::vector<RefinedActionPtr> resultList;
+
+        const Expr* origCond = assertStmt->getExpr();
+        arg1 = this->parseCondition(origCond);
+        RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::MALLOC, arg1, arg2, arg3);
+        resultList.push_back(refinedAct);
+        return resultList;
     }
 
 } // namespace smack

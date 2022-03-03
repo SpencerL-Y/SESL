@@ -98,13 +98,9 @@
 // }
 
 int main(){
-    int i = 0;
-    int *j[5];
-    for(int i = 0; i < 5; i ++){
-        j[i] = malloc(i * sizeof(int) + 1);
-    }
-    for(int k = 0; k < 5; k ++){
-        free(j[k]);
-    }
+    int *i;
+    i = malloc(8*sizeof(int));
+    int *j = i + 4;
+    *j = 10;
     return 0;
 }

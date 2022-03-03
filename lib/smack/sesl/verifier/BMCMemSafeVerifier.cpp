@@ -35,8 +35,10 @@ namespace smack
         std::cout << std::endl;
         std::cout << "-------------PRINT CFG END-----------" << std::endl;
         // ------- obtain concrete cfg
-        ConcreteCFGPtr conCfg = std::make_shared<ConcreteCFG>(mainGraph);
-        conCfg->printConcreteCFG();
+        ConcreteCFGPtr conCfg = std::make_shared<ConcreteCFG>(mainGraph, mainGraph->getVarTypes(), mainGraph->getConstDecls());
+        // conCfg->printConcreteCFG();
+        BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
+        refinedCFG->printRefinedCFG();
         return false;
     }
 } // namespace smack

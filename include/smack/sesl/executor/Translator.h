@@ -62,10 +62,6 @@ namespace smack{
         void translate() override;
     };
 
-    
-
-    
-
     class TransToConstant : Translator {
     private:
         VarEquivPtr varEquivPtr;

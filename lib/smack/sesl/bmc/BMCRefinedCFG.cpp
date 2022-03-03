@@ -75,7 +75,7 @@ namespace smack
         } else if(actType == ActType::OTHER){
             std::cout << "OTHER\t";
         } else if(actType == ActType::OTHERPROC){
-            std::cout << "OTHERPROC\t";
+            std::cout << "OTPROC\t";
         } else if(actType == ActType::STORE){
             std::cout << "STORE\t";
         }
@@ -187,6 +187,7 @@ namespace smack
         } else {
             std::cout << " <NULL>";
         }
+        std::cout << std::endl;
     }
 
     void RefinedEdge::print(){

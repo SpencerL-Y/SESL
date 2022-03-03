@@ -47,6 +47,37 @@ namespace smack
             z3::expr generateTrOther(int u);
     };
 
+    class BlockNormalForm {
+        private:
+            int regId;
+            int length;
+            int primeNum;
+            z3::context* z3Ctx;
+        public:
+            BlockNormalForm(z3::context& ctx, int regId, int l, int primeNum){
+                this->z3Ctx = &ctx;
+                this->regId = regId;
+                this->length = l;
+                this->primeNum = primeNum;
+            }
+            int getLength(){return this->length;}
+            std::vector<z3::expr> getBNFVars();
+            // TODObmc: return the used var in the bnf formula
+    };
+    typedef std::shared_ptr<BlockNormalForm> BNFPtr;
+
+    class RegionNormalForm {
+        private:
+            int maxRegionNum;
+            int primeNum;
+            z3::context* z3Ctx;
+            std::vector<BNFPtr> bnfList;
+        public:
+            // TODObmc: imple
+            RegionNormalForm(z3::context& ctx, int regionNum, int primeNum);
+    };
+    typedef std::shared_ptr<RegionNormalForm> RNFPtr;
+
 
 } // namespace smack
 

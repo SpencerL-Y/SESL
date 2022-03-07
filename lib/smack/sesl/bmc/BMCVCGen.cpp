@@ -5,13 +5,13 @@ namespace smack
     std::vector<z3::expr> BlockNormalForm::getBNFVars(){
         std::list<std::string> varNames;
         for(int i = 0; i < this->length; i++){
-            varNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*i));
-            varNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*i + 1));
-            varNames.push_back("pta_" + std::to_string(this->blockId) + "_" + std::to_string(2*i + 1));
-            varNames.push_back("ptd_" + std::to_string(this->blockId) + "_" + std::to_string(2*i + 1));
+            varNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*i)+ "_(" + std::to_string(this->primeNum) + ")");
+            varNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*i + 1)+ "_(" + std::to_string(this->primeNum) + ")");
+            varNames.push_back("pta_" + std::to_string(this->blockId) + "_" + std::to_string(2*i + 1)+ "_(" + std::to_string(this->primeNum) + ")");
+            varNames.push_back("ptd_" + std::to_string(this->blockId) + "_" + std::to_string(2*i + 1)+ "_(" + std::to_string(this->primeNum) + ")");
         }
-        varNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*this->length));
-        varNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*this->length + 1));
+        varNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*this->length)+ "_(" + std::to_string(this->primeNum) + ")");
+        varNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*this->length + 1)+ "_(" + std::to_string(this->primeNum) + ")");
         std::vector<z3::expr> bnfVars;
         for(std::string s : varNames){
             z3::expr tempVar = this->z3Ctx->int_const(s.c_str());
@@ -23,12 +23,12 @@ namespace smack
     std::vector<z3::expr> BlockNormalForm::getBNFAddrVars(){
         std::list<std::string> addrVarNames;
         for(int i = 0; i < this->length; i++){
-            addrVarNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*i));
-            addrVarNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*i + 1));
-            addrVarNames.push_back("pta_" + std::to_string(this->blockId) + "_" + std::to_string(2*i + 1));
+            addrVarNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*i) + "_(" + std::to_string(this->primeNum) + ")");
+            addrVarNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*i + 1)+ "_(" + std::to_string(this->primeNum) + ")");
+            addrVarNames.push_back("pta_" + std::to_string(this->blockId) + "_" + std::to_string(2*i + 1)+ "_(" + std::to_string(this->primeNum) + ")");
         }
-        addrVarNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*this->length));
-        addrVarNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*this->length + 1));
+        addrVarNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*this->length)+ "_(" + std::to_string(this->primeNum) + ")");
+        addrVarNames.push_back("blka_" + std::to_string(this->blockId) + "_" + std::to_string(2*this->length + 1)+ "_(" + std::to_string(this->primeNum) + ")");
         std::vector<z3::expr> bnfAddrVars;
         for(std::string s : addrVarNames){
             z3::expr tempVar = this->z3Ctx->int_const(s.c_str());
@@ -42,7 +42,7 @@ namespace smack
     std::vector<z3::expr> BlockNormalForm::getBNFDataVars(){
         std::list<std::string> dataVarNames;
         for(int i = 0; i < this->length; i ++){
-            dataVarNames.push_back("ptd_" + std::to_string(this->blockId) + "_" + std::to_string(2 * i + 1));
+            dataVarNames.push_back("ptd_" + std::to_string(this->blockId) + "_" + std::to_string(2 * i + 1)+ "_(" + std::to_string(this->primeNum) + ")");
         }
         std::vector<z3::expr> bnfDataVars;
         for(std::string s : dataVarNames){
@@ -139,6 +139,17 @@ namespace smack
 
         z3::expr finalResult = (blkImplicitCons && rnfImplicitCons);
         return finalResult;
+    }
+
+    std::vector<z3::expr> RegionNormalForm::getRNFVars(){
+        std::vector<z3::expr> rnfVars;
+        for(BNFPtr bnf : this->bnfList){
+            std::vector<z3::expr> bnfVars = bnf->getBNFVars();
+            for(z3::expr var : bnfVars){
+                rnfVars.push_back(var);
+            }
+        }
+        return rnfVars;
     }
 
 } // namespace smack

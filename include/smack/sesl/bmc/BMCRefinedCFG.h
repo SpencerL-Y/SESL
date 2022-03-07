@@ -64,12 +64,18 @@ namespace smack
             const Expr* arg1;
             const Expr* arg2;
             const Expr* arg3;
+            int type1;
+            int type2;
+            int type3;
             ConcreteAction::ActType actType;
         public:
-            RefinedAction(ConcreteAction::ActType at, const Expr* arg1, const Expr* arg2, const Expr* arg3) : actType(at), arg1(arg1), arg2(arg2), arg3(arg3){}
+            RefinedAction(ConcreteAction::ActType at, const Expr* arg1, const Expr* arg2, const Expr* arg3, int t1, int t2, int t3) : actType(at), arg1(arg1), arg2(arg2), arg3(arg3), type1(t1), type2(t2), type3(t3){}
             const Expr* getArg1(){return arg1;}
             const Expr* getArg2(){return arg2;}
             const Expr* getArg3(){return arg3;}
+            int getType1(){return this->type1;}
+            int getType2(){return this->type2;}
+            int getType3(){return this->type3;}
             ConcreteAction::ActType getActType(){return this->actType;}
             void print();
     };
@@ -96,18 +102,14 @@ namespace smack
             int vertexNum;
             std::list<ConcreteEdgePtr> concreteEdges;
             std::unordered_map<std::string, int> nameToConcreteState;
-            std::unordered_map<std::string, std::string> varTypes;
-            std::vector<ConstDecl*> constDelcs;
+            CFGPtr origCfg;
         public:
             ConcreteCFG(
-                CFGPtr origCfg, 
-                // variable types
-                std::unordered_map<std::string, std::string> vt,
-                std::vector<ConstDecl*> cds
+                CFGPtr origCfg
             );
             void printConcreteCFG();
-            std::unordered_map<std::string, std::string> getVarTypes(){return this->varTypes;};
             int getVertexNum(){return this->vertexNum;}
+            CFGPtr getOrigCfg(){return this->origCfg;}
             std::list<ConcreteEdgePtr> getConcreteEdges(){return this->concreteEdges;}
     };
     typedef std::shared_ptr<ConcreteCFG> ConcreteCFGPtr;
@@ -119,9 +121,8 @@ namespace smack
         private:
             int vertexNum;
             std::list<RefinedEdgePtr> refinedEdges;
-            std::unordered_map<std::string, std::string> refinedVarTypes;
+            CFGPtr origCfg;
         public:
-            // TODObmc: use Stmt Formatter when constructing BMCRefinedCFG
             BMCRefinedCFG(ConcreteCFGPtr conCfg);
             void printRefinedCFG();
 

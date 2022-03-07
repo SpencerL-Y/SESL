@@ -99,15 +99,10 @@ namespace smack
         std::cout << std::endl; 
     }
 
-    ConcreteCFG::ConcreteCFG(
-        CFGPtr origCfg,
-        std::unordered_map<std::string, std::string> vt,
-        std::vector<ConstDecl*> cds
-    ) {
-        this->varTypes = vt;
-        this->constDelcs = cds;
+    ConcreteCFG::ConcreteCFG(CFGPtr origCfg) {
         // Construct the concrete cfg from original one
         this->vertexNum = 0;
+        this->origCfg = origCfg;
         int stateId = 0;
         for(StatePtr statePtr : origCfg->getStates()){
             BMCDEBUG(std::cout << "INFO: Begin translating state: " << statePtr->getBlockName() << std::endl;);
@@ -154,12 +149,8 @@ namespace smack
             edge->print();
         }
         std::cout << "INFO: ----------- VarTypes: " << std::endl;
-        for(auto varTypePair : this->varTypes){
+        for(auto varTypePair : this->origCfg->getVarTypes()){
             std::cout << varTypePair.first + " " + varTypePair.second << std::endl;
-        }
-        std::cout << "INFO: ----------- ConstDecls: " << std::endl;
-        for(ConstDecl* cd : this->constDelcs){
-            cd->print(std::cout);
         }
         std::cout << std::endl;
     }
@@ -170,6 +161,7 @@ namespace smack
         std::cout << " ARG1: ";
         if(this->arg1 != nullptr){
             this->arg1->print(std::cout);
+            std::cout << "(" << this->type1 << ") " << std::endl;
         } else {
             std::cout << " <NULL>";
         }
@@ -177,6 +169,7 @@ namespace smack
         std::cout << " ARG2: ";
         if(this->arg2 != nullptr){
             this->arg2->print(std::cout);
+            std::cout << "(" << this->type2 << ") " << std::endl;
         } else {
             std::cout << " <NULL>";
         }
@@ -184,6 +177,7 @@ namespace smack
         std::cout << " ARG1: ";
         if(this->arg3 != nullptr){
             this->arg3->print(std::cout);
+            std::cout << "(" << this->type3 << ") " << std::endl;
         } else {
             std::cout << " <NULL>";
         }
@@ -199,10 +193,10 @@ namespace smack
     }
 
     BMCRefinedCFG::BMCRefinedCFG(ConcreteCFGPtr conCfg){
-        StmtFormatterPtr formatter = std::make_shared<StmtFormatter>();
+        StmtFormatterPtr formatter = std::make_shared<StmtFormatter>(conCfg->getOrigCfg());
         // TODObmc: this should be problematic since variables appears not only restricts in the cfg vars, but also constDecls
-        this->refinedVarTypes = conCfg->getVarTypes();
         this->vertexNum = conCfg->getVertexNum();
+        this->origCfg = conCfg->getOrigCfg();
         for(ConcreteEdgePtr conEdge : conCfg->getConcreteEdges()){
             RefinedEdgePtr refinedEdge = formatter->convert(conEdge);
             this->refinedEdges.push_back(refinedEdge);
@@ -217,7 +211,7 @@ namespace smack
             edge->print();
         }
         std::cout << "INFO: ----------- VarTypes: " << std::endl;
-        for(auto varTypePair : this->refinedVarTypes){
+        for(auto varTypePair : this->origCfg->getVarTypes()){
             std::cout << varTypePair.first + " " + varTypePair.second << std::endl;
         }
         std::cout << std::endl;

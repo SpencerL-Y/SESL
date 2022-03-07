@@ -16,10 +16,12 @@ namespace smack
     class StmtFormatter
     {
     private:
+
+        CFGPtr origCfg;
         // assume stmt parsing
         std::vector<RefinedActionPtr> resolveAssumeStmt(const AssumeStmt* ass);
         const Expr* parseCondition(const Expr* origCond);
-
+        
         // assign stmt parsing
         std::vector<RefinedActionPtr> resolveSingleAssignStmt(const AssignStmt* assign);
         // TODObmc: watch out the order to push to the new list
@@ -46,11 +48,15 @@ namespace smack
 
         // assert stmt parsing
         std::vector<RefinedActionPtr> resolveAssertStmt(const AssertStmt* assertStmt);
+
+        // var type computing
+        int getVarByteSize(std::string varName);
+        int getPtrVarStepWidth(std::string ptrVarName);
     public:
 
         static MemoryManagerPtr ExprMemoryManager;
 
-        StmtFormatter(){};
+        StmtFormatter(CFGPtr origCfg) : origCfg(origCfg){}
 
         RefinedEdgePtr convert(ConcreteEdgePtr origEdge);
 

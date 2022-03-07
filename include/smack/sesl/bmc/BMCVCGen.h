@@ -8,9 +8,58 @@
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 #include "smack/sesl/bmc/StmtFormatter.h"
 
+#define BOT -1
 
 namespace smack
 {
+    class BlockNormalForm {
+        private:
+            int blockId;
+            int length;
+            int primeNum;
+            z3::context* z3Ctx;
+        public:
+            BlockNormalForm(z3::context& ctx, int blockId, int l, int primeNum){
+                this->z3Ctx = &ctx;
+                this->blockId = blockId;
+                this->length = l;
+                this->primeNum = primeNum;
+            }
+            int getLength(){return this->length;}
+            int getBlockId(){return this->blockId;}
+            int getPrimeNum(){return this->primeNum;}
+
+            std::vector<z3::expr> getBNFVars();
+            std::vector<z3::expr> getBNFAddrVars();
+            std::vector<z3::expr> getBNFDataVars();
+            z3::expr generateImplicitConstraint();
+            z3::expr generateInitialCondition();
+            
+            // TODObmc: return the used var in the bnf formula
+    };
+    typedef std::shared_ptr<BlockNormalForm> BNFPtr;
+
+    class RegionNormalForm {
+        private:
+            int maxRegionNum;
+            int primeNum;
+            int length;
+            z3::context* z3Ctx;
+            std::vector<BNFPtr> bnfList;
+        public:
+            // TODObmc: imple
+            RegionNormalForm(z3::context& ctx, int regionNum, int length, int primeNum);
+            int getMaxRegionNum(){return this->maxRegionNum;}
+            int getPrimeNum(){return this->primeNum;}
+            int getLength(){return this->length;}
+            std::vector<BNFPtr> getBnfList(){return this->bnfList;}
+            z3::expr generateImplicitConstraint();
+            z3::expr genreateInitialCondition();
+            std::vector<z3::expr> getRNFVars();
+    };
+    typedef std::shared_ptr<RegionNormalForm> RNFPtr;
+
+
     class BMCVCGen {
         private:
             z3::context z3Ctx;
@@ -36,48 +85,24 @@ namespace smack
             z3::expr generateATSTransitionRelation();
 
             // Stmt semantic encoding
-            z3::expr generateTrMalloc(int u);
-            z3::expr generateTrFree(int u);
-            z3::expr generateTrStore(int u);
-            z3::expr generateTrLoad(int u);
-            z3::expr generateTrUnchage(int u);
-            z3::expr generateTrAssert(int u);
-            z3::expr generateTrOtherProc(int u);
-            z3::expr generateTrCommonAssign(int u);
-            z3::expr generateTrOther(int u);
+            z3::expr generateTrMalloc(RNFPtr rnf);
+            z3::expr generateTrFree(RNFPtr rnf);
+            z3::expr generateTrStore(RNFPtr rnf);
+            z3::expr generateTrLoad(RNFPtr rnf);
+            z3::expr generateTrUnchage(RNFPtr rnf);
+            z3::expr generateTrAssert(RNFPtr rnf);
+            z3::expr generateTrOtherProc(RNFPtr rnf);
+            z3::expr generateTrCommonAssign(RNFPtr rnf);
+            z3::expr generateTrOther(RNFPtr rnf);
+
+            // Utilities
+            z3::expr generateRemainUnchanged();
+
+            // Vars Utilities
+            std::vector<z3::expr> getATSVars();
     };
 
-    class BlockNormalForm {
-        private:
-            int regId;
-            int length;
-            int primeNum;
-            z3::context* z3Ctx;
-        public:
-            BlockNormalForm(z3::context& ctx, int regId, int l, int primeNum){
-                this->z3Ctx = &ctx;
-                this->regId = regId;
-                this->length = l;
-                this->primeNum = primeNum;
-            }
-            int getLength(){return this->length;}
-            std::vector<z3::expr> getBNFVars();
-            // TODObmc: return the used var in the bnf formula
-    };
-    typedef std::shared_ptr<BlockNormalForm> BNFPtr;
-
-    class RegionNormalForm {
-        private:
-            int maxRegionNum;
-            int primeNum;
-            z3::context* z3Ctx;
-            std::vector<BNFPtr> bnfList;
-        public:
-            // TODObmc: imple
-            RegionNormalForm(z3::context& ctx, int regionNum, int primeNum);
-    };
-    typedef std::shared_ptr<RegionNormalForm> RNFPtr;
-
+    
 
 } // namespace smack
 

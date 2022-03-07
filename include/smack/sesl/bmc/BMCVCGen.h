@@ -8,6 +8,7 @@
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 #include "smack/sesl/bmc/StmtFormatter.h"
 
+#define BOT -1
 
 namespace smack
 {
@@ -30,9 +31,9 @@ namespace smack
 
             std::vector<z3::expr> getBNFVars();
             std::vector<z3::expr> getBNFAddrVars();
-            std::vector<std::pair<z3::expr, z3::expr>> getBNFEqualPairs();
+            std::vector<z3::expr> getBNFDataVars();
             z3::expr generateImplicitConstraint();
-            z3::expr generateInitialConfiguration();
+            z3::expr generateInitialCondition();
             
             // TODObmc: return the used var in the bnf formula
     };
@@ -42,15 +43,18 @@ namespace smack
         private:
             int maxRegionNum;
             int primeNum;
+            int length;
             z3::context* z3Ctx;
             std::vector<BNFPtr> bnfList;
         public:
             // TODObmc: imple
-            RegionNormalForm(z3::context& ctx, int regionNum, int primeNum);
+            RegionNormalForm(z3::context& ctx, int regionNum, int length, int primeNum);
             int getMaxRegionNum(){return this->maxRegionNum;}
             int getPrimeNum(){return this->primeNum;}
+            int getLength(){return this->length;}
             std::vector<BNFPtr> getBnfList(){return this->bnfList;}
             z3::expr generateImplicitConstraint();
+            z3::expr genreateInitialCondition();
             std::vector<z3::expr> getRNFVars();
     };
     typedef std::shared_ptr<RegionNormalForm> RNFPtr;
@@ -90,6 +94,12 @@ namespace smack
             z3::expr generateTrOtherProc(RNFPtr rnf);
             z3::expr generateTrCommonAssign(RNFPtr rnf);
             z3::expr generateTrOther(RNFPtr rnf);
+
+            // Utilities
+            z3::expr generateRemainUnchanged();
+
+            // Vars Utilities
+            std::vector<z3::expr> getATSVars();
     };
 
     

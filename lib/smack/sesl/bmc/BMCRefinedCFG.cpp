@@ -105,30 +105,30 @@ namespace smack
         this->vertexNum = 0;
         this->edgeNum = 0;
         this->origCfg = origCfg;
-        int stateId = 0;
+        int vertexId = 0;
         int edgeId = 0;
         for(StatePtr statePtr : origCfg->getStates()){
             BMCDEBUG(std::cout << "INFO: Begin translating state: " << statePtr->getBlockName() << std::endl;);
 
-            stateId += 1;
+            vertexId += 1;
             this->vertexNum += 1;
             StatementList origStateStmts = statePtr->getStateBlock()->getStatements();
             
             std::string entryName = statePtr->getBlockName() + "_entry";
-            this->nameToConcreteState[entryName] = stateId;
+            this->nameToConcreteState[entryName] = vertexId;
 
             for(const Stmt* stmt : origStateStmts){
-                int newStateId = stateId +1;
-                ConcreteEdgePtr edge = std::make_shared<ConcreteEdge>(stateId, newStateId, stmt, edgeId);
+                int newvertexId = vertexId +1;
+                ConcreteEdgePtr edge = std::make_shared<ConcreteEdge>(vertexId, newvertexId, stmt, edgeId);
                 this->concreteEdges.push_back(edge);
-                stateId = newStateId;
+                vertexId = newvertexId;
                 this->vertexNum += 1;
                 edgeId += 1;
                 this->edgeNum += 1;
             }
 
             std::string exitName = statePtr->getBlockName() + "_exit";
-            this->nameToConcreteState[exitName] = stateId;
+            this->nameToConcreteState[exitName] = vertexId;
         }
         
         for(StatePtr statePtr : origCfg->getStates()){
@@ -205,19 +205,27 @@ namespace smack
         this->edgeNum = conCfg->getEdgeNum();
         this->origCfg = conCfg->getOrigCfg();
         std::map<int, bool> tempFinalVertices;
-        for(int stateId = 0; stateId < this->vertexNum; stateId++){
-            tempFinalVertices[stateId] = true;
+        std::map<int, bool> tempInitVertices;
+        for(int vertexId = 0; vertexId < this->vertexNum; vertexId++){
+            tempFinalVertices[vertexId] = true;
+            tempInitVertices[vertexId] = true;
         }
         for(ConcreteEdgePtr conEdge : conCfg->getConcreteEdges()){
             RefinedEdgePtr refinedEdge = formatter->convert(conEdge);
             this->refinedEdges.push_back(refinedEdge);
             this->edge2IdMap[refinedEdge] = refinedEdge->getEdgeId();
             tempFinalVertices[refinedEdge->getFrom()] = false;
+            tempInitVertices[refinedEdge->getTo()] = false;
         }
-        // sort out the final vertices
+        // sort out the final and init vertices
         for(std::pair<int, bool> finalPair : tempFinalVertices){
             if(finalPair.second){
                 this->finalVertices.insert(finalPair.first);
+            }
+        }
+        for(std::pair<int, bool> initPair : tempInitVertices){
+            if(initPair.second){
+                this->initVertices.insert(initPair.first);
             }
         }
         // add self loops for the final vertices
@@ -231,7 +239,56 @@ namespace smack
             this->edgeNum += 1;
         }
     }   
+
+
+    std::list<RefinedEdgePtr> BMCRefinedCFG::getEdgesStartFrom(int fromVertex){
+        assert(fromVertex >= 0 && fromVertex < this->vertexNum);
+        std::list<RefinedEdgePtr> startEdges;
+        for(RefinedEdgePtr edge : this->refinedEdges){
+            if(edge->getFrom() == fromVertex){
+                startEdges.push_back(edge);
+            }
+        }
+        return startEdges;
+    }
+
+    std::list<RefinedEdgePtr> BMCRefinedCFG::getEdgesEndWith(int toVertex){
+        assert(toVertex >= 0 && toVertex < this->vertexNum);
+        std::list<RefinedEdgePtr> toEdges;
+        for(RefinedEdgePtr edge : this->refinedEdges){
+            if(edge->getTo() == toVertex){
+                toEdges.push_back(edge);
+            }
+        }
+        return toEdges;
+    }
+
+    int BMCRefinedCFG::mapEdge2Id(RefinedEdgePtr edge){
+        if(this->edge2IdMap.find(edge) != this->edge2IdMap.end()){
+            return this->edge2IdMap[edge];
+        } else {
+            BMCDEBUG(std::cout << "ERROR: edge does not exist in BMCRefinedCFG" << std::endl;);
+            assert(false);
+            return -1;
+        }
+    }
     
+    bool BMCRefinedCFG::isInitVertex(int vertexId){
+        if(this->initVertices.find(vertexId) != this->initVertices.end()){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool BMCRefinedCFG::isFinalVertex(int vertexId){
+        if(this->finalVertices.find(vertexId) != this->finalVertices.end()){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     void BMCRefinedCFG::printRefinedCFG(){
         std::cout << "INFO: -------------- Print Refined CFG" << std::endl;
         std::cout << "INFO: ----------- Num of Vertices: " << this->vertexNum << std::endl;
@@ -245,4 +302,5 @@ namespace smack
         }
         std::cout << std::endl;
     }
+
 } // namespace smack

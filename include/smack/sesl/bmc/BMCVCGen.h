@@ -98,12 +98,12 @@ namespace smack
             }
 
             z3::expr generateATSInitConfiguration();
-            z3::expr generateATSTransitionRelation();
+            z3::expr generateATSTransitionRelation(int u);
             // initial configuration generation
             z3::expr generateCFGInitCondition();
             z3::expr generateRNFInitCondition();
-            z3::expr generateCFGTransition();
-            z3::expr generateRNFTransition();
+            z3::expr generateCFGTransition(int u);
+            z3::expr generateRNFTransition(int u);
 
             // feasibility and violation
             z3::expr generateFeasibleVC();

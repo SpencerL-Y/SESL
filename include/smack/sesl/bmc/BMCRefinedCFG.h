@@ -128,26 +128,24 @@ namespace smack
             int edgeNum;
             std::list<RefinedEdgePtr> refinedEdges;
             std::unordered_map<RefinedEdgePtr, int> edge2IdMap;
+            std::set<int> initVertices;
             std::set<int> finalVertices;
             CFGPtr origCfg;
         public:
         // TODObmc: add self loop and tag for exit vertex
             BMCRefinedCFG(ConcreteCFGPtr conCfg);
             std::list<RefinedEdgePtr> getRefinedEdges(){return this->refinedEdges;}
-            RefinedEdgePtr mapEdge2Id(RefinedEdgePtr edge);
-            std::set<int> getFinalVertices(){return this->finalVertices;}
+            std::list<RefinedEdgePtr> getEdgesStartFrom(int fromVertex);
+            std::list<RefinedEdgePtr> getEdgesEndWith(int toVertex);
+            int mapEdge2Id(RefinedEdgePtr edge);
             int getVertexNum(){return this->vertexNum;}
             int getEdgeNum(){return this->edgeNum;}
-            bool isFinalVertex(int stateId){
-                if(this->finalVertices.find(stateId) != this->finalVertices.end()){
-                    return true;
-                } else {
-                    return false;
-                }
-            }
+            std::set<int> getInitVertices(){return this->initVertices;}
+            bool isInitVertex(int vertexId);
+            std::set<int> getFinalVertices(){return this->finalVertices;}
+            bool isFinalVertex(int vertexId);
 
             void printRefinedCFG();
-
     };
 
     typedef std::shared_ptr<BMCRefinedCFG> BMCRefinedCFGPtr;

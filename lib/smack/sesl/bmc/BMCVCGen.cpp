@@ -110,6 +110,7 @@ namespace smack
         for(BNFPtr bnf : this->bnfList){
             rnfInitCond = (rnfInitCond && bnf->generateInitialCondition());
         }
+        rnfInitCond = rnfInitCond && this->generateImplicitConstraint();
         return rnfInitCond;
     }
     
@@ -152,4 +153,120 @@ namespace smack
         return rnfVars;
     }
 
+    z3::expr BMCVCGen::generateATSInitConfiguration(){
+        z3::expr cfgInitCondition = this->generateCFGInitCondition();
+        z3::expr rnfInitCondition = this->generateRNFInitCondition();
+        z3::expr initResult = rnfInitCondition && cfgInitCondition;
+        return initResult;
+    }
+
+    z3::expr BMCVCGen::generateATSTransitionRelation(int u){
+        z3::expr cfgTran = this->generateCFGTransition(u);
+        z3::expr rnfTran = this->generateRNFTransition(u);
+        z3::expr atsTransResult = cfgTran && rnfTran;
+        return atsTransResult;
+    }
+
+    // initial configuration generation
+    z3::expr BMCVCGen::generateCFGInitCondition(){
+        // initially loc must represent a initial location
+        z3::expr initCfg = this->z3Ctx.bool_val(false);
+        for(int vertexId : this->refCfg->getInitVertices()){
+            initCfg = (initCfg || (this->getLocVar(0) == vertexId));
+        }
+        return initCfg;
+    }
+    
+    z3::expr BMCVCGen::generateRNFInitCondition(){
+        return this->currentRNF->genreateInitialCondition();
+    }
+
+    z3::expr BMCVCGen::generateCFGTransition(int u){
+        z3::expr currentLocationIsAtSomeVertex = this->z3Ctx.bool_val(false);
+        for(int vertexId = 0; vertexId < this->refCfg->getVertexNum(); vertexId ++){
+            currentLocationIsAtSomeVertex = (
+                currentLocationIsAtSomeVertex ||
+                this->getLocVar(u) == vertexId
+            );
+        }
+
+        z3::expr encodeEdgesAndActionsForEachVertex = this->z3Ctx.bool_val(true);
+        for(int startVertex = 0; startVertex < this->refCfg->getVertexNum(); startVertex ++){
+            z3::expr currentStateIsStartVertex = (this->getLocVar(u) == startVertex);
+            z3::expr behaviorForEachEdge = this->z3Ctx.bool_val(false);
+            std::list<RefinedEdgePtr> startEdgeList = this->refCfg->getEdgesStartFrom(startVertex);
+            for(RefinedEdgePtr edge : startEdgeList){
+                // TODObmc: distinguish the situation where an edge has several actions
+                if(edge->getRefinedActions().size() <= 1){
+                    z3::expr edgeActionEncoding = this->z3Ctx.bool_val(true);
+                    edgeActionEncoding = edgeActionEncoding && (this->getActVar(u) ==   edge->getRefinedActions()[0]->getActType());
+                    // TODObmc: stop here, to be added later
+                    // need to give encodings for different situations of actionType
+                    //edgeActionEncoding = edgeActionEncoding && (this->getArgVar(1, u) == )
+                }
+            }
+        }
+
+    }
+
+    z3::expr BMCVCGen::generateRNFTransition(int u){
+
+    }
+
+    // feasibility and violation
+    z3::expr BMCVCGen::generateFeasibleVC(){}
+    z3::expr BMCVCGen::generateViolation(){}
+    // Detailed violation situation encodings
+    // Stmt semantic encoding
+    z3::expr BMCVCGen::generateTrMalloc(){}
+    z3::expr BMCVCGen::generateTrFree(){}
+    z3::expr BMCVCGen::generateTrStore(){}
+    z3::expr BMCVCGen::generateTrLoad(){}
+    z3::expr BMCVCGen::generateTrUnchage(){}
+    z3::expr BMCVCGen::generateTrAssert(){}
+    z3::expr BMCVCGen::generateTrOtherProc(){}
+    z3::expr BMCVCGen::generateTrCommonAssign(){}
+    z3::expr BMCVCGen::generateTrOther(){}
+    // Utilities
+    z3::expr BMCVCGen::generateRemainUnchanged(){}
+    z3::expr BMCVCGen::generateShiftAddress(){}
+    // Vars Utilities
+    std::vector<z3::expr> BMCVCGen::getATSVars(int u){}
+
+    std::vector<z3::expr> BMCVCGen::getUtilVars(int u){
+        std::vector<z3::expr> utilVars;
+        utilVars.push_back(this->getLocVar(u));
+        utilVars.push_back(this->getActVar(u));
+        utilVars.push_back(this->getArgVar(1, u));
+        utilVars.push_back(this->getArgVar(2, u));
+        utilVars.push_back(this->getArgVar(3, u));
+        utilVars.push_back(this->getTypeVar(1, u));
+        utilVars.push_back(this->getTypeVar(2, u));
+        utilVars.push_back(this->getTypeVar(3, u));
+        return utilVars;
+    }
+
+    z3::expr BMCVCGen::getLocVar(int u){
+        std::string locVarName = "loc_" + std::to_string(u);
+        z3::expr locVar = this->z3Ctx.int_const(locVarName.c_str());
+        return locVar;
+    }
+
+    z3::expr BMCVCGen::getActVar(int u){
+        std::string actVarName = "act_" + std::to_string(u);
+        z3::expr actVar = this->z3Ctx.int_const(actVarName.c_str());
+        return actVar;
+    }
+
+    z3::expr BMCVCGen::getArgVar(int index, int u){
+        std::string argVarName = "arg_" + std::to_string(index);
+        z3::expr argVar = this->z3Ctx.int_const(argVarName.c_str());
+        return argVar;
+    }
+
+    z3::expr BMCVCGen::getTypeVar(int index, int u){
+        std::string typeVarName = "type_" + std::to_string(index);
+        z3::expr typeVar = this->z3Ctx.int_const(typeVarName.c_str());
+        return typeVar;
+    }
 } // namespace smack

@@ -81,9 +81,10 @@ namespace smack
         }
     }
 
-    ConcreteEdge::ConcreteEdge(int from, int to, const Stmt* s) {
+    ConcreteEdge::ConcreteEdge(int from, int to, const Stmt* s, int id) {
         this->fromVertex = from;
         this->toVertex = to;
+        this->edgeId = id;
         // TODO: create action for the edge
         ConcreteActionPtr newAction = std::make_shared<ConcreteAction>(s);
         this->action = newAction;
@@ -102,8 +103,10 @@ namespace smack
     ConcreteCFG::ConcreteCFG(CFGPtr origCfg) {
         // Construct the concrete cfg from original one
         this->vertexNum = 0;
+        this->edgeNum = 0;
         this->origCfg = origCfg;
         int stateId = 0;
+        int edgeId = 0;
         for(StatePtr statePtr : origCfg->getStates()){
             BMCDEBUG(std::cout << "INFO: Begin translating state: " << statePtr->getBlockName() << std::endl;);
 
@@ -116,10 +119,12 @@ namespace smack
 
             for(const Stmt* stmt : origStateStmts){
                 int newStateId = stateId +1;
-                ConcreteEdgePtr edge = std::make_shared<ConcreteEdge>(stateId, newStateId, stmt);
+                ConcreteEdgePtr edge = std::make_shared<ConcreteEdge>(stateId, newStateId, stmt, edgeId);
                 this->concreteEdges.push_back(edge);
                 stateId = newStateId;
                 this->vertexNum += 1;
+                edgeId += 1;
+                this->edgeNum += 1;
             }
 
             std::string exitName = statePtr->getBlockName() + "_exit";
@@ -135,7 +140,8 @@ namespace smack
                 int from = this->nameToConcreteState[fromKey];
                 int to = this->nameToConcreteState[toKey];
                 const Stmt* actionStmt = destEdgePair.second->getGuard().getStmt();
-                ConcreteEdgePtr edge = std::make_shared<ConcreteEdge>(from, to, actionStmt);
+                ConcreteEdgePtr edge = std::make_shared<ConcreteEdge>(from, to, actionStmt, edgeId);
+                edgeId += 1;
                 this->concreteEdges.push_back(edge);
             }    
         }
@@ -196,10 +202,33 @@ namespace smack
         StmtFormatterPtr formatter = std::make_shared<StmtFormatter>(conCfg->getOrigCfg());
         // TODObmc: this should be problematic since variables appears not only restricts in the cfg vars, but also constDecls
         this->vertexNum = conCfg->getVertexNum();
+        this->edgeNum = conCfg->getEdgeNum();
         this->origCfg = conCfg->getOrigCfg();
+        std::map<int, bool> tempFinalVertices;
+        for(int stateId = 0; stateId < this->vertexNum; stateId++){
+            tempFinalVertices[stateId] = true;
+        }
         for(ConcreteEdgePtr conEdge : conCfg->getConcreteEdges()){
             RefinedEdgePtr refinedEdge = formatter->convert(conEdge);
             this->refinedEdges.push_back(refinedEdge);
+            this->edge2IdMap[refinedEdge] = refinedEdge->getEdgeId();
+            tempFinalVertices[refinedEdge->getFrom()] = false;
+        }
+        // sort out the final vertices
+        for(std::pair<int, bool> finalPair : tempFinalVertices){
+            if(finalPair.second){
+                this->finalVertices.insert(finalPair.first);
+            }
+        }
+        // add self loops for the final vertices
+        for(int finalId : this->finalVertices){
+            int currentEdgeId = this->edgeNum;
+            std::vector<RefinedActionPtr> emptyActions;
+            RefinedEdgePtr selfLoop = std::make_shared<RefinedEdge>(emptyActions, finalId, finalId, currentEdgeId);
+            this->edge2IdMap[selfLoop] = currentEdgeId;
+            this->refinedEdges.push_back(selfLoop);
+            currentEdgeId += 1;
+            this->edgeNum += 1;
         }
     }   
     

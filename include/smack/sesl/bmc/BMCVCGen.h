@@ -29,11 +29,20 @@ namespace smack
             int getBlockId(){return this->blockId;}
             int getPrimeNum(){return this->primeNum;}
 
+            // getVars
             std::vector<z3::expr> getBNFVars();
             std::vector<z3::expr> getBNFAddrVars();
             std::vector<z3::expr> getBNFDataVars();
+            // \mu formula
             z3::expr generateImplicitConstraint();
+            // initial condition
             z3::expr generateInitialCondition();
+            // semantic conditions
+            z3::expr generateInsertBytePt(/*TODObmc*/);
+            z3::expr generateLoadBytePt(/* TODObmc*/);
+        
+            void increasePrimeNum();
+
             
             // TODObmc: return the used var in the bnf formula
     };
@@ -53,9 +62,17 @@ namespace smack
             int getPrimeNum(){return this->primeNum;}
             int getLength(){return this->length;}
             std::vector<BNFPtr> getBnfList(){return this->bnfList;}
-            z3::expr generateImplicitConstraint();
-            z3::expr genreateInitialCondition();
+            // getVars
             std::vector<z3::expr> getRNFVars();
+            // \nu formula
+            z3::expr generateImplicitConstraint();
+            // initial condition 
+            z3::expr genreateInitialCondition();
+            // semantic conditions
+            z3::expr generateInsertBytePt(/*TODObmc*/);
+            z3::expr generateLoadBytePt(/* TODObmc*/);
+            // increase primeNum
+            void increasePrimeNum();
     };
     typedef std::shared_ptr<RegionNormalForm> RNFPtr;
 
@@ -65,8 +82,9 @@ namespace smack
             z3::context z3Ctx;
             BMCRefinedCFGPtr refCfg;
             std::set<z3::expr> normalFormVariables;
-            std::set<z3::expr> conCfgVariables;
-            std::set<z3::expr> trUtilVariables;
+            std::set<std::string> conCfgVariables;
+            std::set<std::string> trUtilVariables;
+            RNFPtr currentRNF;
 
             int regionNum;
             int pointsToNum;
@@ -75,31 +93,46 @@ namespace smack
                 // TODObmc: need to imple:
                 //1. obtain conCfgVariables from refinedCFG
                 //2. create trUtilVariables
-                //3. create normalFormVariables 
+                //3. get normalFormVariables 
+                //4. do preanalysis to determine regionNum and PointsToNum, then we can initialize currentRNF
             }
+
+            z3::expr generateATSInitConfiguration();
+            z3::expr generateATSTransitionRelation(int u);
+            // initial configuration generation
+            z3::expr generateCFGInitCondition();
+            z3::expr generateRNFInitCondition();
+            z3::expr generateCFGTransition(int u);
+            z3::expr generateRNFTransition(int u);
+
+            // feasibility and violation
             z3::expr generateFeasibleVC();
             z3::expr generateViolation();
 
             // Detailed violation situation encodings
 
-            z3::expr generateATSTransitionRelation();
-
             // Stmt semantic encoding
-            z3::expr generateTrMalloc(RNFPtr rnf);
-            z3::expr generateTrFree(RNFPtr rnf);
-            z3::expr generateTrStore(RNFPtr rnf);
-            z3::expr generateTrLoad(RNFPtr rnf);
-            z3::expr generateTrUnchage(RNFPtr rnf);
-            z3::expr generateTrAssert(RNFPtr rnf);
-            z3::expr generateTrOtherProc(RNFPtr rnf);
-            z3::expr generateTrCommonAssign(RNFPtr rnf);
-            z3::expr generateTrOther(RNFPtr rnf);
+            z3::expr generateTrMalloc();
+            z3::expr generateTrFree();
+            z3::expr generateTrStore();
+            z3::expr generateTrLoad();
+            z3::expr generateTrUnchage();
+            z3::expr generateTrAssert();
+            z3::expr generateTrOtherProc();
+            z3::expr generateTrCommonAssign();
+            z3::expr generateTrOther();
 
             // Utilities
             z3::expr generateRemainUnchanged();
+            z3::expr generateShiftAddress();
 
             // Vars Utilities
-            std::vector<z3::expr> getATSVars();
+            std::vector<z3::expr> getATSVars(int u);
+            std::vector<z3::expr> getUtilVars(int u);
+            z3::expr getLocVar(int u);
+            z3::expr getActVar(int u);
+            z3::expr getArgVar(int index, int u);
+            z3::expr getTypeVar(int index, int u);
     };
 
     

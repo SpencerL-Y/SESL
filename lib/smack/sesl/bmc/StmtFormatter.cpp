@@ -52,7 +52,7 @@ namespace smack
             }
         }
 
-        RefinedEdgePtr refinedEdge = std::make_shared<RefinedEdge>(actionList, from, to);
+        RefinedEdgePtr refinedEdge = std::make_shared<RefinedEdge>(actionList, from, to, origEdge->getEdgeId());
         return refinedEdge;
     }
 

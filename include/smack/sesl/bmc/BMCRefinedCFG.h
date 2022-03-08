@@ -46,14 +46,15 @@ namespace smack
             int fromVertex;
             int toVertex;
             ConcreteActionPtr action;
+            int edgeId;
         public:
-            ConcreteEdge(int from, int to, ConcreteActionPtr act) : fromVertex(from), toVertex(to), action(act) {}
+            ConcreteEdge(int from, int to, ConcreteActionPtr act, int id) : fromVertex(from), toVertex(to), action(act), edgeId(id) {}
 
-            ConcreteEdge(int from, int to, const Stmt* s);
+            ConcreteEdge(int from, int to, const Stmt* s, int id);
             int getFromVertex(){ return this->fromVertex;}
             int getToVertex() {return this->toVertex;}
             ConcreteActionPtr getAction() { return this->action;}
-
+            int getEdgeId(){return this->edgeId;}
             void print();
     };
 
@@ -87,11 +88,13 @@ namespace smack
             int from;
             int to;
             std::vector<RefinedActionPtr> refinedActions;
+            int edgeId;
         public:
-            RefinedEdge(std::vector<RefinedActionPtr> rfa, int from, int to) : refinedActions(rfa), from(from), to(to) {}
+            RefinedEdge(std::vector<RefinedActionPtr> rfa, int from, int to, int id) : refinedActions(rfa), from(from), to(to), edgeId(id) {}
             int getFrom(){return this->from;}
             int getTo(){return this->to;}
             std::vector<RefinedActionPtr> getRefinedActions(){return this->refinedActions;}
+            int getEdgeId(){return this->edgeId;}
             void print();
     };
     
@@ -100,6 +103,7 @@ namespace smack
     class ConcreteCFG {
         private:
             int vertexNum;
+            int edgeNum;
             std::list<ConcreteEdgePtr> concreteEdges;
             std::unordered_map<std::string, int> nameToConcreteState;
             CFGPtr origCfg;
@@ -109,6 +113,7 @@ namespace smack
             );
             void printConcreteCFG();
             int getVertexNum(){return this->vertexNum;}
+            int getEdgeNum(){return this->edgeNum;}
             CFGPtr getOrigCfg(){return this->origCfg;}
             std::list<ConcreteEdgePtr> getConcreteEdges(){return this->concreteEdges;}
     };
@@ -120,12 +125,27 @@ namespace smack
     class BMCRefinedCFG {
         private:
             int vertexNum;
+            int edgeNum;
             std::list<RefinedEdgePtr> refinedEdges;
+            std::unordered_map<RefinedEdgePtr, int> edge2IdMap;
+            std::set<int> initVertices;
+            std::set<int> finalVertices;
             CFGPtr origCfg;
         public:
+        // TODObmc: add self loop and tag for exit vertex
             BMCRefinedCFG(ConcreteCFGPtr conCfg);
-            void printRefinedCFG();
+            std::list<RefinedEdgePtr> getRefinedEdges(){return this->refinedEdges;}
+            std::list<RefinedEdgePtr> getEdgesStartFrom(int fromVertex);
+            std::list<RefinedEdgePtr> getEdgesEndWith(int toVertex);
+            int mapEdge2Id(RefinedEdgePtr edge);
+            int getVertexNum(){return this->vertexNum;}
+            int getEdgeNum(){return this->edgeNum;}
+            std::set<int> getInitVertices(){return this->initVertices;}
+            bool isInitVertex(int vertexId);
+            std::set<int> getFinalVertices(){return this->finalVertices;}
+            bool isFinalVertex(int vertexId);
 
+            void printRefinedCFG();
     };
 
     typedef std::shared_ptr<BMCRefinedCFG> BMCRefinedCFGPtr;

@@ -180,10 +180,18 @@ namespace smack
             std::cout << " <NULL>";
         }
 
-        std::cout << " ARG1: ";
+        std::cout << " ARG3: ";
         if(this->arg3 != nullptr){
             this->arg3->print(std::cout);
             std::cout << "(" << this->type3 << ") " << std::endl;
+        } else {
+            std::cout << " <NULL>";
+        }
+
+        std::cout << " ARG4: ";
+        if(this->arg4 != nullptr){
+            this->arg4->print(std::cout);
+            std::cout << "(" << this->type4 << ") " << std::endl;
         } else {
             std::cout << " <NULL>";
         }

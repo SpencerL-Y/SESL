@@ -160,12 +160,6 @@ namespace smack
         return initResult;
     }
 
-    z3::expr BMCVCGen::generateATSTransitionRelation(int u){
-        z3::expr cfgTran = this->generateCFGTransition(u);
-        z3::expr rnfTran = this->generateRNFTransition(u);
-        z3::expr atsTransResult = cfgTran && rnfTran;
-        return atsTransResult;
-    }
 
     // initial configuration generation
     z3::expr BMCVCGen::generateCFGInitCondition(){
@@ -181,7 +175,7 @@ namespace smack
         return this->currentRNF->genreateInitialCondition();
     }
 
-    z3::expr BMCVCGen::generateCFGTransition(int u){
+    z3::expr BMCVCGen::generateATSTransitionRelation(int u){
         z3::expr currentLocationIsAtSomeVertex = this->z3Ctx.bool_val(false);
         for(int vertexId = 0; vertexId < this->refCfg->getVertexNum(); vertexId ++){
             currentLocationIsAtSomeVertex = (
@@ -197,20 +191,45 @@ namespace smack
             std::list<RefinedEdgePtr> startEdgeList = this->refCfg->getEdgesStartFrom(startVertex);
             for(RefinedEdgePtr edge : startEdgeList){
                 // TODObmc: distinguish the situation where an edge has several actions
-                if(edge->getRefinedActions().size() <= 1){
+                if(edge->getRefinedActions().size() == 0){
+
+                } else if(edge->getRefinedActions().size() == 1){
                     z3::expr edgeActionEncoding = this->z3Ctx.bool_val(true);
-                    edgeActionEncoding = edgeActionEncoding && (this->getActVar(u) ==   edge->getRefinedActions()[0]->getActType());
-                    // TODObmc: stop here, to be added later
+                    edgeActionEncoding = edgeActionEncoding && (this->getActVar(u) ==  edge->getRefinedActions()[0]->getActType());
                     // need to give encodings for different situations of actionType
                     //edgeActionEncoding = edgeActionEncoding && (this->getArgVar(1, u) == )
+                } else {
+
                 }
             }
         }
 
     }
 
-    z3::expr BMCVCGen::generateRNFTransition(int u){
+    z3::expr BMCVCGen::generateActTypeArgTemplateEncoding(RefinedActionPtr refAct, int u){
+        if(ConcreteAction::ActType::ASSERT == refAct->getActType()){
 
+        } else if(ConcreteAction::ActType::ASSUME == refAct->getActType()){
+
+        } else if(ConcreteAction::ActType::COMMONASSIGN == refAct->getActType()){
+
+        } else if(ConcreteAction::ActType::FREE == refAct->getActType()){
+
+        } else if(ConcreteAction::ActType::MALLOC == refAct->getActType()){
+
+        } else if(ConcreteAction::ActType::NULLSTMT == refAct->getActType()){
+
+        } else if(ConcreteAction::ActType::OTHER == refAct->getActType()){
+
+        } else if(ConcreteAction::ActType::OTHERPROC == refAct->getActType()){
+
+        } else if(ConcreteAction::ActType::STORE == refAct->getActType()){
+
+        } else if(ConcreteAction::ActType::LOAD == refAct->getActType()){
+
+        } else {
+            return this->z3Ctx.bool_val(false);
+        }
     }
 
     // feasibility and violation

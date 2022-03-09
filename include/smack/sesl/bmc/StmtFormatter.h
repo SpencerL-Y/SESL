@@ -10,6 +10,8 @@
 // convert the intruction on concreteCFG into a well-formatted arithmetic expression,
 // which can be later used to generate verification condition.
 
+#define BOT -1
+#define UNKNOWN 0
 
 namespace smack
 {
@@ -19,13 +21,13 @@ namespace smack
 
         CFGPtr origCfg;
         // assume stmt parsing
-        std::vector<RefinedActionPtr> resolveAssumeStmt(const AssumeStmt* ass);
+        std::vector<RefinedActionPtr> formatAssumeStmt(const AssumeStmt* ass);
         const Expr* parseCondition(const Expr* origCond);
         
         // assign stmt parsing
-        std::vector<RefinedActionPtr> resolveSingleAssignStmt(const AssignStmt* assign);
+        std::vector<RefinedActionPtr> formatSingleAssignStmt(const AssignStmt* assign);
         // TODObmc: watch out the order to push to the new list
-        std::vector<RefinedActionPtr> resolveBundleAssignStmts(std::list<const Expr*> lhsList, std::list<const Expr*> rhsList);
+        std::vector<RefinedActionPtr> formatBundleAssignStmts(std::list<const Expr*> lhsList, std::list<const Expr*> rhsList);
         // TODObmc: imple
         bool isUnaryPtrCastFuncName(std::string funcName);
         bool isPtrArithFuncName(std::string funcName);
@@ -42,12 +44,12 @@ namespace smack
         bool isBinaryBooleanFuncName(std::string funcName);
         const Expr* parseBinaryBooleanExpr(const Expr* origBoolExpr);
         // call stmt parsing
-        std::vector<RefinedActionPtr> resolveCallStmt(const CallStmt* callStmt);
+        std::vector<RefinedActionPtr> formatCallStmt(const CallStmt* callStmt);
         
         bool isNoSideEffectFuncName(std::string procName);
 
         // assert stmt parsing
-        std::vector<RefinedActionPtr> resolveAssertStmt(const AssertStmt* assertStmt);
+        std::vector<RefinedActionPtr> formatAssertStmt(const AssertStmt* assertStmt);
 
         // var type computing
         int getVarByteSize(std::string varName);

@@ -102,14 +102,8 @@ namespace smack
             // initial configuration generation
             z3::expr generateCFGInitCondition();
             z3::expr generateRNFInitCondition();
-            z3::expr generateCFGTransition(int u);
-            z3::expr generateRNFTransition(int u);
-
-            // feasibility and violation
-            z3::expr generateFeasibleVC();
-            z3::expr generateViolation();
-
-            // Detailed violation situation encodings
+            
+            z3::expr generateActTypeArgTemplateEncoding(RefinedActionPtr refAct, int u);
 
             // Stmt semantic encoding
             z3::expr generateTrMalloc();
@@ -125,6 +119,13 @@ namespace smack
             // Utilities
             z3::expr generateRemainUnchanged();
             z3::expr generateShiftAddress();
+
+
+            
+            // Detailed violation situation encodings
+            // feasibility and violation
+            z3::expr generateFeasibleVC();
+            z3::expr generateViolation();
 
             // Vars Utilities
             std::vector<z3::expr> getATSVars(int u);

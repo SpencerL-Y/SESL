@@ -62,21 +62,28 @@ namespace smack
 
     class RefinedAction {
         private:
+            // two byte vars
             const Expr* arg1;
             const Expr* arg2;
+            // two boolean vars
             const Expr* arg3;
+            const Expr* arg4;
+            // type indicates whether these variables exists
             int type1;
             int type2;
             int type3;
+            int type4;
             ConcreteAction::ActType actType;
         public:
-            RefinedAction(ConcreteAction::ActType at, const Expr* arg1, const Expr* arg2, const Expr* arg3, int t1, int t2, int t3) : actType(at), arg1(arg1), arg2(arg2), arg3(arg3), type1(t1), type2(t2), type3(t3){}
+            RefinedAction(ConcreteAction::ActType at, const Expr* arg1, const Expr* arg2, const Expr* arg3, Expr* arg4, int t1, int t2, int t3, int t4) : actType(at), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), type1(t1), type2(t2), type3(t3), type4(t4){}
             const Expr* getArg1(){return arg1;}
             const Expr* getArg2(){return arg2;}
             const Expr* getArg3(){return arg3;}
+            const Expr* getArg4(){return arg4;}
             int getType1(){return this->type1;}
             int getType2(){return this->type2;}
             int getType3(){return this->type3;}
+            int getType4(){return this->type4;}
             ConcreteAction::ActType getActType(){return this->actType;}
             void print();
     };

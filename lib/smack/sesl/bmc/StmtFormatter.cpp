@@ -806,7 +806,7 @@ namespace smack
         std::string typeStr = detailTypePair.first;
         if(typeStr.find("ref") != std::string::npos){
             return PTR_BYTEWIDTH;
-        } else if(detailTypePair.second < 4 && detailTypePair.second > 0){
+        } else if(detailTypePair.second < 8 && detailTypePair.second > 0){
             return 1;
         } else {
             return detailTypePair.second/8;

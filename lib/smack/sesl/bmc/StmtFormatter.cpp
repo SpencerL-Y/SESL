@@ -782,7 +782,7 @@ namespace smack
     }
 
 
-    std::vector<RefinedActionPtr> formatOtherStmt(const Stmt* otherStmt){
+    std::vector<RefinedActionPtr> StmtFormatter::formatOtherStmt(const Stmt* otherStmt){
         const Expr* arg1 = nullptr;
         const Expr* arg2 = nullptr;
         const Expr* arg3 = nullptr;

@@ -66,9 +66,9 @@ namespace smack
             // getVars
             std::vector<z3::expr> getRNFVars();
             std::set<std::string> getRNFVarNames();
-            z3::expr getBlkAddrVar(int blockId, int sub);
-            z3::expr getPtAddrVar(int blockId, int sub);
-            z3::expr getDataVar(int blockId, int sub);
+            z3::expr getBlkAddrVar(int blockId, int sub, int u);
+            z3::expr getPtAddrVar(int blockId, int sub, int u);
+            z3::expr getDataVar(int blockId, int sub, int u);
             // \nu formula
             z3::expr generateImplicitConstraint();
             // initial condition 
@@ -104,7 +104,7 @@ namespace smack
                 //3. get normalFormVariables 
                 //4. do preanalysis to determine regionNum and PointsToNum, then we can initialize currentRNF
                 //5. initialize rnf
-                this->currentRNF = std::make_shared<RegionNormalForm>(&this->z3Ctx, regNum, ptNum, 0);
+                this->currentRNF = std::make_shared<RegionNormalForm>(this->z3Ctx, regNum, ptNum, 0);
                 
             }
 
@@ -130,8 +130,8 @@ namespace smack
             z3::expr generateTrCommonAssignBool(int u);
 
             // Utilities
-            z3::expr generateRemainUnchanged(std::set<std::string> varNames);
-            z3::expr generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos);
+            z3::expr generateRemainUnchanged(std::set<std::string> origVarNames, int u);
+            z3::expr generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int u);
 
 
             

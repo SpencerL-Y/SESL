@@ -176,19 +176,19 @@ namespace smack
     }
 
 
-    z3::expr RegionNormalForm::getBlkAddrVar(int blockId, int sub){
-        std::string addrVarName = "blka_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(" + std::to_string(this->primeNum) + ")";
+    z3::expr RegionNormalForm::getBlkAddrVar(int blockId, int sub, int u){
+        std::string addrVarName = "blka_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(" + std::to_string(u) + ")";
         return this->z3Ctx->int_const(addrVarName.c_str());
     }
 
-    z3::expr RegionNormalForm::getPtAddrVar(int blockId, int sub){
-        std::string addrVarName = "pta_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(" + std::to_string(this->primeNum) + ")";
+    z3::expr RegionNormalForm::getPtAddrVar(int blockId, int sub, int u){
+        std::string addrVarName = "pta_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(" + std::to_string(u) + ")";
         return this->z3Ctx->int_const(addrVarName.c_str());
     }
 
-    z3::expr RegionNormalForm::getDataVar(int blockId, int sub){
+    z3::expr RegionNormalForm::getDataVar(int blockId, int sub, int u){
 
-        std::string addrVarName = "ptd_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(" + std::to_string(this->primeNum) + ")";
+        std::string addrVarName = "ptd_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(" + std::to_string(u) + ")";
         return this->z3Ctx->int_const(addrVarName.c_str());
     }
 
@@ -413,16 +413,39 @@ namespace smack
         z3::expr genTrExpr = (
             mallocBranch && freeBranch && otherBranch && assumeBranch && commonBoolAssignBranch && commonNonBoolAssignBranches && storeBranch && loadBranch
         );
-        
+
         return genTrExpr;
 
     }
 
     z3::expr BMCVCGen::generateTrMalloc(int u){
+        this->currentRNF->setPrimeNum(u);
+        z3::expr differentMallocSituation = this->z3Ctx.bool_val(false);
+        for(int blockId = 0; blockId < this->regionNum; blockId ++){
+            z3::expr premise = this->z3Ctx.bool_val(true);
+            for(int notEmptyId = 0; notEmptyId < blockId; notEmptyId ++){
+                premise = premise && this->currentRNF->getBlkAddrVar(notEmptyId, 0, u) != BOT;
+            }
+            premise = premise && this->currentRNF->getBlkAddrVar(blockId, 0, u) == BOT;
 
+            std::set<std::string> unchangedOrigVarNames;
+            z3::expr implicant = (
+                this->currentRNF->getBlkAddrVar(blockId, 0, u + 1) == this->getArgVar(1, u) &&
+                this->currentRNF->getBlkAddrVar(blockId, 1, u + 1) == (this->getArgVar(1, u) + this->getArgVar(2, u)) &&
+                this->generateRemainUnchanged(unchangedOrigVarNames, u)
+                //TODObmc: compute the unchanged variables
+            );
+            differentMallocSituation = differentMallocSituation && z3::implies(premise, implicant);
+        }
+        return differentMallocSituation;
     }
 
-    z3::expr BMCVCGen::generateTrFree(int u){}
+    z3::expr BMCVCGen::generateTrFree(int u){
+        z3::expr findCorrectBlock = this->z3Ctx.bool_val(false);
+        for(int blockId = 0; blockId < this->regionNum; blockId ++){
+            //STOP HERE
+        }
+    }
     z3::expr BMCVCGen::generateTrStore(int u){}
     z3::expr BMCVCGen::generateTrLoad(int u){}
     z3::expr BMCVCGen::generateTrUnchage(int u){}
@@ -436,8 +459,8 @@ namespace smack
     }
     z3::expr BMCVCGen::generateTrCommonAssignBool(int u){}
     // Utilities
-    z3::expr BMCVCGen::generateRemainUnchanged(std::set<std::string> varNames){}
-    z3::expr BMCVCGen::generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos){}
+    z3::expr BMCVCGen::generateRemainUnchanged(std::set<std::string> origVarNames, int u){}
+    z3::expr BMCVCGen::generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int u){}
     // Vars Utilities
     std::vector<z3::expr> BMCVCGen::getATSVars(int u){}
 
@@ -469,13 +492,13 @@ namespace smack
     }
 
     z3::expr BMCVCGen::getArgVar(int index, int u){
-        std::string argVarName = "arg_(" + std::to_string(index) + ")";
+        std::string argVarName = "arg_" + std::to_string(index) + "(" + std::to_string(u) + ")";
         z3::expr argVar = this->z3Ctx.int_const(argVarName.c_str());
         return argVar;
     }
 
     z3::expr BMCVCGen::getTypeVar(int index, int u){
-        std::string typeVarName = "type_(" + std::to_string(index) + ")";
+        std::string typeVarName = "type_" + std::to_string(index) + "(" + std::to_string(u) + ")";
         z3::expr typeVar = this->z3Ctx.int_const(typeVarName.c_str());
         return typeVar;
     }

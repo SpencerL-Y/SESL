@@ -50,7 +50,9 @@ namespace smack
 
         // assert stmt parsing
         std::vector<RefinedActionPtr> formatAssertStmt(const AssertStmt* assertStmt);
-
+        
+        // other stmt parsing
+        std::vector<RefinedActionPtr> formatOtherStmt(const Stmt* otherStmt);
         // var type computing
         int getVarByteSize(std::string varName);
         int getPtrVarStepWidth(std::string ptrVarName);

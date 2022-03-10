@@ -9,6 +9,7 @@
 #include "smack/sesl/bmc/StmtFormatter.h"
 
 #define BOT -1
+#define NIL -2
 
 namespace smack
 {
@@ -104,6 +105,7 @@ namespace smack
             z3::expr generateRNFInitCondition();
             
             z3::expr generateActTypeArgTemplateEncoding(RefinedActionPtr refAct, int u);
+            z3::expr generateTypeVarEqualities(RefinedActionPtr refAct, int u);
 
             // Stmt semantic encoding
             z3::expr generateTrMalloc();

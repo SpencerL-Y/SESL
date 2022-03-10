@@ -94,6 +94,8 @@ namespace smack {
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const;
 
+        virtual z3::expr bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const;
+
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const;
 
         static const Expr *exists(std::list<Binding>, const Expr *e);
@@ -217,6 +219,8 @@ namespace smack {
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
+        virtual z3::expr bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const override;
+
         std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const override;
 
         void print(std::ostream &os) const;
@@ -265,6 +269,8 @@ namespace smack {
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+
+        virtual z3::expr bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const override;
 
         bool getVal() const { return val; }
 
@@ -320,6 +326,8 @@ namespace smack {
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+
+        virtual z3::expr bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const override;
 
         std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const override;
 
@@ -424,6 +432,8 @@ namespace smack {
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
+        virtual z3::expr bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const override;
+
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         void print(std::ostream &os) const;
@@ -519,6 +529,8 @@ namespace smack {
 
         z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
 
+        virtual z3::expr bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const override;
+
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const override;
@@ -546,6 +558,8 @@ namespace smack {
         virtual const Expr* renameClone(std::string funcName, int usedNum, std::set<std::string> globalVarNames) const override;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
+        
+        virtual z3::expr bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const override;
 
         const Expr* getCond() const { return this->cond;}
 

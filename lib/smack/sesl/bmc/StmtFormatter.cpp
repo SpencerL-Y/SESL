@@ -49,6 +49,7 @@ namespace smack
                 actionList = this->formatAssertStmt(assertStmt);
             } else {
                 assert(ConcreteAction::ActType::OTHER == type);
+                actionList = this->formatOtherStmt(origStmt);
             }
         }
 
@@ -254,10 +255,10 @@ namespace smack
         } else {
             arg1 = lhs;
             arg2 = rhs;
-            type1 = 0;
-            type2 = 0;
-            type3 = 0;
-            type4 = 0;
+            type1 = UNKNOWN;
+            type2 = UNKNOWN;
+            type3 = UNKNOWN;
+            type4 = UNKNOWN;
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN,arg1, arg2, arg3, arg4, type1, type2, type3, type4);
             resultList.push_back(refinedAct);
             return resultList;
@@ -351,7 +352,7 @@ namespace smack
                             type2 = this->getPtrVarStepWidth(varArg1->name());
                         } else if(ExprType::FUNC == origStoreDst->getType()){
                             arg1 = this->parsePtrArithmeticExpr(origStoreDst);
-                            type2 = 0;
+                            type2 = UNKNOWN;
                         } else {
                             BMCDEBUG(std::cout << "ERROR: stored dst not allowed: " << origStoreDst << std::endl; );
                             arg1 = origStoreDst;
@@ -421,10 +422,10 @@ namespace smack
             } else {
                 arg1 = tempLhs;
                 arg2 = tempRhs;
-                type1 = 0;
-                type2 = 0;
-                type3 = 0;
-                type4 = 0;
+                type1 = UNKNOWN;
+                type2 = UNKNOWN;
+                type3 = UNKNOWN;
+                type4 = UNKNOWN;
                 
                 RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN, arg1, arg2, arg3, arg4, type1, type2, type3, type4);
                 resultList.push_back(refinedAct);
@@ -676,7 +677,7 @@ namespace smack
                 if(mallocParam->isVar()){
                     type2 = this->getVarByteSize(((const VarExpr*) mallocParam)->name());
                 } else {
-                    type2 = 1;
+                    type2 = UNKNOWN;
                 }
             } else {
                 BMCDEBUG(std::cout << "ERROR: malloc param should not be function" << std::endl;);
@@ -695,7 +696,7 @@ namespace smack
                 BMCDEBUG(std::cout << "ERROR: Free param not a var or value" << std::endl;);
                 arg1 = freeParam;
             }
-            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::MALLOC, arg1, arg2, arg3, arg4, type1, type2, type3, type4);
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::FREE, arg1, arg2, arg3, arg4, type1, type2, type3, type4);
             resultList.push_back(refinedAct);
             return resultList;
         } else if(!call->getProc().compare("$alloc")){
@@ -775,16 +776,32 @@ namespace smack
         const Expr* origCond = assertStmt->getExpr();
         arg3 = this->parseCondition(origCond);
         type3 = 1;
-        RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::MALLOC, arg1, arg2, arg3, arg4, type1, type2, type3, type4);
+        RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::ASSERT, arg1, arg2, arg3, arg4, type1, type2, type3, type4);
+        resultList.push_back(refinedAct);
+        return resultList;
+    }
+
+
+    std::vector<RefinedActionPtr> formatOtherStmt(const Stmt* otherStmt){
+        const Expr* arg1 = nullptr;
+        const Expr* arg2 = nullptr;
+        const Expr* arg3 = nullptr;
+        const Expr* arg4 = nullptr;
+        int type1 = BOT;
+        int type2 = BOT;
+        int type3 = BOT;
+        int type4 = BOT;
+        std::vector<RefinedActionPtr> resultList;
+        RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHER, arg1, arg2, arg3, arg4, type1, type2, type3, type4);
         resultList.push_back(refinedAct);
         return resultList;
     }
 
     // --------- var type computing
     int StmtFormatter::getVarByteSize(std::string varName){
-        // for(auto i : this->origCfg->getVarTypes()){
-        //     std::cout << i.first << " " << i.second << std::endl;
-        // }
+        for(auto i : this->origCfg->getVarTypes()){
+            std::cout << i.first << " " << i.second << std::endl;
+        }
         std::pair<std::string, int> detailTypePair = this->origCfg->getGlobalVarDetailType(varName);
         std::string typeStr = detailTypePair.first;
         if(typeStr.find("ref") != std::string::npos){
@@ -792,7 +809,7 @@ namespace smack
         } else if(detailTypePair.second < 4 && detailTypePair.second > 0){
             return 1;
         } else {
-            return detailTypePair.second;
+            return detailTypePair.second/8;
         }
     }
 

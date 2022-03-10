@@ -194,10 +194,9 @@ namespace smack
                 if(edge->getRefinedActions().size() == 0){
 
                 } else if(edge->getRefinedActions().size() == 1){
+                    RefinedActionPtr refAct = edge->getRefinedActions()[0];
                     z3::expr edgeActionEncoding = this->z3Ctx.bool_val(true);
-                    edgeActionEncoding = edgeActionEncoding && (this->getActVar(u) ==  edge->getRefinedActions()[0]->getActType());
-                    // need to give encodings for different situations of actionType
-                    //edgeActionEncoding = edgeActionEncoding && (this->getArgVar(1, u) == )
+                    edgeActionEncoding = edgeActionEncoding && (this->getActVar(u) ==  refAct->getActType() && this->generateActTypeArgTemplateEncoding(refAct, u));
                 } else {
 
                 }
@@ -207,29 +206,109 @@ namespace smack
     }
 
     z3::expr BMCVCGen::generateActTypeArgTemplateEncoding(RefinedActionPtr refAct, int u){
+        // TODObmc: the variables in the cfg also contains a u, we need a function for variables extractions and remain unchange
+        z3::expr actTemplate = this->z3Ctx.bool_val(true);
         if(ConcreteAction::ActType::ASSERT == refAct->getActType()){
-
+            assert(refAct->getArg3() != nullptr && refAct->getType3() == 1);
+            z3::expr arg3Equal = (this->getArgVar(3, u) == refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType3()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == BOT);
+            z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
+            z3::expr arg4Equal = (this->getArgVar(4, u) == false);
+            actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u));
+            return actTemplate;
         } else if(ConcreteAction::ActType::ASSUME == refAct->getActType()){
-
+            assert(refAct->getArg3() != nullptr && refAct->getType3() == 1);
+            z3::expr arg3Equal = (this->getArgVar(3, u) == refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType3()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == BOT);
+            z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
+            z3::expr arg4Equal = (this->getArgVar(4, u) == false);
+            actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u));
+            return actTemplate;
         } else if(ConcreteAction::ActType::COMMONASSIGN == refAct->getActType()){
-
+            if(refAct->getArg1() != nullptr && refAct->getArg2() != nullptr){
+                // non boolean common assign
+                assert(refAct->getArg3() == nullptr && refAct->getArg4() == nullptr);
+                z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
+                z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+                z3::expr arg3Equal = (this->getArgVar(3, u) == false);
+                z3::expr arg4Equal = (this->getArgVar(4, u) == false);
+                actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u));
+                return actTemplate;
+            } else if(refAct->getArg3() != nullptr && refAct->getArg4() != nullptr){
+                // boolean common assign
+                assert(refAct->getArg1() == nullptr && refAct->getArg2() == nullptr && refAct->getType3() == 1 && refAct->getType4() == 1);
+                z3::expr arg1Equal = (this->getArgVar(1, u) == BOT);
+                z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
+                z3::expr arg3Equal = (this->getArgVar(3, u) == refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType3()));
+                z3::expr arg4Equal = (this->getArgVar(4, u) == refAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType4()));
+                actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u));
+                return actTemplate;
+            } else {
+                // should not happen
+                BMCDEBUG(std::cout << "ERROR: This should not happen for assign template framing" << std::endl;);
+                assert(false);
+                return this->z3Ctx.bool_val(false);
+            }
         } else if(ConcreteAction::ActType::FREE == refAct->getActType()){
-
+            assert(refAct->getArg1() != nullptr && refAct->getType1() == PTR_BYTEWIDTH);
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
+            z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
+            z3::expr arg3Equal = (this->getArgVar(3, u) == false);
+            z3::expr arg4Equal = (this->getArgVar(4, u) == false);
+            actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u));
+            return actTemplate;
         } else if(ConcreteAction::ActType::MALLOC == refAct->getActType()){
 
+            assert(refAct->getArg1() != nullptr && refAct->getType1() == PTR_BYTEWIDTH && refAct->getArg2() != nullptr && refAct->getType2() != BOT);
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
+            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+            z3::expr arg3Equal = (this->getArgVar(3, u) == false);
+            z3::expr arg4Equal = (this->getArgVar(4, u) == false);
+            actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u));
         } else if(ConcreteAction::ActType::NULLSTMT == refAct->getActType()){
-
-        } else if(ConcreteAction::ActType::OTHER == refAct->getActType()){
-
-        } else if(ConcreteAction::ActType::OTHERPROC == refAct->getActType()){
-
+            assert(refAct->getArg1() == nullptr && refAct->getArg2() == nullptr && refAct->getArg2() == nullptr && refAct->getArg3() == nullptr && refAct->getArg4() == nullptr);
+            z3::expr arg1Equal = (this->getArgVar(1, u) == BOT);
+            z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
+            z3::expr arg3Equal = (this->getArgVar(3, u) == false);
+            z3::expr arg4Equal = (this->getArgVar(4, u) == false);
+            actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u));
+        } else if(ConcreteAction::ActType::OTHER == refAct->getActType() ||    
+                  ConcreteAction::ActType::OTHERPROC == refAct->getActType()){
+            // do nothing
+            z3::expr arg1Equal = (this->getArgVar(1, u) == BOT);
+            z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
+            z3::expr arg3Equal = (this->getArgVar(3, u) == false);
+            z3::expr arg4Equal = (this->getArgVar(4, u) == false);
+            actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u));
         } else if(ConcreteAction::ActType::STORE == refAct->getActType()){
-
+            assert(refAct->getArg1() != nullptr && refAct->getArg2() != nullptr &&
+                   refAct->getType1() == PTR_BYTEWIDTH);
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
+            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+            z3::expr arg3Equal = (this->getArgVar(3, u) == false);
+            z3::expr arg4Equal = (this->getArgVar(4, u) == false);
+            actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u));
         } else if(ConcreteAction::ActType::LOAD == refAct->getActType()){
-
+            assert(refAct->getArg1() != nullptr && refAct->getArg2() != nullptr &&
+                   refAct->getType2() == PTR_BYTEWIDTH);
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
+            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+            z3::expr arg3Equal = (this->getArgVar(3, u) == false);
+            z3::expr arg4Equal = (this->getArgVar(4, u) == false);
+            actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u));
         } else {
             return this->z3Ctx.bool_val(false);
         }
+    }
+
+    
+    z3::expr BMCVCGen::generateTypeVarEqualities(RefinedActionPtr refAct, int u){
+        z3::expr result = this->z3Ctx.bool_val(true);
+        result = result && (this->getTypeVar(1, u) == refAct->getType1());
+        result = result && (this->getTypeVar(2, u) == refAct->getType2());
+        result = result && (this->getTypeVar(3, u) == refAct->getType3());
+        result = result && (this->getTypeVar(4, u) == refAct->getType4());
+        return result;
     }
 
     // feasibility and violation
@@ -288,4 +367,5 @@ namespace smack
         z3::expr typeVar = this->z3Ctx.int_const(typeVarName.c_str());
         return typeVar;
     }
+
 } // namespace smack

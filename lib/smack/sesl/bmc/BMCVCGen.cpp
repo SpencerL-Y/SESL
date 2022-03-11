@@ -497,7 +497,9 @@ namespace smack
 
     z3::expr BMCVCGen::generateTrCommonAssignBool(int u){}
     // Utilities
-    z3::expr BMCVCGen::generateRemainUnchanged(std::set<std::string> origVarNames, int u){}
+    z3::expr BMCVCGen::generateRemainUnchanged(std::set<std::string> origVarNames, int u){
+        
+    }
     z3::expr BMCVCGen::generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int u){}
     // Vars Utilities
     std::vector<z3::expr> BMCVCGen::getATSVars(int u){}

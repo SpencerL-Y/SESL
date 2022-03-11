@@ -60,7 +60,7 @@ namespace smack
             initCond = (initCond && (addr == BOT));
         }
         for(z3::expr data : dataVars){
-            initCond = (initCond && (data == 0));
+            initCond = (initCond && (data == UNKNOWN));
         }
         return initCond; 
     }
@@ -378,7 +378,7 @@ namespace smack
         z3::expr otherBranch = z3::implies(
             this->getActVar(u) == ConcreteAction::ActType::OTHER || 
             this->getActVar(u) == ConcreteAction::ActType::OTHERPROC,
-            this->generateTrUnchage(u)
+            this->generateTrUnchanged(u)
         );
 
         z3::expr assumeBranch = z3::implies(
@@ -443,13 +443,50 @@ namespace smack
     z3::expr BMCVCGen::generateTrFree(int u){
         z3::expr findCorrectBlock = this->z3Ctx.bool_val(false);
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
-            //STOP HERE
+            z3::expr premise = (
+                this->currentRNF->getBlkAddrVar(blockId, 0, u) == this->getArgVar(1, u) &&
+                this->getArgVar(1, u) != BOT
+            );
+            z3::expr clearAllVariables = this->z3Ctx.bool_val(true);
+            std::set<std::string> unchangedOrigVarNames;
+            for(int currLen = 1; currLen <= this->pointsToNum; currLen ++){
+                clearAllVariables == (
+                    clearAllVariables &&
+                    this->currentRNF->getBlkAddrVar(blockId, 2*currLen - 2, u + 1) == BOT,
+                    this->currentRNF->getBlkAddrVar(blockId, 2*currLen - 1, u + 1) == BOT,
+                    this->currentRNF->getPtAddrVar(blockId, 2*currLen - 1, u + 1) == BOT,
+                    this->currentRNF->getDataVar(blockId, 2*currLen - 1, u + 1) == UNKNOWN
+                );
+                // TODObmc: compute the unchanged vars
+            }
+            clearAllVariables = (
+                clearAllVariables &&
+                this->currentRNF->getBlkAddrVar(blockId, 2*this->pointsToNum, u + 1) == BOT,
+                this->currentRNF->getBlkAddrVar(blockId, 2*this->pointsToNum + 1, u + 1)
+            );
+            clearAllVariables = (clearAllVariables && this->generateRemainUnchanged(unchangedOrigVarNames, u));
+            findCorrectBlock = (
+                findCorrectBlock ||
+                z3::implies(premise, clearAllVariables)
+            );
         }
+        return findCorrectBlock;
     }
+
     z3::expr BMCVCGen::generateTrStore(int u){}
     z3::expr BMCVCGen::generateTrLoad(int u){}
-    z3::expr BMCVCGen::generateTrUnchage(int u){}
-    z3::expr BMCVCGen::generateTrAssume(int u){}
+
+    z3::expr BMCVCGen::generateTrUnchanged(int u){
+        // TODObmc: compute all vars need step changing
+        std::set<std::string> allRNFVars_U_allProgramVars;
+        z3::expr unchangedResult = this->generateRemainUnchanged(allRNFVars_U_allProgramVars, u);
+        return unchangedResult;
+    }
+
+    z3::expr BMCVCGen::generateTrAssume(int u){
+
+    }
+
     z3::expr BMCVCGen::generateTrCommonAssignNonBool(int u, int arg1Size, int arg2Size){
         if(arg1Size >= arg2Size){
             // normal common assign
@@ -457,6 +494,7 @@ namespace smack
             // need to cut some bytes
         }
     }
+
     z3::expr BMCVCGen::generateTrCommonAssignBool(int u){}
     // Utilities
     z3::expr BMCVCGen::generateRemainUnchanged(std::set<std::string> origVarNames, int u){}

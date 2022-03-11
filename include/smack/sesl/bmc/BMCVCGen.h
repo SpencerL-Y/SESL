@@ -124,7 +124,7 @@ namespace smack
             z3::expr generateTrFree(int u);
             z3::expr generateTrStore(int u);
             z3::expr generateTrLoad(int u);
-            z3::expr generateTrUnchage(int u);
+            z3::expr generateTrUnchanged(int u);
             z3::expr generateTrAssume(int u);
             z3::expr generateTrCommonAssignNonBool(int u, int arg1Size, int arg2Size);
             z3::expr generateTrCommonAssignBool(int u);

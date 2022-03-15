@@ -68,7 +68,11 @@ namespace smack
             std::set<std::string> getRNFOrigVarNames();
             z3::expr getBlkAddrVar(int blockId, int sub, int u);
             z3::expr getPtAddrVar(int blockId, int sub, int u);
-            z3::expr getDataVar(int blockId, int sub, int u);
+            z3::expr getPtDataVar(int blockId, int sub, int u);
+            // getTempVar
+            z3::expr getTempBlkAddrVar(int blockId, int sub, int u);
+            z3::expr getTempPtAddrVar(int blockId, int sub, int u);
+            z3::expr getTempPtDataVar(int blockId, int sub, int u);
             // \nu formula
             z3::expr generateImplicitConstraint();
             // initial condition 
@@ -133,7 +137,10 @@ namespace smack
             // Utilities
             z3::expr generateIntRemainUnchanged(std::set<std::string> origVarNames, int u);
             z3::expr generateBoolRemainUnchanged(std::set<std::string> origVarNames, int u);
-            z3::expr generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int u);
+            z3::expr generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int dataSize, int u);
+            z3::expr equalTemp2StepInRNF(int stepU, int tempU);
+            z3::expr equalTempAndNextTemp(int tempU);
+            z3::expr generateShiftAddressByte(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int iu);
             z3::expr generateUtilVariablesRanges(int type1, int type2, int u);
 
 

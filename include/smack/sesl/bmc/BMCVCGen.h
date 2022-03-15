@@ -101,6 +101,7 @@ namespace smack
             int regionNum;
             int pointsToNum;
             int freshCounter;
+            int tempCounter;
         public:
             BMCVCGen(BMCRefinedCFGPtr rcfg, int regNum, int ptNum) : refCfg(rcfg), regionNum(regNum), pointsToNum(ptNum) {
                 // TODObmc: need to imple:
@@ -110,7 +111,8 @@ namespace smack
                 //4. do preanalysis to determine regionNum and PointsToNum, then we can initialize currentRNF
                 //5. initialize rnf
                 this->currentRNF = std::make_shared<RegionNormalForm>(this->z3Ctx, regNum, ptNum, 0);
-                this->freshCounter ++;
+                this->freshCounter = 0;
+                this->tempCounter = 0;
             }
 
             z3::expr generateATSInitConfiguration();
@@ -128,6 +130,7 @@ namespace smack
             z3::expr generateTrMalloc(int u);
             z3::expr generateTrFree(int u);
             z3::expr generateTrStore(int u);
+            z3::expr generateTrStoreByteSize(int u, int byteSize);
             z3::expr generateTrLoad(int u);
             z3::expr generateTrUnchanged(int u);
             z3::expr generateTrAssume(int u);
@@ -137,10 +140,11 @@ namespace smack
             // Utilities
             z3::expr generateIntRemainUnchanged(std::set<std::string> origVarNames, int u);
             z3::expr generateBoolRemainUnchanged(std::set<std::string> origVarNames, int u);
-            z3::expr generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int dataSize, int u);
+            // z3::expr generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int dataSize, int u);
+            z3::expr BMCVCGen::equalStepAndNextStepInProg(std::set<std::string> unchangedProgNames, int u);
             z3::expr equalTemp2StepInRNF(int stepU, int tempU);
-            z3::expr equalTempAndNextTemp(int tempU);
-            z3::expr generateShiftAddressByte(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int iu);
+            z3::expr equalTempAndNextTempInRNF(std::set<std::string> unchangedOrigNames, int tempU);
+            std::pair<z3::expr, std::set<std::string>> generateShiftAddressByte(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int iu);
             z3::expr generateUtilVariablesRanges(int type1, int type2, int u);
 
 
@@ -157,6 +161,7 @@ namespace smack
             z3::expr getTypeVar(int index, int u);
             z3::expr computerByteLenRange(int byteLen);
             z3::expr generateFreshVar();
+            std::set<std::string>  setSubstract(std::set<std::string> from, std::set<std::string> substracted);
     };
 
     

@@ -214,7 +214,7 @@ namespace smack
         this->origCfg = conCfg->getOrigCfg();
         std::map<int, bool> tempFinalVertices;
         std::map<int, bool> tempInitVertices;
-        for(int vertexId = 0; vertexId < this->vertexNum; vertexId++){
+        for(int vertexId = 1; vertexId <= this->vertexNum; vertexId++){
             tempFinalVertices[vertexId] = true;
             tempInitVertices[vertexId] = true;
         }
@@ -250,7 +250,7 @@ namespace smack
 
 
     std::list<RefinedEdgePtr> BMCRefinedCFG::getEdgesStartFrom(int fromVertex){
-        assert(fromVertex >= 0 && fromVertex < this->vertexNum);
+        assert(fromVertex > 0 && fromVertex <= this->vertexNum);
         std::list<RefinedEdgePtr> startEdges;
         for(RefinedEdgePtr edge : this->refinedEdges){
             if(edge->getFrom() == fromVertex){
@@ -261,7 +261,7 @@ namespace smack
     }
 
     std::list<RefinedEdgePtr> BMCRefinedCFG::getEdgesEndWith(int toVertex){
-        assert(toVertex >= 0 && toVertex < this->vertexNum);
+        assert(toVertex > 0 && toVertex <= this->vertexNum);
         std::list<RefinedEdgePtr> toEdges;
         for(RefinedEdgePtr edge : this->refinedEdges){
             if(edge->getTo() == toVertex){
@@ -294,6 +294,75 @@ namespace smack
             return true;
         } else {
             return false;
+        }
+    }
+    
+    std::map<int, int> BMCRefinedCFG::computeSccMap(){
+        std::map<int, std::pair<int, int>> computeTable;
+        std::map<int, int> sccResult;
+        this->sccNum = 0;
+        this->sccId = 0;
+        for(int i = 1; i <= this->vertexNum; i++){
+            computeTable[i] = {-1, -1};
+        }
+        std::list<int> emptyStack;
+        for(int v = 1; v <= this->vertexNum; v++){
+            if(computeTable[v].second == -1){
+                this->tarjanScc(v, computeTable, emptyStack, sccResult);
+            }
+        }
+        std::cout << "SCC Result: " << std::endl;
+        for(auto i : computeTable){
+            std::cout << i.first << " " << i.second.first << "," << i.second.second << std::endl;
+        }
+        return sccResult;
+    }
+
+    bool listHas(std::list<int>& currStack, int elem){
+        for(int i : currStack){
+            if(elem == i){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void BMCRefinedCFG::tarjanScc(int curr, std::map<int, std::pair<int, int>>& currentMap, std::list<int>& currStack, std::map<int, int>& sccResult){
+        currentMap[curr].second = this->sccNum;
+        currentMap[curr].first = this->sccNum;
+        this->sccNum += 1;
+        currStack.push_back(curr);
+        for(RefinedEdgePtr edge : this->refinedEdges){
+            if(edge->getFrom() == curr){
+                if(currentMap[edge->getTo()].second == -1){
+                    this->tarjanScc(edge->getTo(), currentMap, currStack, sccResult);
+                    currentMap[curr] = {
+                        std::min(
+                            currentMap[curr].first,
+                            currentMap[edge->getTo()].first
+                        ), 
+                        currentMap[curr].second
+                    };
+                } else if(listHas(currStack, edge->getTo())){
+                    currentMap[curr] = {
+                        std::min(
+                            currentMap[curr].first,
+                            currentMap[edge->getTo()].second
+                        ),
+                        currentMap[curr].second
+                    };
+                }
+            }
+        }
+
+        if(currentMap[curr].first == currentMap[curr].second){
+            this->sccId += 1;
+            while(currStack.back() != curr){
+                sccResult[currStack.back()] = this->sccId;
+                currStack.pop_back();
+            }
+            sccResult[curr] = this->sccId;
+            currStack.pop_back();
         }
     }
 

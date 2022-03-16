@@ -2,6 +2,7 @@
 #define BMCREFINEDCFG_H
 
 #include <map>
+#include <stack>
 #include <string>
 #include <unistd.h>
 #include <iostream>
@@ -141,6 +142,7 @@ namespace smack
             std::set<int> initVertices;
             std::set<int> finalVertices;
             CFGPtr origCfg;
+            int sccNum, sccId;
         public:
         // TODObmc: add self loop and tag for exit vertex
             BMCRefinedCFG(ConcreteCFGPtr conCfg);
@@ -154,6 +156,8 @@ namespace smack
             bool isInitVertex(int vertexId);
             std::set<int> getFinalVertices(){return this->finalVertices;}
             bool isFinalVertex(int vertexId);
+            std::map<int, int> computeSccMap();
+            void tarjanScc(int currentVertex, std::map<int, std::pair<int, int>>& currentMap,  std::list<int>& currStack, std::map<int, int>& sccResult);
 
             void printRefinedCFG();
     };

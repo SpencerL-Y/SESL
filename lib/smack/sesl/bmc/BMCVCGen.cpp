@@ -683,6 +683,9 @@ namespace smack
 
     z3::expr BMCVCGen::generateTrUnchanged(int u){
         // TODObmc: compute all vars need step changing
+        std::set<std::string> unchangedRNFOrigVars = this->currentRNF->getRNFOrigVarNames();
+        z3::expr equality = this->equalStepAndNextStep(unchangedRNFOrigVars, u);
+        return equality;
     }
 
     z3::expr BMCVCGen::generateTrAssume(int u){
@@ -788,7 +791,7 @@ namespace smack
         return equality;
     }
 
-    z3::expr BMCVCGen::equalStepAndNextStepInProg(std::set<std::string> unchangedProgNames, int u){
+    z3::expr BMCVCGen::equalStepAndNextStep(std::set<std::string> unchangedProgNames, int u){
         z3::expr equality = this->z3Ctx.bool_val(true);
         for(std::string progName : unchangedProgNames){
             equality = equality && 

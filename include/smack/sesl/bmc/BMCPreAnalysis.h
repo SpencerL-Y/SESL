@@ -16,9 +16,22 @@ namespace smack
     {
     private:
         /* data */
+        BMCRefinedCFGPtr refinedCfg;
+        int loopBound;
     public:
-        BMCPreAnalysis(/* args */);
+        BMCPreAnalysis(BMCRefinedCFGPtr refCfg, int loopBound) :refinedCfg(refCfg), loopBound(loopBound) {
+            std::map<int, int> sccResult = refCfg->computeSccMap();
+            std::cout << "SCC result: " << std::endl;
+            for(auto i : sccResult){
+                std::cout << i.first << ", " << i.second << std::endl;
+            }
+        }
+        std::pair<int, int> computeRegNumAndPtNum();
+        std::set<std::string> getProgOrigVars();
+        int computeMinStoreByteLen();
     };
+
+    typedef std::shared_ptr<BMCPreAnalysis> BMCPreAnalysisPtr;
 } // namespace smack
 
 

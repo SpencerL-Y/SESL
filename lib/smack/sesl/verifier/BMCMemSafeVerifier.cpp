@@ -9,6 +9,7 @@
 #include "smack/SmackOptions.h"
 #include "smack/sesl/bmc/BMCVCGen.h"
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
+#include "smack/sesl/bmc/BMCPreAnalysis.h"
 
 namespace smack
 {
@@ -40,6 +41,9 @@ namespace smack
         // conCfg->printConcreteCFG();
         BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
         refinedCFG->printRefinedCFG();
+
+        BMCPreAnalysisPtr pre = std::make_shared<BMCPreAnalysis>(refinedCFG, 5);
+        
         return false;
     }
 } // namespace smack

@@ -141,7 +141,7 @@ namespace smack
             z3::expr generateIntRemainUnchanged(std::set<std::string> origVarNames, int u);
             z3::expr generateBoolRemainUnchanged(std::set<std::string> origVarNames, int u);
             // z3::expr generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int dataSize, int u);
-            z3::expr BMCVCGen::equalStepAndNextStepInProg(std::set<std::string> unchangedProgNames, int u);
+            z3::expr equalStepAndNextStepInProg(std::set<std::string> unchangedProgNames, int u);
             z3::expr equalTemp2StepInRNF(int stepU, int tempU);
             z3::expr equalTempAndNextTempInRNF(std::set<std::string> unchangedOrigNames, int tempU);
             std::pair<z3::expr, std::set<std::string>> generateShiftAddressByte(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int iu);

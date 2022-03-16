@@ -7,9 +7,9 @@
 #include <map>
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 #include "smack/sesl/bmc/StmtFormatter.h"
+#include "smack/sesl/bmc/BMCPreAnalysis.h"
 
 #define BOT -1
-#define NIL -2
 
 namespace smack
 {
@@ -65,10 +65,14 @@ namespace smack
             std::vector<BNFPtr> getBnfList(){return this->bnfList;}
             // getVars
             std::vector<z3::expr> getRNFVars();
-            std::set<std::string> getRNFVarNames();
+            std::set<std::string> getRNFOrigVarNames();
             z3::expr getBlkAddrVar(int blockId, int sub, int u);
             z3::expr getPtAddrVar(int blockId, int sub, int u);
-            z3::expr getDataVar(int blockId, int sub, int u);
+            z3::expr getPtDataVar(int blockId, int sub, int u);
+            // getTempVar
+            z3::expr getTempBlkAddrVar(int blockId, int sub, int u);
+            z3::expr getTempPtAddrVar(int blockId, int sub, int u);
+            z3::expr getTempPtDataVar(int blockId, int sub, int u);
             // \nu formula
             z3::expr generateImplicitConstraint();
             // initial condition 
@@ -96,6 +100,8 @@ namespace smack
 
             int regionNum;
             int pointsToNum;
+            int freshCounter;
+            int tempCounter;
         public:
             BMCVCGen(BMCRefinedCFGPtr rcfg, int regNum, int ptNum) : refCfg(rcfg), regionNum(regNum), pointsToNum(ptNum) {
                 // TODObmc: need to imple:
@@ -105,7 +111,8 @@ namespace smack
                 //4. do preanalysis to determine regionNum and PointsToNum, then we can initialize currentRNF
                 //5. initialize rnf
                 this->currentRNF = std::make_shared<RegionNormalForm>(this->z3Ctx, regNum, ptNum, 0);
-                
+                this->freshCounter = 0;
+                this->tempCounter = 0;
             }
 
             z3::expr generateATSInitConfiguration();
@@ -123,15 +130,24 @@ namespace smack
             z3::expr generateTrMalloc(int u);
             z3::expr generateTrFree(int u);
             z3::expr generateTrStore(int u);
+            z3::expr generateTrStoreByteSize(int u, int byteSize);
             z3::expr generateTrLoad(int u);
-            z3::expr generateTrUnchage(int u);
+            z3::expr generateTrLoadByteSize(int u, int byteSize);
+            z3::expr generateTrUnchanged(int u);
             z3::expr generateTrAssume(int u);
             z3::expr generateTrCommonAssignNonBool(int u, int arg1Size, int arg2Size);
             z3::expr generateTrCommonAssignBool(int u);
 
             // Utilities
-            z3::expr generateRemainUnchanged(std::set<std::string> origVarNames, int u);
-            z3::expr generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int u);
+            z3::expr generateIntRemainUnchanged(std::set<std::string> origVarNames, int u);
+            z3::expr generateBoolRemainUnchanged(std::set<std::string> origVarNames, int u);
+            // z3::expr generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int dataSize, int u);
+            z3::expr equalStepAndNextStepInt(std::set<std::string> unchangedProgNames, int u);
+            z3::expr equalStepAndNextStepBool(std::set<std::string> unchangedProgNames, int u);
+            z3::expr equalTemp2StepInRNF(int stepU, int tempU);
+            z3::expr equalTempAndNextTempInRNF(std::set<std::string> unchangedOrigNames, int tempU);
+            std::pair<z3::expr, std::set<std::string>> generateShiftAddressByte(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int iu);
+            z3::expr generateUtilVariablesRanges(int type1, int type2, int u);
 
 
             
@@ -141,12 +157,13 @@ namespace smack
             z3::expr generateViolation(int l);
 
             // Vars Utilities
-            std::vector<z3::expr> getATSVars(int u);
-            std::vector<z3::expr> getUtilVars(int u);
             z3::expr getLocVar(int u);
             z3::expr getActVar(int u);
             z3::expr getArgVar(int index, int u);
             z3::expr getTypeVar(int index, int u);
+            z3::expr computerByteLenRange(int byteLen);
+            z3::expr getFreshVar();
+            std::set<std::string>  setSubstract(std::set<std::string> from, std::set<std::string> substracted);
     };
 
     

@@ -9,6 +9,7 @@
 #include "smack/SmackOptions.h"
 #include "smack/sesl/bmc/BMCVCGen.h"
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
+#include "smack/sesl/bmc/BMCPreAnalysis.h"
 
 namespace smack
 {
@@ -40,6 +41,17 @@ namespace smack
         // conCfg->printConcreteCFG();
         BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
         refinedCFG->printRefinedCFG();
+
+        BMCPreAnalysisPtr pre = std::make_shared<BMCPreAnalysis>(refinedCFG, 5);
+        std::set<std::string> progVars = pre->getProgOrigVars();
+        std::cout << "Program Orig Vars: " << std::endl;
+        for(std::string varName : progVars){
+            std::cout << varName << std::endl;
+        }
+        std::cout << "ProgMaxByteLen: " << pre->computeMaxStoreByteLen() << std::endl;
+        
+        std::cout << "ProgMinByteLen: " <<   pre->computeMinStoreByteLen() << std::endl;
+
         return false;
     }
 } // namespace smack

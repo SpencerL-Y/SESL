@@ -520,19 +520,20 @@ namespace smack
         z3::expr tempSum = this->z3Ctx.int_val(0);
         std::vector<z3::expr> storedByteVars;
         for(int currByte = 1; currByte <= byteSize; currByte ++){
-            z3::expr freshDataVar = this->generateFreshVar();
+            z3::expr freshDataVar = this->getFreshVar();
             storedByteVars.push_back(freshDataVar);
             tempSum = tempSum + this->computerByteLenRange(byteSize - currByte) * freshDataVar;
         }
         z3::expr bytifiedEqual = (tempSum == this->getArgVar(2, u));
         
+        this->tempCounter ++;
         z3::expr startShVarToTemp = this->equalTemp2StepInRNF(u, this->tempCounter);
 
         z3::expr executeStoreSequence = this->z3Ctx.bool_val(true);
         for(int currByte = 1; currByte <= byteSize; currByte ++){
             z3::expr storedByteVar = storedByteVars[currByte - 1];
             z3::expr storedAddr = this->getArgVar(1, u) + (currByte - 1);
-            z3::expr currByteStoreResult = this->z3Ctx.bool_val(false);
+            z3::expr currByteStoreResult = this->z3Ctx.bool_val(true);
             for(int blockId = 0; blockId < this->regionNum; blockId ++){
                 for(int iPt = 1; iPt <= this->pointsToNum; iPt ++){
                     z3::expr blkSplitSituation = 
@@ -568,7 +569,7 @@ namespace smack
                         changeDataVar && replaceUnchangeUpdate
                     );
 
-                    currByteStoreResult = currByteStoreResult ||
+                    currByteStoreResult = currByteStoreResult &&
                                           (blkSplit && ptReplace);
                 }
             }
@@ -586,14 +587,102 @@ namespace smack
 
 
     z3::expr BMCVCGen::generateTrLoad(int u){
-        //STOP HERE
+        std::set<int> byteSizeSet = {1,2,4,8};
+        z3::expr allLoadSituation = this->z3Ctx.bool_val(true);
+        for(int byteSize : byteSizeSet){
+            allLoadSituation == allLoadSituation &&
+            z3::implies(
+                this->getTypeVar(2, u) == byteSize,
+                this->generateTrLoadByteSize(u, byteSize)
+            );
+        }
+        return allLoadSituation;
+    }
+
+    z3::expr BMCVCGen::generateTrLoadByteSize(int u, int byteSize){
+        z3::expr tempSum = this->z3Ctx.int_val(0);
+        std::vector<z3::expr> loadFreshByteVars;
+        for(int currByte = 1; currByte <= byteSize; currByte++){
+            z3::expr freshDataVar = this->getFreshVar();
+            tempSum = tempSum + this->computerByteLenRange(byteSize - currByte) * freshDataVar;
+            loadFreshByteVars[currByte - 1] = freshDataVar;
+        }
+
+        z3::expr bytifiedEqual = (tempSum == this->getArgVar(1, u));
+
+        z3::expr startShVarToTemp = this->equalTemp2StepInRNF(u, this->tempCounter);
+
+        z3::expr executeLoadSequence = this->z3Ctx.bool_val(true);
+
+        for(int currByte = 1; currByte <= byteSize; currByte ++){
+            z3::expr loadAddr = this->getArgVar(2, u) + (currByte - 1);
+
+            z3::expr currByteLoadResult = this->z3Ctx.bool_val(true);
+            for(int blockId = 0; blockId < this->regionNum; blockId ++){
+                for(int iPt = 1; iPt <= this->pointsToNum; iPt ++){
+                    z3::expr loadFreshSituation = (
+                        loadAddr >= this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 2, this->tempCounter) &&
+                        loadAddr < this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 1, this->tempCounter)
+                    );
+                    auto shiftPair = this->generateShiftAddressByte(
+                        loadAddr,
+                        loadFreshByteVars[currByte - 1],
+                        blockId,
+                        iPt,
+                        this->tempCounter
+                    );
+                    z3::expr shiftByteExpr = shiftPair.first;
+                    std::set<std::string> loadFreshChangedSet = shiftPair.second;
+                    std::set<std::string> loadFreshUnchangedSet = this->setSubstract(
+                        this->currentRNF->getRNFOrigVarNames(), loadFreshChangedSet
+                    );
+                    z3::expr loadFreshUnchange = this->equalTempAndNextTempInRNF(
+                        loadFreshUnchangedSet,
+                        this->tempCounter
+                    );
+
+                    z3::expr loadFresh = z3::implies(
+                        loadFreshSituation,
+                        shiftByteExpr && 
+                        loadFreshUnchange
+                    );
+
+                    z3::expr loadExistSituation = (
+                        this->getArgVar(2, u) == this->currentRNF->getTempPtAddrVar(blockId, 2*iPt - 1, this->tempCounter)
+                    );
+                    z3::expr freshByteEqual = (
+                        this->currentRNF->getTempPtDataVar(blockId, 2*iPt - 1, this->tempCounter) ==
+                        loadFreshByteVars[currByte - 1]
+                    );
+                    std::set<std::string> loadExistUnchangeSet = this->currentRNF->getRNFOrigVarNames();
+                    z3::expr loadExistUnchange = this->equalTempAndNextTempInRNF(
+                        loadExistUnchangeSet,
+                        this->tempCounter
+                    );
+
+                    z3::expr loadExist = z3::implies(
+                        loadExistSituation,
+                        freshByteEqual && loadExistUnchange
+                    );
+                    currByteLoadResult = currByteLoadResult &&
+                    (loadExist && loadFresh);
+                }
+            }
+            executeLoadSequence == executeLoadSequence && (currByteLoadResult);
+            this->tempCounter ++;
+        }
+
+        z3::expr endTempVarToSh = this->equalTemp2StepInRNF(u + 1, this->tempCounter);
+
+        z3::expr finalResult = startShVarToTemp &&
+                               bytifiedEqual &&
+                               executeLoadSequence &&
+                               endTempVarToSh;
+        return finalResult;
     }
 
     z3::expr BMCVCGen::generateTrUnchanged(int u){
         // TODObmc: compute all vars need step changing
-        std::set<std::string> allRNFVars;
-        z3::expr unchangedResult = this->generateIntRemainUnchanged(allRNFVars, u);
-        return unchangedResult;
     }
 
     z3::expr BMCVCGen::generateTrAssume(int u){
@@ -622,7 +711,7 @@ namespace smack
             z3::expr arg1Result = this->z3Ctx.int_val(0);
             for(int i = 0; i < arg2Size; i++){
                 z3::expr currBase = this->computerByteLenRange(i);
-                z3::expr currByte = this->generateFreshVar();
+                z3::expr currByte = this->getFreshVar();
                 z3::expr currByteRange = (
                     currByte >= 0 &&
                     currByte < 256
@@ -676,26 +765,6 @@ namespace smack
         return unchange;
     }
 
-    // z3::expr BMCVCGen::generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int dataSize, int u){
-    //     int k = this->pointsToNum;
-    //     z3::expr notSufficientSituation = z3::implies(
-    //         this->currentRNF->getPtAddrVar(blockId, 2*k - 1 - 2*(dataSize - 1), u) == BOT,
-    //         true
-    //     );
-    //     z3::expr equalCurrStepToTemp = this->z3Ctx.bool_val(true);
-    //     equalCurrStepToTemp = equalCurrStepToTemp && this->equalTemp2StepInRNF(u, this->tempCounter);
-    //     this->tempCounter ++;
-    //     z3::expr implicitShiftChange = this->z3Ctx.bool_val(true);
-    //     z3::expr tempSum = this->z3Ctx.int_val(0);
-    //     for(int currByte = 1; currByte <= dataSize; currByte ++){
-    //         z3::expr freshDataVar = this->generateFreshVar();
-    //         z3::expr currAddr = addrVar + (currByte - 1);
-    //         implicitShiftChange = implicitShiftChange && 
-    //         this->generateShiftAddressByte(currAddr, freshDataVar, blockId, )
-    //         tempSum = tempSum + this->computerByteLenRange(dataSize - currByte) * freshDataVar;
-    //     }
-    // }
-
     z3::expr BMCVCGen::equalTemp2StepInRNF(int stepU, int tempU){
         z3::expr equality = this->z3Ctx.bool_val(true);
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
@@ -720,7 +789,13 @@ namespace smack
     }
 
     z3::expr BMCVCGen::equalStepAndNextStepInProg(std::set<std::string> unchangedProgNames, int u){
-
+        z3::expr equality = this->z3Ctx.bool_val(true);
+        for(std::string progName : unchangedProgNames){
+            equality = equality && 
+            this->z3Ctx.int_const((progName + "_(" + std::to_string(u) + ")").c_str()) ==
+            this->z3Ctx.int_const((progName + "_(" + std::to_string(u + 1) + ")").c_str());
+        }
+        return equality;
     }
 
     z3::expr BMCVCGen::equalTempAndNextTempInRNF(std::set<std::string> unchangedOrigNames, int tempU){
@@ -822,7 +897,7 @@ namespace smack
         return result;
     }
 
-    z3::expr BMCVCGen::generateFreshVar(){
+    z3::expr BMCVCGen::getFreshVar(){
         std::string varName = "fresh_" + std::to_string(this->freshCounter);
         this->freshCounter ++;
         z3::expr freshVar = this->z3Ctx.int_const(varName.c_str());

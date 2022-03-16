@@ -9,7 +9,6 @@
 #include "smack/sesl/bmc/StmtFormatter.h"
 
 #define BOT -1
-#define NIL -2
 
 namespace smack
 {
@@ -132,6 +131,7 @@ namespace smack
             z3::expr generateTrStore(int u);
             z3::expr generateTrStoreByteSize(int u, int byteSize);
             z3::expr generateTrLoad(int u);
+            z3::expr generateTrLoadByteSize(int u, int byteSize);
             z3::expr generateTrUnchanged(int u);
             z3::expr generateTrAssume(int u);
             z3::expr generateTrCommonAssignNonBool(int u, int arg1Size, int arg2Size);
@@ -160,7 +160,7 @@ namespace smack
             z3::expr getArgVar(int index, int u);
             z3::expr getTypeVar(int index, int u);
             z3::expr computerByteLenRange(int byteLen);
-            z3::expr generateFreshVar();
+            z3::expr getFreshVar();
             std::set<std::string>  setSubstract(std::set<std::string> from, std::set<std::string> substracted);
     };
 

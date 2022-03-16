@@ -90,6 +90,8 @@ namespace smack {
 
         virtual bool isValue() const = 0;
 
+        virtual std::list<const Expr*> getChilds() const = 0;
+
         virtual std::pair<bool, int> translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const;
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const;
@@ -231,6 +233,13 @@ namespace smack {
 
         bool isValue() const { return false; }
 
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            result.push_back(lhs);
+            result.push_back(rhs);
+            return result;
+        }
+
         Binary getOp() const { return op; }
 
         const Expr *getLhs() const { return lhs; }
@@ -258,6 +267,11 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result = this->args;
+            return result;
+        }
     };
 
     class BoolLit : public Expr {
@@ -281,6 +295,11 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return true; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            return result;
+        }
     };
 
     class RModeLit : public Expr {
@@ -300,6 +319,11 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            return result;
+        }
     };
 
     class IntLit : public Expr {
@@ -338,6 +362,11 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return true; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            return result;
+        }
     };
 
     class BvLit : public Expr {
@@ -362,6 +391,11 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            return result;
+        }
     };
 
     class FPLit : public Expr {
@@ -388,6 +422,11 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            return result;
+        }
     };
 
     class StringLit : public Expr {
@@ -405,6 +444,11 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            return result;
+        }
     };
 
     class NegExpr : public Expr {
@@ -422,6 +466,12 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            result.push_back(expr);
+            return result;
+        }
     };
 
     class NotExpr : public Expr {
@@ -445,6 +495,12 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            result.push_back(expr);
+            return result;
+        }
     };
 
     class QuantExpr : public Expr {
@@ -470,6 +526,12 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            result.push_back(expr);
+            return result;
+        }
     };
 
     class SelExpr : public Expr {
@@ -490,6 +552,12 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            result.push_back(base);
+            return result;
+        }
     };
 
     class UpdExpr : public Expr {
@@ -513,6 +581,13 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            result.push_back(base);
+            result.push_back(val);
+            return result;
+        }
     };
 
     class VarExpr : public Expr {
@@ -542,6 +617,14 @@ namespace smack {
         bool isVar() const { return true; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            for(const Expr* e : this->byteVars){
+                result.push_back(e);
+            }
+            return result;
+        }
     };
 
     class IfThenElseExpr : public Expr {
@@ -572,6 +655,14 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            result.push_back(cond);
+            result.push_back(trueValue);
+            result.push_back(falseValue);
+            return result;
+        }
     };
 
     class BvExtract : public Expr {
@@ -592,6 +683,14 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+        
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            result.push_back(var);
+            result.push_back(upper);
+            result.push_back(lower);
+            return result;
+        }
     };
 
     class BvConcat : public Expr {
@@ -610,6 +709,13 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            result.push_back(left);
+            result.push_back(right);
+            return result;
+        }
     };
 
     // --------------------------- AST for Array Separation Logic ------------------------------
@@ -648,6 +754,11 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            return result;
+        }
     };
 
     class EmpLit : public SpatialLiteral {
@@ -957,6 +1068,11 @@ namespace smack {
         bool isRegionClause() const { return true;}
         bool isValue() const {return false;}
         bool isVar() const {return false;}
+        std::list<const Expr*> getChilds() const {
+            // TODOsh: not added
+            std::list<const Expr*> result;
+            return result;
+        }
         ExprType getType() const {return ExprType::RegClause;}
     };
 
@@ -976,6 +1092,11 @@ namespace smack {
         bool isErrorClause() const  { return true;}
         bool isRegionClause() const { return false;}
         bool isValue() const {return false;}
+        std::list<const Expr*> getChilds() const {
+            //TODOsh: not added
+            std::list<const Expr*> result;
+            return result;
+        }
         bool isVar() const {return false;}
 
         virtual z3::expr translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const override;
@@ -1045,6 +1166,12 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            //TODOsh: not added
+            std::list<const Expr*> result;
+            return result;
+        }
 
     };
 
@@ -1577,6 +1704,11 @@ namespace smack {
         bool isVar() const { return false; }
 
         bool isValue() const { return false; }
+
+        std::list<const Expr*> getChilds() const {
+            std::list<const Expr*> result;
+            return result;
+        }
     };
 
     class ProcDecl : public Decl, public CodeContainer {

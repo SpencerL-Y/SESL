@@ -311,10 +311,10 @@ namespace smack
                 this->tarjanScc(v, computeTable, emptyStack, sccResult);
             }
         }
-        std::cout << "SCC Result: " << std::endl;
-        for(auto i : computeTable){
-            std::cout << i.first << " " << i.second.first << "," << i.second.second << std::endl;
-        }
+        // std::cout << "SCC Result: " << std::endl;
+        // for(auto i : computeTable){
+        //     std::cout << i.first << " " << i.second.first << "," << i.second.second << std::endl;
+        // }
         return sccResult;
     }
 

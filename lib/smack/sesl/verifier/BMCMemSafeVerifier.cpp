@@ -42,16 +42,23 @@ namespace smack
         BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
         refinedCFG->printRefinedCFG();
 
-        BMCPreAnalysisPtr pre = std::make_shared<BMCPreAnalysis>(refinedCFG, 5);
-        std::set<std::string> progVars = pre->getProgOrigVars();
-        std::cout << "Program Orig Vars: " << std::endl;
-        for(std::string varName : progVars){
-            std::cout << varName << std::endl;
-        }
-        std::cout << "ProgMaxByteLen: " << pre->computeMaxStoreByteLen() << std::endl;
+        // BMCPreAnalysisPtr pre = std::make_shared<BMCPreAnalysis>(refinedCFG, 5);
+        // std::set<std::string> progVars = pre->getProgOrigVars();
+        // std::cout << "Program Orig Vars: " << std::endl;
+        // for(std::string varName : progVars){
+        //     std::cout << varName << std::endl;
+        // }
+        // std::cout << "ProgMaxByteLen: " << pre->computeMaxStoreByteLen() << std::endl;
         
-        std::cout << "ProgMinByteLen: " <<   pre->computeMinStoreByteLen() << std::endl;
-
+        // std::cout << "ProgMinByteLen: " <<   pre->computeMinStoreByteLen() << std::endl;
+        BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
+        z3::expr vc = vcg->generateBMCVC(1);
+        std::cout << "Result: " << std::endl;
+        std::cout << vc.to_string() << std::endl;
+        
+        z3::solver s(vcg->getContext());
+        s.add(vc);
+        std::cout << s.check() << std::endl;
         return false;
     }
 } // namespace smack

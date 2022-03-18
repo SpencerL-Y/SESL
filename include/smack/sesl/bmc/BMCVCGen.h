@@ -35,7 +35,7 @@ namespace smack
             std::vector<z3::expr> getBNFAddrVars();
             std::vector<z3::expr> getBNFDataVars();
             // \mu formula
-            z3::expr generateImplicitConstraint();
+            z3::expr generateAbstraction();
             // initial condition
             z3::expr generateInitialCondition();
             // semantic conditions
@@ -74,12 +74,9 @@ namespace smack
             z3::expr getTempPtAddrVar(int blockId, int sub, int u);
             z3::expr getTempPtDataVar(int blockId, int sub, int u);
             // \nu formula
-            z3::expr generateImplicitConstraint();
+            z3::expr generateAbstraction(int u);
             // initial condition 
             z3::expr generateInitialCondition();
-            // semantic conditions
-            z3::expr generateInsertBytePt(/*TODObmc*/);
-            z3::expr generateLoadBytePt(/* TODObmc*/);
             // set primeNum
             void setPrimeNum(int u){
                 for(BNFPtr bnf: this->bnfList){
@@ -96,21 +93,27 @@ namespace smack
             BMCRefinedCFGPtr refCfg;
             std::set<std::string> cfgVariables;
             std::set<std::string> trUtilVariables;
-            RNFPtr currentRNF;
+            RNFPtr currentRNF; 
+            BMCPreAnalysisPtr preAnalysis;
 
+            int loopBound;
             int regionNum;
             int pointsToNum;
             int freshCounter;
             int tempCounter;
         public:
-            BMCVCGen(BMCRefinedCFGPtr rcfg, int regNum, int ptNum) : refCfg(rcfg), regionNum(regNum), pointsToNum(ptNum) {
+            BMCVCGen(BMCRefinedCFGPtr rcfg, int lb) : refCfg(rcfg), loopBound(lb) {
                 // TODObmc: need to imple:
                 //1. obtain conCfgVariables from refinedCFG
                 //2. create trUtilVariables
                 //3. get normalFormVariables 
                 //4. do preanalysis to determine regionNum and PointsToNum, then we can initialize currentRNF
                 //5. initialize rnf
-                this->currentRNF = std::make_shared<RegionNormalForm>(this->z3Ctx, regNum, ptNum, 0);
+                this->preAnalysis = std::make_shared<BMCPreAnalysis>(this->refCfg, this->loopBound);
+                this->regionNum = this->preAnalysis->computeRegNumAndPtNum().first;
+                this->pointsToNum = this->preAnalysis->computeRegNumAndPtNum().second;
+                std::cout << "INFO: regNum " <<  this->regionNum << "ptNum " << this->pointsToNum;
+                this->currentRNF = std::make_shared<RegionNormalForm>(this->z3Ctx, this->regionNum, this->pointsToNum, 0);
                 this->freshCounter = 0;
                 this->tempCounter = 0;
             }
@@ -119,7 +122,7 @@ namespace smack
             z3::expr generateATSTransitionRelation(int u);
             // initial configuration generation
             z3::expr generateCFGInitCondition();
-            z3::expr generateRNFInitCondition();
+            z3::expr generateRNFInitConditionAndAbstraction();
             
             z3::expr generateActTypeArgTemplateEncoding(RefinedActionPtr refAct, int u);
             z3::expr generateTypeVarEqualities(RefinedActionPtr refAct, int u);
@@ -154,7 +157,13 @@ namespace smack
             // Detailed violation situation encodings
             // feasibility and violation
             z3::expr generateFeasibleVC(int l);
-            z3::expr generateViolation(int l);
+            z3::expr generateViolation(int u);
+            z3::expr generateDerefViolation(int u);
+            z3::expr generateFreeViolation(int u);
+            z3::expr generateMemleakViolation(int u);
+
+            // final
+            z3::expr generateBMCVC(int l);
 
             // Vars Utilities
             z3::expr getLocVar(int u);
@@ -164,7 +173,11 @@ namespace smack
             z3::expr computerByteLenRange(int byteLen);
             z3::expr getFreshVar();
             std::set<std::string>  setSubstract(std::set<std::string> from, std::set<std::string> substracted);
+
+            z3::context& getContext(){return this->z3Ctx;}
     };
+
+    typedef std::shared_ptr<BMCVCGen> BMCVCGenPtr;
 
     
 

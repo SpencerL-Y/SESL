@@ -187,6 +187,7 @@ namespace smack
                         type2 = this->getPtrVarStepWidth(varArg1->name());
                     } else if(ExprType::FUNC == origStoreDst->getType()){
                         arg1 = this->parsePtrArithmeticExpr(origStoreDst);
+                        //TODObmc: check here
                         type2 = UNKNOWN;
                     } else {
                         BMCDEBUG(std::cout << "ERROR: stored dst not allowed: " << origStoreDst << std::endl; );
@@ -221,7 +222,7 @@ namespace smack
                     arg1 = origLoadDst;
                     const VarExpr* varArg1 = (const VarExpr*) arg1;
                     type1 = this->getVarByteSize(varArg1->name());
-                    type2 = this->getPtrVarStepWidth(varArg1->name());
+                    type2 = PTR_BYTEWIDTH;
                     if(origLoadSrc->isVar()){
                         arg2 = origLoadSrc;
                     } else if(origLoadSrc->getType() == ExprType::FUNC){

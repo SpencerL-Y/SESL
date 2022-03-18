@@ -99,11 +99,9 @@
 
 int main(){
     int *i;
-    int q;
     i = malloc(8*sizeof(int));
-    if(q == 0 && q + 1 == 2){
-        int *j = i + 4;
-        *j = 10;
-    }
+    int *j = i + 4;
+    *j = 10;
+    
     return 0;
 }

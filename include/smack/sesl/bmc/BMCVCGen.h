@@ -34,8 +34,18 @@ namespace smack
             std::vector<z3::expr> getBNFVars();
             std::vector<z3::expr> getBNFAddrVars();
             std::vector<z3::expr> getBNFDataVars();
+
+
+            z3::expr getBlkAddrVar(int sub, int u);
+            z3::expr getPtAddrVar(int sub, int u);
+            z3::expr getPtDataVar(int sub, int u);
+            // getTempVar
+            z3::expr getTempBlkAddrVar(int sub, int u);
+            z3::expr getTempPtAddrVar(int sub, int u);
+            z3::expr getTempPtDataVar(int sub, int u);
+
             // \mu formula
-            z3::expr generateAbstraction();
+            z3::expr generateAbstraction(int u);
             // initial condition
             z3::expr generateInitialCondition();
             // semantic conditions
@@ -128,7 +138,7 @@ namespace smack
             z3::expr generateTypeVarEqualities(RefinedActionPtr refAct, int u);
 
             // Stmt semantic encoding
-            z3::expr generateGeneralTr(int u);
+            z3::expr generateGeneralTr(RefinedActionPtr refAct, int u);
 
             z3::expr generateTrMalloc(int u);
             z3::expr generateTrFree(int u);

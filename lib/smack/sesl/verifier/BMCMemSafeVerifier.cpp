@@ -59,6 +59,7 @@ namespace smack
         z3::solver s(vcg->getContext());
         s.add(vc);
         std::cout << s.check() << std::endl;
+        std::cout << s.get_model() << std::endl;
         return false;
     }
 } // namespace smack

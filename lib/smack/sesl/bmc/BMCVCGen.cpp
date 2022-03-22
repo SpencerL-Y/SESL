@@ -126,7 +126,14 @@ namespace smack
             headTailLinked = (headTailLinked && z3::implies(ptBlkPlusOnePremise, ptBlkPlusOneEquality));
         }
 
-        z3::expr finalResult = (addrOrder && bottomSplit && blkPtEquality && headTailLinked);
+        z3::expr addrValueRestriction = this->z3Ctx->bool_val(true);
+        for(int i = 0; i <= this->length; i ++){
+            z3::expr left = this->getBlkAddrVar(2*i, u) == BOT || this->getBlkAddrVar(2*i, u) > 0;
+            z3::expr right = this->getBlkAddrVar(2*i + 1, u) == BOT || this->getBlkAddrVar(2*i + 1, u) > 0;
+            addrValueRestriction = (addrValueRestriction && (left && right));
+        }
+
+        z3::expr finalResult = (addrOrder && bottomSplit && blkPtEquality && headTailLinked && addrValueRestriction);
         return finalResult;
     }
 
@@ -297,6 +304,7 @@ namespace smack
                         edgeActionEncoding = edgeActionEncoding && 
                         (this->getActVar(u) ==  refAct->getActType()&& 
                         this->generateActTypeArgTemplateEncoding(refAct, u)) &&
+                        this->getLocVar(u + 1) == edge->getTo() && 
                         this->generateGeneralTr(refAct, u);
                         behaviorForEachEdgeOnCurrVertex = behaviorForEachEdgeOnCurrVertex ||    edgeActionEncoding;
                     } else {

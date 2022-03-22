@@ -100,7 +100,7 @@ namespace smack
         }
 
         z3::expr bottomSplit = this->z3Ctx->bool_val(true);
-        for(int i = 0; i < this->length; i ++){
+        for(int i = 0; i <= this->length; i ++){
             z3::expr premise = (this->getBlkAddrVar(2*i, u) == BOT);
             z3::expr implicant = this->z3Ctx->bool_val(true);
             for(int j = i; j <= this->length; j ++){
@@ -110,6 +110,15 @@ namespace smack
                 );
             }
             bottomSplit = bottomSplit && z3::implies(premise, implicant);
+        }
+
+        z3::expr blkBothBottom = this->z3Ctx->bool_val(true);
+        for(int i = 0; i <= this->length; i++){
+            z3::expr leftIsBottom = this->getBlkAddrVar(2*i, u) == BOT;
+            z3::expr rightIsBottom = this->getBlkAddrVar(2*i + 1, u) == BOT;
+            blkBothBottom = blkBothBottom && 
+            (z3::implies(leftIsBottom, rightIsBottom) &&
+             z3::implies(rightIsBottom, leftIsBottom));
         }
 
         z3::expr blkPtEquality = this->z3Ctx->bool_val(true);
@@ -133,7 +142,7 @@ namespace smack
             addrValueRestriction = (addrValueRestriction && (left && right));
         }
 
-        z3::expr finalResult = (addrOrder && bottomSplit && blkPtEquality && headTailLinked && addrValueRestriction);
+        z3::expr finalResult = (addrOrder && bottomSplit && blkBothBottom && blkPtEquality && headTailLinked && addrValueRestriction);
         return finalResult;
     }
 
@@ -573,7 +582,7 @@ namespace smack
     z3::expr BMCVCGen::generateViolation(int l){
 
         z3::expr result = this->z3Ctx.bool_val(false);
-        for(int u = 0; u <= l; u ++){
+        for(int u = 0; u < l; u ++){
             result = result ||(
                 this->generateDerefViolation(u) ||
                 this->generateFreeViolation(u) ||

@@ -52,7 +52,8 @@ namespace smack
         
         // std::cout << "ProgMinByteLen: " <<   pre->computeMinStoreByteLen() << std::endl;
         BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
-        z3::expr vc = vcg->generateBMCVC(1);
+        // z3::expr vc = vcg->generateBMCVC(24);
+        z3::expr vc = vcg->generateFeasibleVC(13);
         std::cout << "Result: " << std::endl;
         std::cout << vc.to_string() << std::endl;
         

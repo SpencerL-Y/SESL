@@ -99,7 +99,7 @@
 
 int main(){
     char *i;
-    i = malloc(8*sizeof(char));
+    i = malloc(3*sizeof(char));
     char *j = i + 4;
     *j = 'a';
     free(i);

@@ -1,5 +1,9 @@
 # SESL: A Symbolic Executor based on Separation Logic
 
+## Contact
+
+Any feedbacks, advises and questions are welcomed. Feel free to ask any question by sending an email to lixie19[AT]ios[DOT]ac[DOT]cn or by creating an issue.
+
 ## Introduction
 
 SESL is a tool for memory safety checking. It is an symbolic execution extension of existing state-of-the-art tool SMACK on separation logic. 

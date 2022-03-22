@@ -795,7 +795,7 @@ namespace smack
 
     z3::expr BMCVCGen::generateTrMalloc(int u){
         this->currentRNF->setPrimeNum(u);
-        z3::expr differentMallocSituation = this->z3Ctx.bool_val(false);
+        z3::expr differentMallocSituation = this->z3Ctx.bool_val(true);
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
             z3::expr premise = this->z3Ctx.bool_val(true);
             for(int notEmptyId = 0; notEmptyId < blockId; notEmptyId ++){

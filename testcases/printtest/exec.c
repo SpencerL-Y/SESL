@@ -98,10 +98,10 @@
 // }
 
 int main(){
-    int *i;
-    i = malloc(8*sizeof(int));
-    int *j = i + 4;
-    *j = 10;
-    
+    char *i;
+    i = malloc(8*sizeof(char));
+    char *j = i + 4;
+    *j = 'a';
+    free(i);
     return 0;
 }

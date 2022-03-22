@@ -1175,7 +1175,7 @@ namespace smack {
     }
 
      z3::expr VarExpr::bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const {
-        std::string translatedVarName = this->name() + "_" + std::to_string(u);
+        std::string translatedVarName = this->name() + "_(" + std::to_string(u) + ")";
         if(type != 1){
             z3::expr res = z3Ctx.int_const(translatedVarName.c_str());
             return res;

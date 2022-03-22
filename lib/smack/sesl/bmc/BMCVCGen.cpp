@@ -52,6 +52,31 @@ namespace smack
         return bnfDataVars;
     }
 
+    z3::expr BlockNormalForm::getBlkAddrVar(int sub, int u){
+        std::string addrVarName = "blka_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(" + std::to_string(u) + ")";
+        return this->z3Ctx->int_const(addrVarName.c_str());
+    }
+    z3::expr BlockNormalForm::getPtAddrVar(int sub, int u){
+        std::string addrVarName = "pta_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(" + std::to_string(u) + ")";
+        return this->z3Ctx->int_const(addrVarName.c_str());
+    }
+    z3::expr BlockNormalForm::getPtDataVar(int sub, int u){
+        std::string addrVarName = "ptd_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(" + std::to_string(u) + ")";
+        return this->z3Ctx->int_const(addrVarName.c_str());
+    }
+    z3::expr BlockNormalForm::getTempBlkAddrVar(int sub, int iu){
+        std::string addrVarName = "blka_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(t_" + std::to_string(iu) + ")";
+        return this->z3Ctx->int_const(addrVarName.c_str());
+    }
+    z3::expr BlockNormalForm::getTempPtAddrVar(int sub, int iu){
+        std::string addrVarName = "pta_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(t_" + std::to_string(iu) + ")";
+        return this->z3Ctx->int_const(addrVarName.c_str());
+    }
+    z3::expr BlockNormalForm::getTempPtDataVar(int sub, int iu){
+        std::string addrVarName = "ptd_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(t_" + std::to_string(iu) + ")";
+        return this->z3Ctx->int_const(addrVarName.c_str());
+    }
+
     z3::expr BlockNormalForm::generateInitialCondition(){
         z3::expr initCond = this->z3Ctx->bool_val(true);
         std::vector<z3::expr> addrVars = this->getBNFAddrVars();
@@ -65,33 +90,43 @@ namespace smack
         return initCond; 
     }
 
-    z3::expr BlockNormalForm::generateAbstraction(){
+    z3::expr BlockNormalForm::generateAbstraction(int u){
+        // TODObmc: there is bug here.
         z3::expr addrOrder = this->z3Ctx->bool_val(true);
-        std::vector<z3::expr> addrList = this->getBNFAddrVars();
-        for(int i = 0; i < addrList.size() - 1; i++){
-            z3::expr left = addrList[i];
-            z3::expr right = addrList[i + 1];
+        for(int i = 0; i <= this->length; i++){
+            z3::expr left = this->getBlkAddrVar(2*i, u);
+            z3::expr right = this->getBlkAddrVar(2*i + 1, u);
             addrOrder = (addrOrder && (left <= right));
         }
 
         z3::expr bottomSplit = this->z3Ctx->bool_val(true);
-        for(int i = 0; i < addrList.size(); i ++){
-            z3::expr premise = (addrList[i] == BOT);
+        for(int i = 0; i < this->length; i ++){
+            z3::expr premise = (this->getBlkAddrVar(2*i, u) == BOT);
             z3::expr implicant = this->z3Ctx->bool_val(true);
-            for(int j = i + 1; j <addrList.size(); j ++){
-                implicant = (implicant && (addrList[j] == BOT));
+            for(int j = i; j <= this->length; j ++){
+                implicant = (implicant &&  
+                    this->getBlkAddrVar(2*j, u) == BOT &&
+                    this->getBlkAddrVar(2*j + 1, u) == BOT
+                );
             }
             bottomSplit = bottomSplit && z3::implies(premise, implicant);
         }
 
-        z3::expr headTailLinked = this->z3Ctx->bool_val(true);
-        for(int i = 1; i < this->length; i++){
-            // TODObmc: the number of byte number is currently defined as 1
-            z3::expr tempEqual = (addrList[2 * i - 1] + 1 == addrList[2 * i]);
-            headTailLinked = (headTailLinked && tempEqual);
+        z3::expr blkPtEquality = this->z3Ctx->bool_val(true);
+        for(int i = 0; i < this->length; i++){
+            blkPtEquality == blkPtEquality &&
+            this->getBlkAddrVar(2*i + 1, u) == this->getPtAddrVar(2*i + 1, u);
         }
 
-        z3::expr finalResult = (addrOrder && bottomSplit && headTailLinked);
+        z3::expr headTailLinked = this->z3Ctx->bool_val(true);
+        for(int i = 1; i < this->length; i++){
+            z3::expr ptBlkPlusOnePremise = this->getPtAddrVar(2*i - 1, u) != BOT &&
+                                           this->getBlkAddrVar(2*i, u) != BOT;
+            z3::expr ptBlkPlusOneEquality = (this->getPtAddrVar(2*i - 1, u) + 1 == this->getBlkAddrVar(2*i, u));
+            headTailLinked = (headTailLinked && z3::implies(ptBlkPlusOnePremise, ptBlkPlusOneEquality));
+        }
+
+        z3::expr finalResult = (addrOrder && bottomSplit && blkPtEquality && headTailLinked);
         return finalResult;
     }
 
@@ -121,7 +156,7 @@ namespace smack
         this->setPrimeNum(u);
         z3::expr blkAbs = this->z3Ctx->bool_val(true);
         for(BNFPtr bnf : this->bnfList){
-            blkAbs = (blkAbs && bnf->generateAbstraction());
+            blkAbs = (blkAbs && bnf->generateAbstraction(u));
         }
 
         z3::expr rnfAbstraction = this->z3Ctx->bool_val(true);
@@ -262,7 +297,7 @@ namespace smack
                         edgeActionEncoding = edgeActionEncoding && 
                         (this->getActVar(u) ==  refAct->getActType()&& 
                         this->generateActTypeArgTemplateEncoding(refAct, u)) &&
-                        this->generateGeneralTr(u);
+                        this->generateGeneralTr(refAct, u);
                         behaviorForEachEdgeOnCurrVertex = behaviorForEachEdgeOnCurrVertex ||    edgeActionEncoding;
                     } else {
                         // TODObmc
@@ -515,9 +550,14 @@ namespace smack
         z3::expr result = this->z3Ctx.bool_val(true);
         z3::expr initConfig = this->generateATSInitConfiguration();
         result = result && initConfig;
+        // BMCDEBUG(std::cout << "InitConfig: " << std::endl;);
+        // BMCDEBUG(std::cout << initConfig.to_string() << std::endl;);
         for(int i = 0; i < l; i++){
             result = result && this->generateATSTransitionRelation(i);
             result = result && this->currentRNF->generateAbstraction(i + 1);
+
+            // BMCDEBUG(std::cout << "Step " + std::to_string(i) + "transition ----------------------------" << std::endl <<  result.to_string() << std::endl;);
+            // BMCDEBUG(std::cout << result.to_string() << std::endl;);
         }
         return result;
     }
@@ -631,67 +671,88 @@ namespace smack
     }
 
     // Stmt semantic encoding
-    z3::expr BMCVCGen::generateGeneralTr(int u){
+    z3::expr BMCVCGen::generateGeneralTr(RefinedActionPtr refAct, int u){
         // TODObmc: add unchange of heap variables
         this->currentRNF->setPrimeNum(u);
         std::set<int> allNonBoolByteNum= {1, 4, PTR_BYTEWIDTH};
-        z3::expr mallocBranch = z3::implies(
-            this->getActVar(u) == ConcreteAction::ActType::MALLOC,
-            this->generateTrMalloc(u)
-        );
-
-        z3::expr freeBranch = z3::implies(
-            this->getActVar(u) == ConcreteAction::ActType::FREE,
-            this->generateTrFree(u)
-        );
-
-        z3::expr otherBranch = z3::implies(
-            this->getActVar(u) == ConcreteAction::ActType::OTHER || 
-            this->getActVar(u) == ConcreteAction::ActType::OTHERPROC,
-            this->generateTrUnchanged(u)
-        );
-
-        z3::expr assumeBranch = z3::implies(
-            this->getActVar(u) == ConcreteAction::ActType::ASSUME,
-            this->generateTrAssume(u)
-        );
-
-        z3::expr commonBoolAssignBranch = z3::implies(
-            this->getActVar(u) == ConcreteAction::ActType::COMMONASSIGN && 
-            this->getArgVar(1, u) == BOT && 
-            this->getArgVar(2, u) == BOT,
-            this->generateTrCommonAssignBool(u)
-        );
-
-        z3::expr commonNonBoolAssignBranches = this->z3Ctx.bool_val(true);
-        for(int leftByteNum : allNonBoolByteNum){
-            for(int rightByteNum : allNonBoolByteNum){
-                commonNonBoolAssignBranches = commonNonBoolAssignBranches && this->generateTrCommonAssignNonBool(u, leftByteNum, rightByteNum);
-            }
+        if(refAct->getActType() == ConcreteAction::ActType::MALLOC){
+            z3::expr mallocBranch = z3::implies(
+                this->getActVar(u) == ConcreteAction::ActType::MALLOC,
+                this->generateTrMalloc(u)
+            );
+            return mallocBranch;
         }
+        else if(refAct->getActType() == ConcreteAction::ActType::FREE){
+            z3::expr freeBranch = z3::implies(
+                this->getActVar(u) == ConcreteAction::ActType::FREE,
+                this->generateTrFree(u)
+            );
+            return freeBranch;
+        }
+        else if(refAct->getActType() == ConcreteAction::ActType::OTHER ||
+           refAct->getActType() == ConcreteAction::ActType::OTHERPROC){
+            z3::expr otherBranch = z3::implies(
+                this->getActVar(u) == ConcreteAction::ActType::OTHER || 
+                this->getActVar(u) == ConcreteAction::ActType::OTHERPROC,
+                this->generateTrUnchanged(u)
+            );
+            return otherBranch;
+        }
+        else if(refAct->getActType() == ConcreteAction::ActType::ASSUME){
+            z3::expr assumeBranch = z3::implies(
+                this->getActVar(u) == ConcreteAction::ActType::ASSUME,
+                this->generateTrAssume(u)
+            );
+            return assumeBranch;
+        }
+        else if(refAct->getActType() == ConcreteAction::ActType::COMMONASSIGN){
+            z3::expr commonBoolAssignBranch = z3::implies(
+                this->getActVar(u) == ConcreteAction::ActType::COMMONASSIGN && 
+                this->getArgVar(1, u) == BOT && 
+                this->getArgVar(2, u) == BOT,
+                this->generateTrCommonAssignBool(u)
+            );
+            return commonBoolAssignBranch;
+        }
+        else if(refAct->getActType() == ConcreteAction::ActType::COMMONASSIGN){
+            z3::expr commonNonBoolAssignBranches = this->z3Ctx.bool_val(true);
+            for(int leftByteNum : allNonBoolByteNum){
+                for(int rightByteNum : allNonBoolByteNum){
+                    commonNonBoolAssignBranches = commonNonBoolAssignBranches &&    this->generateTrCommonAssignNonBool(u, leftByteNum, rightByteNum);
+                }
+            }
+            return commonNonBoolAssignBranches;
+        }
+        else if(refAct->getActType() == ConcreteAction::ActType::STORE){
+            z3::expr storeBranch = z3::implies(
+                this->getActVar(u) == ConcreteAction::ActType::STORE,
+                this->generateTrStore(u)  
+            );
+            return storeBranch;
+        }
+        else if(refAct->getActType() == ConcreteAction::ActType::LOAD){
+            z3::expr loadBranch = z3::implies(
+                this->getActVar(u) == ConcreteAction::ActType::LOAD,
+                this->generateTrLoad(u)
+            );
+            return loadBranch;
+        }
+        else{
 
-        z3::expr storeBranch = z3::implies(
-            this->getActVar(u) == ConcreteAction::ActType::STORE,
-            this->generateTrStore(u)  
-        );
+            return this->z3Ctx.bool_val(true);
+        }
+        // z3::expr genTrExpr = (
+        //     mallocBranch && 
+        //     freeBranch && 
+        //     otherBranch && 
+        //     assumeBranch && 
+        //     commonBoolAssignBranch && 
+        //     commonNonBoolAssignBranches && 
+        //     storeBranch && 
+        //     loadBranch
+        // );
 
-        z3::expr loadBranch = z3::implies(
-            this->getActVar(u) == ConcreteAction::ActType::LOAD,
-            this->generateTrLoad(u)
-        );
-
-        z3::expr genTrExpr = (
-            mallocBranch && 
-            freeBranch && 
-            otherBranch && 
-            assumeBranch && 
-            commonBoolAssignBranch && 
-            commonNonBoolAssignBranches && 
-            storeBranch && 
-            loadBranch
-        );
-
-        return genTrExpr;
+        // return genTrExpr;
 
     }
 
@@ -1098,6 +1159,8 @@ namespace smack
             this->currentRNF->getTempPtAddrVar(blockId, 2*k - 1, iu) == BOT,
             shiftChange
         );
+        // BMCDEBUG(std::cout << "ShiftImplies: " << std::endl;);
+        // BMCDEBUG(std::cout << shiftImplies.to_string() << std::endl;);
         return {shiftImplies && notSufficientSpaceSituation,  changedOrigVarNames};
     }
 
@@ -1132,7 +1195,7 @@ namespace smack
     }
 
     z3::expr BMCVCGen::getArgVar(int index, int u){
-        std::string argVarName = "arg_" + std::to_string(index) + "(" + std::to_string(u) + ")";
+        std::string argVarName = "arg_" + std::to_string(index) + "_(" + std::to_string(u) + ")";
         if(index == 1 || index == 2){
             z3::expr argVar = this->z3Ctx.int_const(argVarName.c_str());
             return argVar;
@@ -1146,7 +1209,7 @@ namespace smack
     }
 
     z3::expr BMCVCGen::getTypeVar(int index, int u){
-        std::string typeVarName = "type_" + std::to_string(index) + "(" + std::to_string(u) + ")";
+        std::string typeVarName = "type_" + std::to_string(index) + "_(" + std::to_string(u) + ")";
         z3::expr typeVar = this->z3Ctx.int_const(typeVarName.c_str());
         return typeVar;
     }

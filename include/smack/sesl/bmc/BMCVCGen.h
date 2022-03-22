@@ -105,6 +105,7 @@ namespace smack
             std::set<std::string> trUtilVariables;
             RNFPtr currentRNF; 
             BMCPreAnalysisPtr preAnalysis;
+            z3::expr_vector* existVars;
 
             int loopBound;
             int regionNum;
@@ -126,6 +127,11 @@ namespace smack
                 this->currentRNF = std::make_shared<RegionNormalForm>(this->z3Ctx, this->regionNum, this->pointsToNum, 0);
                 this->freshCounter = 0;
                 this->tempCounter = 0;
+                this->existVars = new z3::expr_vector(this->z3Ctx);
+            }
+
+            ~BMCVCGen(){
+                delete(this->existVars);
             }
 
             z3::expr generateATSInitConfiguration();

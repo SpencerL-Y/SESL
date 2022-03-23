@@ -188,6 +188,8 @@ namespace smack
             z3::expr getTypeVar(int index, int u);
             z3::expr computerByteLenRange(int byteLen);
             z3::expr getFreshVar();
+            z3::expr getBNFOverflowVar();
+            z3::expr getRNFOverflowVar();
             std::set<std::string>  setSubstract(std::set<std::string> from, std::set<std::string> substracted);
 
             z3::context& getContext(){return this->z3Ctx;}

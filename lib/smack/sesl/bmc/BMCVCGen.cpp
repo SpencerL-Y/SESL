@@ -593,6 +593,9 @@ namespace smack
             // BMCDEBUG(std::cout << "Step " + std::to_string(i) + "transition ----------------------------" << std::endl <<  result.to_string() << std::endl;);
             // BMCDEBUG(std::cout << result.to_string() << std::endl;);
         }
+
+        // DEBUG
+        // result = z3::exists(*this->existVars, result);
         return result;
     }
 
@@ -895,8 +898,14 @@ namespace smack
                     z3::expr blkSplitSituation = 
                     storedAddr >= this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 2, this->tempCounter) &&
                     storedAddr < this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 1, this->tempCounter);
+
+                    this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 2, this->tempCounter));
+                    this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 1, this->tempCounter));
+                    
                     auto genPair = this->generateShiftAddressByte(storedAddr, storedByteVar, blockId, iPt, this->tempCounter);
                     z3::expr shiftByteExpr = genPair.first;
+                    BMCDEBUG(std::cout << genPair.first << std::endl;);
+                    std::cout << "-----------------------" << std::endl;
                     std::set<std::string> changedTempOrigNames = genPair.second;
                     std::set<std::string> shiftUnchangedSet = this->setSubstract(this->currentRNF->getRNFOrigVarNames(), changedTempOrigNames);
                     z3::expr shiftUnchangeUpdate = this->equalTempAndNextTempInRNF(
@@ -932,6 +941,8 @@ namespace smack
             executeStoreSequence == executeStoreSequence && currByteStoreResult;
             this->tempCounter ++;
         }
+        // TODObmc: here we need tempCounter --
+
         z3::expr endTempVarToSh = this->equalTemp2StepInRNF(u + 1, this->tempCounter);
 
         z3::expr finalResult = startShVarToTemp &&
@@ -1120,12 +1131,20 @@ namespace smack
                 this->currentRNF->getTempPtAddrVar(blockId, iPt * 2 + 1, tempU) &&
                 this->currentRNF->getPtDataVar(blockId, iPt * 2 + 1, stepU) == 
                 this->currentRNF->getTempPtDataVar(blockId, iPt * 2 + 1, tempU);
+
+                this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, iPt * 2, tempU));
+                this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, iPt * 2 + 1, tempU));
+                this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, iPt * 2 + 1, tempU));
+                this->existVars->push_back(this->currentRNF->getTempPtDataVar(blockId, iPt * 2 + 1, tempU));
             }
             equality = equality &&
             this->currentRNF->getBlkAddrVar(blockId, 2 * this->pointsToNum, stepU) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum, tempU) && 
             this->currentRNF->getBlkAddrVar(blockId, 2 * this->pointsToNum + 1, stepU) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum + 1, tempU); 
+
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum, tempU));
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum + 1, tempU));
         }
         return equality;
     }
@@ -1156,6 +1175,10 @@ namespace smack
             equality = equality && 
             this->z3Ctx.int_const((origName + "_(t_" + std::to_string(tempU) + ")").c_str()) ==
             this->z3Ctx.int_const((origName + "_(t_" + std::to_string(tempU) + ")").c_str());
+
+            this->existVars->push_back(this->z3Ctx.int_const((origName + "_(t_" + std::to_string(tempU) + ")").c_str()));
+
+            this->existVars->push_back(this->z3Ctx.int_const((origName + "_(t_" + std::to_string(tempU) + ")").c_str()));
         }
         return equality;
     }
@@ -1175,9 +1198,13 @@ namespace smack
         shiftChange = shiftChange && 
         this->currentRNF->getTempPtAddrVar(blockId, 2*j - 1, iu + 1) == addrVar && 
         this->currentRNF->getTempPtDataVar(blockId, 2*j - 1, iu + 1) == dataVar;
+
+        this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*j - 1, iu + 1));
+        this->existVars->push_back(this->currentRNF->getTempPtDataVar(blockId, 2*j - 1, iu + 1));
+
         changedOrigVarNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*j - 1) );
         changedOrigVarNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*j - 1) );
-        for(int r = j + 1; r <= k + 1; r ++){
+        for(int r = j + 1; r <= k ; r ++){
             shiftChange = shiftChange &&
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 1, iu + 1) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 3, iu) &&
@@ -1185,6 +1212,13 @@ namespace smack
             this->currentRNF->getTempPtAddrVar(blockId, 2*r - 3, iu) &&
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r, iu + 1) ==
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 2, iu);
+
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 1, iu + 1));
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 3, iu));
+            this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*r - 1, iu + 1));
+            this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*r - 3, iu));
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r, iu + 1));
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 2, iu));
 
             changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*r - 1) );
             changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*r) );
@@ -1195,6 +1229,7 @@ namespace smack
             this->currentRNF->getTempPtAddrVar(blockId, 2*k - 1, iu) == BOT,
             shiftChange
         );
+        this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*k - 1, iu));
         // BMCDEBUG(std::cout << "ShiftImplies: " << std::endl;);
         // BMCDEBUG(std::cout << shiftImplies.to_string() << std::endl;);
         return {shiftImplies && notSufficientSpaceSituation,  changedOrigVarNames};
@@ -1264,6 +1299,17 @@ namespace smack
         this->freshCounter ++;
         z3::expr freshVar = this->z3Ctx.int_const(varName.c_str());
         return freshVar;
+    }
+
+
+    z3::expr BMCVCGen::getBNFOverflowVar(){
+        std::string varName = "BNFOverflow";
+        return this->z3Ctx.bool_const(varName.c_str());
+    }
+
+    z3::expr BMCVCGen::getRNFOverflowVar(){
+        std::string varName = "RNFOverflow";
+        return this->z3Ctx.bool_const(varName.c_str());
     }
 
     std::set<std::string> BMCVCGen::setSubstract(std::set<std::string> from, std::set<std::string> substracted){

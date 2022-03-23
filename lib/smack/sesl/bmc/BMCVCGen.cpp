@@ -1,5 +1,9 @@
 #include "smack/sesl/bmc/BMCVCGen.h"
-
+// Author: Xie Li
+// Institute: Institute of Software, CAS
+// Started: 15/3/2022
+// DO NOT MODIFY!!
+// 
 namespace smack
 {
     std::vector<z3::expr> BlockNormalForm::getBNFVars(){

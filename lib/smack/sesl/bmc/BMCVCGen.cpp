@@ -915,8 +915,8 @@ namespace smack
                     
                     auto genPair = this->generateShiftAddressByte(storedAddr, storedByteVar, blockId, iPt, this->tempCounter);
                     z3::expr shiftByteExpr = genPair.first;
-                    // BMCDEBUG(std::cout << genPair.first << std::endl;);
-                    // std::cout << "-----------------------" << std::endl;
+                    BMCDEBUG(std::cout << shiftByteExpr << std::endl;);
+                    std::cout << "-----------------------" << std::endl;
                     std::set<std::string> changedTempOrigNames = genPair.second;
                     std::set<std::string> shiftUnchangedSet = this->setSubstract(this->currentRNF->getRNFOrigVarNames(), changedTempOrigNames);
                     z3::expr shiftUnchangeUpdate = this->equalTempAndNextTempInRNF(
@@ -949,13 +949,13 @@ namespace smack
                                           (blkSplit && ptReplace);
                 }
             }
-            executeStoreSequence == executeStoreSequence && currByteStoreResult;
+            executeStoreSequence = executeStoreSequence && currByteStoreResult;
+            
             this->tempCounter ++;
         }
         // TODObmc: here we need tempCounter --
 
         z3::expr endTempVarToSh = this->equalTemp2StepInRNF(u + 1, this->tempCounter);
-
         z3::expr finalResult = startShVarToTemp &&
                                bytifiedEqual && 
                                executeStoreSequence && 
@@ -1324,6 +1324,7 @@ namespace smack
         std::string varName = "fresh_" + std::to_string(this->freshCounter);
         this->freshCounter ++;
         z3::expr freshVar = this->z3Ctx.int_const(varName.c_str());
+        this->existVars->push_back(freshVar);
         return freshVar;
     }
 

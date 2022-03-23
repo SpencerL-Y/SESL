@@ -91,7 +91,6 @@ namespace smack
     }
 
     z3::expr BlockNormalForm::generateAbstraction(int u){
-        // TODObmc: there is bug here.
         z3::expr addrOrder = this->z3Ctx->bool_val(true);
         for(int i = 0; i <= this->length; i++){
             z3::expr left = this->getBlkAddrVar(2*i, u);
@@ -131,8 +130,14 @@ namespace smack
         for(int i = 1; i < this->length; i++){
             z3::expr ptBlkPlusOnePremise = this->getPtAddrVar(2*i - 1, u) != BOT &&
                                            this->getBlkAddrVar(2*i, u) != BOT;
+            // TODObmc: byte length 1
             z3::expr ptBlkPlusOneEquality = (this->getPtAddrVar(2*i - 1, u) + 1 == this->getBlkAddrVar(2*i, u));
-            headTailLinked = (headTailLinked && z3::implies(ptBlkPlusOnePremise, ptBlkPlusOneEquality));
+            z3::expr blkPtEquality = (this->getBlkAddrVar(2*i - 1, u) == this->getPtAddrVar(2*i - 1, u));
+            headTailLinked = (
+                headTailLinked && 
+                z3::implies(ptBlkPlusOnePremise, ptBlkPlusOneEquality) && 
+                blkPtEquality
+            );
         }
 
         z3::expr addrValueRestriction = this->z3Ctx->bool_val(true);
@@ -459,7 +464,7 @@ namespace smack
         } else if(ConcreteAction::ActType::MALLOC == refAct->getActType()){
 
             assert(refAct->getArg1() != nullptr && refAct->getType1() == PTR_BYTEWIDTH && refAct->getArg2() != nullptr && refAct->getType2() != BOT);
-            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType1()));
             z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
             z3::expr arg3Equal = (
                 z3::implies(this->getArgVar(3, u), false) &&
@@ -746,22 +751,26 @@ namespace smack
             return assumeBranch;
         }
         else if(refAct->getActType() == ConcreteAction::ActType::COMMONASSIGN){
-            z3::expr commonBoolAssignBranch = z3::implies(
-                this->getActVar(u) == ConcreteAction::ActType::COMMONASSIGN && 
-                this->getArgVar(1, u) == BOT && 
-                this->getArgVar(2, u) == BOT,
-                this->generateTrCommonAssignBool(u)
-            );
-            return commonBoolAssignBranch;
-        }
-        else if(refAct->getActType() == ConcreteAction::ActType::COMMONASSIGN){
-            z3::expr commonNonBoolAssignBranches = this->z3Ctx.bool_val(true);
-            for(int leftByteNum : allNonBoolByteNum){
-                for(int rightByteNum : allNonBoolByteNum){
-                    commonNonBoolAssignBranches = commonNonBoolAssignBranches &&    this->generateTrCommonAssignNonBool(u, leftByteNum, rightByteNum);
+            if(refAct->getArg3() !=  nullptr && refAct->getArg4() != nullptr){
+                z3::expr commonBoolAssignBranch = z3::implies(
+                    this->getActVar(u) == ConcreteAction::ActType::COMMONASSIGN && 
+                    this->getArgVar(1, u) == BOT && 
+                    this->getArgVar(2, u) == BOT,
+                    this->generateTrCommonAssignBool(u)
+                );
+                return commonBoolAssignBranch;
+            } else if(refAct->getArg1() != nullptr && refAct->getArg2() != nullptr){
+                z3::expr commonNonBoolAssignBranches = this->z3Ctx.bool_val(true);
+                for(int leftByteNum : allNonBoolByteNum){
+                    for(int rightByteNum : allNonBoolByteNum){
+                        commonNonBoolAssignBranches = commonNonBoolAssignBranches && this->generateTrCommonAssignNonBool(u, leftByteNum, rightByteNum);
+                    }
                 }
+                return commonNonBoolAssignBranches;
+            } else {
+                BMCDEBUG(std::cout << "ERROR: this common assign situation should not happen.." << std::endl;);
+                assert(false);
             }
-            return commonNonBoolAssignBranches;
         }
         else if(refAct->getActType() == ConcreteAction::ActType::STORE){
             z3::expr storeBranch = z3::implies(
@@ -816,7 +825,9 @@ namespace smack
                 this->currentRNF->getBlkAddrVar(blockId, 1, u + 1) == (this->getArgVar(1, u) + this->getArgVar(2, u)) &&
                 this->generateIntRemainUnchanged(unchangedOrigVarNames, u)
             );
-            differentMallocSituation = differentMallocSituation && z3::implies(premise, implicant);
+            differentMallocSituation = differentMallocSituation && 
+            z3::implies(premise, implicant) && 
+            (this->getArgVar(1, u) > 0 && this->getArgVar(2, u) >= 0);
         }
         return differentMallocSituation;
     }
@@ -904,8 +915,8 @@ namespace smack
                     
                     auto genPair = this->generateShiftAddressByte(storedAddr, storedByteVar, blockId, iPt, this->tempCounter);
                     z3::expr shiftByteExpr = genPair.first;
-                    BMCDEBUG(std::cout << genPair.first << std::endl;);
-                    std::cout << "-----------------------" << std::endl;
+                    // BMCDEBUG(std::cout << genPair.first << std::endl;);
+                    // std::cout << "-----------------------" << std::endl;
                     std::set<std::string> changedTempOrigNames = genPair.second;
                     std::set<std::string> shiftUnchangedSet = this->setSubstract(this->currentRNF->getRNFOrigVarNames(), changedTempOrigNames);
                     z3::expr shiftUnchangeUpdate = this->equalTempAndNextTempInRNF(
@@ -1204,7 +1215,16 @@ namespace smack
 
         changedOrigVarNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*j - 1) );
         changedOrigVarNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*j - 1) );
-        for(int r = j + 1; r <= k ; r ++){
+
+        // TODObmc: byte length 1
+        shiftChange = shiftChange &&
+        this->currentRNF->getTempBlkAddrVar(blockId, 2*j, iu + 1) == this->currentRNF->getTempPtAddrVar(blockId, 2*j - 1, iu + 1) + 1;
+
+        this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*j, iu + 1));
+
+        changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*j));
+
+        for(int r = j + 1; r < k ; r ++){
             shiftChange = shiftChange &&
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 1, iu + 1) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 3, iu) &&
@@ -1224,6 +1244,12 @@ namespace smack
             changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*r) );
             changedOrigVarNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*r - 1) );
         }
+        shiftChange = shiftChange &&
+        this->currentRNF->getTempBlkAddrVar(blockId, 2*k + 1 , iu + 1) == 
+        this->currentRNF->getTempBlkAddrVar(blockId, 2*k - 1, iu);
+
+        changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*k - 1) );
+
 
         z3::expr shiftImplies = z3::implies(
             this->currentRNF->getTempPtAddrVar(blockId, 2*k - 1, iu) == BOT,

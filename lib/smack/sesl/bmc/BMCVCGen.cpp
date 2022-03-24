@@ -615,8 +615,8 @@ namespace smack
         for(int u = 0; u < l; u ++){
             result = result ||(
                 this->generateDerefViolation(u) ||
-                this->generateFreeViolation(u) //||
-                // this->generateMemleakViolation(u)
+                this->generateFreeViolation(u) ||
+                this->generateMemleakViolation(u)
             );
         }
         return result;

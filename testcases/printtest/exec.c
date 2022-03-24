@@ -100,8 +100,10 @@
 int main(){
     char *i;
     i = malloc(11*sizeof(char));
-    char *j = i + 4;
+    char *j = i + 10;
+    char *k = i + 11;
     *j = 'a';
+    *k = 'b';
     free(i);
     return 0;
 }

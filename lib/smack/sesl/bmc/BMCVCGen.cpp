@@ -615,8 +615,8 @@ namespace smack
         for(int u = 0; u < l; u ++){
             result = result ||(
                 this->generateDerefViolation(u) ||
-                this->generateFreeViolation(u) ||
-                this->generateMemleakViolation(u)
+                this->generateFreeViolation(u) //||
+                // this->generateMemleakViolation(u)
             );
         }
         return result;
@@ -684,7 +684,7 @@ namespace smack
     }
 
     z3::expr BMCVCGen::generateFreeViolation(int u){
-        z3::expr freeActionEqual = this->getArgVar(1, u) == ConcreteAction::ActType::FREE;
+        z3::expr freeActionEqual = this->getActVar(u) == ConcreteAction::ActType::FREE;
         z3::expr invalidFreeSituation = this->z3Ctx.bool_val(false);
         invalidFreeSituation = invalidFreeSituation || 
         this->getArgVar(1, u) < 0 ||

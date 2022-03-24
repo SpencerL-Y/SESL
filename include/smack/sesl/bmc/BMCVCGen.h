@@ -173,7 +173,7 @@ namespace smack
             // Detailed violation situation encodings
             // feasibility and violation
             z3::expr generateFeasibleVC(int l);
-            z3::expr generateViolation(int u);
+            z3::expr generateViolation(int l);
             z3::expr generateDerefViolation(int u);
             z3::expr generateFreeViolation(int u);
             z3::expr generateMemleakViolation(int u);

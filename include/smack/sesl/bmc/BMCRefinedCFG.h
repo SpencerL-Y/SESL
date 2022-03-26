@@ -34,6 +34,7 @@ namespace smack
             ActType actType;
         public:
             ConcreteAction(const Stmt* s);
+            ConcreteAction() : stmt(nullptr), actType(ActType::NULLSTMT){}
             
             bool hasStmt() {return (stmt == nullptr) ? false : true;}
             const Stmt* getStmt() const {return this->stmt;};
@@ -122,10 +123,12 @@ namespace smack
             ConcreteCFG(
                 CFGPtr origCfg
             );
+            ConcreteCFG(std::list<ConcreteEdgePtr> edges, CFGPtr origCfg);
             void printConcreteCFG();
             int getVertexNum(){return this->vertexNum;}
             int getEdgeNum(){return this->edgeNum;}
             CFGPtr getOrigCfg(){return this->origCfg;}
+            std::shared_ptr<ConcreteCFG> simplify();
             std::list<ConcreteEdgePtr> getConcreteEdges(){return this->concreteEdges;}
     };
     typedef std::shared_ptr<ConcreteCFG> ConcreteCFGPtr;
@@ -158,6 +161,7 @@ namespace smack
             bool isFinalVertex(int vertexId);
             std::map<int, int> computeSccMap();
             void tarjanScc(int currentVertex, std::map<int, std::pair<int, int>>& currentMap,  std::list<int>& currStack, std::map<int, int>& sccResult);
+            
 
             void printRefinedCFG();
     };

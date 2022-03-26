@@ -1,5 +1,9 @@
 #include "smack/sesl/bmc/BMCVCGen.h"
-
+// Author: Xie Li
+// Institute: Institute of Software, CAS
+// Started: 15/3/2022
+// DO NOT MODIFY!!
+// 
 namespace smack
 {
     std::vector<z3::expr> BlockNormalForm::getBNFVars(){
@@ -91,7 +95,6 @@ namespace smack
     }
 
     z3::expr BlockNormalForm::generateAbstraction(int u){
-        // TODObmc: there is bug here.
         z3::expr addrOrder = this->z3Ctx->bool_val(true);
         for(int i = 0; i <= this->length; i++){
             z3::expr left = this->getBlkAddrVar(2*i, u);
@@ -100,7 +103,7 @@ namespace smack
         }
 
         z3::expr bottomSplit = this->z3Ctx->bool_val(true);
-        for(int i = 0; i < this->length; i ++){
+        for(int i = 0; i <= this->length; i ++){
             z3::expr premise = (this->getBlkAddrVar(2*i, u) == BOT);
             z3::expr implicant = this->z3Ctx->bool_val(true);
             for(int j = i; j <= this->length; j ++){
@@ -110,6 +113,15 @@ namespace smack
                 );
             }
             bottomSplit = bottomSplit && z3::implies(premise, implicant);
+        }
+
+        z3::expr blkBothBottom = this->z3Ctx->bool_val(true);
+        for(int i = 0; i <= this->length; i++){
+            z3::expr leftIsBottom = this->getBlkAddrVar(2*i, u) == BOT;
+            z3::expr rightIsBottom = this->getBlkAddrVar(2*i + 1, u) == BOT;
+            blkBothBottom = blkBothBottom && 
+            (z3::implies(leftIsBottom, rightIsBottom) &&
+             z3::implies(rightIsBottom, leftIsBottom));
         }
 
         z3::expr blkPtEquality = this->z3Ctx->bool_val(true);
@@ -122,11 +134,24 @@ namespace smack
         for(int i = 1; i < this->length; i++){
             z3::expr ptBlkPlusOnePremise = this->getPtAddrVar(2*i - 1, u) != BOT &&
                                            this->getBlkAddrVar(2*i, u) != BOT;
+            // TODObmc: byte length 1
             z3::expr ptBlkPlusOneEquality = (this->getPtAddrVar(2*i - 1, u) + 1 == this->getBlkAddrVar(2*i, u));
-            headTailLinked = (headTailLinked && z3::implies(ptBlkPlusOnePremise, ptBlkPlusOneEquality));
+            z3::expr blkPtEquality = (this->getBlkAddrVar(2*i - 1, u) == this->getPtAddrVar(2*i - 1, u));
+            headTailLinked = (
+                headTailLinked && 
+                z3::implies(ptBlkPlusOnePremise, ptBlkPlusOneEquality) && 
+                blkPtEquality
+            );
         }
 
-        z3::expr finalResult = (addrOrder && bottomSplit && blkPtEquality && headTailLinked);
+        z3::expr addrValueRestriction = this->z3Ctx->bool_val(true);
+        for(int i = 0; i <= this->length; i ++){
+            z3::expr left = this->getBlkAddrVar(2*i, u) == BOT || this->getBlkAddrVar(2*i, u) > 0;
+            z3::expr right = this->getBlkAddrVar(2*i + 1, u) == BOT || this->getBlkAddrVar(2*i + 1, u) > 0;
+            addrValueRestriction = (addrValueRestriction && (left && right));
+        }
+
+        z3::expr finalResult = (addrOrder && bottomSplit && blkBothBottom && blkPtEquality && headTailLinked && addrValueRestriction);
         return finalResult;
     }
 
@@ -291,14 +316,32 @@ namespace smack
 
                     if(edge->getRefinedActions().size() == 0){
                         // TODObmc: maybe change the concreteCFG translation
+                        std::set<std::string> changedNames;
+                        RefinedActionPtr nullRefAct = std::make_shared<RefinedAction>(
+                            ConcreteAction::ActType::NULLSTMT, 
+                            nullptr, nullptr, nullptr, nullptr,
+                            BOT, BOT, BOT, BOT,
+                            changedNames
+                        );
+                        z3::expr emptyEdgeUtilVarsEncoding = this->z3Ctx.bool_val(true);
+                        z3::expr nullEdgeActionEncoding =  
+                        this->getActVar(u) == nullRefAct->getActType() &&
+                        this->generateActTypeArgTemplateEncoding(nullRefAct, u) && 
+                        this->getLocVar(u + 1) == edge->getTo() && 
+                        this->generateGeneralTr(nullRefAct, u);
+
+                        behaviorForEachEdgeOnCurrVertex = 
+                        behaviorForEachEdgeOnCurrVertex || nullEdgeActionEncoding;
+                        
                     } else if(edge->getRefinedActions().size() == 1){
                         RefinedActionPtr refAct = edge->getRefinedActions()[0];
                         z3::expr edgeActionEncoding = this->z3Ctx.bool_val (true);
                         edgeActionEncoding = edgeActionEncoding && 
                         (this->getActVar(u) ==  refAct->getActType()&& 
                         this->generateActTypeArgTemplateEncoding(refAct, u)) &&
+                        this->getLocVar(u + 1) == edge->getTo() && 
                         this->generateGeneralTr(refAct, u);
-                        behaviorForEachEdgeOnCurrVertex = behaviorForEachEdgeOnCurrVertex ||    edgeActionEncoding;
+                        behaviorForEachEdgeOnCurrVertex = behaviorForEachEdgeOnCurrVertex || edgeActionEncoding;
                     } else {
                         // TODObmc
                     }
@@ -425,7 +468,7 @@ namespace smack
         } else if(ConcreteAction::ActType::MALLOC == refAct->getActType()){
 
             assert(refAct->getArg1() != nullptr && refAct->getType1() == PTR_BYTEWIDTH && refAct->getArg2() != nullptr && refAct->getType2() != BOT);
-            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType1()));
             z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
             z3::expr arg3Equal = (
                 z3::implies(this->getArgVar(3, u), false) &&
@@ -559,13 +602,17 @@ namespace smack
             // BMCDEBUG(std::cout << "Step " + std::to_string(i) + "transition ----------------------------" << std::endl <<  result.to_string() << std::endl;);
             // BMCDEBUG(std::cout << result.to_string() << std::endl;);
         }
+
+        // DEBUG
+        // result = z3::exists(*this->existVars, result);
         return result;
     }
 
     z3::expr BMCVCGen::generateViolation(int l){
 
         z3::expr result = this->z3Ctx.bool_val(false);
-        for(int u = 0; u <= l; u ++){
+        // WARNING: the loop condition must be u < l
+        for(int u = 0; u < l; u ++){
             result = result ||(
                 this->generateDerefViolation(u) ||
                 this->generateFreeViolation(u) ||
@@ -637,7 +684,7 @@ namespace smack
     }
 
     z3::expr BMCVCGen::generateFreeViolation(int u){
-        z3::expr freeActionEqual = this->getArgVar(1, u) == ConcreteAction::ActType::FREE;
+        z3::expr freeActionEqual = this->getActVar(u) == ConcreteAction::ActType::FREE;
         z3::expr invalidFreeSituation = this->z3Ctx.bool_val(false);
         invalidFreeSituation = invalidFreeSituation || 
         this->getArgVar(1, u) < 0 ||
@@ -690,10 +737,12 @@ namespace smack
             return freeBranch;
         }
         else if(refAct->getActType() == ConcreteAction::ActType::OTHER ||
-           refAct->getActType() == ConcreteAction::ActType::OTHERPROC){
+           refAct->getActType() == ConcreteAction::ActType::OTHERPROC || 
+           refAct->getActType() == ConcreteAction::ActType::NULLSTMT){
             z3::expr otherBranch = z3::implies(
                 this->getActVar(u) == ConcreteAction::ActType::OTHER || 
-                this->getActVar(u) == ConcreteAction::ActType::OTHERPROC,
+                this->getActVar(u) == ConcreteAction::ActType::OTHERPROC ||
+                this->getActVar(u) == ConcreteAction::ActType::NULLSTMT,
                 this->generateTrUnchanged(u)
             );
             return otherBranch;
@@ -706,22 +755,26 @@ namespace smack
             return assumeBranch;
         }
         else if(refAct->getActType() == ConcreteAction::ActType::COMMONASSIGN){
-            z3::expr commonBoolAssignBranch = z3::implies(
-                this->getActVar(u) == ConcreteAction::ActType::COMMONASSIGN && 
-                this->getArgVar(1, u) == BOT && 
-                this->getArgVar(2, u) == BOT,
-                this->generateTrCommonAssignBool(u)
-            );
-            return commonBoolAssignBranch;
-        }
-        else if(refAct->getActType() == ConcreteAction::ActType::COMMONASSIGN){
-            z3::expr commonNonBoolAssignBranches = this->z3Ctx.bool_val(true);
-            for(int leftByteNum : allNonBoolByteNum){
-                for(int rightByteNum : allNonBoolByteNum){
-                    commonNonBoolAssignBranches = commonNonBoolAssignBranches &&    this->generateTrCommonAssignNonBool(u, leftByteNum, rightByteNum);
+            if(refAct->getArg3() !=  nullptr && refAct->getArg4() != nullptr){
+                z3::expr commonBoolAssignBranch = z3::implies(
+                    this->getActVar(u) == ConcreteAction::ActType::COMMONASSIGN && 
+                    this->getArgVar(1, u) == BOT && 
+                    this->getArgVar(2, u) == BOT,
+                    this->generateTrCommonAssignBool(u)
+                );
+                return commonBoolAssignBranch;
+            } else if(refAct->getArg1() != nullptr && refAct->getArg2() != nullptr){
+                z3::expr commonNonBoolAssignBranches = this->z3Ctx.bool_val(true);
+                for(int leftByteNum : allNonBoolByteNum){
+                    for(int rightByteNum : allNonBoolByteNum){
+                        commonNonBoolAssignBranches = commonNonBoolAssignBranches && this->generateTrCommonAssignNonBool(u, leftByteNum, rightByteNum);
+                    }
                 }
+                return commonNonBoolAssignBranches;
+            } else {
+                BMCDEBUG(std::cout << "ERROR: this common assign situation should not happen.." << std::endl;);
+                assert(false);
             }
-            return commonNonBoolAssignBranches;
         }
         else if(refAct->getActType() == ConcreteAction::ActType::STORE){
             z3::expr storeBranch = z3::implies(
@@ -758,7 +811,7 @@ namespace smack
 
     z3::expr BMCVCGen::generateTrMalloc(int u){
         this->currentRNF->setPrimeNum(u);
-        z3::expr differentMallocSituation = this->z3Ctx.bool_val(false);
+        z3::expr differentMallocSituation = this->z3Ctx.bool_val(true);
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
             z3::expr premise = this->z3Ctx.bool_val(true);
             for(int notEmptyId = 0; notEmptyId < blockId; notEmptyId ++){
@@ -766,14 +819,19 @@ namespace smack
             }
             premise = premise && this->currentRNF->getBlkAddrVar(blockId, 0, u) == BOT;
 
-            std::set<std::string> unchangedOrigVarNames;
+            std::set<std::string> rnfOrigVars = this->currentRNF->getRNFOrigVarNames();
+            std::set<std::string> changedOrigVars;
+            changedOrigVars.insert("blka_" + std::to_string(blockId) + "_0");
+            changedOrigVars.insert("blka_" + std::to_string(blockId) + "_1");
+            std::set<std::string> unchangedOrigVarNames = this->setSubstract(rnfOrigVars, changedOrigVars);
             z3::expr implicant = (
                 this->currentRNF->getBlkAddrVar(blockId, 0, u + 1) == this->getArgVar(1, u) &&
                 this->currentRNF->getBlkAddrVar(blockId, 1, u + 1) == (this->getArgVar(1, u) + this->getArgVar(2, u)) &&
                 this->generateIntRemainUnchanged(unchangedOrigVarNames, u)
-                //TODObmc: compute the unchanged heap variables
             );
-            differentMallocSituation = differentMallocSituation && z3::implies(premise, implicant);
+            differentMallocSituation = differentMallocSituation && 
+            z3::implies(premise, implicant) && 
+            (this->getArgVar(1, u) > 0 && this->getArgVar(2, u) >= 0);
         }
         return differentMallocSituation;
     }
@@ -786,20 +844,30 @@ namespace smack
                 this->getArgVar(1, u) != BOT
             );
             z3::expr clearAllVariables = this->z3Ctx.bool_val(true);
+            std::set<std::string> rnfOrigVarNames = this->currentRNF->getRNFOrigVarNames();
+            std::set<std::string> changedOrigVarNames;
             std::set<std::string> unchangedOrigVarNames;
             for(int currLen = 1; currLen <= this->pointsToNum; currLen ++){
-                clearAllVariables == 
+                clearAllVariables = 
                     clearAllVariables &&
                     this->currentRNF->getBlkAddrVar(blockId, 2*currLen - 2, u + 1) == BOT &&
                     this->currentRNF->getBlkAddrVar(blockId, 2*currLen - 1, u + 1) == BOT &&
                     this->currentRNF->getPtAddrVar(blockId, 2*currLen - 1, u + 1) == BOT &&
                     this->currentRNF->getPtDataVar(blockId, 2*currLen - 1, u + 1) == UNKNOWN;
                 // TODObmc: compute the unchanged heap vars
+                
+                changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*currLen - 2));
+                changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*currLen - 1));
+                changedOrigVarNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*currLen - 1));
+                changedOrigVarNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*currLen - 1));
             }
             clearAllVariables = 
                 clearAllVariables &&
                 this->currentRNF->getBlkAddrVar(blockId, 2*this->pointsToNum, u + 1) == BOT &&
                 this->currentRNF->getBlkAddrVar(blockId, 2*this->pointsToNum + 1, u + 1) == BOT;
+            changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*this->pointsToNum));
+            changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*this->pointsToNum + 1));
+            unchangedOrigVarNames = this->setSubstract(rnfOrigVarNames, changedOrigVarNames);
             clearAllVariables = (clearAllVariables && this->generateIntRemainUnchanged(unchangedOrigVarNames, u));
             findCorrectBlock = 
                 findCorrectBlock &&
@@ -845,8 +913,14 @@ namespace smack
                     z3::expr blkSplitSituation = 
                     storedAddr >= this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 2, this->tempCounter) &&
                     storedAddr < this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 1, this->tempCounter);
+
+                    this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 2, this->tempCounter));
+                    this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 1, this->tempCounter));
+                    
                     auto genPair = this->generateShiftAddressByte(storedAddr, storedByteVar, blockId, iPt, this->tempCounter);
                     z3::expr shiftByteExpr = genPair.first;
+                    // BMCDEBUG(std::cout << shiftByteExpr << std::endl;);
+                    // std::cout << "-----------------------" << std::endl;
                     std::set<std::string> changedTempOrigNames = genPair.second;
                     std::set<std::string> shiftUnchangedSet = this->setSubstract(this->currentRNF->getRNFOrigVarNames(), changedTempOrigNames);
                     z3::expr shiftUnchangeUpdate = this->equalTempAndNextTempInRNF(
@@ -879,11 +953,13 @@ namespace smack
                                           (blkSplit && ptReplace);
                 }
             }
-            executeStoreSequence == executeStoreSequence && currByteStoreResult;
+            executeStoreSequence = executeStoreSequence && currByteStoreResult;
+            
             this->tempCounter ++;
         }
-        z3::expr endTempVarToSh = this->equalTemp2StepInRNF(u + 1, this->tempCounter);
+        // TODObmc: here we need tempCounter --
 
+        z3::expr endTempVarToSh = this->equalTemp2StepInRNF(u + 1, this->tempCounter);
         z3::expr finalResult = startShVarToTemp &&
                                bytifiedEqual && 
                                executeStoreSequence && 
@@ -988,7 +1064,6 @@ namespace smack
     }
 
     z3::expr BMCVCGen::generateTrUnchanged(int u){
-        // TODObmc: compute all vars need step changing
         std::set<std::string> unchangedRNFOrigVars = this->currentRNF->getRNFOrigVarNames();
         z3::expr equality = this->equalStepAndNextStepInt(unchangedRNFOrigVars, u);
         return equality;
@@ -996,8 +1071,7 @@ namespace smack
 
     z3::expr BMCVCGen::generateTrAssume(int u){
         z3::expr assumeResult = this->getArgVar(3, u);
-        // TODObmc: compute all vars unchanged 
-        std::set<std::string> unchangedOrigNames;
+        std::set<std::string> unchangedOrigNames = this->currentRNF->getRNFOrigVarNames();
         z3::expr result = assumeResult && this->generateIntRemainUnchanged(unchangedOrigNames, u);
         return result;
     }
@@ -1006,8 +1080,7 @@ namespace smack
         if(arg1Size >= arg2Size){
             // normal common assign
             z3::expr assignEquality = this->getArgVar(1, u) == this->getArgVar(2, u);
-            // TODObmc: compute variables unchanged.
-            std::set<std::string> unchangedOrigNames;
+            std::set<std::string> unchangedOrigNames = this->currentRNF->getRNFOrigVarNames();
             z3::expr result = assignEquality && this->generateIntRemainUnchanged(unchangedOrigNames, u);
             return result;
         } else {
@@ -1030,8 +1103,8 @@ namespace smack
             z3::expr arg2Equality = (this->getArgVar(2, u) == arg2Result);
             z3::expr arg1Equality = (this->getArgVar(1, u) == arg1Result);
             // TODObmc: compute variables unchanged
-            std::set<std::string> unchangedOrigNames;
-            return (
+            std::set<std::string> unchangedOrigNames = this->currentRNF->getRNFOrigVarNames();
+            return ( 
                 arg2Equality && 
                 arg1Equality && 
                 this->generateIntRemainUnchanged(unchangedOrigNames, u)
@@ -1041,7 +1114,7 @@ namespace smack
 
     z3::expr BMCVCGen::generateTrCommonAssignBool(int u){
         z3::expr boolEquility = this->getArgVar(3, u) == this->getArgVar(4, u);
-        std::set<std::string> unchangedOrigNames;
+        std::set<std::string> unchangedOrigNames = this->currentRNF->getRNFOrigVarNames();
         z3::expr result = (
             boolEquility && 
             this->generateIntRemainUnchanged(unchangedOrigNames, u)
@@ -1051,23 +1124,12 @@ namespace smack
     
     // Utilities
     z3::expr BMCVCGen::generateIntRemainUnchanged(std::set<std::string> origVarNames, int u){
-        z3::expr unchange = this->z3Ctx.bool_val(true);
-        for(std::string s : origVarNames){
-            unchange = unchange && 
-            (this->z3Ctx.int_const((s + "_(" + std::to_string(u + 1) + ")").c_str()) == 
-            this->z3Ctx.int_const((s + "_(" + std::to_string(u) + ")").c_str()));
-        }
+        z3::expr unchange = this->equalStepAndNextStepInt(origVarNames, u);
         return unchange;
     }
 
-
     z3::expr BMCVCGen::generateBoolRemainUnchanged(std::set<std::string> origVarNames, int u){
-        z3::expr unchange = this->z3Ctx.bool_val(true);
-        for(std::string s : origVarNames){
-            unchange = unchange && 
-            this->z3Ctx.bool_const((s + "_(" + std::to_string(u + 1) + ")").c_str()) == 
-            this->z3Ctx.bool_const((s + "_(" + std::to_string(u) + ")").c_str());
-        }
+        z3::expr unchange = this->equalStepAndNextStepBool(origVarNames, u);
         return unchange;
     }
 
@@ -1084,12 +1146,20 @@ namespace smack
                 this->currentRNF->getTempPtAddrVar(blockId, iPt * 2 + 1, tempU) &&
                 this->currentRNF->getPtDataVar(blockId, iPt * 2 + 1, stepU) == 
                 this->currentRNF->getTempPtDataVar(blockId, iPt * 2 + 1, tempU);
+
+                this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, iPt * 2, tempU));
+                this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, iPt * 2 + 1, tempU));
+                this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, iPt * 2 + 1, tempU));
+                this->existVars->push_back(this->currentRNF->getTempPtDataVar(blockId, iPt * 2 + 1, tempU));
             }
             equality = equality &&
             this->currentRNF->getBlkAddrVar(blockId, 2 * this->pointsToNum, stepU) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum, tempU) && 
             this->currentRNF->getBlkAddrVar(blockId, 2 * this->pointsToNum + 1, stepU) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum + 1, tempU); 
+
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum, tempU));
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum + 1, tempU));
         }
         return equality;
     }
@@ -1119,7 +1189,11 @@ namespace smack
         for(std::string origName : unchangedOrigNames){
             equality = equality && 
             this->z3Ctx.int_const((origName + "_(t_" + std::to_string(tempU) + ")").c_str()) ==
-            this->z3Ctx.int_const((origName + "_(t_" + std::to_string(tempU) + ")").c_str());
+            this->z3Ctx.int_const((origName + "_(t_" + std::to_string(tempU + 1) + ")").c_str());
+
+            this->existVars->push_back(this->z3Ctx.int_const((origName + "_(t_" + std::to_string(tempU) + ")").c_str()));
+
+            this->existVars->push_back(this->z3Ctx.int_const((origName + "_(t_" + std::to_string(tempU + 1) + ")").c_str()));
         }
         return equality;
     }
@@ -1136,12 +1210,28 @@ namespace smack
         );
 
         z3::expr shiftChange = this->z3Ctx.bool_val(true);
-        shiftChange = shiftChange && 
+        shiftChange = shiftChange &&
+        this->currentRNF->getTempBlkAddrVar(blockId, 2*j - 1, iu + 1) == this->currentRNF->getTempPtAddrVar(blockId, 2*j - 1, iu + 1) &&
         this->currentRNF->getTempPtAddrVar(blockId, 2*j - 1, iu + 1) == addrVar && 
         this->currentRNF->getTempPtDataVar(blockId, 2*j - 1, iu + 1) == dataVar;
-        changedOrigVarNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*j - 1) );
-        changedOrigVarNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*j - 1) );
-        for(int r = j + 1; r <= k + 1; r ++){
+
+        this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*j - 1, iu + 1));
+        this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*j - 1, iu + 1));
+        this->existVars->push_back(this->currentRNF->getTempPtDataVar(blockId, 2*j - 1, iu + 1));
+
+        changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*j - 1));
+        changedOrigVarNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*j - 1));
+        changedOrigVarNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*j - 1));
+
+        // TODObmc: byte length 1
+        shiftChange = shiftChange &&
+        this->currentRNF->getTempBlkAddrVar(blockId, 2*j, iu + 1) == this->currentRNF->getTempPtAddrVar(blockId, 2*j - 1, iu + 1) + 1;
+
+        this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*j, iu + 1));
+
+        changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*j));
+
+        for(int r = j + 1; r < k ; r ++){
             shiftChange = shiftChange &&
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 1, iu + 1) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 3, iu) &&
@@ -1150,15 +1240,29 @@ namespace smack
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r, iu + 1) ==
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 2, iu);
 
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 1, iu + 1));
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 3, iu));
+            this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*r - 1, iu + 1));
+            this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*r - 3, iu));
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r, iu + 1));
+            this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 2, iu));
+
             changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*r - 1) );
             changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*r) );
             changedOrigVarNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*r - 1) );
         }
+        shiftChange = shiftChange &&
+        this->currentRNF->getTempBlkAddrVar(blockId, 2*k + 1 , iu + 1) == 
+        this->currentRNF->getTempBlkAddrVar(blockId, 2*k - 1, iu);
+
+        changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*k + 1) );
+
 
         z3::expr shiftImplies = z3::implies(
             this->currentRNF->getTempPtAddrVar(blockId, 2*k - 1, iu) == BOT,
             shiftChange
         );
+        this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*k - 1, iu));
         // BMCDEBUG(std::cout << "ShiftImplies: " << std::endl;);
         // BMCDEBUG(std::cout << shiftImplies.to_string() << std::endl;);
         return {shiftImplies && notSufficientSpaceSituation,  changedOrigVarNames};
@@ -1227,7 +1331,19 @@ namespace smack
         std::string varName = "fresh_" + std::to_string(this->freshCounter);
         this->freshCounter ++;
         z3::expr freshVar = this->z3Ctx.int_const(varName.c_str());
+        this->existVars->push_back(freshVar);
         return freshVar;
+    }
+
+
+    z3::expr BMCVCGen::getBNFOverflowVar(){
+        std::string varName = "BNFOverflow";
+        return this->z3Ctx.bool_const(varName.c_str());
+    }
+
+    z3::expr BMCVCGen::getRNFOverflowVar(){
+        std::string varName = "RNFOverflow";
+        return this->z3Ctx.bool_const(varName.c_str());
     }
 
     std::set<std::string> BMCVCGen::setSubstract(std::set<std::string> from, std::set<std::string> substracted){

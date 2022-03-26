@@ -105,6 +105,7 @@ namespace smack
             std::set<std::string> trUtilVariables;
             RNFPtr currentRNF; 
             BMCPreAnalysisPtr preAnalysis;
+            z3::expr_vector* existVars;
 
             int loopBound;
             int regionNum;
@@ -126,6 +127,11 @@ namespace smack
                 this->currentRNF = std::make_shared<RegionNormalForm>(this->z3Ctx, this->regionNum, this->pointsToNum, 0);
                 this->freshCounter = 0;
                 this->tempCounter = 0;
+                this->existVars = new z3::expr_vector(this->z3Ctx);
+            }
+
+            ~BMCVCGen(){
+                delete(this->existVars);
             }
 
             z3::expr generateATSInitConfiguration();
@@ -167,7 +173,7 @@ namespace smack
             // Detailed violation situation encodings
             // feasibility and violation
             z3::expr generateFeasibleVC(int l);
-            z3::expr generateViolation(int u);
+            z3::expr generateViolation(int l);
             z3::expr generateDerefViolation(int u);
             z3::expr generateFreeViolation(int u);
             z3::expr generateMemleakViolation(int u);
@@ -182,6 +188,8 @@ namespace smack
             z3::expr getTypeVar(int index, int u);
             z3::expr computerByteLenRange(int byteLen);
             z3::expr getFreshVar();
+            z3::expr getBNFOverflowVar();
+            z3::expr getRNFOverflowVar();
             std::set<std::string>  setSubstract(std::set<std::string> from, std::set<std::string> substracted);
 
             z3::context& getContext(){return this->z3Ctx;}

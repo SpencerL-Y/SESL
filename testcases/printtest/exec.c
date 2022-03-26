@@ -99,9 +99,11 @@
 
 int main(){
     char *i;
-    i = malloc(8*sizeof(char));
-    char *j = i + 4;
+    i = malloc(11*sizeof(char));
+    char *j = i + 10;
+    char *k = i + 13;
     *j = 'a';
+    *k = 'b';
     free(i);
     return 0;
 }

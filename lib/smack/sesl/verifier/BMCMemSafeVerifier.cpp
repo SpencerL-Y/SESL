@@ -38,6 +38,7 @@ namespace smack
 
         // ------- obtain concrete cfg
         ConcreteCFGPtr conCfg = std::make_shared<ConcreteCFG>(mainGraph);
+        conCfg = conCfg->simplify();
         // conCfg->printConcreteCFG();
         BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
         refinedCFG->printRefinedCFG();
@@ -51,8 +52,12 @@ namespace smack
         // std::cout << "ProgMaxByteLen: " << pre->computeMaxStoreByteLen() << std::endl;
         
         // std::cout << "ProgMinByteLen: " <<   pre->computeMinStoreByteLen() << std::endl;
+
+
         BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
-        z3::expr vc = vcg->generateBMCVC(1);
+        z3::expr vc = vcg->generateBMCVC(18);
+        // z3::expr vc = vcg->generateFeasibleVC(1);
+        // z3::expr vc = vcg->generateFeasibleVC(1);
         std::cout << "Result: " << std::endl;
         std::cout << vc.to_string() << std::endl;
         

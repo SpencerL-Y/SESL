@@ -101,7 +101,7 @@ int main(){
     char *i;
     i = malloc(11*sizeof(char));
     char *j = i + 10;
-    char *k = i + 11;
+    char *k = i + 13;
     *j = 'a';
     *k = 'b';
     free(i);

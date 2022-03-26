@@ -147,6 +147,122 @@ namespace smack
         }
     }
 
+
+    ConcreteCFG::ConcreteCFG(std::list<ConcreteEdgePtr> edges, CFGPtr origCfg){
+        std::map<int, int> oldVertexNum2New;
+        int currVertexId = 1;
+        int currEdgeId = 1;
+        this->vertexNum = 0;
+        this->edgeNum = 0;
+        for(ConcreteEdgePtr edge : edges){
+            if(oldVertexNum2New.find(edge->getFromVertex()) == oldVertexNum2New.end()){
+                oldVertexNum2New[edge->getFromVertex()] = currVertexId;
+                currVertexId += 1;
+                this->vertexNum += 1;
+            } 
+            if(oldVertexNum2New.find(edge->getToVertex()) == oldVertexNum2New.end()){
+                oldVertexNum2New[edge->getToVertex()] = currVertexId;
+                currVertexId += 1;
+                this->vertexNum += 1;
+            }
+
+            ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(
+                oldVertexNum2New[edge->getFromVertex()], 
+                oldVertexNum2New[edge->getToVertex()], 
+                edge->getAction(), 
+                currEdgeId
+            );
+            currEdgeId ++;
+            this->edgeNum ++;
+
+            this->concreteEdges.push_back(newEdge);
+        }
+        this->origCfg = origCfg;
+
+    }
+
+
+    bool isEmptyEdge(ConcreteEdgePtr edge){
+        if(edge->getAction()->getActType() == ConcreteAction::ActType::OTHER || 
+            edge->getAction()->getActType() == ConcreteAction::ActType::OTHERPROC ||
+            edge->getAction()->getActType() == ConcreteAction::ActType::NULLSTMT){
+                return true;
+        } else {
+            return false;
+        }
+    }
+
+    ConcreteCFGPtr ConcreteCFG::simplify(){
+        std::list<ConcreteEdgePtr> currEdges = this->getConcreteEdges();
+        int newEdgeId = this->getEdgeNum() + 1;
+        for(int vertexIndex = 1; vertexIndex <= this->vertexNum; vertexIndex ++){
+            
+            std::list<ConcreteEdgePtr> relatedEdges;
+            std::list<ConcreteEdgePtr> unrelatedEdges;
+            std::list<ConcreteEdgePtr> nextCurrEdges;
+            for(ConcreteEdgePtr e : currEdges){
+                if(e->getFromVertex() == vertexIndex ||
+                   e->getToVertex()   == vertexIndex){
+                    relatedEdges.push_back(e);
+                } else {
+                    unrelatedEdges.push_back(e);
+                }
+            }
+
+            bool beginReduce = true;
+            for(ConcreteEdgePtr re : relatedEdges){
+                if(!isEmptyEdge(re)){
+                    beginReduce = false;
+                    break;
+                }
+            }
+
+            if(beginReduce){
+                std::list<int> startVertices;
+                std::list<int> toVertices;
+                for(ConcreteEdgePtr re : relatedEdges){
+                    if(re->getFromVertex() != vertexIndex){
+                        startVertices.push_back(re->getFromVertex());
+                    } else if(re->getToVertex() != vertexIndex){
+                        toVertices.push_back(re->getToVertex());
+                    } else {
+                        BMCDEBUG(std::cout << "ERROR: This should not happen in simplify..." << std::endl;);
+                        assert(false);
+                    }
+                }
+                std::list<ConcreteEdgePtr> newlyIntroducedEdges;
+                for(int fromIndex : startVertices){
+                    for(int toIndex : toVertices){
+                        ConcreteActionPtr newAct = std::make_shared<ConcreteAction>();
+                        ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(fromIndex, toIndex, newAct, newEdgeId);
+                        newEdgeId ++;
+                        newlyIntroducedEdges.push_back(newEdge);
+                    }
+                }
+
+                for(ConcreteEdgePtr e : newlyIntroducedEdges){
+                    nextCurrEdges.push_back(e);
+                }
+                for(ConcreteEdgePtr e : unrelatedEdges){
+                    nextCurrEdges.push_back(e);
+                }
+                currEdges = nextCurrEdges;
+
+            } else {
+                for(ConcreteEdgePtr e : relatedEdges){
+                    nextCurrEdges.push_back(e);
+                }
+                for(ConcreteEdgePtr e : unrelatedEdges){
+                    nextCurrEdges.push_back(e);
+                }
+                currEdges = nextCurrEdges;
+            }
+        }
+
+        ConcreteCFGPtr newCFG = std::make_shared<ConcreteCFG>(currEdges, this->origCfg);
+        return newCFG;
+    }
+
     void ConcreteCFG::printConcreteCFG() {
         std::cout << "INFO: -------------- Print Concrete CFG" << std::endl;
         std::cout << "INFO: ----------- Num of Vertices: " << this->vertexNum << std::endl;
@@ -365,6 +481,8 @@ namespace smack
             currStack.pop_back();
         }
     }
+
+    
 
     void BMCRefinedCFG::printRefinedCFG(){
         std::cout << "INFO: -------------- Print Refined CFG" << std::endl;

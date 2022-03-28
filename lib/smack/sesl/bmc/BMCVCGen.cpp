@@ -160,6 +160,7 @@ namespace smack
         this->primeNum = primeNum;
         this->z3Ctx = &ctx;
         this->length = length;
+        std::cout << "RNF LENGTH: " << this->length << std::endl;
         for(int i = 0; i < this->maxRegionNum; i++){
             BNFPtr newBnf = std::make_shared<BlockNormalForm>(ctx, i, length, primeNum);
             this->bnfList.push_back(newBnf);
@@ -219,10 +220,10 @@ namespace smack
         std::set<std::string> varNames;
         for(int i = 0; i < this->maxRegionNum; i++){
             for(int j =0; j < this->length; j++){
-                std::string blka1 = "blka_" + std::to_string(i) + "_" + std::to_string(2*i) ;
-                std::string blka2 = "blka_" + std::to_string(i) + "_" + std::to_string(2*i + 1);
-                std::string pta = "pta_" + std::to_string(i) + "_" + std::to_string(2*i + 1);
-                std::string ptd = "ptd_" + std::to_string(i) + "_" + std::to_string(2*i + 1);
+                std::string blka1 = "blka_" + std::to_string(i) + "_" + std::to_string(2*j) ;
+                std::string blka2 = "blka_" + std::to_string(i) + "_" + std::to_string(2*j + 1);
+                std::string pta = "pta_" + std::to_string(i) + "_" + std::to_string(2*j + 1);
+                std::string ptd = "ptd_" + std::to_string(i) + "_" + std::to_string(2*j + 1);
                 varNames.insert(blka1);     
                 varNames.insert(blka2);     
                 varNames.insert(pta);     
@@ -232,6 +233,9 @@ namespace smack
             std::string finalBlka2 = "blka_" + std::to_string(i) + "_" + std::to_string(2*this->length + 1);
             varNames.insert(finalBlka1);
             varNames.insert(finalBlka2);
+        }
+        for(std::string name : varNames){
+            std::cout << name << std::endl;
         }
         return varNames;
     }
@@ -919,8 +923,8 @@ namespace smack
                     
                     auto genPair = this->generateShiftAddressByte(storedAddr, storedByteVar, blockId, iPt, this->tempCounter);
                     z3::expr shiftByteExpr = genPair.first;
-                    // BMCDEBUG(std::cout << shiftByteExpr << std::endl;);
-                    // std::cout << "-----------------------" << std::endl;
+                    BMCDEBUG(std::cout << shiftByteExpr << std::endl;);
+                    std::cout << "-----------------------" << std::endl;
                     std::set<std::string> changedTempOrigNames = genPair.second;
                     std::set<std::string> shiftUnchangedSet = this->setSubstract(this->currentRNF->getRNFOrigVarNames(), changedTempOrigNames);
                     z3::expr shiftUnchangeUpdate = this->equalTempAndNextTempInRNF(
@@ -1231,7 +1235,8 @@ namespace smack
 
         changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*j));
 
-        for(int r = j + 1; r < k ; r ++){
+        for(int r = j + 1; r <= k ; r ++){
+            std::cout << "ENTER HERE" << std::endl;
             shiftChange = shiftChange &&
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 1, iu + 1) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 3, iu) &&

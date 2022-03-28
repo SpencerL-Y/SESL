@@ -188,6 +188,17 @@ namespace smack
             edge->getAction()->getActType() == ConcreteAction::ActType::NULLSTMT){
                 return true;
         } else {
+            //  Buggy
+            // if(edge->getAction()->getActType() == ConcreteAction::ActType::ASSUME){
+            //     const AssumeStmt* ass = (const AssumeStmt*) edge->getAction()->getStmt();
+            //     const Expr* assExpr = ass->getExpr();
+            //     if(assExpr->getType() == ExprType::BOOL){
+            //         const BoolLit* bval = (const BoolLit*) assExpr;
+            //         if(bval->getVal() == true){
+            //             return true;
+            //         }
+            //     }
+            // }
             return false;
         }
     }

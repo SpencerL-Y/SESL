@@ -55,8 +55,8 @@ namespace smack
 
 
         BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
-        // z3::expr vc = vcg->generateBMCVC(18);
-        z3::expr vc = vcg->generateFeasibleVC(1);
+        z3::expr vc = vcg->generateBMCVC(18);
+        // z3::expr vc = vcg->generateFeasibleVC(1);
         // z3::expr vc = vcg->generateFeasibleVC(1);
         std::cout << "Result: " << std::endl;
         std::cout << vc.to_string() << std::endl;

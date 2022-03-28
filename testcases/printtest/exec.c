@@ -97,11 +97,22 @@
 //         list = next;
 // }
 
+// int main(){
+//     char *i;
+//     i = malloc(11*sizeof(char));
+//     char *j = i + 10;
+//     char *k = i + 7;
+//     *j = 'a';
+//     *k = 'b';
+//     free(i);
+//     return 0;
+// }
+
 int main(){
     char *i;
     i = malloc(11*sizeof(char));
     char *j = i + 10;
-    char *k = i + 13;
+    char *k = i + 7;
     *j = 'a';
     *k = 'b';
     free(i);

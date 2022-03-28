@@ -124,23 +124,32 @@ namespace smack
              z3::implies(rightIsBottom, leftIsBottom));
         }
 
-        z3::expr blkPtEquality = this->z3Ctx->bool_val(true);
-        for(int i = 0; i < this->length; i++){
-            blkPtEquality == blkPtEquality &&
-            this->getBlkAddrVar(2*i + 1, u) == this->getPtAddrVar(2*i + 1, u);
-        }
+        // z3::expr blkPtEquality = this->z3Ctx->bool_val(true);
+        // for(int i = 0; i < this->length; i++){
+        //     z3::expr blkPtPremise = 
+        //     this->getBlkAddrVar(2*i + 1, u) != BOT && 
+        //     this->getPtAddrVar(2*i + 1, u) != BOT;
+
+        //     blkPtEquality == blkPtEquality &&
+        //     this->getBlkAddrVar(2*i + 1, u) == this->getPtAddrVar(2*i + 1, u);
+        // }
 
         z3::expr headTailLinked = this->z3Ctx->bool_val(true);
-        for(int i = 1; i < this->length; i++){
-            z3::expr ptBlkPlusOnePremise = this->getPtAddrVar(2*i - 1, u) != BOT &&
-                                           this->getBlkAddrVar(2*i, u) != BOT;
+        for(int i = 1; i <= this->length; i++){
+            z3::expr ptBlkPlusOnePremise = 
+            this->getPtAddrVar(2*i - 1, u) != BOT &&
+            this->getBlkAddrVar(2*i, u) != BOT;
             // TODObmc: byte length 1
             z3::expr ptBlkPlusOneEquality = (this->getPtAddrVar(2*i - 1, u) + 1 == this->getBlkAddrVar(2*i, u));
+
+            z3::expr blkPtPremise = 
+            this->getBlkAddrVar(2*i - 1, u) != BOT && 
+            this->getPtAddrVar(2*i - 1, u) != BOT;
             z3::expr blkPtEquality = (this->getBlkAddrVar(2*i - 1, u) == this->getPtAddrVar(2*i - 1, u));
             headTailLinked = (
                 headTailLinked && 
                 z3::implies(ptBlkPlusOnePremise, ptBlkPlusOneEquality) && 
-                blkPtEquality
+                z3::implies(blkPtPremise, blkPtEquality)
             );
         }
 
@@ -151,7 +160,8 @@ namespace smack
             addrValueRestriction = (addrValueRestriction && (left && right));
         }
 
-        z3::expr finalResult = (addrOrder && bottomSplit && blkBothBottom && blkPtEquality && headTailLinked && addrValueRestriction);
+        z3::expr finalResult = (addrOrder && bottomSplit && blkBothBottom &&  headTailLinked && addrValueRestriction);
+        std::cout << "Abstraction: " << finalResult << std::endl;
         return finalResult;
     }
 
@@ -234,9 +244,9 @@ namespace smack
             varNames.insert(finalBlka1);
             varNames.insert(finalBlka2);
         }
-        for(std::string name : varNames){
-            std::cout << name << std::endl;
-        }
+        // for(std::string name : varNames){
+        //     std::cout << name << std::endl;
+        // }
         return varNames;
     }
 
@@ -923,8 +933,8 @@ namespace smack
                     
                     auto genPair = this->generateShiftAddressByte(storedAddr, storedByteVar, blockId, iPt, this->tempCounter);
                     z3::expr shiftByteExpr = genPair.first;
-                    BMCDEBUG(std::cout << shiftByteExpr << std::endl;);
-                    std::cout << "-----------------------" << std::endl;
+                    // BMCDEBUG(std::cout << shiftByteExpr << std::endl;);
+                    // std::cout << "-----------------------" << std::endl;
                     std::set<std::string> changedTempOrigNames = genPair.second;
                     std::set<std::string> shiftUnchangedSet = this->setSubstract(this->currentRNF->getRNFOrigVarNames(), changedTempOrigNames);
                     z3::expr shiftUnchangeUpdate = this->equalTempAndNextTempInRNF(
@@ -1236,7 +1246,7 @@ namespace smack
         changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*j));
 
         for(int r = j + 1; r <= k ; r ++){
-            std::cout << "ENTER HERE" << std::endl;
+            // std::cout << "ENTER HERE" << std::endl;
             shiftChange = shiftChange &&
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 1, iu + 1) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 3, iu) &&

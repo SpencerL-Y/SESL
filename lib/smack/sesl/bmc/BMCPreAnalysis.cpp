@@ -78,10 +78,13 @@ namespace smack
         int max = 1;
         for(RefinedEdgePtr edge : this->refinedCfg->getRefinedEdges()){
             for(RefinedActionPtr act : edge->getRefinedActions()){
-                if(act->getActType() == ConcreteAction::ActType::LOAD ||
-                   act->getActType() == ConcreteAction::ActType::STORE){
+                if(act->getActType() == ConcreteAction::ActType::STORE){
                     if(act->getType2() > max){
                        max = act->getType2();
+                    }
+                } else if(act->getActType() == ConcreteAction::ActType::LOAD){
+                    if(act->getType1() > max){
+                        max = act->getType1();
                     }
                 }
             }

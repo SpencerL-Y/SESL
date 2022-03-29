@@ -570,7 +570,7 @@ namespace smack
             assert(refAct->getArg1() != nullptr && refAct->getArg2() != nullptr &&
                    refAct->getType2() == PTR_BYTEWIDTH);
             z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
-            std::cout << "arg1 rhs: " << this->getArgVar(1, u) << std::endl;
+            // std::cout << "arg1 rhs: " << this->getArgVar(1, u) << std::endl;
             z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
             z3::expr arg3Equal = (
                 z3::implies(this->getArgVar(3, u), false) &&
@@ -987,7 +987,7 @@ namespace smack
         std::set<int> byteSizeSet = {1,2,4};
         z3::expr allLoadSituation = this->z3Ctx.bool_val(true);
         for(int byteSize : byteSizeSet){
-            allLoadSituation == allLoadSituation &&
+            allLoadSituation = allLoadSituation &&
             z3::implies(
                 this->getTypeVar(1, u) == byteSize,
                 this->generateTrLoadByteSize(u, byteSize)

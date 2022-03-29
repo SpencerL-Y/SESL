@@ -122,10 +122,10 @@
 // }
 
 // example 3: char load
-// int main(){
-//     char *i = malloc(11*sizeof(int));
-//     char *j = i + 5;
-//     *j = 'b';
-//     char load = *j;
-//     free(i);
-// }
+int main(){
+    char *i = malloc(11*sizeof(char));
+    char *j = i + 5;
+    *j = 'b';
+    char load = *j;
+    free(i);
+}

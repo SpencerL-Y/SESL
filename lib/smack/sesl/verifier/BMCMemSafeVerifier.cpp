@@ -54,17 +54,17 @@ namespace smack
         // std::cout << "ProgMinByteLen: " <<   pre->computeMinStoreByteLen() << std::endl;
 
 
-        BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
-        z3::expr vc = vcg->generateBMCVC(18);
-        // z3::expr vc = vcg->generateFeasibleVC(1);
-        // z3::expr vc = vcg->generateFeasibleVC(1);
-        std::cout << "Result: " << std::endl;
-        std::cout << vc.to_string() << std::endl;
+        // BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
+        // z3::expr vc = vcg->generateBMCVC(18);
+        // // z3::expr vc = vcg->generateFeasibleVC(1);
+        // // z3::expr vc = vcg->generateFeasibleVC(1);
+        // std::cout << "Result: " << std::endl;
+        // std::cout << vc.to_string() << std::endl;
         
-        z3::solver s(vcg->getContext());
-        s.add(vc);
-        std::cout << s.check() << std::endl;
-        std::cout << s.get_model() << std::endl;
+        // z3::solver s(vcg->getContext());
+        // s.add(vc);
+        // std::cout << s.check() << std::endl;
+        // std::cout << s.get_model() << std::endl;
         return false;
     }
 } // namespace smack

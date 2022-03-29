@@ -161,7 +161,7 @@ namespace smack
         }
 
         z3::expr finalResult = (addrOrder && bottomSplit && blkBothBottom &&  headTailLinked && addrValueRestriction);
-        std::cout << "Abstraction: " << finalResult << std::endl;
+        // std::cout << "Abstraction: " << finalResult << std::endl;
         return finalResult;
     }
 

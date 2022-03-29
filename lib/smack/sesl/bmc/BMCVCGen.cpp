@@ -1253,6 +1253,7 @@ namespace smack
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 3, iu) &&
             this->currentRNF->getTempPtAddrVar(blockId, 2*r - 1, iu + 1) == 
             this->currentRNF->getTempPtAddrVar(blockId, 2*r - 3, iu) &&
+            this->currentRNF->getTempPtDataVar(blockId, 2*r - 1, iu + 1) == this->currentRNF->getTempPtDataVar(blockId, 2*r - 3, iu) &&
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r, iu + 1) ==
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 2, iu);
 
@@ -1260,12 +1261,15 @@ namespace smack
             this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 3, iu));
             this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*r - 1, iu + 1));
             this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*r - 3, iu));
+            this->existVars->push_back(this->currentRNF->getTempPtDataVar(blockId, 2*r - 1, iu + 1));
+            this->existVars->push_back(this->currentRNF->getTempPtDataVar(blockId, 2*r - 3, iu));
             this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r, iu + 1));
             this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 2, iu));
 
             changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*r - 1) );
             changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*r) );
             changedOrigVarNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*r - 1) );
+            changedOrigVarNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*r - 1));
         }
         shiftChange = shiftChange &&
         this->currentRNF->getTempBlkAddrVar(blockId, 2*k + 1 , iu + 1) == 

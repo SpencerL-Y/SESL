@@ -126,6 +126,6 @@ int main(){
     char *i = malloc(11*sizeof(char));
     char *j = i + 5;
     *j = 'b';
-    char load = *j;
+    char load = *(j + 1);
     free(i);
 }

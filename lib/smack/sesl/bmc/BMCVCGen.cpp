@@ -569,7 +569,7 @@ namespace smack
         } else if(ConcreteAction::ActType::LOAD == refAct->getActType()){
             assert(refAct->getArg1() != nullptr && refAct->getArg2() != nullptr &&
                    refAct->getType2() == PTR_BYTEWIDTH);
-            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType1()));
             // std::cout << "arg1 rhs: " << this->getArgVar(1, u) << std::endl;
             z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
             z3::expr arg3Equal = (
@@ -1065,7 +1065,7 @@ namespace smack
                     (loadExist && loadFresh);
                 }
             }
-            executeLoadSequence == executeLoadSequence && (currByteLoadResult);
+            executeLoadSequence = executeLoadSequence && (currByteLoadResult);
             this->tempCounter ++;
         }
 

@@ -1176,13 +1176,14 @@ namespace smack {
 
      z3::expr VarExpr::bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const {
         std::string translatedVarName = this->name() + "_(" + std::to_string(u) + ")";
-        if(type != 1){
+        // if(type != 1){
             z3::expr res = z3Ctx.int_const(translatedVarName.c_str());
             return res;
-        } else {
-            z3::expr res = z3Ctx.bool_const(translatedVarName.c_str());
-            return res;
-        }
+            // there is no bool variables in C programs
+        // } else {
+        //     z3::expr res = z3Ctx.bool_const(translatedVarName.c_str());
+        //     return res;
+        // }
     }
 
     std::pair<bool, int> VarExpr::translateToInt(const std::shared_ptr<VarEquiv> &varEquivPtr) const {

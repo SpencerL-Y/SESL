@@ -97,22 +97,35 @@
 //         list = next;
 // }
 
-int main(){
-    char *i;
-    i = malloc(11*sizeof(char));
-    char *j = i + 10;
-    char *k = i + 7;
-    *j = 'a';
-    *k = 'b';
-    free(i);
-    return 0;
-}
 
+// example 1: char store
+// int main(){
+//     char *i;
+//     i = malloc(11*sizeof(char));
+//     char *j = i + 10;
+//     char *k = i + 7;
+//     *j = 'a';
+//     *k = 'b';
+//     free(i);
+//     return 0;
+// }
+
+
+// example 2: int store
 // int main(){
 //     int *i;
 //     i = malloc(4*sizeof(int));
-//     int *j = i + 4;
+//     int *j = i + 3;
 //     *j = 10;
 //     free(i);
 //     return 0;
+// }
+
+// example 3: char load
+// int main(){
+//     char *i = malloc(11*sizeof(int));
+//     char *j = i + 5;
+//     *j = 'b';
+//     char load = *j;
+//     free(i);
 // }

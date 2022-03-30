@@ -124,23 +124,32 @@ namespace smack
              z3::implies(rightIsBottom, leftIsBottom));
         }
 
-        z3::expr blkPtEquality = this->z3Ctx->bool_val(true);
-        for(int i = 0; i < this->length; i++){
-            blkPtEquality == blkPtEquality &&
-            this->getBlkAddrVar(2*i + 1, u) == this->getPtAddrVar(2*i + 1, u);
-        }
+        // z3::expr blkPtEquality = this->z3Ctx->bool_val(true);
+        // for(int i = 0; i < this->length; i++){
+        //     z3::expr blkPtPremise = 
+        //     this->getBlkAddrVar(2*i + 1, u) != BOT && 
+        //     this->getPtAddrVar(2*i + 1, u) != BOT;
+
+        //     blkPtEquality == blkPtEquality &&
+        //     this->getBlkAddrVar(2*i + 1, u) == this->getPtAddrVar(2*i + 1, u);
+        // }
 
         z3::expr headTailLinked = this->z3Ctx->bool_val(true);
-        for(int i = 1; i < this->length; i++){
-            z3::expr ptBlkPlusOnePremise = this->getPtAddrVar(2*i - 1, u) != BOT &&
-                                           this->getBlkAddrVar(2*i, u) != BOT;
+        for(int i = 1; i <= this->length; i++){
+            z3::expr ptBlkPlusOnePremise = 
+            this->getPtAddrVar(2*i - 1, u) != BOT &&
+            this->getBlkAddrVar(2*i, u) != BOT;
             // TODObmc: byte length 1
             z3::expr ptBlkPlusOneEquality = (this->getPtAddrVar(2*i - 1, u) + 1 == this->getBlkAddrVar(2*i, u));
+
+            z3::expr blkPtPremise = 
+            this->getBlkAddrVar(2*i - 1, u) != BOT && 
+            this->getPtAddrVar(2*i - 1, u) != BOT;
             z3::expr blkPtEquality = (this->getBlkAddrVar(2*i - 1, u) == this->getPtAddrVar(2*i - 1, u));
             headTailLinked = (
                 headTailLinked && 
                 z3::implies(ptBlkPlusOnePremise, ptBlkPlusOneEquality) && 
-                blkPtEquality
+                z3::implies(blkPtPremise, blkPtEquality)
             );
         }
 
@@ -151,7 +160,8 @@ namespace smack
             addrValueRestriction = (addrValueRestriction && (left && right));
         }
 
-        z3::expr finalResult = (addrOrder && bottomSplit && blkBothBottom && blkPtEquality && headTailLinked && addrValueRestriction);
+        z3::expr finalResult = (addrOrder && bottomSplit && blkBothBottom &&  headTailLinked && addrValueRestriction);
+        // std::cout << "Abstraction: " << finalResult << std::endl;
         return finalResult;
     }
 
@@ -160,6 +170,7 @@ namespace smack
         this->primeNum = primeNum;
         this->z3Ctx = &ctx;
         this->length = length;
+        std::cout << "RNF LENGTH: " << this->length << std::endl;
         for(int i = 0; i < this->maxRegionNum; i++){
             BNFPtr newBnf = std::make_shared<BlockNormalForm>(ctx, i, length, primeNum);
             this->bnfList.push_back(newBnf);
@@ -219,10 +230,10 @@ namespace smack
         std::set<std::string> varNames;
         for(int i = 0; i < this->maxRegionNum; i++){
             for(int j =0; j < this->length; j++){
-                std::string blka1 = "blka_" + std::to_string(i) + "_" + std::to_string(2*i) ;
-                std::string blka2 = "blka_" + std::to_string(i) + "_" + std::to_string(2*i + 1);
-                std::string pta = "pta_" + std::to_string(i) + "_" + std::to_string(2*i + 1);
-                std::string ptd = "ptd_" + std::to_string(i) + "_" + std::to_string(2*i + 1);
+                std::string blka1 = "blka_" + std::to_string(i) + "_" + std::to_string(2*j) ;
+                std::string blka2 = "blka_" + std::to_string(i) + "_" + std::to_string(2*j + 1);
+                std::string pta = "pta_" + std::to_string(i) + "_" + std::to_string(2*j + 1);
+                std::string ptd = "ptd_" + std::to_string(i) + "_" + std::to_string(2*j + 1);
                 varNames.insert(blka1);     
                 varNames.insert(blka2);     
                 varNames.insert(pta);     
@@ -233,6 +244,9 @@ namespace smack
             varNames.insert(finalBlka1);
             varNames.insert(finalBlka2);
         }
+        // for(std::string name : varNames){
+        //     std::cout << name << std::endl;
+        // }
         return varNames;
     }
 
@@ -361,8 +375,14 @@ namespace smack
         if(ConcreteAction::ActType::ASSERT == refAct->getActType()){
             assert(refAct->getArg3() != nullptr && refAct->getType3() == 1);
             z3::expr arg3Equal = 
-            z3::implies(this->getArgVar(3, u), refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType3())) && 
-            z3::implies(refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType3()), this->getArgVar(3, u));
+            z3::implies(
+                this->getArgVar(3, u), 
+                refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg())
+            ) && 
+            z3::implies(
+                refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()), 
+                this->getArgVar(3, u)
+            );
             z3::expr arg1Equal = (this->getArgVar(1, u) == BOT);
             z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
             z3::expr arg4Equal = (
@@ -378,8 +398,8 @@ namespace smack
         } else if(ConcreteAction::ActType::ASSUME == refAct->getActType()){
             assert(refAct->getArg3() != nullptr && refAct->getType3() == 1);
             z3::expr arg3Equal = 
-            z3::implies(this->getArgVar(3, u), refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType3())) &&
-            z3::implies(refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType3()), this->getArgVar(3, u));
+            z3::implies(this->getArgVar(3, u), refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg())) &&
+            z3::implies(refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()), this->getArgVar(3, u));
             z3::expr arg1Equal = (this->getArgVar(1, u) == BOT);
             z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
             z3::expr arg4Equal = (
@@ -397,8 +417,8 @@ namespace smack
                 // non boolean common assign
                 assert(refAct->getArg3() == nullptr && refAct->getArg4() == nullptr);
                 // u + 1 is used to denote the new value. i.e. the transition relation 
-                z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType1()));
-                z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+                z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refCfg->getOrigCfg()));
+                z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
                 z3::expr arg3Equal = (
                     z3::implies(this->getArgVar(3, u), false) &&
                     z3::implies(false, this->getArgVar(3, u))
@@ -423,12 +443,12 @@ namespace smack
                 z3::expr arg1Equal = (this->getArgVar(1, u) == BOT);
                 z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
                 z3::expr arg3Equal = 
-                z3::implies(this->getArgVar(3, u), refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType3())) &&
-                z3::implies(refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType3()), this->getArgVar(3, u));
+                z3::implies(this->getArgVar(3, u), refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refCfg->getOrigCfg())) &&
+                z3::implies(refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refCfg->getOrigCfg()), this->getArgVar(3, u));
 
                 z3::expr arg4Equal = 
-                z3::implies(this->getArgVar(4, u), refAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType4())) &&
-                z3::implies(refAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType4()), this->getArgVar(4, u));
+                z3::implies(this->getArgVar(4, u), refAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg())) &&
+                z3::implies(refAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()), this->getArgVar(4, u));
 
                 std::set<std::string> changedVars = refAct->getChangedOrigNames();
                 std::set<std::string> unchangedOrigVars = this->setSubstract(allProgVars,changedVars);
@@ -446,7 +466,7 @@ namespace smack
             }
         } else if(ConcreteAction::ActType::FREE == refAct->getActType()){
             assert(refAct->getArg1() != nullptr && refAct->getType1() == PTR_BYTEWIDTH);
-            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
             z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
             z3::expr arg3Equal = (
                 z3::implies(this->getArgVar(3, u), false) &&
@@ -468,8 +488,8 @@ namespace smack
         } else if(ConcreteAction::ActType::MALLOC == refAct->getActType()){
 
             assert(refAct->getArg1() != nullptr && refAct->getType1() == PTR_BYTEWIDTH && refAct->getArg2() != nullptr && refAct->getType2() != BOT);
-            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType1()));
-            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refCfg->getOrigCfg()));
+            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
             z3::expr arg3Equal = (
                 z3::implies(this->getArgVar(3, u), false) &&
                 z3::implies(false, this->getArgVar(3, u))
@@ -533,8 +553,8 @@ namespace smack
         } else if(ConcreteAction::ActType::STORE == refAct->getActType()){
             assert(refAct->getArg1() != nullptr && refAct->getArg2() != nullptr &&
                    refAct->getType1() == PTR_BYTEWIDTH);
-            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
-            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
+            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
             z3::expr arg3Equal = (
                 z3::implies(this->getArgVar(3, u), false) &&
                 z3::implies(false, this->getArgVar(3, u))
@@ -555,8 +575,9 @@ namespace smack
         } else if(ConcreteAction::ActType::LOAD == refAct->getActType()){
             assert(refAct->getArg1() != nullptr && refAct->getArg2() != nullptr &&
                    refAct->getType2() == PTR_BYTEWIDTH);
-            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
-            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refCfg->getOrigCfg()));
+            // std::cout << "arg1 rhs: " << this->getArgVar(1, u) << std::endl;
+            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
             z3::expr arg3Equal = (
                 z3::implies(this->getArgVar(3, u), false) &&
                 z3::implies(false, this->getArgVar(3, u))
@@ -972,7 +993,7 @@ namespace smack
         std::set<int> byteSizeSet = {1,2,4};
         z3::expr allLoadSituation = this->z3Ctx.bool_val(true);
         for(int byteSize : byteSizeSet){
-            allLoadSituation == allLoadSituation &&
+            allLoadSituation = allLoadSituation &&
             z3::implies(
                 this->getTypeVar(1, u) == byteSize,
                 this->generateTrLoadByteSize(u, byteSize)
@@ -1050,7 +1071,7 @@ namespace smack
                     (loadExist && loadFresh);
                 }
             }
-            executeLoadSequence == executeLoadSequence && (currByteLoadResult);
+            executeLoadSequence = executeLoadSequence && (currByteLoadResult);
             this->tempCounter ++;
         }
 
@@ -1231,12 +1252,14 @@ namespace smack
 
         changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*j));
 
-        for(int r = j + 1; r < k ; r ++){
+        for(int r = j + 1; r <= k ; r ++){
+            // std::cout << "ENTER HERE" << std::endl;
             shiftChange = shiftChange &&
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 1, iu + 1) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 3, iu) &&
             this->currentRNF->getTempPtAddrVar(blockId, 2*r - 1, iu + 1) == 
             this->currentRNF->getTempPtAddrVar(blockId, 2*r - 3, iu) &&
+            this->currentRNF->getTempPtDataVar(blockId, 2*r - 1, iu + 1) == this->currentRNF->getTempPtDataVar(blockId, 2*r - 3, iu) &&
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r, iu + 1) ==
             this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 2, iu);
 
@@ -1244,12 +1267,15 @@ namespace smack
             this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 3, iu));
             this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*r - 1, iu + 1));
             this->existVars->push_back(this->currentRNF->getTempPtAddrVar(blockId, 2*r - 3, iu));
+            this->existVars->push_back(this->currentRNF->getTempPtDataVar(blockId, 2*r - 1, iu + 1));
+            this->existVars->push_back(this->currentRNF->getTempPtDataVar(blockId, 2*r - 3, iu));
             this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r, iu + 1));
             this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2*r - 2, iu));
 
             changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*r - 1) );
             changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*r) );
             changedOrigVarNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*r - 1) );
+            changedOrigVarNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*r - 1));
         }
         shiftChange = shiftChange &&
         this->currentRNF->getTempBlkAddrVar(blockId, 2*k + 1 , iu + 1) == 

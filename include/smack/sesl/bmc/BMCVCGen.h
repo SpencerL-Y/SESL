@@ -123,7 +123,7 @@ namespace smack
                 this->preAnalysis = std::make_shared<BMCPreAnalysis>(this->refCfg, this->loopBound);
                 this->regionNum = this->preAnalysis->computeRegNumAndPtNum().first;
                 this->pointsToNum = this->preAnalysis->computeRegNumAndPtNum().second;
-                std::cout << "INFO: regNum " <<  this->regionNum << "ptNum " << this->pointsToNum;
+                std::cout << "INFO: regNum " <<  this->regionNum << " ptNum " << this->pointsToNum << std::endl;
                 this->currentRNF = std::make_shared<RegionNormalForm>(this->z3Ctx, this->regionNum, this->pointsToNum, 0);
                 this->freshCounter = 0;
                 this->tempCounter = 0;

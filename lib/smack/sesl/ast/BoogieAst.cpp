@@ -175,7 +175,7 @@ namespace smack {
         return res;
     }
 
-    z3::expr Expr::bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const {
+    z3::expr Expr::bmcTranslateToZ3(z3::context &z3Ctx, int u, CFGPtr cfg) const {
         auto res = z3Ctx.bool_val(true);
         return res;
     }
@@ -803,10 +803,10 @@ namespace smack {
         return res;
     }
 
-    z3::expr BinExpr::bmcTranslateToZ3(z3::context& z3Ctx, int u, int type) const {
+    z3::expr BinExpr::bmcTranslateToZ3(z3::context& z3Ctx, int u, CFGPtr cfg) const {
         z3::expr res = z3Ctx.bool_val(true);
-        const z3::expr left = lhs->bmcTranslateToZ3(z3Ctx, u, type);
-        const z3::expr right = rhs->bmcTranslateToZ3(z3Ctx, u, type);
+        const z3::expr left = lhs->bmcTranslateToZ3(z3Ctx, u, cfg);
+        const z3::expr right = rhs->bmcTranslateToZ3(z3Ctx, u, cfg);
         //CDEBUG(std::cout << "left: " << left.to_string() << " right: " << right.to_string() << " op: " << op
         //                 << std::endl);
         switch (op) {
@@ -827,7 +827,42 @@ namespace smack {
                 res = (left and right);
                 break;
             case Eq:
-                res = (left == right);
+                if (lhs->isVar() && rhs->isVar()) {
+                    const VarExpr *lhsVar = (const VarExpr *) lhs;
+                    const VarExpr *rhsVar = (const VarExpr *) rhs;
+                    std::string lhsOrigVarName = lhsVar->name();
+                    std::string rhsOrigVarName = rhsVar->name();
+                    // Deal with boolean assignment
+                    if (cfg->getVarDetailType(lhsOrigVarName).second == 1) {
+                        assert(cfg->getVarDetailType(rhsOrigVarName).second == 1);
+                        res = z3::implies(left, right) && z3::implies(right, left);
+                        return res;
+                    }
+                    return (left == right);
+                } else if (lhs->isVar()) {
+                    const VarExpr *lhsVar = (const VarExpr *) lhs;
+                    std::string lhsOrigVarName = lhsVar->name();
+                    if (cfg->getVarDetailType(lhsOrigVarName).second == 1) {
+                        // if lhs variable is a boolean variable
+                        if(rhs->isValue()){
+                            const IntLit *rhsInt = (const IntLit *) rhs;
+                            if (rhsInt->getVal() == 0) {
+                                res = z3::implies(left, false) && z3::implies(false, left);
+                            } else {
+                                res = z3::implies(left, true) && z3::implies(true, left);
+                            }
+                            return res;
+                        } else {
+                            res = z3::implies(left, right) && z3::implies(right, left);
+                            return res;
+                        }
+                    } else {
+                        res = (left == right);
+                        return res;
+                    }
+                } else {
+                    assert(false);
+                }
                 break;
             case Neq:
                 res = (left != right);
@@ -965,7 +1000,7 @@ namespace smack {
         return z3Ctx.int_val(val.c_str());
     }
 
-    z3::expr IntLit::bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const{
+    z3::expr IntLit::bmcTranslateToZ3(z3::context &z3Ctx, int u, CFGPtr cfg) const{
         return z3Ctx.int_val(val.c_str());
     }
 
@@ -1030,8 +1065,8 @@ namespace smack {
         }
     }
 
-    z3::expr NotExpr::bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const {
-        auto exp = expr->bmcTranslateToZ3(z3Ctx, u, type);
+    z3::expr NotExpr::bmcTranslateToZ3(z3::context &z3Ctx, int u, CFGPtr cfg) const {
+        auto exp = expr->bmcTranslateToZ3(z3Ctx, u, cfg);
         if(expr->isValue() && expr->getType() == ExprType::INT){
             const IntLit* intExpr = (const IntLit*) expr;
             if(intExpr->getVal() == 0){
@@ -1174,13 +1209,16 @@ namespace smack {
         return res;
     }
 
-     z3::expr VarExpr::bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const {
+     z3::expr VarExpr::bmcTranslateToZ3(z3::context &z3Ctx, int u, CFGPtr cfg) const {
         std::string translatedVarName = this->name() + "_(" + std::to_string(u) + ")";
-        if(type != 1){
-            z3::expr res = z3Ctx.int_const(translatedVarName.c_str());
+        auto typeInfo = cfg->getVarDetailType(this->name());
+        std::string typeStr = typeInfo.first;
+        int type = typeInfo.second;
+        if(type == 1 && typeStr.find("ref") == std::string::npos){
+            z3::expr res = z3Ctx.bool_const(translatedVarName.c_str());
             return res;
         } else {
-            z3::expr res = z3Ctx.bool_const(translatedVarName.c_str());
+            z3::expr res = z3Ctx.int_const(translatedVarName.c_str());
             return res;
         }
     }
@@ -1224,12 +1262,12 @@ namespace smack {
                     (not cond->translateToZ3(z3Ctx, cfg, varFac, varBounder) and falseValue->translateToZ3(z3Ctx, cfg, varFac, varBounder)));
     }
 
-    z3::expr IfThenElseExpr::bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const{
-        z3::expr premise = this->cond->bmcTranslateToZ3(z3Ctx, u, type);
-        z3::expr negPremise = (not this->cond->bmcTranslateToZ3(z3Ctx, u, type));
+    z3::expr IfThenElseExpr::bmcTranslateToZ3(z3::context &z3Ctx, int u, CFGPtr cfg) const{
+        z3::expr premise = this->cond->bmcTranslateToZ3(z3Ctx, u, cfg);
+        z3::expr negPremise = (not this->cond->bmcTranslateToZ3(z3Ctx, u, cfg));
         z3::expr res = (
-            implies(premise, this->trueValue->bmcTranslateToZ3(z3Ctx, u, type)) && 
-            implies(negPremise, this->falseValue->bmcTranslateToZ3(z3Ctx, u, type))
+            implies(premise, this->trueValue->bmcTranslateToZ3(z3Ctx, u, cfg)) && 
+            implies(negPremise, this->falseValue->bmcTranslateToZ3(z3Ctx, u, cfg))
         );
         return res;
     }
@@ -1433,7 +1471,7 @@ namespace smack {
         return z3Ctx.bool_val(this->val);
     }
 
-    z3::expr BoolLit::bmcTranslateToZ3(z3::context &z3Ctx, int u, int type) const{
+    z3::expr BoolLit::bmcTranslateToZ3(z3::context &z3Ctx, int u, CFGPtr cfg) const{
         return z3Ctx.bool_val(this->val);
     }
 

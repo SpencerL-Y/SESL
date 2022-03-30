@@ -375,8 +375,14 @@ namespace smack
         if(ConcreteAction::ActType::ASSERT == refAct->getActType()){
             assert(refAct->getArg3() != nullptr && refAct->getType3() == 1);
             z3::expr arg3Equal = 
-            z3::implies(this->getArgVar(3, u), refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType3())) && 
-            z3::implies(refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType3()), this->getArgVar(3, u));
+            z3::implies(
+                this->getArgVar(3, u), 
+                refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg())
+            ) && 
+            z3::implies(
+                refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()), 
+                this->getArgVar(3, u)
+            );
             z3::expr arg1Equal = (this->getArgVar(1, u) == BOT);
             z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
             z3::expr arg4Equal = (
@@ -392,8 +398,8 @@ namespace smack
         } else if(ConcreteAction::ActType::ASSUME == refAct->getActType()){
             assert(refAct->getArg3() != nullptr && refAct->getType3() == 1);
             z3::expr arg3Equal = 
-            z3::implies(this->getArgVar(3, u), refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType3())) &&
-            z3::implies(refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType3()), this->getArgVar(3, u));
+            z3::implies(this->getArgVar(3, u), refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg())) &&
+            z3::implies(refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()), this->getArgVar(3, u));
             z3::expr arg1Equal = (this->getArgVar(1, u) == BOT);
             z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
             z3::expr arg4Equal = (
@@ -411,8 +417,8 @@ namespace smack
                 // non boolean common assign
                 assert(refAct->getArg3() == nullptr && refAct->getArg4() == nullptr);
                 // u + 1 is used to denote the new value. i.e. the transition relation 
-                z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType1()));
-                z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+                z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refCfg->getOrigCfg()));
+                z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
                 z3::expr arg3Equal = (
                     z3::implies(this->getArgVar(3, u), false) &&
                     z3::implies(false, this->getArgVar(3, u))
@@ -437,12 +443,12 @@ namespace smack
                 z3::expr arg1Equal = (this->getArgVar(1, u) == BOT);
                 z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
                 z3::expr arg3Equal = 
-                z3::implies(this->getArgVar(3, u), refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType3())) &&
-                z3::implies(refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType3()), this->getArgVar(3, u));
+                z3::implies(this->getArgVar(3, u), refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refCfg->getOrigCfg())) &&
+                z3::implies(refAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refCfg->getOrigCfg()), this->getArgVar(3, u));
 
                 z3::expr arg4Equal = 
-                z3::implies(this->getArgVar(4, u), refAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType4())) &&
-                z3::implies(refAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType4()), this->getArgVar(4, u));
+                z3::implies(this->getArgVar(4, u), refAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg())) &&
+                z3::implies(refAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()), this->getArgVar(4, u));
 
                 std::set<std::string> changedVars = refAct->getChangedOrigNames();
                 std::set<std::string> unchangedOrigVars = this->setSubstract(allProgVars,changedVars);
@@ -460,7 +466,7 @@ namespace smack
             }
         } else if(ConcreteAction::ActType::FREE == refAct->getActType()){
             assert(refAct->getArg1() != nullptr && refAct->getType1() == PTR_BYTEWIDTH);
-            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
             z3::expr arg2Equal = (this->getArgVar(2, u) == BOT);
             z3::expr arg3Equal = (
                 z3::implies(this->getArgVar(3, u), false) &&
@@ -482,8 +488,8 @@ namespace smack
         } else if(ConcreteAction::ActType::MALLOC == refAct->getActType()){
 
             assert(refAct->getArg1() != nullptr && refAct->getType1() == PTR_BYTEWIDTH && refAct->getArg2() != nullptr && refAct->getType2() != BOT);
-            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType1()));
-            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refCfg->getOrigCfg()));
+            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
             z3::expr arg3Equal = (
                 z3::implies(this->getArgVar(3, u), false) &&
                 z3::implies(false, this->getArgVar(3, u))
@@ -547,8 +553,8 @@ namespace smack
         } else if(ConcreteAction::ActType::STORE == refAct->getActType()){
             assert(refAct->getArg1() != nullptr && refAct->getArg2() != nullptr &&
                    refAct->getType1() == PTR_BYTEWIDTH);
-            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType1()));
-            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
+            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
             z3::expr arg3Equal = (
                 z3::implies(this->getArgVar(3, u), false) &&
                 z3::implies(false, this->getArgVar(3, u))
@@ -569,9 +575,9 @@ namespace smack
         } else if(ConcreteAction::ActType::LOAD == refAct->getActType()){
             assert(refAct->getArg1() != nullptr && refAct->getArg2() != nullptr &&
                    refAct->getType2() == PTR_BYTEWIDTH);
-            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, refAct->getType1()));
+            z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refCfg->getOrigCfg()));
             // std::cout << "arg1 rhs: " << this->getArgVar(1, u) << std::endl;
-            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, refAct->getType2()));
+            z3::expr arg2Equal = (this->getArgVar(2, u) == refAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()));
             z3::expr arg3Equal = (
                 z3::implies(this->getArgVar(3, u), false) &&
                 z3::implies(false, this->getArgVar(3, u))

@@ -823,7 +823,11 @@ namespace smack
         std::string typeStr = detailTypePair.first;
         if(typeStr.find("ref") != std::string::npos){
             return PTR_BYTEWIDTH;
-        } else if(detailTypePair.second < 8 && detailTypePair.second > 0){
+        } else if(detailTypePair.second == 1){
+            // represent boolean variables in boogie
+            return -3;
+        } 
+        else if(detailTypePair.second < 8 && detailTypePair.second > 1){
             return 1;
         } else {
             return detailTypePair.second/8;

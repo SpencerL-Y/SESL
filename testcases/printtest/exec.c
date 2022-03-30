@@ -126,6 +126,16 @@ int main(){
     char *i = malloc(11*sizeof(char));
     char *j = i + 5;
     *j = 'b';
-    char load = *(j + 1);
-    free(i);
+    char* l = j - 2;
+    char load = *l;
+    // free(i);
 }
+
+// example 4: loop test
+// int main(){
+//     int i;
+//     int *j = malloc(sizeof(int) * 2);
+//     if(i > 0){
+//         free(j);
+//     }
+// }

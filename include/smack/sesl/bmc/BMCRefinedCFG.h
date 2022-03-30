@@ -161,7 +161,7 @@ namespace smack
             bool isFinalVertex(int vertexId);
             std::map<int, int> computeSccMap();
             void tarjanScc(int currentVertex, std::map<int, std::pair<int, int>>& currentMap,  std::list<int>& currStack, std::map<int, int>& sccResult);
-            
+            CFGPtr getOrigCfg() {return this->origCfg;}
 
             void printRefinedCFG();
     };

@@ -122,20 +122,31 @@
 // }
 
 // example 3: char load
-int main(){
-    char *i = malloc(11*sizeof(char));
-    char *j = i + 5;
-    *j = 'b';
-    char* l = j - 2;
-    char load = *l;
-    // free(i);
-}
-
-// example 4: loop test
 // int main(){
-//     int i;
+//     char *i = malloc(11*sizeof(char));
+//     char *j = i + 5;
+//     *j = 'b';
+//     char* l = j - 1;
+//     char load = *l;
+//     free(i);
+// }
+
+// example 4
+// int main(){
+//     int *m = malloc(2*sizeof(int));
+//     *(m + 1) = 10;
+//     free(m);
+//     // free(m);
+// }
+
+// example 5: condition test
+// int main(){
+//     int i = 2;
 //     int *j = malloc(sizeof(int) * 2);
-//     if(i > 0){
+//     if(i < 0){
 //         free(j);
-//     }
+//     } else if(i == 2){
+//         free(j);
+//         free(j);
+//     } 
 // }

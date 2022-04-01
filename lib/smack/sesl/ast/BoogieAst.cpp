@@ -1215,7 +1215,7 @@ namespace smack {
         auto typeInfo = cfg->getGlobalVarDetailType(this->name());
         std::string typeStr = typeInfo.first;
         int type = typeInfo.second;
-        std::cout << "Translate var: " << " Type: " << type << "Type name:  " << typeStr << " name: " << this->name() << std::endl;
+        // std::cout << "Translate var: " << " Type: " << type << "Type name:  " << typeStr << " name: " << this->name() << std::endl;
         if(type == 1 && typeStr.find("ref") == std::string::npos){
             z3::expr res = z3Ctx.bool_const(translatedVarName.c_str());
             return res;

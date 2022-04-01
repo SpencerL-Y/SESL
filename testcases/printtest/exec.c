@@ -140,13 +140,36 @@
 // }
 
 // example 5: condition test
+int main(){
+    int i = -1;
+    int *j = malloc(sizeof(int) * 2);
+    if(i < 0){
+        free(j);
+    } else if(i == 2){
+        free(j);
+        free(j);
+    } 
+}
+
+
+// example 6: multi-region simple
 // int main(){
-//     int i = 2;
-//     int *j = malloc(sizeof(int) * 2);
-//     if(i < 0){
-//         free(j);
-//     } else if(i == 2){
-//         free(j);
-//         free(j);
-//     } 
+//     char* i = malloc(10 * sizeof(char));
+//     char* j = malloc(5 * sizeof(char));
+
+//     char *k = i + 12;
+//     char *w = j + 4;
+//     *k = 10;
+//     char d = *w;
+//     free(i);
+//     free(j);
+//     return 0;
+
+// }
+
+// example 7: initial test for array
+// int main(){
+//     int array[10];
+//     array[5] = 10;
+//     return 0;
 // }

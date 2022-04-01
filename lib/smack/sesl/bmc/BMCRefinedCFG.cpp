@@ -339,9 +339,9 @@ namespace smack
                 }
                 currEdges = nextCurrEdges;
                 // std::cout << "CURRENT LIST ------ " << "------------ Id " << vertexIndex << std::endl;
-                for(ConcreteEdgePtr e : currEdges){
-                    e->print();
-                }
+                // for(ConcreteEdgePtr e : currEdges){
+                //     e->print();
+                // }
             } else {
                 continue;
             }

@@ -78,7 +78,11 @@ namespace smack
     const Expr* StmtFormatter::parseCondition(const Expr* origCond){
         if(origCond->isVar()){
             return origCond;
-        } else if(ExprType::BIN == origCond->getType()){
+        } 
+        else if(ExprType::FUNC == origCond->getType()){
+            return this->parseVarArithmeticExpr(origCond);
+        }
+        else if(ExprType::BIN == origCond->getType()){
             const BinExpr* condBin = (const BinExpr*) origCond;
             const Expr* newLhs = this->parseCondition(condBin->getLhs());
             const Expr* newRhs = this->parseCondition(condBin->getRhs());
@@ -590,7 +594,7 @@ namespace smack
         const FunExpr* origFun = (const FunExpr*) origBoolExpr;
         std::string funcName = origFun->name();
         const Expr* inner = origFun->getArgs().front();
-        if(funcName.find("$not") != std::string::npos){
+        if(funcName.find("$not") != std::string::npos){  
             result = Expr::not_(this->parseCondition(inner));
         } else {
             BMCDEBUG(std::cout << "ERROR: UNKNOWN unary boolean expression: " << origFun << std::endl;);
@@ -628,8 +632,8 @@ namespace smack
         const Expr* origArg1 = origFunExpr->getArgs().front();
         const Expr* origArg2 = origFunExpr->getArgs().back();
 
-        const Expr* finalLhs = origArg1;
-        const Expr* finalRhs = origArg2;
+        const Expr* finalLhs = this->parseCondition(origArg1);
+        const Expr* finalRhs = this->parseCondition(origArg2);
 
 
         const Expr* result = nullptr;
@@ -702,7 +706,19 @@ namespace smack
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::MALLOC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);
             return resultList;
-        } else if(!call->getProc().compare("free_")){
+        // } else if(!call->getProc().compare("$alloc")){
+        //     // array and struct allocation
+        //     std::string retVarName = call->getReturns().front();
+        //     changedNames.insert(retVarName);
+        //     const Expr* retVar = new VarExpr(retVarName);
+        //     REGISTER_EXPRPTR(retVar);
+        //     const Expr* allocParam = call->getParams().front();
+        //     if(allocParam.-->isVar() || allocParam->isValue()){
+        //         arg1 = retVar;
+        //         arg2 = mallocPara
+        //     }
+        }
+        else if(!call->getProc().compare("free_")){
             const Expr* freeParam = call->getParams().front();
             if(freeParam->isVar() || freeParam->isValue()){
                 arg1 = freeParam;

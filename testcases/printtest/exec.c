@@ -115,7 +115,7 @@
 // int main(){
 //     short *i;
 //     i = malloc(4*sizeof(short));
-//     short *j = i;
+//     short *j = i + 2;
 //     *j = 10;
 //     free(i);
 //     return 0;
@@ -126,7 +126,7 @@
 //     char *i = malloc(11*sizeof(char));
 //     char *j = i + 5;
 //     *j = 'b';
-//     char* l = j - 1;
+//     char* l = j + 6;
 //     char load = *l;
 //     free(i);
 // }
@@ -140,19 +140,22 @@
 // }
 
 // example 5: condition test
-// int main(){
-//     int i = 0;
-//     int *j = malloc(sizeof(int) * 2);
-//     if(i < 0){
-//         free(j);
-//     } else if(i == 0){
+// BUGGY
+int main(){
+    int i = 0;
+    int *j = malloc(sizeof(int) * 2);
+    if(i < 0){
+        free(j);
+    
+    } 
+    else if(i == 2){
+        free(j);
+        free(j);
+    } else {
 
-//     } 
-//     else if(i == 2){
-//         free(j);
-//         free(j);
-//     } 
-// }
+    }
+    return 0;
+}
 
 
 // example 6: multi-region simple
@@ -171,8 +174,8 @@
 // }
 
 // example 7: initial test for array
-int main(){
-    char array[10];
-    array[5] = 'a';
-    return 0;
-}
+// int main(){
+//     char array[10];
+//     array[5] = 'a';
+//     return 0;
+// }

@@ -692,10 +692,10 @@ namespace smack
         this->getActVar(u) == ConcreteAction::ActType::LOAD;
         z3::expr loadViolate =  
         (this->getArgVar(2, u) == BOT);
-        z3::expr legalLoadAddr = this->z3Ctx.bool_val(true);
+        z3::expr legalLoadAddr = this->z3Ctx.bool_val(false);
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
             for(int iPt = 1; iPt <= this->pointsToNum; iPt ++){
-                legalLoadAddr = legalLoadAddr &&
+                legalLoadAddr = legalLoadAddr ||
                 (this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 2, u) != BOT &&
                 this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 1, u) != BOT &&
                 this->getArgVar(2, u) >= this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 2, u) && 
@@ -704,7 +704,7 @@ namespace smack
                 this->currentRNF->getPtAddrVar(blockId, 2*iPt - 1, u) == this->getArgVar(2, u));
 
                 // TODO: need to check whether getTypeVar can correctly get the byteSize
-                legalLoadAddr = legalLoadAddr &&
+                legalLoadAddr = legalLoadAddr ||
                 (this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 2, u) != BOT &&
                 this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 1, u) != BOT &&
                 this->getArgVar(2, u) + this->getTypeVar(1, u) - 1 >= this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 2, u) && 
@@ -722,10 +722,10 @@ namespace smack
         this->getActVar(u) == ConcreteAction::ActType::STORE;
         z3::expr storeViolate =  
         (this->getArgVar(1, u) == BOT);
-        z3::expr legalStoreAddr = this->z3Ctx.bool_val(true);
+        z3::expr legalStoreAddr = this->z3Ctx.bool_val(false);
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
             for(int iPt = 1; iPt <= this->pointsToNum; iPt ++){
-                legalStoreAddr = legalStoreAddr &&
+                legalStoreAddr = legalStoreAddr ||
                 (this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 2, u) != BOT &&
                 this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 1, u) != BOT &&
                 this->getArgVar(1, u) >= this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 2, u) && 
@@ -733,7 +733,7 @@ namespace smack
                 (this->currentRNF->getPtAddrVar(blockId, 2*iPt - 1, u) != BOT &&
                 this->currentRNF->getPtAddrVar(blockId, 2*iPt - 1, u) == this->getArgVar(1, u));
 
-                legalStoreAddr = legalStoreAddr &&
+                legalStoreAddr = legalStoreAddr ||
                 (this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 2, u) != BOT &&
                 this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 1, u) != BOT &&
                 this->getArgVar(1, u) + this->getTypeVar(2, u) - 1 >= this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 2, u) && 
@@ -862,22 +862,8 @@ namespace smack
             return loadBranch;
         }
         else{
-
             return this->z3Ctx.bool_val(true);
         }
-        // z3::expr genTrExpr = (
-        //     mallocBranch && 
-        //     freeBranch && 
-        //     otherBranch && 
-        //     assumeBranch && 
-        //     commonBoolAssignBranch && 
-        //     commonNonBoolAssignBranches && 
-        //     storeBranch && 
-        //     loadBranch
-        // );
-
-        // return genTrExpr;
-
     }
 
     z3::expr BMCVCGen::generateTrMalloc(int u, bool selfClean){
@@ -1284,7 +1270,6 @@ namespace smack
         std::set<std::string> changedOrigVarNames;
         int k = this->pointsToNum;
         int j = insertPos;  
-
         
         // TODObmc: not enough space
         z3::expr notSufficientSpaceSituation = z3::implies(

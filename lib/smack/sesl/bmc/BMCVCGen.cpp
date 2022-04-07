@@ -183,6 +183,8 @@ namespace smack
         z3::expr rnfInitCond = this->z3Ctx->bool_val(true);
         for(BNFPtr bnf : this->bnfList){
             rnfInitCond = (rnfInitCond && bnf->generateInitialCondition());
+            rnfInitCond = (rnfInitCond && 
+            this->getSelfCleanVar(bnf->getBlockId(), 0) == BOT);
         }
         rnfInitCond = rnfInitCond;
         return rnfInitCond;
@@ -243,6 +245,9 @@ namespace smack
             std::string finalBlka2 = "blka_" + std::to_string(i) + "_" + std::to_string(2*this->length + 1);
             varNames.insert(finalBlka1);
             varNames.insert(finalBlka2);
+            
+            std::string selfClean = "clean_" + std::to_string(i);
+            varNames.insert(selfClean);
         }
         // for(std::string name : varNames){
         //     std::cout << name << std::endl;
@@ -267,6 +272,10 @@ namespace smack
     }
 
 
+    z3::expr RegionNormalForm::getSelfCleanVar(int blockId, int u){
+        std::string selfCleanVarName = "clean_" + std::to_string(blockId) + "_(" + std::to_string(u) + ")";
+        return this->z3Ctx->int_const(selfCleanVarName.c_str());
+    }
 
     z3::expr RegionNormalForm::getTempBlkAddrVar(int blockId, int sub, int iu){
         std::string addrVarName = "blka_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(t_" + std::to_string(iu) + ")";
@@ -281,6 +290,12 @@ namespace smack
     z3::expr RegionNormalForm::getTempPtDataVar(int blockId, int sub, int iu){
         std::string addrVarName = "ptd_" + std::to_string(blockId) + "_" + std::to_string(sub) + "_(t_" + std::to_string(iu) + ")";
         return this->z3Ctx->int_const(addrVarName.c_str());
+    }
+
+    z3::expr RegionNormalForm::getTempSelfCleanVar(int blockId, int iu){
+        std::string selfCleanVarName = "clean_" + std::to_string(blockId) + "_(t_" + std::to_string(iu) + ")";
+
+        return this->z3Ctx->int_const(selfCleanVarName.c_str());
     }
 
     z3::expr BMCVCGen::generateATSInitConfiguration(){
@@ -485,7 +500,10 @@ namespace smack
             (this->generateTypeVarEqualities(refAct, u)) &&
             progVarChange;
             return actTemplate;
-        } else if(ConcreteAction::ActType::MALLOC == refAct->getActType()){
+        } else if(
+            ConcreteAction::ActType::MALLOC == refAct->getActType() || 
+            ConcreteAction::ActType::ALLOC  == refAct->getActType()
+        ){
 
             assert(refAct->getArg1() != nullptr && refAct->getType1() == PTR_BYTEWIDTH && refAct->getArg2() != nullptr && refAct->getType2() != BOT);
             z3::expr arg1Equal = (this->getArgVar(1, u) == refAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refCfg->getOrigCfg()));
@@ -738,7 +756,8 @@ namespace smack
         z3::expr isValidFree = this->z3Ctx.bool_val(false);
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
             isValidFree = isValidFree ||
-            this->getArgVar(1, u) == this->currentRNF->getBlkAddrVar(blockId, 0, u);
+            this->getArgVar(1, u) == this->currentRNF->getBlkAddrVar(blockId, 0, u) && 
+            this->currentRNF->getSelfCleanVar(blockId, u) == NOT_CLEAN;
         }
         invalidFreeSituation = invalidFreeSituation ||
         (!isValidFree);
@@ -771,9 +790,15 @@ namespace smack
         if(refAct->getActType() == ConcreteAction::ActType::MALLOC){
             z3::expr mallocBranch = z3::implies(
                 this->getActVar(u) == ConcreteAction::ActType::MALLOC,
-                this->generateTrMalloc(u)
+                this->generateTrMalloc(u, false)
             );
             return mallocBranch;
+        } else if(refAct->getActType() == ConcreteAction::ActType::ALLOC){
+            z3::expr allocBranch = z3::implies(
+                this->getActVar(u) == ConcreteAction::ActType::ALLOC,
+                this->generateTrMalloc(u, true)
+            );
+            return allocBranch;
         }
         else if(refAct->getActType() == ConcreteAction::ActType::FREE){
             z3::expr freeBranch = z3::implies(
@@ -855,7 +880,7 @@ namespace smack
 
     }
 
-    z3::expr BMCVCGen::generateTrMalloc(int u){
+    z3::expr BMCVCGen::generateTrMalloc(int u, bool selfClean){
         this->currentRNF->setPrimeNum(u);
         z3::expr differentMallocSituation = this->z3Ctx.bool_val(true);
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
@@ -869,10 +894,13 @@ namespace smack
             std::set<std::string> changedOrigVars;
             changedOrigVars.insert("blka_" + std::to_string(blockId) + "_0");
             changedOrigVars.insert("blka_" + std::to_string(blockId) + "_1");
+            changedOrigVars.insert("clean_" + std::to_string(blockId));
             std::set<std::string> unchangedOrigVarNames = this->setSubstract(rnfOrigVars, changedOrigVars);
+            int selfCleanNum = selfClean ? SELF_CLEAN : NOT_CLEAN;
             z3::expr implicant = (
                 this->currentRNF->getBlkAddrVar(blockId, 0, u + 1) == this->getArgVar(1, u) &&
                 this->currentRNF->getBlkAddrVar(blockId, 1, u + 1) == (this->getArgVar(1, u) + this->getArgVar(2, u)) &&
+                this->currentRNF->getSelfCleanVar(blockId, u + 1) == selfCleanNum && 
                 this->generateIntRemainUnchanged(unchangedOrigVarNames, u)
             );
             differentMallocSituation = differentMallocSituation && 
@@ -887,7 +915,8 @@ namespace smack
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
             z3::expr premise = (
                 this->currentRNF->getBlkAddrVar(blockId, 0, u) == this->getArgVar(1, u) &&
-                this->getArgVar(1, u) != BOT
+                this->getArgVar(1, u) != BOT &&
+                this->currentRNF->getSelfCleanVar(blockId, u) == NOT_CLEAN
             );
             z3::expr clearAllVariables = this->z3Ctx.bool_val(true);
             std::set<std::string> rnfOrigVarNames = this->currentRNF->getRNFOrigVarNames();
@@ -911,8 +940,12 @@ namespace smack
                 clearAllVariables &&
                 this->currentRNF->getBlkAddrVar(blockId, 2*this->pointsToNum, u + 1) == BOT &&
                 this->currentRNF->getBlkAddrVar(blockId, 2*this->pointsToNum + 1, u + 1) == BOT;
+            clearAllVariables = 
+                clearAllVariables &&
+                this->currentRNF->getSelfCleanVar(blockId, u + 1) == BOT;
             changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*this->pointsToNum));
             changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*this->pointsToNum + 1));
+            changedOrigVarNames.insert("clean_" + std::to_string(blockId));
             unchangedOrigVarNames = this->setSubstract(rnfOrigVarNames, changedOrigVarNames);
             clearAllVariables = (clearAllVariables && this->generateIntRemainUnchanged(unchangedOrigVarNames, u));
             findCorrectBlock = 
@@ -1202,10 +1235,12 @@ namespace smack
             this->currentRNF->getBlkAddrVar(blockId, 2 * this->pointsToNum, stepU) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum, tempU) && 
             this->currentRNF->getBlkAddrVar(blockId, 2 * this->pointsToNum + 1, stepU) == 
-            this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum + 1, tempU); 
+            this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum + 1, tempU) &&
+            this->currentRNF->getSelfCleanVar(blockId, stepU) == this->currentRNF->getTempSelfCleanVar(blockId, tempU);
 
             this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum, tempU));
             this->existVars->push_back(this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum + 1, tempU));
+            this->existVars->push_back(this->currentRNF->getTempSelfCleanVar(blockId, tempU));
         }
         return equality;
     }

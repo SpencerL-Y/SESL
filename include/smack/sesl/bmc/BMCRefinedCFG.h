@@ -22,6 +22,7 @@ namespace smack
                 ASSERT,
                 ASSUME,
                 MALLOC,
+                ALLOC,
                 FREE,
                 OTHERPROC,
                 LOAD,

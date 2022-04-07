@@ -14,7 +14,7 @@ namespace smack
         if(s == nullptr){
             this->actType = ActType::NULLSTMT;
         } else {
-                if(s->getKind() == Stmt::Kind::ASSERT){
+            if(s->getKind() == Stmt::Kind::ASSERT){
                 this->actType = ActType::ASSERT;
             } else if(s->getKind() == Stmt::Kind::ASSIGN){
                 // deal with load, store and common assignments here
@@ -46,7 +46,10 @@ namespace smack
                     this->actType = ActType::MALLOC; 
                 } else if(callStmt->getProc().find("free") != std::string::npos){
                     this->actType = ActType::FREE;
-                } else {
+                } else if(!callStmt->getProc().compare("$alloc")) {
+                    this->actType = ActType::ALLOC;
+                }
+                else {
                     this->actType = ActType::OTHERPROC;
                 }
             } else if(s->getKind() == Stmt::Kind::RETURN){

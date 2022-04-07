@@ -538,16 +538,22 @@ namespace smack
         // TODObmc: imple
         if(ExprType::FUNC == origArithExpr->getType()){
             const FunExpr* funExpr = (const FunExpr*) origArithExpr;
-            assert(this->isBinaryArithFuncName(funExpr->name()));
-            const Expr* resultExpr = NULL;
-            const Expr* funArg1 = funExpr->getArgs().front();
-            const Expr* funArg2 = funExpr->getArgs().back();
-            resultExpr = this->parseBinaryArithmeticExpression(
-                funExpr->name(),
-                this->parseVarArithmeticExpr(funArg1),
-                this->parseVarArithmeticExpr(funArg2)
-            );
-            return resultExpr;
+            if(this->isBinaryArithFuncName(funExpr->name())){
+                const Expr* resultExpr = NULL;
+                const Expr* funArg1 = funExpr->getArgs().front();
+                const Expr* funArg2 = funExpr->getArgs().back();
+                resultExpr = this->parseBinaryArithmeticExpression(
+                    funExpr->name(),
+                    this->parseVarArithmeticExpr(funArg1),
+                    this->parseVarArithmeticExpr(funArg2)
+                );
+                return resultExpr;
+            } else if(this->isUnaryAssignFuncName(funExpr->name())){
+                return this->parseVarArithmeticExpr(funExpr->getArgs().front());
+            } else {
+                BMCDEBUG(std::cout << "ERROR: not parsed" << funExpr << std::endl;);
+                return funExpr;
+            }
         } else {
             return origArithExpr;
         }
@@ -680,7 +686,6 @@ namespace smack
         int type3 = BOT;
         int type4 = BOT;
         std::set<std::string> changedNames;
-
         std::vector<RefinedActionPtr> resultList;
         if(!call->getProc().compare("malloc")){
             // use a set to denote the malloc variables and free variables for detection that whether free is a valid one..
@@ -689,10 +694,10 @@ namespace smack
             const Expr* retVar = new VarExpr(retVarName);
             REGISTER_EXPRPTR(retVar);
             const Expr* mallocParam = call->getParams().front();
+            type1 = PTR_BYTEWIDTH;
             if(mallocParam->isVar() || mallocParam->isValue()){
                 arg1 = retVar;
                 arg2 = mallocParam;
-                type1 = PTR_BYTEWIDTH;
                 if(mallocParam->isVar()){
                     type2 = this->getVarByteSize(((const VarExpr*) mallocParam)->name());
                 } else {
@@ -706,17 +711,33 @@ namespace smack
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::MALLOC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);
             return resultList;
-        // } else if(!call->getProc().compare("$alloc")){
-        //     // array and struct allocation
-        //     std::string retVarName = call->getReturns().front();
-        //     changedNames.insert(retVarName);
-        //     const Expr* retVar = new VarExpr(retVarName);
-        //     REGISTER_EXPRPTR(retVar);
-        //     const Expr* allocParam = call->getParams().front();
-        //     if(allocParam.-->isVar() || allocParam->isValue()){
-        //         arg1 = retVar;
-        //         arg2 = mallocPara
-        //     }
+        } else if(!call->getProc().compare("$alloc")){
+            BMCDEBUG(std::cout << "HEREEEEEEEEEEEEEE" << std::endl;);
+            // array and struct allocation
+            std::string retVarName = call->getReturns().front();
+            changedNames.insert(retVarName);
+            const Expr* retVar = new VarExpr(retVarName);
+            REGISTER_EXPRPTR(retVar);
+            const Expr* allocParam = call->getParams().front();
+
+            type1 = PTR_BYTEWIDTH;
+            if(allocParam->isVar() || allocParam->isValue()){
+                arg1 = retVar;
+                arg2 = allocParam;
+                if(allocParam->isVar()){
+                    type2 = this->getVarByteSize(((const VarExpr*) allocParam)->name());
+                } else {
+                    type2 = UNKNOWN;
+                }
+            } else {
+                BMCDEBUG(std::cout << "WARNING: alloc param should not be function" << std::endl;);
+                arg1 = retVar;
+                arg2 = this->parseVarArithmeticExpr(allocParam);
+                type2 = UNKNOWN;
+            }
+            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::ALLOC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
+            resultList.push_back(refinedAct);
+            return resultList;
         }
         else if(!call->getProc().compare("free_")){
             const Expr* freeParam = call->getParams().front();
@@ -730,12 +751,7 @@ namespace smack
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::FREE, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);
             return resultList;
-        } else if(!call->getProc().compare("$alloc")){
-            //TODObmc
-            RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
-            resultList.push_back(refinedAct);
-            return resultList;
-        } else if(!call->getProc().compare("calloc")) {
+        }  else if(!call->getProc().compare("calloc")) {
             //TODObmc
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);

@@ -10,6 +10,8 @@
 #include "smack/sesl/bmc/BMCPreAnalysis.h"
 
 #define BOT -1
+#define SELF_CLEAN 1
+#define NOT_CLEAN 0
 
 namespace smack
 {
@@ -79,10 +81,12 @@ namespace smack
             z3::expr getBlkAddrVar(int blockId, int sub, int u);
             z3::expr getPtAddrVar(int blockId, int sub, int u);
             z3::expr getPtDataVar(int blockId, int sub, int u);
+            z3::expr getSelfCleanVar(int blockId, int u);
             // getTempVar
-            z3::expr getTempBlkAddrVar(int blockId, int sub, int u);
-            z3::expr getTempPtAddrVar(int blockId, int sub, int u);
-            z3::expr getTempPtDataVar(int blockId, int sub, int u);
+            z3::expr getTempBlkAddrVar(int blockId, int sub, int iu);
+            z3::expr getTempPtAddrVar(int blockId, int sub, int iu);
+            z3::expr getTempPtDataVar(int blockId, int sub, int iu);
+            z3::expr getTempSelfCleanVar(int blockId, int iu);
             // \nu formula
             z3::expr generateAbstraction(int u);
             // initial condition 
@@ -146,7 +150,7 @@ namespace smack
             // Stmt semantic encoding
             z3::expr generateGeneralTr(RefinedActionPtr refAct, int u);
 
-            z3::expr generateTrMalloc(int u);
+            z3::expr generateTrMalloc(int u, bool selfClean);
             z3::expr generateTrFree(int u);
             z3::expr generateTrStore(int u);
             z3::expr generateTrStoreByteSize(int u, int byteSize);

@@ -7,7 +7,9 @@ namespace smack
         int ptNum = 0;
         for(RefinedEdgePtr edge : this->refinedCfg->getRefinedEdges()){
             for(RefinedActionPtr act : edge->getRefinedActions()){
-                if(act->getActType() == ConcreteAction::ActType::MALLOC){
+                if(
+                act->getActType() == ConcreteAction::ActType::MALLOC ||  
+                act->getActType() == ConcreteAction::ActType::ALLOC){
                     if(this->sccResult[edge->getFrom()] == this->sccResult[edge->getTo()]){
                         mallocNum += this->loopBound;
                     } else {

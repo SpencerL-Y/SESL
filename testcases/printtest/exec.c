@@ -99,23 +99,23 @@
 
 
 // example 1: char store
-int main(){
-    char *i;
-    i = malloc(11*sizeof(char));
-    // char *j = i + 11;
-    char *k = i + 11;
-    // *j = 'a';
-    *k = 'b';
-    free(i);
-    return 0;
-}
+// int main(){
+//     char *i;
+//     i = malloc(11*sizeof(char));
+//     // char *j = i + 11;
+//     char *k = i + 10;
+//     // *j = 'a';
+//     *k = 'b';
+//     free(i);
+//     return 0;
+// }
 
 
 // example 2: int store
 // int main(){
-//     int *i;
-//     i = malloc(4*sizeof(int));
-//     int *j = i + 3;
+//     short *i;
+//     i = malloc(4*sizeof(short));
+//     short *j = i;
 //     *j = 10;
 //     free(i);
 //     return 0;
@@ -171,8 +171,8 @@ int main(){
 // }
 
 // example 7: initial test for array
-// int main(){
-//     int array[10];
-//     array[5] = 10;
-//     return 0;
-// }
+int main(){
+    char array[10];
+    array[5] = 'a';
+    return 0;
+}

@@ -631,15 +631,39 @@ namespace smack
 
     z3::expr BMCVCGen::generateViolation(int l){
 
-        z3::expr result = this->z3Ctx.bool_val(false);
+        z3::expr result = this->z3Ctx.bool_val(true);
+        z3::expr totalDerefVar = this->z3Ctx.bool_const("INVALID_DEREF");
+        z3::expr totalFreeVar = this->z3Ctx.bool_const("INVALID_FREE");
+        z3::expr totalMemleakVar = this->z3Ctx.bool_const("MEMLEAK");
+        z3::expr derefValue = this->z3Ctx.bool_val(false);
+        z3::expr freeValue = this->z3Ctx.bool_val(false);
+        z3::expr memleakValue = this->z3Ctx.bool_val(false);
         // WARNING: the loop condition must be u < l
         for(int u = 0; u < l; u ++){
-            result = result ||(
-                this->generateDerefViolation(u) ||
-                this->generateFreeViolation(u) ||
-                this->generateMemleakViolation(u)
+
+            z3::expr derefViolationVar = this->z3Ctx.bool_const(("Invalid_deref_("+ std::to_string(u) + ")").c_str());
+            z3::expr freeViolationVar = this->z3Ctx.bool_const(("Invalid_free_("+ std::to_string(u) + ")").c_str());
+            z3::expr memleakVar = this->z3Ctx.bool_const(("Memory_leak_("+ std::to_string(u) + ")").c_str());
+            result = result &&
+            (
+                z3::implies(this->generateDerefViolation(u), derefViolationVar) &&
+                z3::implies(derefViolationVar, this->generateDerefViolation(u)) &&
+                z3::implies(this->generateFreeViolation(u), freeViolationVar)  &&
+                z3::implies(freeViolationVar, this->generateFreeViolation(u)) &&
+                z3::implies(this->generateMemleakViolation(u), memleakVar) &&
+                z3::implies(memleakVar, this->generateMemleakViolation(u))
             );
+            derefValue = derefValue || derefViolationVar;
+            freeValue = freeValue || freeViolationVar;
+            memleakValue = memleakValue|| memleakVar;
         }
+        result = result && (derefValue || freeValue || memleakValue) && 
+        z3::implies(derefValue, totalDerefVar) &&
+        z3::implies(totalDerefVar, derefValue) && 
+        z3::implies(freeValue, totalFreeVar) &&
+        z3::implies(totalFreeVar, freeValue) &&
+        z3::implies(totalMemleakVar, memleakValue) &&
+        z3::implies(memleakValue, totalMemleakVar);
         return result;
     }
 
@@ -661,6 +685,7 @@ namespace smack
                 (this->currentRNF->getPtAddrVar(blockId, 2*iPt - 1, u) != BOT &&
                 this->currentRNF->getPtAddrVar(blockId, 2*iPt - 1, u) == this->getArgVar(2, u));
 
+                // TODO: need to check whether getTypeVar can correctly get the byteSize
                 legalLoadAddr = legalLoadAddr &&
                 (this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 2, u) != BOT &&
                 this->currentRNF->getBlkAddrVar(blockId, 2*iPt - 1, u) != BOT &&
@@ -670,7 +695,7 @@ namespace smack
                 this->currentRNF->getPtAddrVar(blockId, 2*iPt - 1, u) == this->getArgVar(2, u) + this->getTypeVar(1, u) - 1);
             }
         }
-        loadViolate = loadViolate && !(legalLoadAddr);
+        loadViolate = loadViolate || !(legalLoadAddr);
         z3::expr loadSituation = loadViolate && loadActionEqual;
 
 
@@ -699,7 +724,7 @@ namespace smack
                 this->currentRNF->getPtAddrVar(blockId, 2*iPt - 1, u) == this->getArgVar(2, u) + this->getTypeVar(2, u) - 1);
             }
         }
-        storeViolate = storeViolate && !(legalStoreAddr);
+        storeViolate = storeViolate || !(legalStoreAddr);
         z3::expr storeSituation = storeViolate && storeActionEqual;
         return storeSituation || loadSituation;
     }
@@ -1223,8 +1248,10 @@ namespace smack
     BMCVCGen::generateShiftAddressByte(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int iu){
         std::set<std::string> changedOrigVarNames;
         int k = this->pointsToNum;
-        int j = insertPos;
+        int j = insertPos;  
 
+        
+        // TODObmc: not enough space
         z3::expr notSufficientSpaceSituation = z3::implies(
             this->currentRNF->getTempPtAddrVar(blockId, 2*k - 1, iu) != BOT,
             this->z3Ctx.bool_val(true)

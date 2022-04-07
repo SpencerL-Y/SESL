@@ -99,16 +99,16 @@
 
 
 // example 1: char store
-// int main(){
-//     char *i;
-//     i = malloc(11*sizeof(char));
-//     char *j = i + 10;
-//     char *k = i + 7;
-//     *j = 'a';
-//     *k = 'b';
-//     free(i);
-//     return 0;
-// }
+int main(){
+    char *i;
+    i = malloc(11*sizeof(char));
+    // char *j = i + 11;
+    char *k = i + 11;
+    // *j = 'a';
+    *k = 'b';
+    free(i);
+    return 0;
+}
 
 
 // example 2: int store
@@ -140,16 +140,19 @@
 // }
 
 // example 5: condition test
-int main(){
-    int i = -1;
-    int *j = malloc(sizeof(int) * 2);
-    if(i < 0){
-        free(j);
-    } else if(i == 2){
-        free(j);
-        free(j);
-    } 
-}
+// int main(){
+//     int i = 0;
+//     int *j = malloc(sizeof(int) * 2);
+//     if(i < 0){
+//         free(j);
+//     } else if(i == 0){
+
+//     } 
+//     else if(i == 2){
+//         free(j);
+//         free(j);
+//     } 
+// }
 
 
 // example 6: multi-region simple

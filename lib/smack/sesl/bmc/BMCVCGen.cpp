@@ -765,17 +765,20 @@ namespace smack
     }
 
     z3::expr BMCVCGen::generateMemleakViolation(int u){
-        z3::expr isFianlVertex = this->z3Ctx.bool_val(false);
+        z3::expr isFinalVertex = this->z3Ctx.bool_val(false);
         for(int v : this->refCfg->getFinalVertices()){
-            isFianlVertex = isFianlVertex ||
+            isFinalVertex = isFinalVertex ||
             this->getLocVar(u) == v;
         }
         z3::expr allFreed = this->z3Ctx.bool_val(true);
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
             allFreed = allFreed &&
-            this->currentRNF->getBlkAddrVar(blockId, 0, u) == BOT;
+            z3::implies(
+                this->currentRNF->getSelfCleanVar(blockId, u) != SELF_CLEAN, 
+                this->currentRNF->getBlkAddrVar(blockId, 0, u) == BOT
+            );
         }
-        return isFianlVertex && (!allFreed);
+        return isFinalVertex && (!allFreed);
     }
     
     z3::expr BMCVCGen::generateBMCVC(int l){

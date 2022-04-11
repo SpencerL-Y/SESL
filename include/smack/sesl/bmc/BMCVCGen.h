@@ -196,6 +196,10 @@ namespace smack
             z3::expr getRNFOverflowVar();
             std::set<std::string>  setSubstract(std::set<std::string> from, std::set<std::string> substracted);
 
+            int getLoopBound(){return this->loopBound;}
+            int getRegionNum(){return this->regionNum;}
+            int getPointToNum(){return this->pointsToNum;}
+
             z3::context& getContext(){return this->z3Ctx;}
     };
 

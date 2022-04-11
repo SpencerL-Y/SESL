@@ -141,21 +141,22 @@
 
 // example 5: condition test
 // BUGGY
-// int main(){
-//     int i = 0;
-//     int *j = malloc(sizeof(int) * 2);
-//     if(i < 0){
-//         free(j);
-    
-//     } 
-//     else if(i == 2){
-//         free(j);
-//         free(j);
-//     } else {
-
-//     }
-//     return 0;
-// }
+int main(){
+    int i = 0;
+    int *j = malloc(sizeof(int) * 2);
+    if(i < 0){
+        free(j);
+    } 
+    else if(i == 2){
+        //doublefree
+        free(j);
+        free(j);
+    }  
+    else {
+        //memleak
+    }
+    return 0;
+}
 
 
 // example 6: multi-region simple
@@ -175,8 +176,8 @@
 
 
 // example 7: initial test for array
-int main(){
-    int array[10];
-    array[5] = 100;
-    return 0;
-}
+// int main(){
+//     int array[10];
+//     array[5] = 100;
+//     return 0;
+// }

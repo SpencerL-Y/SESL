@@ -1,3 +1,5 @@
+#include <fstream>
+#include <unistd.h>
 #include "smack/sesl/verifier/BMCMemSafeVerifier.h"
 #include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Debug.h"
@@ -10,11 +12,24 @@
 #include "smack/sesl/bmc/BMCVCGen.h"
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 #include "smack/sesl/bmc/BMCPreAnalysis.h"
+#include "smack/sesl/bmc/BMCVisualizer.h"
 
 namespace smack
 {
     using llvm::errs;
     char BMCMemSafeVerifier::ID = 0;
+
+    void printConcreteCfg2File(ConcreteCFGPtr conCfg, std::string fileName) {
+        char pwd[100];
+        getcwd(pwd, 100);
+        std::string printResult = DOTGenerator::generateDOT4Concrete(conCfg);
+        std::ofstream fs;
+        fs.open(fileName, ios::out);
+        fs << printResult;
+        fs.close();
+    }
+
+    // void printViolationTrace2File(z3::model)
 
     void BMCMemSafeVerifier::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
         AU.setPreservesAll();
@@ -38,7 +53,9 @@ namespace smack
 
         // ------- obtain concrete cfg
         ConcreteCFGPtr conCfg = std::make_shared<ConcreteCFG>(mainGraph);
+        printConcreteCfg2File(conCfg, "./OrigConCfg.dot");
         conCfg = conCfg->simplify();
+        printConcreteCfg2File(conCfg, "./SimpConCfg.dot");
         // conCfg->printConcreteCFG();
         BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
         refinedCFG->printRefinedCFG();
@@ -55,7 +72,8 @@ namespace smack
 
 
         BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
-        z3::expr vc = vcg->generateBMCVC(10);
+        int depth = 20;
+        z3::expr vc = vcg->generateBMCVC(depth);
         // z3::expr vc = vcg->generateFeasibleVC(1);
         std::cout << "Result: " << std::endl;
         std::cout << vc.to_string() << std::endl;
@@ -63,7 +81,13 @@ namespace smack
         z3::solver s(vcg->getContext());
         s.add(vc);
         std::cout << s.check() << std::endl;
-        std::cout << s.get_model() << std::endl;
+        // std::cout << s.get_model() << std::endl;
+        z3::model m = s.get_model();
+        for(int i = 0; i < m.size(); i ++){
+            z3::func_decl v = m[i];
+            assert(v.arity() == 0);
+            std::cout << v.name() << " = " << m.get_const_interp(v).to_string() << "\n" << std::endl;
+        }
         return false;
     }
 } // namespace smack

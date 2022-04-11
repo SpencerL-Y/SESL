@@ -142,7 +142,7 @@
 // example 5: condition test
 // BUGGY
 int main(){
-    int i = 0;
+    int i = 1;
     int *j = malloc(sizeof(int) * 2);
     if(i < 0){
         free(j);

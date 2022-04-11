@@ -20,8 +20,6 @@ namespace smack
     char BMCMemSafeVerifier::ID = 0;
 
     void printConcreteCfg2File(ConcreteCFGPtr conCfg, std::string fileName) {
-        char pwd[100];
-        getcwd(pwd, 100);
         std::string printResult = DOTGenerator::generateDOT4Concrete(conCfg);
         std::ofstream fs;
         fs.open(fileName, ios::out);
@@ -29,7 +27,17 @@ namespace smack
         fs.close();
     }
 
-    // void printViolationTrace2File(z3::model)
+    void printRefinedCfg2File(BMCRefinedCFGPtr refCfg, std::string fileName){
+        std::string printResult = DOTGenerator::generateDOT4Refined(refCfg);
+        std::ofstream fs;
+        fs.open(fileName, ios::out);
+        fs << printResult;
+        fs.close();
+    }
+
+    void printViolationTrace2File(z3::model model, BMCVCGenPtr vcg, std::string fileName){
+
+    }
 
     void BMCMemSafeVerifier::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
         AU.setPreservesAll();
@@ -58,7 +66,8 @@ namespace smack
         printConcreteCfg2File(conCfg, "./SimpConCfg.dot");
         // conCfg->printConcreteCFG();
         BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
-        refinedCFG->printRefinedCFG();
+        // refinedCFG->printRefinedCFG();
+        printRefinedCfg2File(refinedCFG, "./RefCfg.dot");
 
         // BMCPreAnalysisPtr pre = std::make_shared<BMCPreAnalysis>(refinedCFG, 5);
         // std::set<std::string> progVars = pre->getProgOrigVars();
@@ -72,9 +81,9 @@ namespace smack
 
 
         BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
-        int depth = 20;
-        z3::expr vc = vcg->generateBMCVC(depth);
-        // z3::expr vc = vcg->generateFeasibleVC(1);
+        int depth = 11;
+        // z3::expr vc = vcg->generateBMCVC(depth);
+        z3::expr vc = vcg->generateFeasibleVC(1);
         std::cout << "Result: " << std::endl;
         std::cout << vc.to_string() << std::endl;
         

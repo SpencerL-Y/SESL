@@ -58,7 +58,7 @@ namespace smack
             int getToVertex() {return this->toVertex;}
             ConcreteActionPtr getAction() { return this->action;}
             int getEdgeId(){return this->edgeId;}
-            void print();
+            void print(std::ostream &os);
     };
 
     typedef std::shared_ptr<ConcreteEdge> ConcreteEdgePtr;
@@ -91,7 +91,7 @@ namespace smack
             ConcreteAction::ActType getActType(){return this->actType;}
             std::set<std::string> getChangedOrigNames(){return this->changedOrigNames;}
             std::list<std::string> getOrigProgramVars();// TODObmc
-            void print();
+            void print(std::ostream &os);
     };
 
     typedef std::shared_ptr<RefinedAction> RefinedActionPtr;
@@ -108,7 +108,7 @@ namespace smack
             int getTo(){return this->to;}
             std::vector<RefinedActionPtr> getRefinedActions(){return this->refinedActions;}
             int getEdgeId(){return this->edgeId;}
-            void print();
+            void print(std::ostream &os);
     };
     
     typedef std::shared_ptr<RefinedEdge> RefinedEdgePtr;

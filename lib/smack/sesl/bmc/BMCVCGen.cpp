@@ -421,8 +421,12 @@ namespace smack
                 z3::implies(this->getArgVar(4, u), false) &&
                 z3::implies(false, this->getArgVar(4, u))
             );
-
+            // std::cout << "VARIABLE DEBUG:" << std::endl;
+            // for(std::string var : allProgVars){
+            //     std::cout << "VAR: " << var << std::endl;
+            // }
             z3::expr progVarChange = this->equalStepAndNextStepInt(allProgVars, u);
+            // TODOsh: BUG
             actTemplate = actTemplate && 
             (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u)) &&
             progVarChange;
@@ -1181,7 +1185,9 @@ namespace smack
     }
 
     z3::expr BMCVCGen::generateTrCommonAssignBool(int u){
-        z3::expr boolEquility = this->getArgVar(3, u) == this->getArgVar(4, u);
+        z3::expr boolEquility = 
+        z3::implies(this->getArgVar(3, u), this->getArgVar(4, u)) &&
+        z3::implies(this->getArgVar(4, u), this->getArgVar(3, u));
         std::set<std::string> unchangedOrigNames = this->currentRNF->getRNFOrigVarNames();
         z3::expr result = (
             boolEquility && 

@@ -93,14 +93,14 @@ namespace smack
         this->action = newAction;
     }
 
-    void ConcreteEdge::print(){
-        std::cout << "INFO: [Edge " + std::to_string(this->fromVertex) + " --> " + std::to_string(this->toVertex) + "] " << std::endl;
+    void ConcreteEdge::print(std::ostream &os){
+        os << "INFO: [Edge " + std::to_string(this->fromVertex) + " --> " + std::to_string(this->toVertex) + "] " << std::endl;
         if(this->action->getStmt() != nullptr){
-            this->action->getStmt()->print(std::cout);
+            this->action->getStmt()->print(os);
         } else {
-            std::cout << "<null>";;
+            os << "<null>";;
         }
-        std::cout << std::endl; 
+        os << std::endl; 
     }
 
     ConcreteCFG::ConcreteCFG(CFGPtr origCfg) {
@@ -358,7 +358,7 @@ namespace smack
         std::cout << "INFO: ----------- Num of Vertices: " << this->vertexNum << std::endl;
         std::cout << "INFO: -----------  Edges: " << std::endl;
         for(ConcreteEdgePtr edge : this->concreteEdges){
-            edge->print();
+            edge->print(cout);
         }
         std::cout << "INFO: ----------- VarTypes: " << std::endl;
         for(auto varTypePair : this->origCfg->getVarTypes()){
@@ -367,48 +367,48 @@ namespace smack
         std::cout << std::endl;
     }
 
-    void RefinedAction::print(){
-        std::cout << "RefinedAction: ";
+    void RefinedAction::print(std::ostream &os){
+        os << "RefinedAction: ";
         ConcreteAction::printActType(this->getActType());
-        std::cout << " ARG1: ";
+        os << " ARG1: ";
         if(this->arg1 != nullptr){
-            this->arg1->print(std::cout);
-            std::cout << "(" << this->type1 << ") " << std::endl;
+            this->arg1->print(os);
+            os << "(" << this->type1 << ") " << std::endl;
         } else {
-            std::cout << " <NULL>";
+            os << " <NULL>";
         }
 
-        std::cout << " ARG2: ";
+        os << " ARG2: ";
         if(this->arg2 != nullptr){
-            this->arg2->print(std::cout);
-            std::cout << "(" << this->type2 << ") " << std::endl;
+            this->arg2->print(os);
+            os << "(" << this->type2 << ") " << std::endl;
         } else {
-            std::cout << " <NULL>";
+            os << " <NULL>";
         }
 
-        std::cout << " ARG3: ";
+        os << " ARG3: ";
         if(this->arg3 != nullptr){
-            this->arg3->print(std::cout);
-            std::cout << "(" << this->type3 << ") " << std::endl;
+            this->arg3->print(os);
+            os << "(" << this->type3 << ") " << std::endl;
         } else {
-            std::cout << " <NULL>";
+            os << " <NULL>";
         }
 
-        std::cout << " ARG4: ";
+        os << " ARG4: ";
         if(this->arg4 != nullptr){
-            this->arg4->print(std::cout);
-            std::cout << "(" << this->type4 << ") " << std::endl;
+            this->arg4->print(os);
+            os << "(" << this->type4 << ") " << std::endl;
         } else {
-            std::cout << " <NULL>";
+            os << " <NULL>";
         }
-        std::cout << std::endl;
+        os << std::endl;
     }
 
-    void RefinedEdge::print(){
-        std::cout << "INFO: [Edge] " << this->getFrom() << " ---> " << this->getTo() << std::endl;
-        std::cout << "INFO: [Actions]" << std::endl;
+    void RefinedEdge::print(std::ostream &os){
+        os << "INFO: [Edge] " << this->getFrom() << " ---> " << this->getTo() << std::endl;
+        os << "INFO: [Actions]" << std::endl;
         for(RefinedActionPtr act : this->refinedActions){
-            act->print();
+            act->print(os);
         }
     }
 
@@ -579,7 +579,7 @@ namespace smack
         std::cout << "INFO: ----------- Num of Vertices: " << this->vertexNum << std::endl;
         std::cout << "INFO: -----------  Edges: " << std::endl;
         for(RefinedEdgePtr edge : this->refinedEdges){
-            edge->print();
+            edge->print(std::cout);
         }
         std::cout << "INFO: ----------- VarTypes: " << std::endl;
         for(auto varTypePair : this->origCfg->getVarTypes()){

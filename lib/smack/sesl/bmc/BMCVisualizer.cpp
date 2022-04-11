@@ -27,14 +27,12 @@ namespace smack
             std::string edgeTo = std::to_string(edge->getTo());
             std::string edgeLabel = "";
             std::ostringstream oss;
-            for(RefinedActionPtr act : edge->getRefinedActions()){
-                oss << "Act: " << act->getActType() << "\n";
-                oss << "Arg1: " << act->getArg1() << "Arg2: " << act->getArg2() << "Arg3: " << act->getArg3() << "Arg4: " << act->getArg4() << "\n";
-                edgeLabel += oss.str();
-            }
-            result += edgeFrom + " -> " + edgeTo + "[label=\"" + edgeLabel + "\"];\n";
+            edge->print(oss);
+            result += edgeFrom + " -> " + edgeTo + "[label=\"" + oss.str() + "\"];\n";
         }
         result += "}\n";
+
+        return result;
     }
 
     std::string ViolationTraceGenerator::generateViolationTrace(z3::model m){

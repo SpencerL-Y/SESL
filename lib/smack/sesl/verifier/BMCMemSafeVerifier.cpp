@@ -79,6 +79,7 @@ namespace smack
         
         // std::cout << "ProgMinByteLen: " <<   pre->computeMinStoreByteLen() << std::endl;
 
+        std::cout << "-------------PRINT CFG DOT FILE-----------" << std::endl;
 
         BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
         int depth = 11;

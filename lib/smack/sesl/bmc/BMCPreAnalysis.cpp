@@ -51,6 +51,8 @@ namespace smack
             if(expr->isVar()){
                 const VarExpr* exprVar = (const VarExpr*) expr;
                 std::string varName = exprVar->name();
+                std::cout << "VARNAME FOUND: " << varName << std::endl;
+
                 if(result.find(varName) == result.end()){
                     result.insert(varName);
                 }

@@ -62,25 +62,25 @@ namespace smack
     }
 
 
-    void  ConcreteAction::printActType(ConcreteAction::ActType actType){
+    void  ConcreteAction::printActType(ConcreteAction::ActType actType, std::ostream& os){
         if(actType == ActType::ASSERT){
-            std::cout << "ASSERT\t";
+            os << "ASSERT\t";
         } else if(actType == ActType::ASSUME){
-            std::cout << "ASSUME\t";
+            os << "ASSUME\t";
         } else if(actType == ActType::COMMONASSIGN){
-            std::cout << "ASSIGN\t";
+            os << "ASSIGN\t";
         } else if(actType == ActType::FREE){
-            std::cout << "FREE\t";
+            os << "FREE\t";
         } else if(actType == ActType::LOAD){
-            std::cout << "LOAD\t";
+            os << "LOAD\t";
         } else if(actType == ActType::MALLOC){
-            std::cout << "MALLOC\t";
+            os << "MALLOC\t";
         } else if(actType == ActType::OTHER){
-            std::cout << "OTHER\t";
+            os << "OTHER\t";
         } else if(actType == ActType::OTHERPROC){
-            std::cout << "OTPROC\t";
+            os << "OTPROC\t";
         } else if(actType == ActType::STORE){
-            std::cout << "STORE\t";
+            os << "STORE\t";
         }
     }
 
@@ -358,7 +358,7 @@ namespace smack
         std::cout << "INFO: ----------- Num of Vertices: " << this->vertexNum << std::endl;
         std::cout << "INFO: -----------  Edges: " << std::endl;
         for(ConcreteEdgePtr edge : this->concreteEdges){
-            edge->print(cout);
+            edge->print(std::cout);
         }
         std::cout << "INFO: ----------- VarTypes: " << std::endl;
         for(auto varTypePair : this->origCfg->getVarTypes()){
@@ -369,7 +369,7 @@ namespace smack
 
     void RefinedAction::print(std::ostream &os){
         os << "RefinedAction: ";
-        ConcreteAction::printActType(this->getActType());
+        ConcreteAction::printActType(this->getActType(), os);
         os << " ARG1: ";
         if(this->arg1 != nullptr){
             this->arg1->print(os);

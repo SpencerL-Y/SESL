@@ -22,10 +22,10 @@ namespace smack
     public:
         BMCPreAnalysis(BMCRefinedCFGPtr refCfg, int loopBound) :refinedCfg(refCfg), loopBound(loopBound) {
             this->sccResult = refCfg->computeSccMap();
-            std::cout << "SCC result: " << std::endl;
-            for(auto i : sccResult){
-                std::cout << i.first << ", " << i.second << std::endl;
-            }
+            // std::cout << "SCC result: " << std::endl;
+            // for(auto i : sccResult){
+            //     std::cout << i.first << ", " << i.second << std::endl;
+            // }
         }
         std::pair<int, int> computeRegNumAndPtNum();
         std::set<std::string> getProgOrigVars();

@@ -40,7 +40,7 @@ namespace smack
             bool hasStmt() {return (stmt == nullptr) ? false : true;}
             const Stmt* getStmt() const {return this->stmt;};
             ConcreteAction::ActType getActType() {return this->actType;}
-            static void printActType(ConcreteAction::ActType actType);
+            static void printActType(ConcreteAction::ActType actType, std::ostream& os);
     };
     typedef std::shared_ptr<ConcreteAction> ConcreteActionPtr;
 

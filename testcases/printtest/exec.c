@@ -136,27 +136,26 @@
 //     int *m = malloc(2*sizeof(int));
 //     *(m + 1) = 10;
 //     free(m);
-//     // free(m);
+//     free(m);
 // }
 
 // example 5: condition test
-// BUGGY
-int main(){
-    int i = 1;
-    int *j = malloc(sizeof(int) * 2);
-    if(i < 0){
-        free(j);
-    } 
-    else if(i == 2){
-        //doublefree
-        free(j);
-        free(j);
-    }  
-    else {
-        //memleak
-    }
-    return 0;
-}
+// int main(){
+//     int i = 1;
+//     int *j = malloc(sizeof(int) * 2);
+//     if(i < 0){
+//         free(j);
+//     } 
+//     else if(i == 2){
+//         //doublefree
+//         free(j);
+//         free(j);
+//     }  
+//     // else {
+//     //     //memleak
+//     // }
+//     return 0;
+// }
 
 
 // example 6: multi-region simple
@@ -169,15 +168,15 @@ int main(){
 //     *k = 10;
 //     char d = *w;
 //     free(i);
-//     free(j);
+//     // free(j);
 //     return 0;
 
 // }
 
 
 // example 7: initial test for array
-// int main(){
-//     int array[10];
-//     array[5] = 100;
-//     return 0;
-// }
+int main(){
+    int array[10];
+    array[5] = 100;
+    return 0;
+}

@@ -386,6 +386,17 @@ namespace smack
     z3::expr BMCVCGen::generateActTypeArgTemplateEncoding(RefinedActionPtr refAct, int u){
         // TODObmc: add unchanged for program variables 
         std::set<std::string> allProgVars = this->preAnalysis->getProgOrigVars();
+        std::set<std::string> allProgIntVars;
+        std::set<std::string> allProgBoolVars;
+
+        for(std::string s : allProgVars){
+            if(this->refCfg->getStmtFormatter()->getVarByteSize(s) == -3){
+                allProgBoolVars.insert(s);
+            } else {
+                allProgIntVars.insert(s);
+            }
+        }
+
         z3::expr actTemplate = this->z3Ctx.bool_val(true);
         if(ConcreteAction::ActType::ASSERT == refAct->getActType()){
             assert(refAct->getArg3() != nullptr && refAct->getType3() == 1);
@@ -404,7 +415,7 @@ namespace smack
                 z3::implies(this->getArgVar(4, u), false) &&
                 z3::implies(false, this->getArgVar(4, u))
             );
-            z3::expr progVarChange = this->equalStepAndNextStepInt(allProgVars, u);
+            z3::expr progVarChange = this->equalStepAndNextStepInt(allProgIntVars, u) && this->equalStepAndNextStepBool(allProgBoolVars, u);
             actTemplate = actTemplate && 
             (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && this->generateTypeVarEqualities(refAct, u) &&
             progVarChange
@@ -425,7 +436,7 @@ namespace smack
             // for(std::string var : allProgVars){
             //     std::cout << "VAR: " << var << std::endl;
             // }
-            z3::expr progVarChange = this->equalStepAndNextStepInt(allProgVars, u);
+            z3::expr progVarChange = this->equalStepAndNextStepInt(allProgIntVars, u) && this->equalStepAndNextStepBool(allProgBoolVars, u);
             // TODOsh: BUG
             actTemplate = actTemplate && 
             (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && (this->generateTypeVarEqualities(refAct, u)) &&
@@ -448,8 +459,9 @@ namespace smack
                 );
 
                 std::set<std::string> changedVars = refAct->getChangedOrigNames();
-                std::set<std::string> unchangedOrigVars = this->setSubstract(allProgVars,changedVars);
-                z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedOrigVars, u);
+                std::set<std::string> unchangedIntOrigVars = this->setSubstract(allProgIntVars,changedVars);
+                std::set<std::string> unchangedBoolOrigVars = this->setSubstract(allProgBoolVars, changedVars);
+                z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedIntOrigVars, u) && this->equalStepAndNextStepBool(unchangedBoolOrigVars, u);
 
                 actTemplate = actTemplate && 
                 (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && 
@@ -470,8 +482,9 @@ namespace smack
                 z3::implies(refAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, this->refCfg->getOrigCfg()), this->getArgVar(4, u));
 
                 std::set<std::string> changedVars = refAct->getChangedOrigNames();
-                std::set<std::string> unchangedOrigVars = this->setSubstract(allProgVars,changedVars);
-                z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedOrigVars, u);
+                std::set<std::string> unchangedIntOrigVars = this->setSubstract(allProgIntVars,changedVars);
+                std::set<std::string> unchangedBoolOrigVars = this->setSubstract(allProgBoolVars, changedVars);
+                z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedIntOrigVars, u) && this->equalStepAndNextStepBool(unchangedBoolOrigVars, u);
 
                 actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) &&
                 (this->generateTypeVarEqualities(refAct, u)) && 
@@ -497,8 +510,9 @@ namespace smack
             );
             
             std::set<std::string> changedVars = refAct->getChangedOrigNames();
-            std::set<std::string> unchangedOrigVars = this->setSubstract(allProgVars,changedVars);
-            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedOrigVars, u);
+            std::set<std::string> unchangedIntOrigVars = this->setSubstract(allProgIntVars,changedVars);
+            std::set<std::string> unchangedBoolOrigVars = this->setSubstract(allProgBoolVars, changedVars);
+            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedIntOrigVars, u) && this->equalStepAndNextStepBool(unchangedBoolOrigVars, u);
 
             actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && 
             (this->generateTypeVarEqualities(refAct, u)) &&
@@ -522,8 +536,9 @@ namespace smack
             );
 
             std::set<std::string> changedVars = refAct->getChangedOrigNames();
-            std::set<std::string> unchangedOrigVars = this->setSubstract(allProgVars,changedVars);
-            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedOrigVars, u);
+            std::set<std::string> unchangedIntOrigVars = this->setSubstract(allProgIntVars,changedVars);
+            std::set<std::string> unchangedBoolOrigVars = this->setSubstract(allProgBoolVars, changedVars);
+            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedIntOrigVars, u) && this->equalStepAndNextStepBool(unchangedBoolOrigVars, u);
 
             actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && 
             (this->generateTypeVarEqualities(refAct, u)) && 
@@ -543,8 +558,9 @@ namespace smack
             );
 
             std::set<std::string> changedVars = refAct->getChangedOrigNames();
-            std::set<std::string> unchangedOrigVars = this->setSubstract(allProgVars,changedVars);
-            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedOrigVars, u);
+            std::set<std::string> unchangedIntOrigVars = this->setSubstract(allProgIntVars,changedVars);
+            std::set<std::string> unchangedBoolOrigVars = this->setSubstract(allProgBoolVars, changedVars);
+            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedIntOrigVars, u) && this->equalStepAndNextStepBool(unchangedBoolOrigVars, u);
 
             actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && 
             (this->generateTypeVarEqualities(refAct, u)) && 
@@ -565,8 +581,9 @@ namespace smack
             );
 
             std::set<std::string> changedVars = refAct->getChangedOrigNames();
-            std::set<std::string> unchangedOrigVars = this->setSubstract(allProgVars,changedVars);
-            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedOrigVars, u);
+            std::set<std::string> unchangedIntOrigVars = this->setSubstract(allProgIntVars,changedVars);
+            std::set<std::string> unchangedBoolOrigVars = this->setSubstract(allProgBoolVars, changedVars);
+            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedIntOrigVars, u) && this->equalStepAndNextStepBool(unchangedBoolOrigVars, u);
 
             actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && 
             (this->generateTypeVarEqualities(refAct, u)) &&
@@ -587,8 +604,9 @@ namespace smack
             );
 
             std::set<std::string> changedVars = refAct->getChangedOrigNames();
-            std::set<std::string> unchangedOrigVars = this->setSubstract(allProgVars,changedVars);
-            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedOrigVars, u);
+            std::set<std::string> unchangedIntOrigVars = this->setSubstract(allProgIntVars,changedVars);
+            std::set<std::string> unchangedBoolOrigVars = this->setSubstract(allProgBoolVars, changedVars);
+            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedIntOrigVars, u) && this->equalStepAndNextStepBool(unchangedBoolOrigVars, u);
 
             actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && 
             (this->generateTypeVarEqualities(refAct, u)) && 
@@ -608,9 +626,11 @@ namespace smack
                 z3::implies(this->getArgVar(4, u), false) &&
                 z3::implies(false, this->getArgVar(4, u))
             );
+            
             std::set<std::string> changedVars = refAct->getChangedOrigNames();
-            std::set<std::string> unchangedOrigVars = this->setSubstract(allProgVars,changedVars);
-            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedOrigVars, u);
+            std::set<std::string> unchangedIntOrigVars = this->setSubstract(allProgIntVars,changedVars);
+            std::set<std::string> unchangedBoolOrigVars = this->setSubstract(allProgBoolVars, changedVars);
+            z3::expr progVarChange = this->equalStepAndNextStepInt(unchangedIntOrigVars, u) && this->equalStepAndNextStepBool(unchangedBoolOrigVars, u);
 
             actTemplate = actTemplate && (arg1Equal and arg2Equal and arg3Equal and arg4Equal) && 
             (this->generateTypeVarEqualities(refAct, u)) && 
@@ -1254,8 +1274,10 @@ namespace smack
         z3::expr equality = this->z3Ctx.bool_val(true);
         for(std::string progName : unchangedProgNames){
             equality = equality && 
-            this->z3Ctx.int_const((progName + "_(" + std::to_string(u) + ")").c_str()) ==
-            this->z3Ctx.int_const((progName + "_(" + std::to_string(u + 1) + ")").c_str());
+            z3::implies(this->z3Ctx.bool_const((progName + "_(" + std::to_string(u) + ")").c_str()),
+            this->z3Ctx.bool_const((progName + "_(" + std::to_string(u + 1) + ")").c_str())) && 
+            z3::implies(this->z3Ctx.bool_const((progName + "_(" + std::to_string(u + 1) + ")").c_str()), 
+            this->z3Ctx.bool_const((progName + "_(" + std::to_string(u) + ")").c_str()));
         }
         return equality;
     }

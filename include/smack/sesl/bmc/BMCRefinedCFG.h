@@ -14,6 +14,8 @@
 
 namespace smack
 {
+    class StmtFormatter;
+    typedef  std::shared_ptr<StmtFormatter> StmtFormatterPtr;
 
     class ConcreteAction {
         public:
@@ -146,6 +148,7 @@ namespace smack
             std::set<int> initVertices;
             std::set<int> finalVertices;
             CFGPtr origCfg;
+            StmtFormatterPtr stmtFormatter;
             int sccNum, sccId;
         public:
         // TODObmc: add self loop and tag for exit vertex
@@ -163,6 +166,7 @@ namespace smack
             std::map<int, int> computeSccMap();
             void tarjanScc(int currentVertex, std::map<int, std::pair<int, int>>& currentMap,  std::list<int>& currStack, std::map<int, int>& sccResult);
             CFGPtr getOrigCfg() {return this->origCfg;}
+            StmtFormatterPtr getStmtFormatter(){return this->stmtFormatter;}
 
             void printRefinedCFG();
     };

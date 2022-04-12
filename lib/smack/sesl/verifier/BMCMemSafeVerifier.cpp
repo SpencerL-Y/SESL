@@ -82,9 +82,9 @@ namespace smack
         std::cout << "-------------PRINT CFG DOT FILE-----------" << std::endl;
 
         BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
-        int depth = 11;
-        // z3::expr vc = vcg->generateBMCVC(depth);
-        z3::expr vc = vcg->generateFeasibleVC(1);
+        int depth = 20;
+        z3::expr vc = vcg->generateBMCVC(depth);
+        // z3::expr vc = vcg->generateFeasibleVC(1);
         std::cout << "Result: " << std::endl;
         std::cout << vc.to_string() << std::endl;
         

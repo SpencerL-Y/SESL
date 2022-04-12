@@ -413,7 +413,7 @@ namespace smack
     }
 
     BMCRefinedCFG::BMCRefinedCFG(ConcreteCFGPtr conCfg){
-        StmtFormatterPtr formatter = std::make_shared<StmtFormatter>(conCfg->getOrigCfg());
+        this->stmtFormatter = std::make_shared<StmtFormatter>(conCfg->getOrigCfg());
         // TODObmc: this should be problematic since variables appears not only restricts in the cfg vars, but also constDecls
         this->vertexNum = conCfg->getVertexNum();
         this->edgeNum = conCfg->getEdgeNum();
@@ -425,7 +425,7 @@ namespace smack
             tempInitVertices[vertexId] = true;
         }
         for(ConcreteEdgePtr conEdge : conCfg->getConcreteEdges()){
-            RefinedEdgePtr refinedEdge = formatter->convert(conEdge);
+            RefinedEdgePtr refinedEdge = this->stmtFormatter->convert(conEdge);
             this->refinedEdges.push_back(refinedEdge);
             this->edge2IdMap[refinedEdge] = refinedEdge->getEdgeId();
             tempFinalVertices[refinedEdge->getFrom()] = false;

@@ -848,9 +848,9 @@ namespace smack
 
     // --------- var type computing
     int StmtFormatter::getVarByteSize(std::string varName){
-        for(auto i : this->origCfg->getVarTypes()){
-            std::cout << i.first << " " << i.second << std::endl;
-        }
+        // for(auto i : this->origCfg->getVarTypes()){
+        //     std::cout << i.first << " " << i.second << std::endl;
+        // }
         std::pair<std::string, int> detailTypePair = this->origCfg->getGlobalVarDetailType(varName);
         std::string typeStr = detailTypePair.first;
         if(typeStr.find("ref") != std::string::npos){

@@ -36,6 +36,7 @@ namespace smack
     }
 
     void printViolationTrace2File(z3::model model, BMCVCGenPtr vcg, std::string fileName){
+        // TODObmc
 
     }
 
@@ -81,8 +82,8 @@ namespace smack
 
         std::cout << "-------------PRINT CFG DOT FILE-----------" << std::endl;
 
-        BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
-        int depth = 20;
+        BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 2);
+        int depth = 5;
         z3::expr vc = vcg->generateBMCVC(depth);
         // z3::expr vc = vcg->generateFeasibleVC(1);
         std::cout << "Result: " << std::endl;
@@ -93,11 +94,12 @@ namespace smack
         std::cout << s.check() << std::endl;
         // std::cout << s.get_model() << std::endl;
         z3::model m = s.get_model();
-        for(int i = 0; i < m.size(); i ++){
-            z3::func_decl v = m[i];
-            assert(v.arity() == 0);
-            std::cout << v.name() << " = " << m.get_const_interp(v).to_string() << "\n" << std::endl;
-        }
+        // for(int i = 0; i < m.size(); i ++){
+        //     z3::func_decl v = m[i];
+        //     assert(v.arity() == 0);
+        //     std::cout << v.name() << " = " << m.get_const_interp(v).to_string() << "\n" << std::endl;
+        // }
+        std::cout << ViolationTraceGenerator::genreateViolationTraceConfiguration(m, vcg->getRegionNum(), vcg->getPointToNum(), depth);
         return false;
     }
 } // namespace smack

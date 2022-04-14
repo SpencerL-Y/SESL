@@ -34,7 +34,8 @@ namespace smack
     class ViolationTraceGenerator {
         private:
         public:
-            static std::string generateViolationTrace(z3::model m);
+            static std::string generateViolationTrace(z3::model m, int lengthBound);
+            static std::string genreateViolationTraceConfiguration(z3::model m, int regionNum, int ptNum, int lengthBound);
     };
 } // namespace smack
 

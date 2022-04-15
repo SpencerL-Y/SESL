@@ -140,22 +140,22 @@
 // }
 
 // example 5: condition test
-// int main(){
-//     int i = 1;
-//     int *j = malloc(sizeof(int) * 2);
-//     if(i < 0){
-//         free(j);
-//     } 
-//     else if(i == 2){
-//         //doublefree
-//         free(j);
-//         free(j);
-//     }  
-//     // else {
-//     //     //memleak
-//     // }
-//     return 0;
-// }
+int main(){
+    int i = 1;
+    int *j = malloc(sizeof(int) * 2);
+    if(i < 0){
+        free(j);
+    } 
+    else if(i == 2){
+        //doublefree
+        free(j);
+        free(j);
+    }  
+    // else {
+    //     //memleak
+    // }
+    return 0;
+}
 
 
 // example 6: multi-region simple
@@ -177,26 +177,40 @@
 // example 7: initial test for array
 // int main(){
 //     int array[10];
-//     array[11] = 100;
+//     array[9] = 100;
 //     return 0;
 // }
 
-#include <stdlib.h>
-int *a, *b;
-int n;
 
-int main(){
-    n = 128;
-    a = malloc (n * sizeof(*a));
-    b = malloc (n * sizeof(*b));
-    *b++ = 0;
-    int i;
-    for (i = 0; i < n; i++)
-        a[i] = -1;
-    for (i = 0; i < 128 - 1; i++)
-        b[i] = -1;
-    if (b[-2]) /* invalid deref */
-    { free(a); free(b-1); }
-    else
-    { free(a); free(b-1); }
-}
+// example 8: initial test for loop
+// NOT SOLVABLE
+// int main(){
+//     int *a = malloc(3 * sizeof(int));
+//     *(a + 1) = 3 ;
+//     int j = *(a + 1);
+//     for(int i = 0; i < j; i++){
+//         *(a + i) = 9;
+//     }   
+//     free(a);
+//     return 0;
+// }
+
+// #include <stdlib.h>
+// int *a, *b;
+// int n;
+
+// int main(){
+//     n = 128;
+//     a = malloc (n * sizeof(*a));
+//     b = malloc (n * sizeof(*b));
+//     *b++ = 0;
+//     int i;
+//     for (i = 0; i < n; i++)
+//         a[i] = -1;
+//     for (i = 0; i < 128 - 1; i++)
+//         b[i] = -1;
+//     if (b[-2]) /* invalid deref */
+//     { free(a); free(b-1); }
+//     else
+//     { free(a); free(b-1); }
+// }

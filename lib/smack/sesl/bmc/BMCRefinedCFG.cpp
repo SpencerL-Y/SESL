@@ -349,6 +349,59 @@ namespace smack
                 continue;
             }
         }
+
+        for(int vertexIndex = 1; vertexIndex <= this->vertexNum; vertexIndex ++){
+            std::list<ConcreteEdgePtr> relatedEdges;
+            std::list<ConcreteEdgePtr> unrelatedEdges;
+            std::list<ConcreteEdgePtr> nextCurrEdges;
+
+            for(ConcreteEdgePtr e : currEdges){
+                if(e->getToVertex() == vertexIndex ||
+                   e->getFromVertex() == vertexIndex){
+                    relatedEdges.push_back(e);
+                } else {
+                    unrelatedEdges.push_back(e);
+                }
+            } 
+
+            if(relatedEdges.size() == 0){
+                continue;
+            }
+
+            int beginReduce = true;
+            for(ConcreteEdgePtr re : relatedEdges){
+                if(re->getToVertex() == vertexIndex){
+                    if(re->getToVertex() == re->getFromVertex()){
+                        beginReduce = false;
+                        break;
+                    }
+                }
+            }
+
+            if(beginReduce){
+                std::list<ConcreteEdgePtr> incomingEdges;
+                std::list<ConcreteEdgePtr> outcomingEdges;
+                std::list<ConcreteEdgePtr> newlyIntroducedEdges;
+
+                for(ConcreteEdgePtr re : relatedEdges){
+                    if(re->getFromVertex() == vertexIndex){
+                        outcomingEdges.push_back(re);
+                    } else if(re->getToVertex() == vertexIndex){
+                        incomingEdges.push_back(re);
+                    } else {
+                        BMCDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
+                        assert(false);
+                    }
+                }
+
+                for(ConcreteEdgePtr ine : incomingEdges){
+                    if(ine->getAction()->getActType() != ConcreteAction::ActType::ASSUME){
+                        
+                    }
+                }
+
+            }
+        }
         ConcreteCFGPtr newCFG = std::make_shared<ConcreteCFG>(currEdges, this->origCfg);
         return newCFG;
     }

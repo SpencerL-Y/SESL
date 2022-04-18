@@ -209,6 +209,7 @@ namespace smack
     ConcreteCFGPtr ConcreteCFG::simplify(){
         std::list<ConcreteEdgePtr> currEdges = this->getConcreteEdges();
         int newEdgeId = this->getEdgeNum() + 1;
+
         // redundant inout vertex delete
         for(int vertexIndex = 1; vertexIndex <= this->vertexNum; vertexIndex ++){
             
@@ -273,6 +274,7 @@ namespace smack
                 currEdges = nextCurrEdges;
             }
         }
+
         // incoming edge reduction
         for(int vertexIndex = 1; vertexIndex <= this->vertexNum; vertexIndex ++){
             std::list<ConcreteEdgePtr> relatedEdges;
@@ -311,7 +313,7 @@ namespace smack
             if(beginReduce){
                 std::list<ConcreteEdgePtr> incomingEdges;
                 std::list<ConcreteEdgePtr> outcomingEdges;
-                std::list<ConcreteEdgePtr> newlyIndtroducedEdges;
+                std::list<ConcreteEdgePtr> newlyIntroducedEdges;
                 for(ConcreteEdgePtr re : relatedEdges){
                     if(re->getToVertex() == vertexIndex){
                         assert(isEmptyEdge(re));
@@ -330,14 +332,14 @@ namespace smack
                 for(ConcreteEdgePtr ie : incomingEdges){
                     for(ConcreteEdgePtr oe : outcomingEdges){
                         ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(ie->getFromVertex(), oe->getToVertex(), oe->getAction(), ie->getEdgeId());
-                        newlyIndtroducedEdges.push_back(newEdge); 
+                        newlyIntroducedEdges.push_back(newEdge); 
                     }
                 }
 
                 for(ConcreteEdgePtr ue : unrelatedEdges){
                     nextCurrEdges.push_back(ue);
                 }
-                for(ConcreteEdgePtr ne : newlyIndtroducedEdges){
+                for(ConcreteEdgePtr ne : newlyIntroducedEdges){
                     nextCurrEdges.push_back(ne);
                 }
                 currEdges = nextCurrEdges;
@@ -350,6 +352,8 @@ namespace smack
             }
         }
 
+
+        // Assume statement combined
         for(int vertexIndex = 1; vertexIndex <= this->vertexNum; vertexIndex ++){
             std::list<ConcreteEdgePtr> relatedEdges;
             std::list<ConcreteEdgePtr> unrelatedEdges;
@@ -376,6 +380,12 @@ namespace smack
                         break;
                     }
                 }
+
+                if(re->getAction()->getActType() != ConcreteAction::ActType::ASSUME && 
+                   re->getAction()->getActType() != ConcreteAction::ActType::NULLSTMT){
+                    beginReduce = false;
+                    break;
+                }
             }
 
             if(beginReduce){
@@ -395,11 +405,54 @@ namespace smack
                 }
 
                 for(ConcreteEdgePtr ine : incomingEdges){
-                    if(ine->getAction()->getActType() != ConcreteAction::ActType::ASSUME){
-                        
+                    assert(
+                        ine->getAction()->getActType() == ConcreteAction::ActType::ASSUME ||
+                        ine->getAction()->getActType() == ConcreteAction::ActType::NULLSTMT
+                    );
+                    for(ConcreteEdgePtr ote : outcomingEdges){
+                        assert(
+                            ote->getAction()->getActType() == ConcreteAction::ActType::ASSUME ||
+                            ote->getAction()->getActType() == ConcreteAction::ActType::NULLSTMT
+                        );
+                        if(ine->getAction()->getActType() == ConcreteAction::ActType::ASSUME){
+                            if(ote->getAction()->getActType() == ConcreteAction::ActType::ASSUME){
+                                const AssumeStmt* fromAss = (const AssumeStmt*) ine->getAction()->getStmt();
+                                const AssumeStmt* toAss = (const AssumeStmt*) ote->getAction()->getStmt();
+                                std::cout << fromAss->getExpr() << " " << toAss->getExpr() << std::endl;
+                                // TODObmc: maybe need to add mem management
+                                const Expr* newCond = Expr::and_(fromAss->getExpr(), toAss->getExpr());
+                                const AssumeStmt* newAss = new AssumeStmt(newCond);
+                                ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(ine->getFromVertex(), ote->getToVertex(), newAss, ine->getEdgeId());
+                                newlyIntroducedEdges.push_back(newEdge);
+                            } else {
+                                const AssumeStmt* toAss = (const AssumeStmt*) ote->getAction()->getStmt();
+                                const AssumeStmt* newAss = toAss;
+                                ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(ine->getFromVertex(), ote->getToVertex(), newAss, ine->getEdgeId());
+                                newlyIntroducedEdges.push_back(newEdge);
+                            }
+                        } else {
+                            if(ote->getAction()->getActType() == ConcreteAction::ActType::ASSUME){
+                                const AssumeStmt* fromAss = (const AssumeStmt*) ine->getAction()->getStmt();
+                                
+                                // TODObmc: maybe need to add mem management
+                                const AssumeStmt* newAss = fromAss;
+                                ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(ine->getFromVertex(), ote->getToVertex(), newAss, ine->getEdgeId());
+                                newlyIntroducedEdges.push_back(newEdge);
+                            } else {
+                                ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(ine->getFromVertex(), ote->getToVertex(), ine->getAction(), ine->getEdgeId());
+                                newlyIntroducedEdges.push_back(newEdge);
+                            }
+                        }
                     }
                 }
 
+                for(ConcreteEdgePtr ue : unrelatedEdges){
+                    nextCurrEdges.push_back(ue);
+                }
+                for(ConcreteEdgePtr ne : newlyIntroducedEdges){
+                    nextCurrEdges.push_back(ne);
+                }
+                currEdges = nextCurrEdges;
             }
         }
         ConcreteCFGPtr newCFG = std::make_shared<ConcreteCFG>(currEdges, this->origCfg);

@@ -476,10 +476,10 @@ namespace smack {
                 os << "==>";
                 break;
             case Or:
-                os << "\\/";
+                os << "or";
                 break;
             case And:
-                os << "/\\";
+                os << "and";
                 break;
             case Eq:
                 os << "==";

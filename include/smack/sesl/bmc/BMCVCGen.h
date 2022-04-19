@@ -246,7 +246,7 @@ namespace smack
             z3::expr generateRNFInitConditionAndAbstraction();
             
             // Block semantic encoding
-            z3::expr generateBlockCondition(int vertexIndex, int u);
+            z3::expr generateBlockSemantic(int vertexIndex, int u);
 
             // Stmt semantic encoding
             z3::expr generateGeneralTr(RefinedActionPtr refAct, int u);

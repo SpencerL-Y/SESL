@@ -1463,15 +1463,20 @@ namespace smack
     // BMCBlockVCGen
 
     z3::expr BMCBlockVCGen::generateATSInitConfiguration(){
-        
+        z3::expr cfgInitCondition = this->generateCFGInitCondition();
+
+        z3::expr rnfInitCondition = this->generateRNFInitConditionAndAbstraction();
+        z3::expr initResult = rnfInitCondition && cfgInitCondition;
+        return initResult;
     }
+    
     z3::expr generateATSTransitionRelation(int u);
     // initial configuration generation
     z3::expr generateCFGInitCondition();
     z3::expr generateRNFInitConditionAndAbstraction();
     
     // Block semantic encoding
-    z3::expr generateBlockCondition(int vertexIndex, int u);
+    z3::expr generateBlockSemantic(int vertexIndex, int u);
 
     // Stmt semantic encoding
     z3::expr generateGeneralTr(RefinedActionPtr refAct, int u);

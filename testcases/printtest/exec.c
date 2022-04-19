@@ -140,22 +140,22 @@
 // }
 
 // example 5: condition test
-int main(){
-    int i = 1;
-    int *j = malloc(sizeof(int) * 2);
-    if(i < 0){
-        free(j);
-    } 
-    else if(i == 2){
-        //doublefree
-        free(j);
-        free(j);
-    }  
-    // else {
-    //     //memleak
-    // }
-    return 0;
-}
+// int main(){
+//     int i = 1;
+//     int *j = malloc(sizeof(int) * 2);
+//     if(i < 0){
+//         free(j);
+//     } 
+//     else if(i == 2){
+//         //doublefree
+//         free(j);
+//         free(j);
+//     }  
+//     // else {
+//     //     //memleak
+//     // }
+//     return 0;
+// }
 
 
 // example 6: multi-region simple
@@ -184,16 +184,16 @@ int main(){
 
 // example 8: initial test for loop
 // NOT SOLVABLE
-// int main(){
-//     int *a = malloc(3 * sizeof(int));
-//     *(a + 1) = 3 ;
-//     int j = *(a + 1);
-//     for(int i = 0; i < j; i++){
-//         *(a + i) = 9;
-//     }   
-//     free(a);
-//     return 0;
-// }
+int main(){
+    char *a = malloc(3 * sizeof(int));
+    *(a + 1) = 1 ;
+    int j = *(a + 1);
+    for(int i = 0; i < j; i++){
+        *(a + i) = 'a';
+    }   
+    // free(a);
+    return 0;
+}
 
 // #include <stdlib.h>
 // int *a, *b;

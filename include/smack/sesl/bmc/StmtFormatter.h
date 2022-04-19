@@ -61,6 +61,7 @@ namespace smack
         StmtFormatter(CFGPtr origCfg) : origCfg(origCfg){}
 
         RefinedEdgePtr convert(ConcreteEdgePtr origEdge);
+        std::list<RefinedActionPtr> convert(const Stmt* stmt);
         // var type computing
         int getVarByteSize(std::string varName);
         int getPtrVarStepWidth(std::string ptrVarName);

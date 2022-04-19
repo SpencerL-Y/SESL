@@ -57,6 +57,43 @@ namespace smack
         return refinedEdge;
     }
 
+
+    
+    std::list<RefinedActionPtr> StmtFormatter::convert(const Stmt* stmt){
+        std::vector<RefinedActionPtr> actionList;
+        if(stmt == nullptr){
+
+        } else {
+            if(stmt->getKind() == Stmt::Kind::ASSUME){
+                const AssumeStmt* ass = (const AssumeStmt*) stmt;
+                actionList = this->formatAssumeStmt(ass);
+            } else if(stmt->getKind() == Stmt::Kind::ASSIGN){
+                const AssignStmt* assign = (const AssignStmt*) stmt;
+                if(assign->getLhs().size() == 1){
+                    actionList = this->formatSingleAssignStmt(assign);
+                } else {
+                    std::list<const Expr*> lhsList = assign->getLhs();
+                    std::list<const Expr*> rhsList = assign->getRhs();
+                    assert(lhsList.size() == rhsList.size());
+                    actionList = this->formatBundleAssignStmts(lhsList, rhsList);
+                }
+            } else if(stmt->getKind() == Stmt::Kind::CALL){
+                const CallStmt* call = (const CallStmt*) stmt;
+                actionList = this->formatCallStmt(call);
+            } else if(stmt->getKind() == Stmt::Kind::ASSERT){
+                const AssertStmt* assertStmt = (const AssertStmt*) stmt;
+                actionList = this->formatAssertStmt(assertStmt);
+            } else {
+                actionList = this->formatOtherStmt(stmt);
+            }
+        }
+        std::list<RefinedActionPtr> result;
+        for(RefinedActionPtr act : actionList){
+            result.push_back(act);
+        }
+        return result;
+    }
+
     // --------- assume stmt parsing
     
     std::vector<RefinedActionPtr> StmtFormatter::formatAssumeStmt(const AssumeStmt* ass){

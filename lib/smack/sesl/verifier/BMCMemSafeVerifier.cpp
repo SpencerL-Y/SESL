@@ -69,6 +69,8 @@ namespace smack
         BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
         // refinedCFG->printRefinedCFG();
         printRefinedCfg2File(refinedCFG, "./RefCfg.dot");
+        BlockCFGPtr blockCFG = std::make_shared<BlockCFG>(mainGraph);
+        blockCFG->printBlockCFG(std::cout);
 
         // BMCPreAnalysisPtr pre = std::make_shared<BMCPreAnalysis>(refinedCFG, 5);
         // std::set<std::string> progVars = pre->getProgOrigVars();
@@ -83,15 +85,15 @@ namespace smack
         std::cout << "-------------PRINT CFG DOT FILE-----------" << std::endl;
 
         BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 3);
-        int depth = 20;
+        int depth = 25;
         z3::expr vc = vcg->generateBMCVC(depth);
         // z3::expr vc = vcg->generateFeasibleVC(1);
-        std::cout << "Result: " << std::endl;
+        // std::cout << "Result: " << std::endl;
         // std::cout << vc.to_string() << std::endl;
         
         z3::solver s(vcg->getContext());
         s.add(vc);
-        bool check = true;
+        bool check = false;
         if(check) {
             std::cout << s.check() << std::endl;
             // std::cout << s.get_model() << std::endl;

@@ -263,9 +263,6 @@ namespace smack
             z3::expr generateTrCommonAssignBool(int u);
 
 
-            // Block semantic encoding
-            
-
             // Utilities
             z3::expr generateIntRemainUnchanged(std::set<std::string> origVarNames, int u);
             z3::expr generateBoolRemainUnchanged(std::set<std::string> origVarNames, int u);

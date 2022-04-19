@@ -845,4 +845,31 @@ namespace smack
         }
         return false;
     }
+
+
+    RefBlockVertexPtr RefinedBlockCFG::getVertex(int vertexId){
+        for(RefBlockVertexPtr v : this->vertices){
+            if(v->getVertexId() == vertexId){
+                return v;
+            }
+        }
+        BMCDEBUG(std::cout<< "ERROR: RefBlockCFG cannot getVertex" << std::endl;);
+        return nullptr;
+    }
+
+    void RefinedBlockCFG::printRefBlockCFG(std::ostream& os){
+        for(int vertexId = 1; vertexId <= this->vertexNum; vertexId ++){
+            os << "------------------------------------" << std::endl;
+            os << "BlockVertex: " << vertexId << std::endl;
+            for(RefinedActionPtr stmt : this->getVertex(vertexId)->getRefStmts()){
+                stmt->print(os);
+                os << std::endl;
+            }
+        }
+
+        os << "Edges: " << std::endl;
+        for(std::pair<int, int> edge : this->edges){
+            os << "From: " << edge.first << " To: " << edge.second << std::endl;
+        }
+    }
 } // namespace smack

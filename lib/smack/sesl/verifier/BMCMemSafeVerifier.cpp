@@ -70,8 +70,9 @@ namespace smack
         // refinedCFG->printRefinedCFG();
         printRefinedCfg2File(refinedCFG, "./RefCfg.dot");
         BlockCFGPtr blockCFG = std::make_shared<BlockCFG>(mainGraph);
-        blockCFG->printBlockCFG(std::cout);
-
+        // blockCFG->printBlockCFG(std::cout);
+        RefBlockCFGPtr refBlockCFG = std::make_shared<RefinedBlockCFG>(blockCFG);
+        refBlockCFG->printRefBlockCFG(std::cout);
         // BMCPreAnalysisPtr pre = std::make_shared<BMCPreAnalysis>(refinedCFG, 5);
         // std::set<std::string> progVars = pre->getProgOrigVars();
         // std::cout << "Program Orig Vars: " << std::endl;

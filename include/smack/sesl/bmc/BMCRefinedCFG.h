@@ -210,7 +210,6 @@ namespace smack
         bool hasEdge(int fromId, int toId);
         std::list<int> getInitVertices(){return this->initVertices;}
         std::list<int> getFinalVertices(){return this->finalVertices;}
-        std::list<std::pair<int, int>> getEdges() {return this->edges;}
         std::list<std::pair<int,int>> getEdgesStartFrom(int fromVertex);
         std::list<std::pair<int,int>> getEdgesEndWith(int toVertex);
 
@@ -251,14 +250,16 @@ namespace smack
             std::list<RefBlockVertexPtr> getVertices(){return this->vertices;}
             std::list<int> getInitVertices(){return this->initVertices;}
             std::list<int> getFinalVertices(){return this->finalVertices;}
+            RefBlockVertexPtr getVertex(int vertexId);
             std::list<std::pair<int, int>> getEdges() {return this->edges;}
             std::list<std::pair<int,int>> getEdgesStartFrom(int fromVertex);
             std::list<std::pair<int,int>> getEdgesEndWith(int toVertex);
             bool hasEdge(int fromId, int toId);
             CFGPtr getOrigCfg() {return this->origCfg;}
             StmtFormatterPtr getStmtFormatter(){return this->stmtFormatter;}
+            void printRefBlockCFG(std::ostream& os);
     };
-
+    typedef std::shared_ptr<RefinedBlockCFG> RefBlockCFGPtr;
 } // namespace smack
 
 

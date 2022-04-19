@@ -1460,4 +1460,65 @@ namespace smack
         return resultSet;
     }
 
+    // BMCBlockVCGen
+
+    z3::expr BMCBlockVCGen::generateATSInitConfiguration(){
+        
+    }
+    z3::expr generateATSTransitionRelation(int u);
+    // initial configuration generation
+    z3::expr generateCFGInitCondition();
+    z3::expr generateRNFInitConditionAndAbstraction();
+    
+    // Block semantic encoding
+    z3::expr generateBlockCondition(int vertexIndex, int u);
+
+    // Stmt semantic encoding
+    z3::expr generateGeneralTr(RefinedActionPtr refAct, int u);
+
+    z3::expr generateTrMalloc(int u, bool selfClean);
+    z3::expr generateTrFree(int u);
+    z3::expr generateTrStore(int u);
+    z3::expr generateTrStoreByteSize(int u, int byteSize);
+    z3::expr generateTrLoad(int u);
+    z3::expr generateTrLoadByteSize(int u, int byteSize);
+    z3::expr generateTrUnchanged(int u);
+    z3::expr generateTrAssume(int u);
+    z3::expr generateTrCommonAssignNonBool(int u, int arg1Size, int arg2Size);
+    z3::expr generateTrCommonAssignBool(int u);
+
+
+    // Utilities
+    z3::expr generateIntRemainUnchanged(std::set<std::string> origVarNames, int u);
+    z3::expr generateBoolRemainUnchanged(std::set<std::string> origVarNames, int u);
+    // z3::expr generateShiftAddress(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int dataSize, int u;
+    z3::expr equalStepAndNextStepInt(std::set<std::string> unchangedProgNames, int u);
+    z3::expr equalStepAndNextStepBool(std::set<std::string> unchangedProgNames, int u);
+    z3::expr equalTemp2StepInRNF(int stepU, int tempU);
+    z3::expr equalTempAndNextTempInRNF(std::set<std::string> unchangedOrigNames, int tempU);
+    std::pair<z3::expr, std::set<std::string>> generateShiftAddressByte(z3::expr addrVar, z3::expr dataVar, int blockId, int insertPos, int iu);
+    z3::expr generateUtilVariablesRanges(int type1, int type2, int u);
+
+
+    
+    // Detailed violation situation encodings
+    // feasibility and violation
+    z3::expr generateFeasibleVC(int l);
+    z3::expr generateViolation(int l);
+    z3::expr generateDerefViolation(int u);
+    z3::expr generateFreeViolation(int u);
+    z3::expr generateMemleakViolation(int u);
+
+    // final
+    z3::expr generateBMCVC(int l);
+
+    // Vars Utilities
+    z3::expr getLocVar(int u);
+    z3::expr computerByteLenRange(int byteLen);
+    z3::expr getFreshVar();
+    z3::expr getBNFOverflowVar();
+    z3::expr getRNFOverflowVar();
+    std::set<std::string>  setSubstract(std::set<std::string> from, std::set<std::string> substracted);
+
+
 } // namespace smack

@@ -92,7 +92,6 @@ namespace smack
             int getType4(){return this->type4;}
             ConcreteAction::ActType getActType(){return this->actType;}
             std::set<std::string> getChangedOrigNames(){return this->changedOrigNames;}
-            std::list<std::string> getOrigProgramVars();// TODObmc
             void print(std::ostream &os);
     };
 

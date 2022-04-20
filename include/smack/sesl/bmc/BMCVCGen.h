@@ -213,7 +213,7 @@ namespace smack
         private:
             z3::context z3Ctx;
             BMCRefinedCFGPtr refCfg;
-            BlockCFGPtr blockCfg;
+            RefBlockCFGPtr refBlockCfg;
             std::set<std::string> cfgVariables;
             std::set<std::string> trUtilVariables;
             RNFPtr currentRNF; 
@@ -226,7 +226,7 @@ namespace smack
             int freshCounter;
             int tempCounter;
         public:
-            BMCBlockVCGen(BMCRefinedCFGPtr rcfg, BlockCFGPtr bcfg, int lb): refCfg(rcfg), blockCfg(bcfg), loopBound(lb){
+            BMCBlockVCGen(BMCRefinedCFGPtr rcfg, RefBlockCFGPtr bcfg, int lb): refCfg(rcfg), refBlockCfg(bcfg), loopBound(lb){
                 this->preAnalysis = std::make_shared<BMCPreAnalysis>(this->refCfg, this->loopBound);
                 this->regionNum = this->preAnalysis->computeRegNumAndPtNum().first;
                 this->pointsToNum = this->preAnalysis->computeRegNumAndPtNum().second;
@@ -280,9 +280,8 @@ namespace smack
             // feasibility and violation
             z3::expr generateFeasibleVC(int l);
             z3::expr generateViolation(int l);
-            z3::expr generateDerefViolation(int u);
-            z3::expr generateFreeViolation(int u);
-            z3::expr generateMemleakViolation(int u);
+            z3::expr getDerefViolationVar(int u);
+            z3::expr getFreeViolationVar(int u);
 
             // final
             z3::expr generateBMCVC(int l);

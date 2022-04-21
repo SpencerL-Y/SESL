@@ -251,16 +251,16 @@ namespace smack
             // Stmt semantic encoding
             z3::expr generateGeneralTr(RefinedActionPtr refAct, int u);
 
-            z3::expr generateTrMalloc(int u, bool selfClean);
-            z3::expr generateTrFree(int u);
-            z3::expr generateTrStore(int u);
-            z3::expr generateTrStoreByteSize(int u, int byteSize);
-            z3::expr generateTrLoad(int u);
-            z3::expr generateTrLoadByteSize(int u, int byteSize);
+            z3::expr generateTrMalloc(RefinedActionPtr mallocAct, bool selfClean, int u);
+            z3::expr generateTrFree(RefinedActionPtr freeAct, int u);
+            z3::expr generateTrStore(RefinedActionPtr storeAct, int u);
+            z3::expr generateTrStoreByteSize(RefinedActionPtr storeAct, int u, int byteSize);
+            z3::expr generateTrLoad(RefinedActionPtr loadAct, int u);
+            z3::expr generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize);
             z3::expr generateTrUnchanged(int u);
-            z3::expr generateTrAssume(int u);
-            z3::expr generateTrCommonAssignNonBool(int u, int arg1Size, int arg2Size);
-            z3::expr generateTrCommonAssignBool(int u);
+            z3::expr generateTrAssume(RefinedActionPtr assumeAct, int u);
+            z3::expr generateTrCommonAssignNonBool(RefinedActionPtr assignAct, int u);
+            z3::expr generateTrCommonAssignBool(RefinedActionPtr assignAct, int u);
 
 
             // Utilities
@@ -279,9 +279,11 @@ namespace smack
             // Detailed violation situation encodings
             // feasibility and violation
             z3::expr generateFeasibleVC(int l);
-            z3::expr generateViolation(int l);
+            
+            z3::expr recordViolation(int l);
             z3::expr getDerefViolationVar(int u);
             z3::expr getFreeViolationVar(int u);
+            z3::expr getMemleakViolationVar(int u);
 
             // final
             z3::expr generateBMCVC(int l);

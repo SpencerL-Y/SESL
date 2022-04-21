@@ -53,9 +53,7 @@ namespace smack
         
         // other stmt parsing
         std::vector<RefinedActionPtr> formatOtherStmt(const Stmt* otherStmt);
-        // var type computing
-        int getVarByteSize(std::string varName);
-        int getPtrVarStepWidth(std::string ptrVarName);
+        
     public:
 
         static MemoryManagerPtr ExprMemoryManager;
@@ -63,7 +61,10 @@ namespace smack
         StmtFormatter(CFGPtr origCfg) : origCfg(origCfg){}
 
         RefinedEdgePtr convert(ConcreteEdgePtr origEdge);
-
+        std::list<RefinedActionPtr> convert(const Stmt* stmt);
+        // var type computing
+        int getVarByteSize(std::string varName);
+        int getPtrVarStepWidth(std::string ptrVarName);
     };
 
     typedef  std::shared_ptr<StmtFormatter> StmtFormatterPtr;

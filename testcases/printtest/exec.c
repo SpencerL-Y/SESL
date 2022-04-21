@@ -102,9 +102,9 @@
 // int main(){
 //     char *i;
 //     i = malloc(11*sizeof(char));
-//     char *j = i + 10;
-//     char *k = i + 7;
-//     *j = 'a';
+//     // char *j = i + 11;
+//     char *k = i + 10;
+//     // *j = 'a';
 //     *k = 'b';
 //     free(i);
 //     return 0;
@@ -113,29 +113,104 @@
 
 // example 2: int store
 // int main(){
-//     int *i;
-//     i = malloc(4*sizeof(int));
-//     int *j = i + 3;
+//     short *i;
+//     i = malloc(4*sizeof(short));
+//     short *j = i + 2;
 //     *j = 10;
 //     free(i);
 //     return 0;
 // }
 
 // example 3: char load
+// int main(){
+//     char *i = malloc(11*sizeof(char));
+//     char *j = i + 5;
+//     *j = 'b';
+//     char* l = j + 6;
+//     char load = *l;
+//     free(i);
+// }
+
+// example 4
+// int main(){
+//     int *m = malloc(2*sizeof(int));
+//     *(m + 1) = 10;
+//     free(m);
+//     free(m);
+// }
+
+// example 5: condition test
+// int main(){
+//     int i = 1;
+//     int *j = malloc(sizeof(int) * 2);
+//     if(i < 0){
+//         free(j);
+//     } 
+//     else if(i == 2){
+//         //doublefree
+//         free(j);
+//         free(j);
+//     }  
+//     // else {
+//     //     //memleak
+//     // }
+//     return 0;
+// }
+
+
+// example 6: multi-region simple
+// int main(){
+//     char* i = malloc(10 * sizeof(char));
+//     char* j = malloc(5 * sizeof(char));
+
+//     char *k = i + 9;
+//     char *w = j + 4;
+//     *k = 10;
+//     char d = *w;
+//     free(i);
+//     // free(j);
+//     return 0;
+
+// }
+
+
+// example 7: initial test for array
+// int main(){
+//     int array[10];
+//     array[9] = 100;
+//     return 0;
+// }
+
+
+// example 8: initial test for loop
+// NOT SOLVABLE
 int main(){
-    char *i = malloc(11*sizeof(char));
-    char *j = i + 5;
-    *j = 'b';
-    char* l = j - 2;
-    char load = *l;
-    // free(i);
+    char *a = malloc(3 * sizeof(int));
+    *(a + 1) = 1 ;
+    int j = *(a + 1);
+    for(int i = 0; i < j; i++){
+        *(a + i) = 'a';
+    }   
+    // free(a);
+    return 0;
 }
 
-// example 4: loop test
+// #include <stdlib.h>
+// int *a, *b;
+// int n;
+
 // int main(){
+//     n = 128;
+//     a = malloc (n * sizeof(*a));
+//     b = malloc (n * sizeof(*b));
+//     *b++ = 0;
 //     int i;
-//     int *j = malloc(sizeof(int) * 2);
-//     if(i > 0){
-//         free(j);
-//     }
+//     for (i = 0; i < n; i++)
+//         a[i] = -1;
+//     for (i = 0; i < 128 - 1; i++)
+//         b[i] = -1;
+//     if (b[-2]) /* invalid deref */
+//     { free(a); free(b-1); }
+//     else
+//     { free(a); free(b-1); }
 // }

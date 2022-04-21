@@ -14,6 +14,8 @@
 
 namespace smack
 {
+    class StmtFormatter;
+    typedef  std::shared_ptr<StmtFormatter> StmtFormatterPtr;
 
     class ConcreteAction {
         public:
@@ -22,6 +24,7 @@ namespace smack
                 ASSERT,
                 ASSUME,
                 MALLOC,
+                ALLOC,
                 FREE,
                 OTHERPROC,
                 LOAD,
@@ -39,7 +42,7 @@ namespace smack
             bool hasStmt() {return (stmt == nullptr) ? false : true;}
             const Stmt* getStmt() const {return this->stmt;};
             ConcreteAction::ActType getActType() {return this->actType;}
-            static void printActType(ConcreteAction::ActType actType);
+            static void printActType(ConcreteAction::ActType actType, std::ostream& os);
     };
     typedef std::shared_ptr<ConcreteAction> ConcreteActionPtr;
 
@@ -57,7 +60,7 @@ namespace smack
             int getToVertex() {return this->toVertex;}
             ConcreteActionPtr getAction() { return this->action;}
             int getEdgeId(){return this->edgeId;}
-            void print();
+            void print(std::ostream &os);
     };
 
     typedef std::shared_ptr<ConcreteEdge> ConcreteEdgePtr;
@@ -89,8 +92,7 @@ namespace smack
             int getType4(){return this->type4;}
             ConcreteAction::ActType getActType(){return this->actType;}
             std::set<std::string> getChangedOrigNames(){return this->changedOrigNames;}
-            std::list<std::string> getOrigProgramVars();// TODObmc
-            void print();
+            void print(std::ostream &os);
     };
 
     typedef std::shared_ptr<RefinedAction> RefinedActionPtr;
@@ -107,7 +109,7 @@ namespace smack
             int getTo(){return this->to;}
             std::vector<RefinedActionPtr> getRefinedActions(){return this->refinedActions;}
             int getEdgeId(){return this->edgeId;}
-            void print();
+            void print(std::ostream &os);
     };
     
     typedef std::shared_ptr<RefinedEdge> RefinedEdgePtr;
@@ -145,6 +147,7 @@ namespace smack
             std::set<int> initVertices;
             std::set<int> finalVertices;
             CFGPtr origCfg;
+            StmtFormatterPtr stmtFormatter;
             int sccNum, sccId;
         public:
         // TODObmc: add self loop and tag for exit vertex
@@ -162,12 +165,100 @@ namespace smack
             std::map<int, int> computeSccMap();
             void tarjanScc(int currentVertex, std::map<int, std::pair<int, int>>& currentMap,  std::list<int>& currStack, std::map<int, int>& sccResult);
             CFGPtr getOrigCfg() {return this->origCfg;}
+            StmtFormatterPtr getStmtFormatter(){return this->stmtFormatter;}
 
             void printRefinedCFG();
     };
 
     typedef std::shared_ptr<BMCRefinedCFG> BMCRefinedCFGPtr;
 
+    // To reduce the size of formula, we use BlockCFG instead
+    class BlockVertex {
+        private:
+        std::list<const Stmt*> stmts;
+        int vertexId;
+
+        public: 
+        BlockVertex(int id);
+        BlockVertex(StatePtr origState, int id);
+        std::list<const Stmt*> getStmts() {return this->stmts;}
+        int getVertexId() {return this->vertexId;}
+    };
+
+    typedef std::shared_ptr<BlockVertex> BlockVertexPtr;
+    
+
+    class BlockCFG{
+        private:
+        int vertexNum;
+        int edgeNum;
+        std::list<BlockVertexPtr> vertices;
+        std::list<int> initVertices;
+        std::list<int> finalVertices;
+        std::list<std::pair<int, int>> edges;
+        CFGPtr origCfg;
+
+        public:
+        BlockCFG(CFGPtr origCfg);
+        int getVertexNum() {return this->vertexNum;}
+        int getEdgeNum() {return this->edgeNum;}
+        std::list<BlockVertexPtr> getVertices() {return this->vertices;}
+        std::list<std::pair<int, int>> getEdges() {return this->edges;}
+
+        BlockVertexPtr getVertex(int vertexId);
+        bool hasEdge(int fromId, int toId);
+        std::list<int> getInitVertices(){return this->initVertices;}
+        std::list<int> getFinalVertices(){return this->finalVertices;}
+        std::list<std::pair<int,int>> getEdgesStartFrom(int fromVertex);
+        std::list<std::pair<int,int>> getEdgesEndWith(int toVertex);
+
+        CFGPtr getOrigCfg(){return this->origCfg;}
+        void printBlockCFG(std::ostream& os);
+
+    };
+
+    typedef std::shared_ptr<BlockCFG> BlockCFGPtr;
+
+    class RefinedBlockVertex {
+        private:
+            int vertexId;
+            std::list<RefinedActionPtr> refStmts;
+        public:
+            RefinedBlockVertex(BlockVertexPtr origVertex, std::list<RefinedActionPtr> refActs) : vertexId(origVertex->getVertexId()), refStmts(refActs) {}
+            std::list<RefinedActionPtr> getRefStmts() {return this->refStmts;}
+            int getVertexId(){return this->vertexId;}
+    };
+
+    typedef std::shared_ptr<RefinedBlockVertex> RefBlockVertexPtr;
+
+    class RefinedBlockCFG {
+        private:
+            int vertexNum;
+            int edgeNum;
+            std::list<RefBlockVertexPtr> vertices;
+            std::list<int> initVertices;
+            std::list<int> finalVertices;
+            std::list<std::pair<int, int>> edges;
+            StmtFormatterPtr stmtFormatter;
+            CFGPtr origCfg;
+
+        public:
+            RefinedBlockCFG(BlockCFGPtr blockCfg);
+            int getVertexNum(){return this->vertexNum;}
+            int getEdgeNum(){return this->edgeNum;}
+            std::list<RefBlockVertexPtr> getVertices(){return this->vertices;}
+            std::list<int> getInitVertices(){return this->initVertices;}
+            std::list<int> getFinalVertices(){return this->finalVertices;}
+            RefBlockVertexPtr getVertex(int vertexId);
+            std::list<std::pair<int, int>> getEdges() {return this->edges;}
+            std::list<std::pair<int,int>> getEdgesStartFrom(int fromVertex);
+            std::list<std::pair<int,int>> getEdgesEndWith(int toVertex);
+            bool hasEdge(int fromId, int toId);
+            CFGPtr getOrigCfg() {return this->origCfg;}
+            StmtFormatterPtr getStmtFormatter(){return this->stmtFormatter;}
+            void printRefBlockCFG(std::ostream& os);
+    };
+    typedef std::shared_ptr<RefinedBlockCFG> RefBlockCFGPtr;
 } // namespace smack
 
 

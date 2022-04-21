@@ -1,3 +1,5 @@
+#include <fstream>
+#include <unistd.h>
 #include "smack/sesl/verifier/BMCMemSafeVerifier.h"
 #include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Debug.h"
@@ -10,11 +12,33 @@
 #include "smack/sesl/bmc/BMCVCGen.h"
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 #include "smack/sesl/bmc/BMCPreAnalysis.h"
+#include "smack/sesl/bmc/BMCVisualizer.h"
 
 namespace smack
 {
     using llvm::errs;
     char BMCMemSafeVerifier::ID = 0;
+
+    void printConcreteCfg2File(ConcreteCFGPtr conCfg, std::string fileName) {
+        std::string printResult = DOTGenerator::generateDOT4Concrete(conCfg);
+        std::ofstream fs;
+        fs.open(fileName, ios::out);
+        fs << printResult;
+        fs.close();
+    }
+
+    void printRefinedCfg2File(BMCRefinedCFGPtr refCfg, std::string fileName){
+        std::string printResult = DOTGenerator::generateDOT4Refined(refCfg);
+        std::ofstream fs;
+        fs.open(fileName, ios::out);
+        fs << printResult;
+        fs.close();
+    }
+
+    void printViolationTrace2File(z3::model model, BMCVCGenPtr vcg, std::string fileName){
+        // TODObmc
+
+    }
 
     void BMCMemSafeVerifier::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
         AU.setPreservesAll();
@@ -38,11 +62,17 @@ namespace smack
 
         // ------- obtain concrete cfg
         ConcreteCFGPtr conCfg = std::make_shared<ConcreteCFG>(mainGraph);
+        printConcreteCfg2File(conCfg, "./OrigConCfg.dot");
         conCfg = conCfg->simplify();
+        printConcreteCfg2File(conCfg, "./SimpConCfg.dot");
         // conCfg->printConcreteCFG();
         BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
-        refinedCFG->printRefinedCFG();
-
+        // refinedCFG->printRefinedCFG();
+        printRefinedCfg2File(refinedCFG, "./RefCfg.dot");
+        BlockCFGPtr blockCFG = std::make_shared<BlockCFG>(mainGraph);
+        // blockCFG->printBlockCFG(std::cout);
+        RefBlockCFGPtr refBlockCFG = std::make_shared<RefinedBlockCFG>(blockCFG);
+        refBlockCFG->printRefBlockCFG(std::cout);
         // BMCPreAnalysisPtr pre = std::make_shared<BMCPreAnalysis>(refinedCFG, 5);
         // std::set<std::string> progVars = pre->getProgOrigVars();
         // std::cout << "Program Orig Vars: " << std::endl;
@@ -53,17 +83,38 @@ namespace smack
         
         // std::cout << "ProgMinByteLen: " <<   pre->computeMinStoreByteLen() << std::endl;
 
+        std::cout << "-------------PRINT CFG DOT FILE-----------" << std::endl;
 
-        BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 5);
-        z3::expr vc = vcg->generateBMCVC(10);
+
+        // OLD BMCVCGEN
+        BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 1);
+        int depth = 20;
+        z3::expr vc = vcg->generateBMCVC(depth);
         // z3::expr vc = vcg->generateFeasibleVC(1);
         std::cout << "Result: " << std::endl;
         std::cout << vc.to_string() << std::endl;
         
         z3::solver s(vcg->getContext());
         s.add(vc);
-        std::cout << s.check() << std::endl;
-        std::cout << s.get_model() << std::endl;
+        bool check = true;
+        if(check) {
+            std::cout << s.check() << std::endl;
+            std::cout << s.get_model() << std::endl;
+            z3::model m = s.get_model();
+            if(m){
+                for(int i = 0; i < m.size(); i ++){
+                    z3::func_decl v = m[i];
+                    assert(v.arity() == 0);
+                    std::cout << v.name() << " = " << m.get_const_interp(v).to_string() << "\n" << std::endl;
+                }
+                std::cout << ViolationTraceGenerator::genreateViolationTraceConfiguration   (m, vcg->getRegionNum(), vcg->getPointToNum(), depth);
+            }
+            
+        }
+
+        // NEW BLOCKBMCVCGEN
+        BMCBlockVCGenPtr blockVcg = std::make_shared<BMCBlockVCGen>(refinedCFG, refBlockCFG, 2);
+        
         return false;
     }
 } // namespace smack

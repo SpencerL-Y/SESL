@@ -476,10 +476,10 @@ namespace smack {
                 os << "==>";
                 break;
             case Or:
-                os << "\\/";
+                os << "or";
                 break;
             case And:
-                os << "/\\";
+                os << "and";
                 break;
             case Eq:
                 os << "==";
@@ -833,8 +833,8 @@ namespace smack {
                     std::string lhsOrigVarName = lhsVar->name();
                     std::string rhsOrigVarName = rhsVar->name();
                     // Deal with boolean assignment
-                    if (cfg->getVarDetailType(lhsOrigVarName).second == 1) {
-                        assert(cfg->getVarDetailType(rhsOrigVarName).second == 1);
+                    if (cfg->getGlobalVarDetailType(lhsOrigVarName).second == 1) {
+                        assert(cfg->getGlobalVarDetailType(rhsOrigVarName).second == 1);
                         res = z3::implies(left, right) && z3::implies(right, left);
                         return res;
                     }
@@ -842,7 +842,7 @@ namespace smack {
                 } else if (lhs->isVar()) {
                     const VarExpr *lhsVar = (const VarExpr *) lhs;
                     std::string lhsOrigVarName = lhsVar->name();
-                    if (cfg->getVarDetailType(lhsOrigVarName).second == 1) {
+                    if (cfg->getGlobalVarDetailType(lhsOrigVarName).second == 1) {
                         // if lhs variable is a boolean variable
                         if(rhs->isValue()){
                             const IntLit *rhsInt = (const IntLit *) rhs;
@@ -861,7 +861,8 @@ namespace smack {
                         return res;
                     }
                 } else {
-                    assert(false);
+                    res = (left == right);
+                    return res;
                 }
                 break;
             case Neq:
@@ -1211,9 +1212,10 @@ namespace smack {
 
      z3::expr VarExpr::bmcTranslateToZ3(z3::context &z3Ctx, int u, CFGPtr cfg) const {
         std::string translatedVarName = this->name() + "_(" + std::to_string(u) + ")";
-        auto typeInfo = cfg->getVarDetailType(this->name());
+        auto typeInfo = cfg->getGlobalVarDetailType(this->name());
         std::string typeStr = typeInfo.first;
         int type = typeInfo.second;
+        // std::cout << "Translate var: " << " Type: " << type << "Type name:  " << typeStr << " name: " << this->name() << std::endl;
         if(type == 1 && typeStr.find("ref") == std::string::npos){
             z3::expr res = z3Ctx.bool_const(translatedVarName.c_str());
             return res;

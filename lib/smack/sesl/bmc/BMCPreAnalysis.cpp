@@ -7,13 +7,15 @@ namespace smack
         int ptNum = 0;
         for(RefinedEdgePtr edge : this->refinedCfg->getRefinedEdges()){
             for(RefinedActionPtr act : edge->getRefinedActions()){
-                if(act->getActType() == ConcreteAction::ActType::MALLOC){
+                if(
+                act->getActType() == ConcreteAction::ActType::MALLOC ||  
+                act->getActType() == ConcreteAction::ActType::ALLOC){
                     if(this->sccResult[edge->getFrom()] == this->sccResult[edge->getTo()]){
                         mallocNum += this->loopBound;
                     } else {
                         mallocNum += 1;
                     }
-                } else if(act->getActType() == ConcreteAction::ActType::LOAD ||act->getActType() == ConcreteAction::ActType::STORE){
+                } else if(/*act->getActType() == ConcreteAction::ActType::LOAD ||*/act->getActType() == ConcreteAction::ActType::STORE){
                     if(this->sccResult[edge->getFrom()] == this->sccResult[edge->getTo()]){
                         ptNum += this->loopBound * this->computeMaxStoreByteLen();
                     } else {
@@ -29,11 +31,16 @@ namespace smack
         std::set<std::string> result;
         for(RefinedEdgePtr edge : this->refinedCfg->getRefinedEdges()){
             for(RefinedActionPtr act : edge->getRefinedActions()){
+                // act->print(std::cout);
                 std::list<const Expr*> args;
                 args.push_back(act->getArg1());
                 args.push_back(act->getArg2());
                 args.push_back(act->getArg3());
                 args.push_back(act->getArg4());
+                // for(const Expr* e : args){
+                //     if(e != nullptr)
+                //         e->print(std::cout);
+                // }
                 this->getExprVarRecursive(args, result);
             }
         }
@@ -43,16 +50,19 @@ namespace smack
 
     void BMCPreAnalysis::getExprVarRecursive(std::list<const Expr*> exprList, std::set<std::string>& result){
         for(const Expr* expr : exprList){
+
             if(expr == nullptr) {
-                return;
+                continue;
             }
             if(expr->isVar()){
                 const VarExpr* exprVar = (const VarExpr*) expr;
                 std::string varName = exprVar->name();
+                // std::cout << "VARNAME FOUND: " << varName << std::endl;
+
                 if(result.find(varName) == result.end()){
                     result.insert(varName);
                 }
-                return;
+                continue;
             } else {
                 this->getExprVarRecursive(expr->getChilds(), result);
             }

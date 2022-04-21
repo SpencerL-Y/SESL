@@ -14,7 +14,7 @@ namespace smack
         if(s == nullptr){
             this->actType = ActType::NULLSTMT;
         } else {
-                if(s->getKind() == Stmt::Kind::ASSERT){
+            if(s->getKind() == Stmt::Kind::ASSERT){
                 this->actType = ActType::ASSERT;
             } else if(s->getKind() == Stmt::Kind::ASSIGN){
                 // deal with load, store and common assignments here
@@ -46,7 +46,10 @@ namespace smack
                     this->actType = ActType::MALLOC; 
                 } else if(callStmt->getProc().find("free") != std::string::npos){
                     this->actType = ActType::FREE;
-                } else {
+                } else if(!callStmt->getProc().compare("$alloc")) {
+                    this->actType = ActType::ALLOC;
+                }
+                else {
                     this->actType = ActType::OTHERPROC;
                 }
             } else if(s->getKind() == Stmt::Kind::RETURN){
@@ -59,25 +62,25 @@ namespace smack
     }
 
 
-    void  ConcreteAction::printActType(ConcreteAction::ActType actType){
+    void  ConcreteAction::printActType(ConcreteAction::ActType actType, std::ostream& os){
         if(actType == ActType::ASSERT){
-            std::cout << "ASSERT\t";
+            os << "ASSERT\t";
         } else if(actType == ActType::ASSUME){
-            std::cout << "ASSUME\t";
+            os << "ASSUME\t";
         } else if(actType == ActType::COMMONASSIGN){
-            std::cout << "ASSIGN\t";
+            os << "ASSIGN\t";
         } else if(actType == ActType::FREE){
-            std::cout << "FREE\t";
+            os << "FREE\t";
         } else if(actType == ActType::LOAD){
-            std::cout << "LOAD\t";
+            os << "LOAD\t";
         } else if(actType == ActType::MALLOC){
-            std::cout << "MALLOC\t";
+            os << "MALLOC\t";
         } else if(actType == ActType::OTHER){
-            std::cout << "OTHER\t";
+            os << "OTHER\t";
         } else if(actType == ActType::OTHERPROC){
-            std::cout << "OTPROC\t";
+            os << "OTPROC\t";
         } else if(actType == ActType::STORE){
-            std::cout << "STORE\t";
+            os << "STORE\t";
         }
     }
 
@@ -90,14 +93,14 @@ namespace smack
         this->action = newAction;
     }
 
-    void ConcreteEdge::print(){
-        std::cout << "INFO: [Edge " + std::to_string(this->fromVertex) + " --> " + std::to_string(this->toVertex) + "] " << std::endl;
+    void ConcreteEdge::print(std::ostream &os){
+        os << "INFO: [Edge " + std::to_string(this->fromVertex) + " --> " + std::to_string(this->toVertex) + "] " << std::endl;
         if(this->action->getStmt() != nullptr){
-            this->action->getStmt()->print(std::cout);
+            this->action->getStmt()->print(os);
         } else {
-            std::cout << "<null>";;
+            os << "<null>";;
         }
-        std::cout << std::endl; 
+        os << std::endl; 
     }
 
     ConcreteCFG::ConcreteCFG(CFGPtr origCfg) {
@@ -206,6 +209,7 @@ namespace smack
     ConcreteCFGPtr ConcreteCFG::simplify(){
         std::list<ConcreteEdgePtr> currEdges = this->getConcreteEdges();
         int newEdgeId = this->getEdgeNum() + 1;
+
         // redundant inout vertex delete
         for(int vertexIndex = 1; vertexIndex <= this->vertexNum; vertexIndex ++){
             
@@ -270,6 +274,7 @@ namespace smack
                 currEdges = nextCurrEdges;
             }
         }
+
         // incoming edge reduction
         for(int vertexIndex = 1; vertexIndex <= this->vertexNum; vertexIndex ++){
             std::list<ConcreteEdgePtr> relatedEdges;
@@ -308,7 +313,7 @@ namespace smack
             if(beginReduce){
                 std::list<ConcreteEdgePtr> incomingEdges;
                 std::list<ConcreteEdgePtr> outcomingEdges;
-                std::list<ConcreteEdgePtr> newlyIndtroducedEdges;
+                std::list<ConcreteEdgePtr> newlyIntroducedEdges;
                 for(ConcreteEdgePtr re : relatedEdges){
                     if(re->getToVertex() == vertexIndex){
                         assert(isEmptyEdge(re));
@@ -327,25 +332,129 @@ namespace smack
                 for(ConcreteEdgePtr ie : incomingEdges){
                     for(ConcreteEdgePtr oe : outcomingEdges){
                         ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(ie->getFromVertex(), oe->getToVertex(), oe->getAction(), ie->getEdgeId());
-                        newlyIndtroducedEdges.push_back(newEdge); 
+                        newlyIntroducedEdges.push_back(newEdge); 
                     }
                 }
 
                 for(ConcreteEdgePtr ue : unrelatedEdges){
                     nextCurrEdges.push_back(ue);
                 }
-                for(ConcreteEdgePtr ne : newlyIndtroducedEdges){
+                for(ConcreteEdgePtr ne : newlyIntroducedEdges){
                     nextCurrEdges.push_back(ne);
                 }
                 currEdges = nextCurrEdges;
                 // std::cout << "CURRENT LIST ------ " << "------------ Id " << vertexIndex << std::endl;
-                for(ConcreteEdgePtr e : currEdges){
-                    e->print();
-                }
+                // for(ConcreteEdgePtr e : currEdges){
+                //     e->print();
+                // }
             } else {
                 continue;
             }
         }
+
+
+        // // Assume statement combined
+        // for(int vertexIndex = 1; vertexIndex <= this->vertexNum; vertexIndex ++){
+        //     std::list<ConcreteEdgePtr> relatedEdges;
+        //     std::list<ConcreteEdgePtr> unrelatedEdges;
+        //     std::list<ConcreteEdgePtr> nextCurrEdges;
+
+        //     for(ConcreteEdgePtr e : currEdges){
+        //         if(e->getToVertex() == vertexIndex ||
+        //            e->getFromVertex() == vertexIndex){
+        //             relatedEdges.push_back(e);
+        //         } else {
+        //             unrelatedEdges.push_back(e);
+        //         }
+        //     } 
+
+        //     if(relatedEdges.size() == 0){
+        //         continue;
+        //     }
+
+        //     int beginReduce = true;
+        //     for(ConcreteEdgePtr re : relatedEdges){
+        //         if(re->getToVertex() == vertexIndex){
+        //             if(re->getToVertex() == re->getFromVertex()){
+        //                 beginReduce = false;
+        //                 break;
+        //             }
+        //         }
+
+        //         if(re->getAction()->getActType() != ConcreteAction::ActType::ASSUME && 
+        //            re->getAction()->getActType() != ConcreteAction::ActType::NULLSTMT){
+        //             beginReduce = false;
+        //             break;
+        //         }
+        //     }
+
+        //     if(beginReduce){
+        //         std::list<ConcreteEdgePtr> incomingEdges;
+        //         std::list<ConcreteEdgePtr> outcomingEdges;
+        //         std::list<ConcreteEdgePtr> newlyIntroducedEdges;
+
+        //         for(ConcreteEdgePtr re : relatedEdges){
+        //             if(re->getFromVertex() == vertexIndex){
+        //                 outcomingEdges.push_back(re);
+        //             } else if(re->getToVertex() == vertexIndex){
+        //                 incomingEdges.push_back(re);
+        //             } else {
+        //                 BMCDEBUG(std::cout << "ERROR: this should not happen" << std::endl;);
+        //                 assert(false);
+        //             }
+        //         }
+
+        //         for(ConcreteEdgePtr ine : incomingEdges){
+        //             assert(
+        //                 ine->getAction()->getActType() == ConcreteAction::ActType::ASSUME ||
+        //                 ine->getAction()->getActType() == ConcreteAction::ActType::NULLSTMT
+        //             );
+        //             for(ConcreteEdgePtr ote : outcomingEdges){
+        //                 assert(
+        //                     ote->getAction()->getActType() == ConcreteAction::ActType::ASSUME ||
+        //                     ote->getAction()->getActType() == ConcreteAction::ActType::NULLSTMT
+        //                 );
+        //                 if(ine->getAction()->getActType() == ConcreteAction::ActType::ASSUME){
+        //                     if(ote->getAction()->getActType() == ConcreteAction::ActType::ASSUME){
+        //                         const AssumeStmt* fromAss = (const AssumeStmt*) ine->getAction()->getStmt();
+        //                         const AssumeStmt* toAss = (const AssumeStmt*) ote->getAction()->getStmt();
+        //                         std::cout << fromAss->getExpr() << " " << toAss->getExpr() << std::endl;
+        //                         // TODObmc: maybe need to add mem management
+        //                         const Expr* newCond = Expr::and_(fromAss->getExpr(), toAss->getExpr());
+        //                         const AssumeStmt* newAss = new AssumeStmt(newCond);
+        //                         ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(ine->getFromVertex(), ote->getToVertex(), newAss, ine->getEdgeId());
+        //                         newlyIntroducedEdges.push_back(newEdge);
+        //                     } else {
+        //                         const AssumeStmt* toAss = (const AssumeStmt*) ote->getAction()->getStmt();
+        //                         const AssumeStmt* newAss = toAss;
+        //                         ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(ine->getFromVertex(), ote->getToVertex(), newAss, ine->getEdgeId());
+        //                         newlyIntroducedEdges.push_back(newEdge);
+        //                     }
+        //                 } else {
+        //                     if(ote->getAction()->getActType() == ConcreteAction::ActType::ASSUME){
+        //                         const AssumeStmt* fromAss = (const AssumeStmt*) ine->getAction()->getStmt();
+                                
+        //                         // TODObmc: maybe need to add mem management
+        //                         const AssumeStmt* newAss = fromAss;
+        //                         ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(ine->getFromVertex(), ote->getToVertex(), newAss, ine->getEdgeId());
+        //                         newlyIntroducedEdges.push_back(newEdge);
+        //                     } else {
+        //                         ConcreteEdgePtr newEdge = std::make_shared<ConcreteEdge>(ine->getFromVertex(), ote->getToVertex(), ine->getAction(), ine->getEdgeId());
+        //                         newlyIntroducedEdges.push_back(newEdge);
+        //                     }
+        //                 }
+        //             }
+        //         }
+
+        //         for(ConcreteEdgePtr ue : unrelatedEdges){
+        //             nextCurrEdges.push_back(ue);
+        //         }
+        //         for(ConcreteEdgePtr ne : newlyIntroducedEdges){
+        //             nextCurrEdges.push_back(ne);
+        //         }
+        //         currEdges = nextCurrEdges;
+        //     }
+        // }
         ConcreteCFGPtr newCFG = std::make_shared<ConcreteCFG>(currEdges, this->origCfg);
         return newCFG;
     }
@@ -355,7 +464,7 @@ namespace smack
         std::cout << "INFO: ----------- Num of Vertices: " << this->vertexNum << std::endl;
         std::cout << "INFO: -----------  Edges: " << std::endl;
         for(ConcreteEdgePtr edge : this->concreteEdges){
-            edge->print();
+            edge->print(std::cout);
         }
         std::cout << "INFO: ----------- VarTypes: " << std::endl;
         for(auto varTypePair : this->origCfg->getVarTypes()){
@@ -364,53 +473,53 @@ namespace smack
         std::cout << std::endl;
     }
 
-    void RefinedAction::print(){
-        std::cout << "RefinedAction: ";
-        ConcreteAction::printActType(this->getActType());
-        std::cout << " ARG1: ";
+    void RefinedAction::print(std::ostream &os){
+        os << "RefinedAction: ";
+        ConcreteAction::printActType(this->getActType(), os);
+        os << " ARG1: ";
         if(this->arg1 != nullptr){
-            this->arg1->print(std::cout);
-            std::cout << "(" << this->type1 << ") " << std::endl;
+            this->arg1->print(os);
+            os << "(" << this->type1 << ") " << std::endl;
         } else {
-            std::cout << " <NULL>";
+            os << " <NULL>";
         }
 
-        std::cout << " ARG2: ";
+        os << " ARG2: ";
         if(this->arg2 != nullptr){
-            this->arg2->print(std::cout);
-            std::cout << "(" << this->type2 << ") " << std::endl;
+            this->arg2->print(os);
+            os << "(" << this->type2 << ") " << std::endl;
         } else {
-            std::cout << " <NULL>";
+            os << " <NULL>";
         }
 
-        std::cout << " ARG3: ";
+        os << " ARG3: ";
         if(this->arg3 != nullptr){
-            this->arg3->print(std::cout);
-            std::cout << "(" << this->type3 << ") " << std::endl;
+            this->arg3->print(os);
+            os << "(" << this->type3 << ") " << std::endl;
         } else {
-            std::cout << " <NULL>";
+            os << " <NULL>";
         }
 
-        std::cout << " ARG4: ";
+        os << " ARG4: ";
         if(this->arg4 != nullptr){
-            this->arg4->print(std::cout);
-            std::cout << "(" << this->type4 << ") " << std::endl;
+            this->arg4->print(os);
+            os << "(" << this->type4 << ") " << std::endl;
         } else {
-            std::cout << " <NULL>";
+            os << " <NULL>";
         }
-        std::cout << std::endl;
+        os << std::endl;
     }
 
-    void RefinedEdge::print(){
-        std::cout << "INFO: [Edge] " << this->getFrom() << " ---> " << this->getTo() << std::endl;
-        std::cout << "INFO: [Actions]" << std::endl;
+    void RefinedEdge::print(std::ostream &os){
+        os << "INFO: [Edge] " << this->getFrom() << " ---> " << this->getTo() << std::endl;
+        os << "INFO: [Actions]" << std::endl;
         for(RefinedActionPtr act : this->refinedActions){
-            act->print();
+            act->print(os);
         }
     }
 
     BMCRefinedCFG::BMCRefinedCFG(ConcreteCFGPtr conCfg){
-        StmtFormatterPtr formatter = std::make_shared<StmtFormatter>(conCfg->getOrigCfg());
+        this->stmtFormatter = std::make_shared<StmtFormatter>(conCfg->getOrigCfg());
         // TODObmc: this should be problematic since variables appears not only restricts in the cfg vars, but also constDecls
         this->vertexNum = conCfg->getVertexNum();
         this->edgeNum = conCfg->getEdgeNum();
@@ -422,7 +531,7 @@ namespace smack
             tempInitVertices[vertexId] = true;
         }
         for(ConcreteEdgePtr conEdge : conCfg->getConcreteEdges()){
-            RefinedEdgePtr refinedEdge = formatter->convert(conEdge);
+            RefinedEdgePtr refinedEdge = this->stmtFormatter->convert(conEdge);
             this->refinedEdges.push_back(refinedEdge);
             this->edge2IdMap[refinedEdge] = refinedEdge->getEdgeId();
             tempFinalVertices[refinedEdge->getFrom()] = false;
@@ -576,7 +685,7 @@ namespace smack
         std::cout << "INFO: ----------- Num of Vertices: " << this->vertexNum << std::endl;
         std::cout << "INFO: -----------  Edges: " << std::endl;
         for(RefinedEdgePtr edge : this->refinedEdges){
-            edge->print();
+            edge->print(std::cout);
         }
         std::cout << "INFO: ----------- VarTypes: " << std::endl;
         for(auto varTypePair : this->origCfg->getVarTypes()){
@@ -585,4 +694,182 @@ namespace smack
         std::cout << std::endl;
     }
 
+
+    BlockVertex::BlockVertex(int id){
+        this->vertexId = id;
+    }
+
+    BlockVertex::BlockVertex(StatePtr origState, int id){
+        this->stmts = origState->getStateBlock()->getStatements();
+        this->vertexId = id;
+    }
+    
+    BlockCFG::BlockCFG(CFGPtr origCfg){
+        this->origCfg = origCfg;
+        this->vertexNum = 0;
+        this->edgeNum = 0;
+        int vertexId = 0;
+
+        std::map<std::string, int> name2Id;
+
+        for(StatePtr statePtr : origCfg->getStates()){
+            vertexId += 1;
+            this->vertexNum += 1;
+            std::string blockName = statePtr->getBlockName();
+            name2Id[blockName] = vertexId;
+            BlockVertexPtr newBlockVertex = std::make_shared<BlockVertex>(statePtr, vertexId);
+            this->vertices.push_back(newBlockVertex);
+        }
+
+        vertexId += 1;
+        this->vertexNum += 1;
+        BlockVertexPtr finalEmptyBlock = std::make_shared<BlockVertex>(vertexId);
+        this->vertices.push_back(finalEmptyBlock);
+
+        this->finalVertices.push_back(finalEmptyBlock->getVertexId());
+
+        this->initVertices.push_back(name2Id[origCfg->getEntryBlockName()]);
+
+        for(StatePtr statePtr : origCfg->getStates()){
+            for(auto destEdgePair : statePtr->getEdges()){
+                std::string fromBlockName = statePtr->getBlockName();
+                std::string toBlockName = destEdgePair.first;
+                int from = name2Id[fromBlockName];
+                int to = name2Id[toBlockName];
+                this->edges.push_back({from, to});
+                this->edgeNum ++;
+            }
+        }
+
+        for(int vid = 1; vid <= this->vertexNum; vid ++){
+            bool isFinal = true;
+            for(auto edgePair : this->edges){
+                if(edgePair.first == vid){
+                    isFinal = false;
+                    break;
+                }
+            }
+            if(isFinal){
+                this->edges.push_back({vid, vertexId});
+                this->edgeNum ++;
+            }
+        }
+
+        for(int finalVid : this->finalVertices){
+            this->edges.push_back({finalVid, finalVid});
+            this->edgeNum ++;
+        }
+    }
+
+    BlockVertexPtr BlockCFG::getVertex(int vertexId){
+        for(BlockVertexPtr v : this->vertices){
+            if(v->getVertexId() == vertexId){
+                return v;
+            }
+        }
+        BMCDEBUG(std::cout<< "ERROR: BlockCFG cannot getVertex" << std::endl;);
+        return nullptr;
+    }
+
+    bool BlockCFG::hasEdge(int fromId, int toId){
+        for(auto edgePair : this->edges){
+            if(edgePair.first == fromId && edgePair.second == toId){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::list<std::pair<int,int>> BlockCFG::getEdgesStartFrom(int fromVertex){
+        std::list<std::pair<int,int>> resultList;
+        for(auto edgePair : this->edges){
+            if(edgePair.first == fromVertex){
+                resultList.push_back(edgePair);
+            }
+        }
+        return resultList;
+    }
+
+    std::list<std::pair<int,int>> BlockCFG::getEdgesEndWith(int toVertex){
+        std::list<std::pair<int,int>> resultList;
+        for(auto edgePair : this->edges){
+            if(edgePair.second == toVertex){
+                resultList.push_back(edgePair);
+            }
+        }
+        return resultList;
+    }
+
+    void BlockCFG::printBlockCFG(std::ostream& os){
+        for(int vertexId = 1; vertexId <= this->vertexNum; vertexId ++){
+            os << "------------------------------------" << std::endl;
+            os << "BlockVertex: " << vertexId << std::endl;
+            for(const Stmt* stmt : this->getVertex(vertexId)->getStmts()){
+                stmt->print(os);
+                os << std::endl;
+            }
+        }
+
+        os << "Edges: " << std::endl;
+        for(std::pair<int, int> edge : this->edges){
+            os << "From: " << edge.first << " To: " << edge.second << std::endl;
+        }
+    }
+
+    RefinedBlockCFG::RefinedBlockCFG(BlockCFGPtr blockCfg){
+        this->stmtFormatter = std::make_shared<StmtFormatter>(blockCfg->getOrigCfg());
+        origCfg = blockCfg->getOrigCfg();
+        this->initVertices = blockCfg->getInitVertices();
+        this->finalVertices = blockCfg->getFinalVertices();
+        this->edges = blockCfg->getEdges();
+        this->vertexNum = blockCfg->getVertexNum();
+        this->edgeNum = blockCfg->getEdgeNum();
+        for(BlockVertexPtr origVertex : blockCfg->getVertices()){
+            std::list<RefinedActionPtr> refActs;
+            for(const Stmt* stmt : origVertex->getStmts()){
+                std::list<RefinedActionPtr> resultActions = this->stmtFormatter->convert(stmt);
+                for(RefinedActionPtr act : resultActions){
+                    refActs.push_back(act);
+                }
+            }
+            RefBlockVertexPtr newVertex = std::make_shared<RefinedBlockVertex>(origVertex, refActs);
+            this->vertices.push_back(newVertex);
+        }
+    }
+
+    bool RefinedBlockCFG::hasEdge(int fromId, int toId){
+        for(auto edgePair : this->edges){
+            if(edgePair.first == fromId && edgePair.second == toId){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    RefBlockVertexPtr RefinedBlockCFG::getVertex(int vertexId){
+        for(RefBlockVertexPtr v : this->vertices){
+            if(v->getVertexId() == vertexId){
+                return v;
+            }
+        }
+        BMCDEBUG(std::cout<< "ERROR: RefBlockCFG cannot getVertex" << std::endl;);
+        return nullptr;
+    }
+
+    void RefinedBlockCFG::printRefBlockCFG(std::ostream& os){
+        for(int vertexId = 1; vertexId <= this->vertexNum; vertexId ++){
+            os << "------------------------------------" << std::endl;
+            os << "BlockVertex: " << vertexId << std::endl;
+            for(RefinedActionPtr stmt : this->getVertex(vertexId)->getRefStmts()){
+                stmt->print(os);
+                os << std::endl;
+            }
+        }
+
+        os << "Edges: " << std::endl;
+        for(std::pair<int, int> edge : this->edges){
+            os << "From: " << edge.first << " To: " << edge.second << std::endl;
+        }
+    }
 } // namespace smack

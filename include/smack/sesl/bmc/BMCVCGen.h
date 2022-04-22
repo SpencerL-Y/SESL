@@ -239,24 +239,24 @@ namespace smack
             }
 
 
-            z3::expr generateATSInitConfiguration();
-            z3::expr generateATSTransitionRelation(int u);
+            z3::expr generateATSInitConfiguration(bool addViolation);
+            z3::expr generateATSTransitionRelation(int u, bool addViolation);
             // initial configuration generation
-            z3::expr generateCFGInitCondition();
+            z3::expr generateCFGInitCondition(bool addViolation);
             z3::expr generateRNFInitConditionAndAbstraction();
             
             // Block semantic encoding
-            z3::expr generateBlockSemantic(int vertexIndex, int u);
+            z3::expr generateBlockSemantic(int vertexIndex, int u, bool addViolation);
 
             // Stmt semantic encoding
-            z3::expr generateGeneralTr(RefinedActionPtr refAct, int u);
+            z3::expr generateGeneralTr(RefinedActionPtr refAct, int u, bool addViolation);
 
             z3::expr generateTrMalloc(RefinedActionPtr mallocAct, bool selfClean, int u);
-            z3::expr generateTrFree(RefinedActionPtr freeAct, int u);
-            z3::expr generateTrStore(RefinedActionPtr storeAct, int u);
-            z3::expr generateTrStoreByteSize(RefinedActionPtr storeAct, int u, int byteSize);
-            z3::expr generateTrLoad(RefinedActionPtr loadAct, int u);
-            z3::expr generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize);
+            z3::expr generateTrFree(RefinedActionPtr freeAct, int u, bool addViolation);
+            z3::expr generateTrStore(RefinedActionPtr storeAct, int u, bool addViolation);
+            z3::expr generateTrStoreByteSize(RefinedActionPtr storeAct, int u, int byteSize, bool addViolation);
+            z3::expr generateTrLoad(RefinedActionPtr loadAct, int u, bool addViolation);
+            z3::expr generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize, bool addViolation);
             z3::expr generateTrUnchanged(int u);
             z3::expr generateTrAssume(RefinedActionPtr assumeAct, int u);
             z3::expr generateTrCommonAssignNonBool(RefinedActionPtr assignAct, int u);
@@ -278,9 +278,10 @@ namespace smack
             
             // Detailed violation situation encodings
             // feasibility and violation
-            z3::expr generateFeasibleVC(int l);
+            z3::expr generateFeasibility(bool addViolation, int l);
             
             z3::expr recordViolation(int l);
+            z3::expr generateViolation(int l);
             z3::expr getDerefViolationVar(int u);
             z3::expr getFreeViolationVar(int u);
             z3::expr getMemleakViolationVar(int u);
@@ -296,7 +297,7 @@ namespace smack
             z3::expr getRNFOverflowVar();
             std::set<std::string>  setSubstract(std::set<std::string> from, std::set<std::string> substracted);
             int getLoopBound(){return this->loopBound;}
-            int getPointsToNum(){return this->pointsToNum;}
+            int getPointToNum(){return this->pointsToNum;}
             int getRegionNum(){return this->regionNum;}
             
             z3::context& getContext(){return this->z3Ctx;}

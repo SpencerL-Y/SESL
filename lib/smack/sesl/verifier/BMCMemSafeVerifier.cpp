@@ -87,19 +87,43 @@ namespace smack
 
 
         // OLD BMCVCGEN
-        BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 1);
-        int depth = 20;
-        z3::expr vc = vcg->generateBMCVC(depth);
-        // z3::expr vc = vcg->generateFeasibleVC(1);
+        // BMCVCGenPtr vcg = std::make_shared<BMCVCGen>(refinedCFG, 1);
+        // int depth = 20;
+        // z3::expr vc = vcg->generateBMCVC(depth);
+        // // z3::expr vc = vcg->generateFeasibleVC(1);
+        // std::cout << "Result: " << std::endl;
+        // std::cout << vc.to_string() << std::endl;
+        
+        // z3::solver s(vcg->getContext());
+        // s.add(vc);
+        // bool check = true;
+        // if(check) {
+        //     std::cout << s.check() << std::endl;
+        //     std::cout << s.get_model() << std::endl;
+        //     z3::model m = s.get_model();
+        //     if(m){
+        //         for(int i = 0; i < m.size(); i ++){
+        //             z3::func_decl v = m[i];
+        //             assert(v.arity() == 0);
+        //             std::cout << v.name() << " = " << m.get_const_interp(v).to_string() << "\n" << std::endl;
+        //         }
+        //         std::cout << ViolationTraceGenerator::genreateViolationTraceConfiguration   (m, vcg->getRegionNum(), vcg->getPointToNum(), depth);
+        //     }
+            
+        // }
+
+        // NEW BLOCKBMCVCGEN
+        BMCBlockVCGenPtr blockVcg = std::make_shared<BMCBlockVCGen>(refinedCFG, refBlockCFG, 2);
+        int depth = 1;
+        z3::expr vc = blockVcg->generateFeasibility(false, depth);
         std::cout << "Result: " << std::endl;
         std::cout << vc.to_string() << std::endl;
-        
-        z3::solver s(vcg->getContext());
+        z3::solver s(blockVcg->getContext());
         s.add(vc);
         bool check = true;
         if(check) {
             std::cout << s.check() << std::endl;
-            std::cout << s.get_model() << std::endl;
+            // std::cout << s.get_model() << std::endl;
             z3::model m = s.get_model();
             if(m){
                 for(int i = 0; i < m.size(); i ++){
@@ -107,14 +131,10 @@ namespace smack
                     assert(v.arity() == 0);
                     std::cout << v.name() << " = " << m.get_const_interp(v).to_string() << "\n" << std::endl;
                 }
-                std::cout << ViolationTraceGenerator::genreateViolationTraceConfiguration   (m, vcg->getRegionNum(), vcg->getPointToNum(), depth);
+                std::cout << ViolationTraceGenerator::genreateViolationTraceConfiguration(m, blockVcg->getRegionNum(), blockVcg->getPointToNum(), depth);
             }
             
         }
-
-        // NEW BLOCKBMCVCGEN
-        BMCBlockVCGenPtr blockVcg = std::make_shared<BMCBlockVCGen>(refinedCFG, refBlockCFG, 2);
-        
         return false;
     }
 } // namespace smack

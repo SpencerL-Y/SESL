@@ -132,7 +132,7 @@ namespace smack
                     assert(v.arity() == 0);
                     std::cout << v.name() << " = " << m.get_const_interp(v).to_string() << "\n" << std::endl;
                 }
-                std::cout << ViolationTraceGenerator::genreateViolationTraceConfiguration(m, blockVcg->getRegionNum(), blockVcg->getPointToNum(), depth);
+                std::cout << ViolationTraceGenerator::genreateViolationTraceConfiguration(m, blockVcg->getOrigVars(), blockVcg->getRegionNum(), blockVcg->getPointToNum(), depth);
             }
             
         }

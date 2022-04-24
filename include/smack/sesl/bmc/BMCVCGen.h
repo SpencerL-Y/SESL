@@ -301,6 +301,7 @@ namespace smack
             int getRegionNum(){return this->regionNum;}
             
             z3::context& getContext(){return this->z3Ctx;}
+            std::set<std::string> getOrigVars(){return this->preAnalysis->getProgOrigVars();}
 
 
     };

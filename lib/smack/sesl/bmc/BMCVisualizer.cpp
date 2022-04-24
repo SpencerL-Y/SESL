@@ -87,7 +87,7 @@ namespace smack
     }
 
 
-    std::string ViolationTraceGenerator::genreateViolationTraceConfiguration(z3::model m, int regionNum, int ptNum, int lengthBound){
+    std::string ViolationTraceGenerator::genreateViolationTraceConfiguration(z3::model m, std::set<std::string> origVars, int regionNum, int ptNum, int lengthBound){
         std::string result = " ";
         std::list<z3::func_decl> locationDecls;
         for(int i = 0; i < m.size(); i++){
@@ -103,9 +103,15 @@ namespace smack
             }
         }
 
+       
         std::ostringstream os;
         for(int i = 0; i <= lengthBound; i ++){
             os << "Step ("  << i << "): loc_(" << i << ") = " << locations[i] << std::endl;
+
+            for(std::string origVar : origVars){
+                os << origVar + "_(" << i << ") = " << getVarValuation(m, origVar + "_(" + std::to_string(i) + ")") << std::endl;
+            }
+
             for(int blockId = 0; blockId < regionNum; blockId ++){
                 os << "[Region " << blockId << "] ";
                 for(int ptId = 1; ptId <= ptNum; ptId ++){

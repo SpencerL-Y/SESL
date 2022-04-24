@@ -1502,9 +1502,11 @@ namespace smack
     // Block semantic encoding
     z3::expr BMCBlockVCGen::generateBlockSemantic(int vertexIndex, int u, bool addViolation){
         // use temp to preseve the original spatial formula
-        z3::expr beginningSpatialEqual = this->equalTemp2StepInRNF(u, this->tempCounter);
         // for each statement encode the semantic
         RefBlockVertexPtr currBlock = this->refBlockCfg->getVertex(vertexIndex);
+
+        z3::expr notChangedSpatialEqual = this->equalStepAndNextStepInt(this->currentRNF->getRNFOrigVarNames(), u);
+        z3::expr beginningSpatialEqual = this->equalTemp2StepInRNF(u, this->tempCounter);
         z3::expr blockSemantic = this->z3Ctx.bool_val(true);
         std::set<std::string> allOrigProgVarNames = this->preAnalysis->getProgOrigVars();
         std::set<std::string> allOrigProgIntVarNames;
@@ -1523,6 +1525,11 @@ namespace smack
             for(std::string changedName : tempChanged){
                 allChangedOrigVarNames.insert(changedName);
             }
+            if(refStmt->getActType() == ConcreteAction::ActType::NULLSTMT ||
+               refStmt->getActType() == ConcreteAction::ActType::OTHER ||
+               refStmt->getActType() == ConcreteAction::ActType::OTHERPROC){
+                continue;
+            }
             z3::expr stmtSemantic = this->generateGeneralTr(refStmt, u, addViolation);
             blockSemantic = blockSemantic && stmtSemantic;
         }
@@ -1530,12 +1537,15 @@ namespace smack
         // BUG: need to distinguish the block
         z3::expr endingSpatialEqual = this->equalTemp2StepInRNF(u + 1, this->tempCounter - 1);
         // need to maintain the original variables unchanged in the block
-        std::set<std::string> unchangedOrigIntVarNames = this->setSubstract(allOrigProgIntVarNames, allChangedOrigVarNames);
-        std::set<std::string> unchangedOrigBoolVarNames = this->setSubstract(allOrigProgBoolVarNames, allChangedOrigVarNames);
+        // std::set<std::string> unchangedOrigIntVarNames = this->setSubstract(allOrigProgIntVarNames, allChangedOrigVarNames);
+        // std::set<std::string> unchangedOrigBoolVarNames = this->setSubstract(allOrigProgBoolVarNames, allChangedOrigVarNames);
+        std::set<std::string> unchangedOrigIntVarNames = allOrigProgIntVarNames;
+        std::set<std::string> unchangedOrigBoolVarNames = allOrigProgBoolVarNames;
         z3::expr varRemainUnchanged = this->equalStepAndNextStepBool(unchangedOrigBoolVarNames, u) &&
                                       this->equalStepAndNextStepInt(unchangedOrigIntVarNames, u);
 
-        return beginningSpatialEqual && blockSemantic && endingSpatialEqual && varRemainUnchanged;
+        z3::expr spatialEqualities = currBlock->hasMemoryOperation() ? beginningSpatialEqual && endingSpatialEqual : notChangedSpatialEqual;
+        return spatialEqualities && blockSemantic  && varRemainUnchanged;
 
     }
 
@@ -1589,7 +1599,7 @@ namespace smack
     }
 
     z3::expr BMCBlockVCGen::generateTrMalloc(RefinedActionPtr mallocAct, bool selfClean, int u){
-        z3::expr mallocPtr = mallocAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refBlockCfg->getOrigCfg());
+        z3::expr mallocPtr = mallocAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
         z3::expr mallocSize = mallocAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
 
         z3::expr differentMallocSituation = this->z3Ctx.bool_val(true);
@@ -1801,7 +1811,7 @@ namespace smack
 
     z3::expr BMCBlockVCGen::generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize, bool addViolation){
         z3::expr loadPtr = loadAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
-        z3::expr loadDest = loadAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refBlockCfg->getOrigCfg());
+        z3::expr loadDest = loadAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
 
         z3::expr invalidDerefSituation = loadPtr == BOT;
         z3::expr validDerefSituation = this->z3Ctx.bool_val(false);
@@ -1914,7 +1924,7 @@ namespace smack
     z3::expr BMCBlockVCGen::generateTrCommonAssignNonBool(RefinedActionPtr assignAct, int u){
         int arg1Size = assignAct->getType1();
         int arg2Size = assignAct->getType2();
-        z3::expr lhs = assignAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refBlockCfg->getOrigCfg());
+        z3::expr lhs = assignAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
         z3::expr rhs = assignAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
         if(arg1Size >= arg2Size){
             // normal common assign
@@ -1948,7 +1958,7 @@ namespace smack
     }
 
     z3::expr BMCBlockVCGen::generateTrCommonAssignBool(RefinedActionPtr assignAct, int u){
-        z3::expr lhs = assignAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u + 1, this->refBlockCfg->getOrigCfg());
+        z3::expr lhs = assignAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
         z3::expr rhs = assignAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
         z3::expr boolEquility =  z3::implies(lhs, rhs) && z3::implies(rhs, lhs);
         return boolEquility;

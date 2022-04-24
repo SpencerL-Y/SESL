@@ -185,7 +185,7 @@
 // example 8: initial test for loop
 // NOT SOLVABLE
 int main(){
-    char *a = malloc(3 * sizeof(int));
+    char *a = malloc(3 * sizeof(char));
     *(a + 1) = 1 ;
     int j = *(a + 1);
     for(int i = 0; i < j; i++){

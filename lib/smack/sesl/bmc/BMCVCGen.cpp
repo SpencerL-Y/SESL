@@ -1473,14 +1473,14 @@ namespace smack
     z3::expr BMCBlockVCGen::generateATSTransitionRelation(int u, bool addViolation){
         z3::expr transResult = this->z3Ctx.bool_val(true);
         for(int vertexId = 1; vertexId <= this->refBlockCfg->getVertexNum(); vertexId ++){
+            z3::expr cfgTransPremise = this->getLocVar(u) == vertexId;
+            z3::expr cfgTransImplicant = this->z3Ctx.bool_val(false);
             for(std::pair<int, int> edge : this->refBlockCfg->getEdges()){
                 if(vertexId == edge.first){
-                    transResult = transResult && z3::implies(
-                        this->getLocVar(u) == vertexId,
-                        this->getLocVar(u + 1) == edge.second && this->generateBlockSemantic(edge.second, u, addViolation) && this->currentRNF->generateAbstraction(u + 1)
-                    );
+                    cfgTransImplicant = cfgTransImplicant || this->getLocVar(u + 1) == edge.second && this->generateBlockSemantic(edge.second, u, addViolation) && this->currentRNF->generateAbstraction(u + 1);
                 }
             }
+            transResult = transResult && z3::implies(cfgTransPremise, cfgTransImplicant);
         }
         return transResult;
     }
@@ -1488,7 +1488,7 @@ namespace smack
     z3::expr BMCBlockVCGen::generateCFGInitCondition(bool addViolation){
         z3::expr initCond = this->z3Ctx.bool_val(false);
         for(int vertexId : this->refBlockCfg->getInitVertices()){
-            initCond = initCond || (this->getLocVar(0) == vertexId && this->generateBlockSemantic(vertexId, 0, addViolation));
+            initCond = initCond || (this->getLocVar(0) == vertexId && this->generateBlockSemantic(vertexId, 0, addViolation) && this->currentRNF->generateAbstraction(1));
         }
         return initCond;
     }
@@ -1503,7 +1503,6 @@ namespace smack
     z3::expr BMCBlockVCGen::generateBlockSemantic(int vertexIndex, int u, bool addViolation){
         // use temp to preseve the original spatial formula
         z3::expr beginningSpatialEqual = this->equalTemp2StepInRNF(u, this->tempCounter);
-        this->tempCounter ++;
         // for each statement encode the semantic
         RefBlockVertexPtr currBlock = this->refBlockCfg->getVertex(vertexIndex);
         z3::expr blockSemantic = this->z3Ctx.bool_val(true);
@@ -1528,6 +1527,7 @@ namespace smack
             blockSemantic = blockSemantic && stmtSemantic;
         }
         // give the latest temp to next step spatial formula
+        // BUG: need to distinguish the block
         z3::expr endingSpatialEqual = this->equalTemp2StepInRNF(u + 1, this->tempCounter - 1);
         // need to maintain the original variables unchanged in the block
         std::set<std::string> unchangedOrigIntVarNames = this->setSubstract(allOrigProgIntVarNames, allChangedOrigVarNames);
@@ -1919,8 +1919,7 @@ namespace smack
         if(arg1Size >= arg2Size){
             // normal common assign
             z3::expr assignEquality = lhs == rhs;
-            std::set<std::string> unchangedOrigNames = this->currentRNF->getRNFOrigVarNames();
-            z3::expr result = assignEquality && this->generateIntRemainUnchanged(unchangedOrigNames, u);
+            z3::expr result = assignEquality;
             return result;
         } else {
             // need to cut some bytes

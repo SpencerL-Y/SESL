@@ -1537,12 +1537,12 @@ namespace smack
         // BUG: need to distinguish the block
         z3::expr endingSpatialEqual = this->equalTemp2StepInRNF(u + 1, this->tempCounter - 1);
         // need to maintain the original variables unchanged in the block
-        // std::set<std::string> unchangedOrigIntVarNames = this->setSubstract(allOrigProgIntVarNames, allChangedOrigVarNames);
-        // std::set<std::string> unchangedOrigBoolVarNames = this->setSubstract(allOrigProgBoolVarNames, allChangedOrigVarNames);
-        std::set<std::string> unchangedOrigIntVarNames = allOrigProgIntVarNames;
-        std::set<std::string> unchangedOrigBoolVarNames = allOrigProgBoolVarNames;
-        z3::expr varRemainUnchanged = this->equalStepAndNextStepBool(unchangedOrigBoolVarNames, u) &&
-                                      this->equalStepAndNextStepInt(unchangedOrigIntVarNames, u);
+        std::set<std::string> unchangedOrigIntVarNames = this->setSubstract(allOrigProgIntVarNames, allChangedOrigVarNames);
+        std::set<std::string> unchangedOrigBoolVarNames = this->setSubstract(allOrigProgBoolVarNames, allChangedOrigVarNames);
+        // std::set<std::string> unchangedOrigIntVarNames = allOrigProgIntVarNames;
+        // std::set<std::string> unchangedOrigBoolVarNames = allOrigProgBoolVarNames;
+        z3::expr varRemainUnchanged = this->equalStepAndNextStepBool(unchangedOrigBoolVarNames, u - 1) &&
+                                      this->equalStepAndNextStepInt(unchangedOrigIntVarNames, u - 1);
 
         z3::expr spatialEqualities = currBlock->hasMemoryOperation() ? beginningSpatialEqual && endingSpatialEqual : notChangedSpatialEqual;
         return spatialEqualities && blockSemantic  && varRemainUnchanged;

@@ -239,6 +239,27 @@ namespace smack
                 }
                 return false;
             }
+
+            bool hasDerefOperation(){
+                for(RefinedActionPtr act : this->refStmts){
+                    if(act->getActType() == ConcreteAction::ActType::ALLOC ||
+                       act->getActType() == ConcreteAction::ActType::MALLOC ||
+                       act->getActType() == ConcreteAction::ActType::STORE ||
+                       act->getActType() == ConcreteAction::ActType::LOAD){
+                           return true;
+                       }
+                }
+                return false;
+            }
+
+            bool hasFreeOperation(){
+                for(RefinedActionPtr act : this->refStmts){
+                    if(act->getActType() == ConcreteAction::ActType::FREE){
+                           return true;
+                    }
+                }
+                return false;
+            }
     };
 
     typedef std::shared_ptr<RefinedBlockVertex> RefBlockVertexPtr;

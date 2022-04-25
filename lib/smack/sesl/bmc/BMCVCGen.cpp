@@ -1545,7 +1545,8 @@ namespace smack
                                       this->equalStepAndNextStepInt(unchangedOrigIntVarNames, u - 1);
 
         z3::expr spatialEqualities = currBlock->hasMemoryOperation() ? beginningSpatialEqual && endingSpatialEqual : notChangedSpatialEqual;
-        return spatialEqualities && blockSemantic  && varRemainUnchanged;
+
+        return  spatialEqualities && blockSemantic  && varRemainUnchanged;
 
     }
 
@@ -1553,10 +1554,10 @@ namespace smack
     z3::expr BMCBlockVCGen::generateGeneralTr(RefinedActionPtr refAct, int u, bool addViolation){
         this->currentRNF->setPrimeNum(u);
         if(refAct->getActType() == ConcreteAction::ActType::MALLOC){
-            z3::expr mallocBranch = this->generateTrMalloc(refAct, false, u);
+            z3::expr mallocBranch = this->generateTrMalloc(refAct, false, u, addViolation);
             return mallocBranch;
         } else if(refAct->getActType() == ConcreteAction::ActType::ALLOC){
-            z3::expr allocBranch = this->generateTrMalloc(refAct, true, u);
+            z3::expr allocBranch = this->generateTrMalloc(refAct, true, u, addViolation);
             return allocBranch;
         }
         else if(refAct->getActType() == ConcreteAction::ActType::FREE){
@@ -1598,9 +1599,23 @@ namespace smack
         }
     }
 
-    z3::expr BMCBlockVCGen::generateTrMalloc(RefinedActionPtr mallocAct, bool selfClean, int u){
+    z3::expr BMCBlockVCGen::generateTrMalloc(RefinedActionPtr mallocAct, bool selfClean, int u, bool addViolation){
         z3::expr mallocPtr = mallocAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
         z3::expr mallocSize = mallocAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
+
+        z3::expr validDeref = this->z3Ctx.bool_val(false);
+        for(int blockId = 0; blockId < this->regionNum; blockId ++){
+            validDeref = validDeref || 
+            mallocPtr  >= this->currentRNF->getTempBlkAddrVar(blockId, 0, this->tempCounter) && 
+            mallocPtr < this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum + 1, this->tempCounter) &&
+            mallocPtr + mallocSize >= this->currentRNF->getTempBlkAddrVar(blockId, 0, this->tempCounter) && 
+            mallocPtr + mallocSize < this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum + 1, this->tempCounter) && 
+            this->currentRNF->getTempBlkAddrVar(blockId, 0, this->tempCounter) != BOT && this->currentRNF->getTempBlkAddrVar(blockId, 2 * this->pointsToNum + 1, this->tempCounter) != BOT;
+        }
+
+        z3::expr invalidMalloc = validDeref && mallocPtr == BOT && mallocPtr <= 0;
+        z3::expr recordMallocViolation = z3::implies(invalidMalloc, this->getDerefViolationVar(u));
+        // this->derefViolationVars.push_back(this->getDerefViolationVar(u));
 
         z3::expr differentMallocSituation = this->z3Ctx.bool_val(true);
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
@@ -1628,23 +1643,26 @@ namespace smack
             (mallocPtr > 0 && mallocSize >= 0);
         }
         this->tempCounter ++;
-        return differentMallocSituation;
+        return addViolation ? differentMallocSituation && recordMallocViolation : differentMallocSituation;
     }
 
 
     z3::expr BMCBlockVCGen::generateTrFree(RefinedActionPtr freeAct, int u, bool addViolation){
+
         z3::expr freedPtr = freeAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
 
-        z3::expr validFreePremise = this->z3Ctx.bool_val(false);
-        for(int blockId = 0; blockId < this->regionNum; blockId ++){
-            validFreePremise = validFreePremise || (
-                this->currentRNF->getTempBlkAddrVar(blockId, 0, this->tempCounter) == freedPtr &&
-                freedPtr != BOT &&
-                this->currentRNF->getTempSelfCleanVar(blockId, this->tempCounter) == NOT_CLEAN
-            );
-        }
-        z3::expr invalidFreeSituation = !validFreePremise;
-        z3::expr invalidFreeImplies = z3::implies(invalidFreeSituation, this->getFreeViolationVar(u));
+        // z3::expr validFreePremise = this->z3Ctx.bool_val(false);
+        // for(int blockId = 0; blockId < this->regionNum; blockId ++){
+        //     validFreePremise = validFreePremise || (
+        //         this->currentRNF->getTempBlkAddrVar(blockId, 0, this->tempCounter) == freedPtr &&
+        //         freedPtr != BOT &&
+        //         this->currentRNF->getTempSelfCleanVar(blockId, this->tempCounter) == NOT_CLEAN
+        //     );
+        // }
+        // z3::expr invalidFreeSituation = !validFreePremise;
+        // z3::expr recordInvalidFree = z3::implies(invalidFreeSituation, this->getFreeViolationVar(u));
+        // this->freeViolationVars.push_back(this->getFreeViolationVar(u));
+
 
         z3::expr findCorrectBlock = this->z3Ctx.bool_val(true);
         for(int blockId = 0; blockId < this->regionNum; blockId ++){
@@ -1689,23 +1707,21 @@ namespace smack
             ;
         }
         this->tempCounter ++;
-        z3::expr result = addViolation ? findCorrectBlock && invalidFreeImplies : findCorrectBlock;
+        z3::expr result = addViolation ? findCorrectBlock /*&& recordInvalidFree */:findCorrectBlock;
         return result;
     }
 
     z3::expr BMCBlockVCGen::generateTrStore(RefinedActionPtr storeAct, int u, bool addViolation){
         z3::expr storeSemantic = this->z3Ctx.bool_val(true);
         int storeSize = storeAct->getType2();
-        storeSemantic = this->generateTrStoreByteSize(storeAct, u, storeSize, addViolation);
+        storeSemantic = this->generateTrStoreByteSize(storeAct, u, storeSize);
         return storeSemantic;
     }
 
-    z3::expr BMCBlockVCGen::generateTrStoreByteSize(RefinedActionPtr storeAct, int u, int byteSize, bool addViolation){
+    z3::expr BMCBlockVCGen::generateTrStoreByteSize(RefinedActionPtr storeAct, int u, int byteSize){
         z3::expr storedData = storeAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
         z3::expr storedPtr = storeAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
 
-        z3::expr invalidDerefSituation = storedPtr == BOT;
-        z3::expr validDerefSituation = this->z3Ctx.bool_val(false);
         for(int currByte = 1; currByte <= byteSize; currByte ++){
             z3::expr storedAddr = storedPtr + (currByte - 1);
             for(int blockId = 0; blockId < this->regionNum; blockId ++){
@@ -1715,17 +1731,9 @@ namespace smack
                     storedAddr < this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 1, this->tempCounter);
                     z3::expr ptReplaceSituation = 
                     storedAddr == this->currentRNF->getTempPtAddrVar(blockId, 2*iPt - 1, this->tempCounter);
-                    validDerefSituation = validDerefSituation || blkSplitSituation || ptReplaceSituation;
                 }
-                validDerefSituation = validDerefSituation ||
-                storedAddr >= this->currentRNF->getTempBlkAddrVar(blockId, 2*this->pointsToNum, this->tempCounter) &&
-                storedAddr < this->currentRNF->getTempBlkAddrVar(blockId, 2*this->pointsToNum + 1, this->tempCounter);
             }
         }
-        invalidDerefSituation = invalidDerefSituation && !validDerefSituation;
-
-        z3::expr invalidImplies = z3::implies(invalidDerefSituation, this->getDerefViolationVar(u));
-
         z3::expr tempSum = this->z3Ctx.int_val(0);
         std::vector<z3::expr> storedByteVars;
         for(int currByte = 1; currByte <= byteSize; currByte ++){
@@ -1794,27 +1802,21 @@ namespace smack
         }
         // TODObmc: here we need tempCounter --
 
-        z3::expr finalResult = addViolation ? 
-                               bytifiedEqual && 
-                               executeStoreSequence &&
-                               invalidImplies :
-                               bytifiedEqual && 
+        z3::expr finalResult = bytifiedEqual && 
                                executeStoreSequence;
         return finalResult;
     }
 
     z3::expr BMCBlockVCGen::generateTrLoad(RefinedActionPtr loadAct, int u, bool addViolation){
         int loadSize = loadAct->getType1();
-        z3::expr loadSemantic = this->generateTrLoadByteSize(loadAct, u, loadSize, addViolation);
+        z3::expr loadSemantic = this->generateTrLoadByteSize(loadAct, u, loadSize);
         return loadSemantic;
     }
 
-    z3::expr BMCBlockVCGen::generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize, bool addViolation){
+    z3::expr BMCBlockVCGen::generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize){
         z3::expr loadPtr = loadAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
         z3::expr loadDest = loadAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
 
-        z3::expr invalidDerefSituation = loadPtr == BOT;
-        z3::expr validDerefSituation = this->z3Ctx.bool_val(false);
         for(int currByte = 1; currByte <= byteSize; currByte ++){
             z3::expr loadedAddr = loadPtr + (currByte - 1);
             for(int blockId = 0; blockId < this->regionNum; blockId ++){
@@ -1824,14 +1826,9 @@ namespace smack
                     loadedAddr < this->currentRNF->getTempBlkAddrVar(blockId, 2*iPt - 1, this->tempCounter);
                     z3::expr ptExistsSituation = 
                     loadedAddr == this->currentRNF->getTempPtAddrVar(blockId, 2*iPt - 1, this->tempCounter);
-                    validDerefSituation = validDerefSituation || blkSplitSituation || ptExistsSituation;
                 }
-                validDerefSituation = validDerefSituation ||
-                loadedAddr >= this->currentRNF->getTempBlkAddrVar(blockId, 2*this->pointsToNum, this->tempCounter) &&
-                loadedAddr < this->currentRNF->getTempBlkAddrVar(blockId, 2*this->pointsToNum + 1, this->tempCounter);
             }
         }
-        invalidDerefSituation = invalidDerefSituation && !validDerefSituation;
 
         z3::expr tempSum = this->z3Ctx.int_val(0);
         std::vector<z3::expr> loadFreshByteVars;
@@ -1903,11 +1900,7 @@ namespace smack
         }
 
 
-        z3::expr finalResult = addViolation ?
-                               bytifiedEqual &&
-                               executeLoadSequence &&
-                               invalidDerefSituation :
-                               bytifiedEqual &&
+        z3::expr finalResult = bytifiedEqual &&
                                executeLoadSequence;
         return finalResult;
     }
@@ -2133,9 +2126,14 @@ namespace smack
         z3::expr totalDerefVar = this->z3Ctx.bool_const("INVALID_DEREF");
         z3::expr totalFreeVar = this->z3Ctx.bool_const("INVALID_FREE");
         z3::expr totalMemleakVar = this->z3Ctx.bool_const("MEMLEAK");
-        z3::expr validDerefAndFree = this->z3Ctx.bool_val(false);
+
+        z3::expr memleakViolations = this->z3Ctx.bool_val(false);
+        z3::expr validDerefViolations = this->z3Ctx.bool_val(false);
+        z3::expr validFreeViolations = this->z3Ctx.bool_val(false);
+
+
         z3::expr recording = this->z3Ctx.bool_val(true);
-        for(int i = 0; i <= l; i++){
+        for(int i = 0; i < l; i++){
             z3::expr violationSituation =
             (this->getDerefViolationVar(i) || 
              this->getFreeViolationVar(i));
@@ -2153,17 +2151,30 @@ namespace smack
                     this->currentRNF->getSelfCleanVar(blockId, i) == NOT_CLEAN
                 );
             }
-            memleakSituation = memleakSituation && memleakAddr;
+            memleakSituation = memleakSituation && memleakAddr && memleakVertex;
             violationSituation = violationSituation || memleakSituation; 
-
-            validDerefAndFree = validDerefAndFree || violationSituation;
 
             recording = recording && 
             z3::implies(memleakSituation, totalMemleakVar) &&
             z3::implies(this->getFreeViolationVar(i), totalFreeVar) &&
             z3::implies(this->getDerefViolationVar(i), totalDerefVar);
+
+            memleakViolations = memleakViolations || memleakSituation;
         }
-        return validDerefAndFree && recording;
+            
+        for(z3::expr derefVar : this->derefViolationVars){
+            validDerefViolations = validDerefViolations || derefVar;
+        }
+        for(z3::expr freeVar : this->freeViolationVars){
+            validFreeViolations = validFreeViolations || freeVar;
+        }
+
+        recording = recording &&
+            z3::implies(totalMemleakVar, memleakViolations) &&
+            z3::implies(totalFreeVar, validDerefViolations) &&
+            z3::implies(totalDerefVar, validFreeViolations);
+
+        return (totalDerefVar || totalFreeVar || totalMemleakVar) && recording;
     }
 
     // final

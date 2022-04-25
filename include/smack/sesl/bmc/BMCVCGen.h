@@ -219,6 +219,8 @@ namespace smack
             RNFPtr currentRNF; 
             BMCPreAnalysisPtr preAnalysis;
             z3::expr_vector* existVars;
+            std::list<z3::expr> derefViolationVars;
+            std::list<z3::expr> freeViolationVars;
 
             int loopBound;
             int regionNum;
@@ -251,12 +253,12 @@ namespace smack
             // Stmt semantic encoding
             z3::expr generateGeneralTr(RefinedActionPtr refAct, int u, bool addViolation);
 
-            z3::expr generateTrMalloc(RefinedActionPtr mallocAct, bool selfClean, int u);
+            z3::expr generateTrMalloc(RefinedActionPtr mallocAct, bool selfClean, int u, bool addViolation);
             z3::expr generateTrFree(RefinedActionPtr freeAct, int u, bool addViolation);
             z3::expr generateTrStore(RefinedActionPtr storeAct, int u, bool addViolation);
-            z3::expr generateTrStoreByteSize(RefinedActionPtr storeAct, int u, int byteSize, bool addViolation);
+            z3::expr generateTrStoreByteSize(RefinedActionPtr storeAct, int u, int byteSize);
             z3::expr generateTrLoad(RefinedActionPtr loadAct, int u, bool addViolation);
-            z3::expr generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize, bool addViolation);
+            z3::expr generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize);
             z3::expr generateTrUnchanged(int u);
             z3::expr generateTrAssume(RefinedActionPtr assumeAct, int u);
             z3::expr generateTrCommonAssignNonBool(RefinedActionPtr assignAct, int u);

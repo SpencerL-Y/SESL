@@ -186,9 +186,9 @@
 // NOT SOLVABLE
 int main(){
     char *a = malloc(5 * sizeof(char));
-    *(a + 1) = 4 ;
+    *(a + 1) = 2;
     int j = *(a + 1);
-    for(int i = 0; i < j; i+=2){
+    for(int i = 0; i < j; i++){
         *(a + i) = 'a';
     }   
     // free(a);

@@ -1027,7 +1027,7 @@ namespace smack
 
                     z3::expr ptReplaceSituation = 
                     storedAddr == this->currentRNF->getTempPtAddrVar(blockId, 2*iPt - 1, this->tempCounter);
-                    z3::expr changeDataVar = (this->currentRNF->getTempPtDataVar(blockId, 2*iPt - 1, this->tempCounter) == storedByteVar);
+                    z3::expr changeDataVar = (this->currentRNF->getTempPtDataVar(blockId, 2*iPt - 1, this->tempCounter + 1) == storedByteVar);
                     std::set<std::string> replaceChangedSet;
                     replaceChangedSet.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*iPt - 1));
                     z3::expr replaceUnchangeUpdate = this->equalTempAndNextTempInRNF(
@@ -1488,7 +1488,7 @@ namespace smack
     z3::expr BMCBlockVCGen::generateCFGInitCondition(bool addViolation){
         z3::expr initCond = this->z3Ctx.bool_val(false);
         for(int vertexId : this->refBlockCfg->getInitVertices()){
-            initCond = initCond || (this->getLocVar(0) == vertexId && this->generateBlockSemantic(vertexId, 0, addViolation) && this->currentRNF->generateAbstraction(1));
+            initCond = initCond || (this->getLocVar(0) == vertexId);
         }
         return initCond;
     }
@@ -1770,7 +1770,7 @@ namespace smack
 
                     z3::expr ptReplaceSituation = 
                     storedAddr == this->currentRNF->getTempPtAddrVar(blockId, 2*iPt - 1, this->tempCounter);
-                    z3::expr changeDataVar = (this->currentRNF->getTempPtDataVar(blockId, 2*iPt - 1, this->tempCounter) == storedByteVar);
+                    z3::expr changeDataVar = (this->currentRNF->getTempPtDataVar(blockId, 2*iPt - 1, this->tempCounter + 1) == storedByteVar);
                     std::set<std::string> replaceChangedSet;
                     replaceChangedSet.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*iPt - 1));
                     z3::expr replaceUnchangeUpdate = this->equalTempAndNextTempInRNF(

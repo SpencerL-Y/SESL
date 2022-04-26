@@ -99,16 +99,16 @@
 
 
 // example 1: char store
-// int main(){
-//     char *i;
-//     i = malloc(11*sizeof(char));
-//     // char *j = i + 11;
-//     char *k = i + 10;
-//     // *j = 'a';
-//     *k = 'b';
-//     free(i);
-//     return 0;
-// }
+int main(){
+    char *i;
+    i = malloc(11*sizeof(char));
+    // char *j = i + 11;
+    char *k = i + 10;
+    // *j = 'a';
+    *k = 'b';
+    // free(i);
+    return 0;
+}
 
 
 // example 2: int store
@@ -184,16 +184,16 @@
 
 // example 8: initial test for loop
 // NOT SOLVABLE
-int main(){
-    char *a = malloc(5 * sizeof(char));
-    *(a + 1) = 2;
-    int j = *(a + 1);
-    for(int i = 0; i < j; i++){
-        *(a + i) = 'a';
-    }   
-    // free(a);
-    return 0;
-}
+// int main(){
+//     char *a = malloc(5 * sizeof(char));
+//     *(a + 1) = 2;
+//     int j = *(a + 1);
+//     for(int i = 0; i < j; i++){
+//         *(a + i) = 'a';
+//     }   
+//     // free(a);
+//     return 0;
+// }
 
 // #include <stdlib.h>
 // int *a, *b;

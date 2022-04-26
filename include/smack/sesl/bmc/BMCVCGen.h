@@ -209,6 +209,20 @@ namespace smack
 
     typedef std::shared_ptr<BMCVCGen> BMCVCGenPtr;
 
+
+    class ViolationTuple {
+        private:
+        int step;
+        int location;
+        std::list<z3::expr> exprList;
+        public: 
+        ViolationTuple(int step, int location, std::list<z3::expr> exprList) : step(step), location(location), exprList(exprList){}
+        int getStep(){return step;}
+        int getLocation(){return location;}
+        std::list<z3::expr>& getExprList(){return this->exprList;}
+    };
+    typedef std::shared_ptr<ViolationTuple> VioTuplePtr;
+
     class BMCBlockVCGen {
         private:
             z3::context z3Ctx;
@@ -219,14 +233,16 @@ namespace smack
             RNFPtr currentRNF; 
             BMCPreAnalysisPtr preAnalysis;
             z3::expr_vector* existVars;
-            std::list<z3::expr> derefViolationVars;
-            std::list<z3::expr> freeViolationVars;
 
             int loopBound;
             int regionNum;
             int pointsToNum;
             int freshCounter;
             int tempCounter;
+            std::list<z3::expr> currBlockInvalidFrees;
+            std::list<VioTuplePtr> allInvalidFrees;
+            std::list<z3::expr> currBlockInvalidDerefs;
+            std::list<VioTuplePtr> allInvalidDerefs;
         public:
             BMCBlockVCGen(BMCRefinedCFGPtr rcfg, RefBlockCFGPtr bcfg, int lb): refCfg(rcfg), refBlockCfg(bcfg), loopBound(lb){
                 this->preAnalysis = std::make_shared<BMCPreAnalysis>(this->refCfg, this->loopBound);
@@ -241,23 +257,23 @@ namespace smack
             }
 
 
-            z3::expr generateATSInitConfiguration(bool addViolation);
-            z3::expr generateATSTransitionRelation(int u, bool addViolation);
+            z3::expr generateATSInitConfiguration();
+            z3::expr generateATSTransitionRelation(int u);
             // initial configuration generation
-            z3::expr generateCFGInitCondition(bool addViolation);
+            z3::expr generateCFGInitCondition();
             z3::expr generateRNFInitConditionAndAbstraction();
             
             // Block semantic encoding
-            z3::expr generateBlockSemantic(int vertexIndex, int u, bool addViolation);
+            z3::expr generateBlockSemantic(int vertexIndex, int u);
 
             // Stmt semantic encoding
-            z3::expr generateGeneralTr(RefinedActionPtr refAct, int u, bool addViolation);
+            z3::expr generateGeneralTr(RefinedActionPtr refAct, int u);
 
-            z3::expr generateTrMalloc(RefinedActionPtr mallocAct, bool selfClean, int u, bool addViolation);
-            z3::expr generateTrFree(RefinedActionPtr freeAct, int u, bool addViolation);
-            z3::expr generateTrStore(RefinedActionPtr storeAct, int u, bool addViolation);
+            z3::expr generateTrMalloc(RefinedActionPtr mallocAct, bool selfClean, int u);
+            z3::expr generateTrFree(RefinedActionPtr freeAct, int u);
+            z3::expr generateTrStore(RefinedActionPtr storeAct, int u);
             z3::expr generateTrStoreByteSize(RefinedActionPtr storeAct, int u, int byteSize);
-            z3::expr generateTrLoad(RefinedActionPtr loadAct, int u, bool addViolation);
+            z3::expr generateTrLoad(RefinedActionPtr loadAct, int u);
             z3::expr generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize);
             z3::expr generateTrUnchanged(int u);
             z3::expr generateTrAssume(RefinedActionPtr assumeAct, int u);
@@ -280,13 +296,15 @@ namespace smack
             
             // Detailed violation situation encodings
             // feasibility and violation
-            z3::expr generateFeasibility(bool addViolation, int l);
+            z3::expr generateFeasibility(int l);
             
+            z3::expr generateValidDeref(z3::expr derefPos);
             z3::expr recordViolation(int l);
             z3::expr generateViolation(int l);
             z3::expr getDerefViolationVar(int u);
             z3::expr getFreeViolationVar(int u);
             z3::expr getMemleakViolationVar(int u);
+
 
             // final
             z3::expr generateBMCVC(int l);
@@ -301,7 +319,16 @@ namespace smack
             int getLoopBound(){return this->loopBound;}
             int getPointToNum(){return this->pointsToNum;}
             int getRegionNum(){return this->regionNum;}
-            
+            // Other utils
+            z3::expr formDisjunction(std::list<z3::expr> list){
+                z3::expr result = this->z3Ctx.bool_val(false);
+                for(z3::expr e : list){
+                    result = result || e;
+                }
+                return result;
+            }
+
+            // get functions
             z3::context& getContext(){return this->z3Ctx;}
             std::set<std::string> getOrigVars(){return this->preAnalysis->getProgOrigVars();}
 

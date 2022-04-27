@@ -372,7 +372,6 @@ namespace smack
                         this->generateGeneralTr(refAct, u);
                         behaviorForEachEdgeOnCurrVertex = behaviorForEachEdgeOnCurrVertex || edgeActionEncoding;
                     } else {
-                        // TODObmc
                     }
                 }
                 
@@ -384,7 +383,6 @@ namespace smack
     }
 
     z3::expr BMCVCGen::generateActTypeArgTemplateEncoding(RefinedActionPtr refAct, int u){
-        // TODObmc: add unchanged for program variables 
         std::set<std::string> allProgVars = this->preAnalysis->getProgOrigVars();
         std::set<std::string> allProgIntVars;
         std::set<std::string> allProgBoolVars;
@@ -811,7 +809,6 @@ namespace smack
 
     // Stmt semantic encoding
     z3::expr BMCVCGen::generateGeneralTr(RefinedActionPtr refAct, int u){
-        // TODObmc: add unchange of heap variables
         this->currentRNF->setPrimeNum(u);
         std::set<int> allNonBoolByteNum= {1, 4, PTR_BYTEWIDTH};
         if(refAct->getActType() == ConcreteAction::ActType::MALLOC){
@@ -1049,8 +1046,6 @@ namespace smack
             
             this->tempCounter ++;
         }
-        // TODObmc: here we need tempCounter --
-
         z3::expr endTempVarToSh = this->equalTemp2StepInRNF(u + 1, this->tempCounter);
         z3::expr finalResult = startShVarToTemp &&
                                bytifiedEqual && 
@@ -1194,7 +1189,6 @@ namespace smack
             }
             z3::expr arg2Equality = (this->getArgVar(2, u) == arg2Result);
             z3::expr arg1Equality = (this->getArgVar(1, u) == arg1Result);
-            // TODObmc: compute variables unchanged
             std::set<std::string> unchangedOrigNames = this->currentRNF->getRNFOrigVarNames();
             return ( 
                 arg2Equality && 
@@ -1475,9 +1469,11 @@ namespace smack
         for(int vertexId = 1; vertexId <= this->refBlockCfg->getVertexNum(); vertexId ++){
             z3::expr cfgTransPremise = this->getLocVar(u) == vertexId;
             z3::expr cfgTransImplicant = this->z3Ctx.bool_val(false);
+            z3::expr vertexBlockSemantic = this->generateBlockSemantic(vertexId, u);
             for(std::pair<int, int> edge : this->refBlockCfg->getEdges()){
                 if(vertexId == edge.first){
-                    cfgTransImplicant = cfgTransImplicant || this->getLocVar(u + 1) == edge.second && this->generateBlockSemantic(edge.second, u) && this->currentRNF->generateAbstraction(u + 1);
+                    cfgTransImplicant = cfgTransImplicant || this->getLocVar(u + 1) == edge.second &&  vertexBlockSemantic && 
+                    this->currentRNF->generateAbstraction(u + 1);
                 }
             }
             transResult = transResult && z3::implies(cfgTransPremise, cfgTransImplicant);
@@ -1805,11 +1801,14 @@ namespace smack
             
             this->tempCounter ++;
         }
-        // TODObmc: here we need tempCounter --
 
         z3::expr finalResult = bytifiedEqual && 
                                executeStoreSequence;
         return finalResult;
+    }
+
+    z3::expr BMCBlockVCGen::generateTrStoreUnchange(int u){
+
     }
 
     z3::expr BMCBlockVCGen::generateTrLoad(RefinedActionPtr loadAct, int u){
@@ -1920,6 +1919,10 @@ namespace smack
         z3::expr finalResult = bytifiedEqual &&
                                executeLoadSequence;
         return finalResult;
+    }
+
+    z3::expr BMCBlockVCGen::generateTrLoadUnchange(int u){
+        
     }
 
     z3::expr BMCBlockVCGen::generateTrUnchanged(int u){
@@ -2184,8 +2187,8 @@ namespace smack
             for(int blockId = 0; blockId < this->regionNum; blockId ++){
                 memleakAddr = memleakAddr || 
                 (
-                    this->currentRNF->getBlkAddrVar(blockId, 0, i) != BOT &&
-                    this->currentRNF->getSelfCleanVar(blockId, i) == NOT_CLEAN
+                    this->currentRNF->getBlkAddrVar(blockId, 0, i + 1) != BOT &&
+                    this->currentRNF->getSelfCleanVar(blockId, i + 1) == NOT_CLEAN
                 );
             }
             memleakSituation = memleakSituation && memleakAddr && memleakVertex;
@@ -2241,7 +2244,7 @@ namespace smack
         z3::implies(validDerefViolations, totalDerefVar) && 
         z3::implies(totalDerefVar, validDerefViolations);
 
-        return (totalFreeVar || totalMemleakVar || totalDerefVar) && recording;
+        return (totalFreeVar  || totalDerefVar|| totalMemleakVar) && recording;
     }
 
     // final

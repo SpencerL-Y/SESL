@@ -106,13 +106,14 @@ namespace smack
        
         std::ostringstream os;
         for(int i = 0; i <= lengthBound; i ++){
-            os << "Step ("  << i << "): loc_(" << i << ") = " << locations[i] << std::endl;
-
+           
             for(std::string origVar : origVars){
                 os << origVar + "_(" << i << ") = " << getVarValuation(m, origVar + "_(" + std::to_string(i) + ")") << std::endl;
             }
 
             for(int blockId = 0; blockId < regionNum; blockId ++){
+
+            os << "-----------------------------------" << std::endl;
                 os << "[Region " << blockId << "] ";
                 for(int ptId = 1; ptId <= ptNum; ptId ++){
                     os << "blk[" << 
@@ -134,7 +135,8 @@ namespace smack
                 os << std::endl;
             }
             os << std::endl;
-            os << "-----------------------------------" << std::endl;
+            os << "Step ("  << i << "): loc_(" << i << ") = " << locations[i] << std::endl;
+
         }
         os << "MEMLEAK = " << getVarValuation(m, "MEMLEAK") << "  INVALID_DEREF = " << getVarValuation(m, "INVALID_DEREF") << "  INVALID_FREE = " << getVarValuation(m, "INVALID_FREE") << std::endl;
         return os.str();

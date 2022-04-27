@@ -273,8 +273,10 @@ namespace smack
             z3::expr generateTrFree(RefinedActionPtr freeAct, int u);
             z3::expr generateTrStore(RefinedActionPtr storeAct, int u);
             z3::expr generateTrStoreByteSize(RefinedActionPtr storeAct, int u, int byteSize);
+            z3::expr generateTrStoreUnchange(int u);
             z3::expr generateTrLoad(RefinedActionPtr loadAct, int u);
             z3::expr generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize);
+            z3::expr generateTrLoadUnchange(int u);
             z3::expr generateTrUnchanged(int u);
             z3::expr generateTrAssume(RefinedActionPtr assumeAct, int u);
             z3::expr generateTrCommonAssignNonBool(RefinedActionPtr assignAct, int u);

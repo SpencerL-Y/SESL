@@ -15,7 +15,7 @@ namespace smack
                     } else {
                         mallocNum += 1;
                     }
-                } else if(/*act->getActType() == ConcreteAction::ActType::LOAD ||*/act->getActType() == ConcreteAction::ActType::STORE){
+                } else if(act->getActType() == ConcreteAction::ActType::LOAD ||act->getActType() == ConcreteAction::ActType::STORE){
                     if(this->sccResult[edge->getFrom()] == this->sccResult[edge->getTo()]){
                         ptNum += this->loopBound * this->computeMaxStoreByteLen();
                     } else {

@@ -112,24 +112,33 @@
 
 
 // example 2: int store
-int main(){
-    int *i;
-    i = malloc(4*sizeof(int));
-    int *j = i + 4;
-    *j = 10;
-    free(i);
-    return 0;
-}
+// int main(){
+//     int *i;
+//     i = malloc(4*sizeof(int));
+//     int *j = i + 4;
+//     *j = 10;
+//     free(i);
+//     return 0;
+// }
 
 // example 3: char load
 // int main(){
 //     char *i = malloc(11*sizeof(char));
 //     char *j = i + 5;
 //     *j = 'b';
-//     char* l = j + 6;
+//     char* l = j + 5;
 //     char load = *l;
 //     free(i);
 // }
+
+int main(){
+    char *i = malloc(11*sizeof(char));
+    char *j = i + 7;
+    *j = 'a';
+
+    char load = *(i + 6);
+    free(i);
+}
 
 // example 4
 // int main(){

@@ -35,6 +35,14 @@ namespace smack
         fs.close();
     }
 
+    void printBlockCfg2File(BlockCFGPtr blockCfg, std::string fileName){
+        std::string printResult = DOTGenerator::generateDOT4Block(blockCfg);
+        std::ofstream fs;
+        fs.open(fileName, ios::out);
+        fs << printResult;
+        fs.close();
+    }
+
     void printViolationTrace2File(z3::model model, BMCVCGenPtr vcg, std::string fileName){
         // TODObmc
 
@@ -57,6 +65,7 @@ namespace smack
         StatePtr state = mainGraph->getEntryState();
         std::cout << "-------------PRINT CFG-----------" << std::endl;
         mainGraph->printCFG();
+        mainGraph->printVarInfo();
         std::cout << std::endl;
         std::cout << "-------------PRINT CFG END-----------" << std::endl;
 
@@ -70,7 +79,7 @@ namespace smack
         // refinedCFG->printRefinedCFG();
         printRefinedCfg2File(refinedCFG, "./RefCfg.dot");
         BlockCFGPtr blockCFG = std::make_shared<BlockCFG>(mainGraph);
-        // blockCFG->printBlockCFG(std::cout);
+        printBlockCfg2File(blockCFG, "./BlockCFG.dot");
         RefBlockCFGPtr refBlockCFG = std::make_shared<RefinedBlockCFG>(blockCFG);
         refBlockCFG->printRefBlockCFG(std::cout);
         // BMCPreAnalysisPtr pre = std::make_shared<BMCPreAnalysis>(refinedCFG, 5);
@@ -114,7 +123,7 @@ namespace smack
 
         // NEW BLOCKBMCVCGEN
         BMCBlockVCGenPtr blockVcg = std::make_shared<BMCBlockVCGen>(refinedCFG, refBlockCFG, 2);
-        int depth = 15;
+        int depth = 1;
         // z3::expr vc = blockVcg->generateFeasibility(depth);
         z3::expr vc = blockVcg->generateBMCVC(depth);
         std::cout << "Result: " << std::endl;

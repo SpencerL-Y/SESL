@@ -61,6 +61,34 @@ namespace smack
         return result;
     }
 
+    std::string DOTGenerator::generateDOT4Block(BlockCFGPtr blockCfg){
+        
+        std::string result = "digraph {\n";
+        for(BlockVertexPtr v : blockCfg->getVertices()){
+            result += "\"block" + std::to_string(v->getVertexId()) + "\" [";
+            result += "shape = box,";
+            result += "label = \"";
+            std::ostringstream oss;
+            for(const Stmt* s : v->getStmts()){
+                s->print(oss);
+                oss << "\\n\n";
+            }
+            std::string vertexContent = oss.str();
+            std::replace(vertexContent.begin(), vertexContent.end(), '"', ' ');
+            result += vertexContent;
+            result += "\"";
+            result += "];\n";
+        }
+
+        for(std::pair<int, int> edge : blockCfg->getEdges()){
+            result += "block" + std::to_string(edge.first) + " -> " + "block" + std::to_string(edge.second) + "\n";
+        }
+
+        result += "}\n";
+
+        return result;
+    }
+
     std::string ViolationTraceGenerator::generateViolationTrace(z3::model m, int lengthBound){
         std::string result = " ";
         std::list<z3::func_decl> locationDecls;

@@ -1703,6 +1703,7 @@ namespace smack
         z3::expr storeSemantic = this->z3Ctx.bool_val(true);
         z3::expr storeUnchange = this->z3Ctx.bool_val(true);
         int storeSize = storeAct->getType2();
+        BMCDEBUG(std::cout << "storeSize: " << storeSize <<  "storePtr: " << storeAct->getArg1() << std::endl;);
         assert(storeSize > 0);
         
         z3::expr storedPtr = storeAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
@@ -1867,7 +1868,7 @@ namespace smack
                         loadFreshUnchangedSet,
                         this->tempCounter
                     );
-                    BMCDEBUG(std::cout << "loadFreshUnchange: " << loadFreshUnchange << std::endl;);
+                    // BMCDEBUG(std::cout << "loadFreshUnchange: " << loadFreshUnchange << std::endl;);
                     z3::expr loadFresh = z3::implies(
                         loadFreshSituation,
                         shiftByteExpr && 

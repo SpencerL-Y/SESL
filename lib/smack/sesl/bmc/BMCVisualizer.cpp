@@ -61,6 +61,34 @@ namespace smack
         return result;
     }
 
+    std::string DOTGenerator::generateDOT4Block(BlockCFGPtr blockCfg){
+        
+        std::string result = "digraph {\n";
+        for(BlockVertexPtr v : blockCfg->getVertices()){
+            result += "\"block" + std::to_string(v->getVertexId()) + "\" [";
+            result += "shape = box,";
+            result += "label = \"";
+            std::ostringstream oss;
+            for(const Stmt* s : v->getStmts()){
+                s->print(oss);
+                oss << "\\n\n";
+            }
+            std::string vertexContent = oss.str();
+            std::replace(vertexContent.begin(), vertexContent.end(), '"', ' ');
+            result += vertexContent;
+            result += "\"";
+            result += "];\n";
+        }
+
+        for(std::pair<int, int> edge : blockCfg->getEdges()){
+            result += "block" + std::to_string(edge.first) + " -> " + "block" + std::to_string(edge.second) + "\n";
+        }
+
+        result += "}\n";
+
+        return result;
+    }
+
     std::string ViolationTraceGenerator::generateViolationTrace(z3::model m, int lengthBound){
         std::string result = " ";
         std::list<z3::func_decl> locationDecls;
@@ -87,7 +115,7 @@ namespace smack
     }
 
 
-    std::string ViolationTraceGenerator::genreateViolationTraceConfiguration(z3::model m, int regionNum, int ptNum, int lengthBound){
+    std::string ViolationTraceGenerator::genreateViolationTraceConfiguration(z3::model m, std::set<std::string> origVars, int regionNum, int ptNum, int lengthBound){
         std::string result = " ";
         std::list<z3::func_decl> locationDecls;
         for(int i = 0; i < m.size(); i++){
@@ -103,10 +131,17 @@ namespace smack
             }
         }
 
+       
         std::ostringstream os;
         for(int i = 0; i <= lengthBound; i ++){
-            os << "Step ("  << i << "): loc_(" << i << ") = " << locations[i] << std::endl;
+           
+            for(std::string origVar : origVars){
+                os << origVar + "_(" << i << ") = " << getVarValuation(m, origVar + "_(" + std::to_string(i) + ")") << std::endl;
+            }
+
             for(int blockId = 0; blockId < regionNum; blockId ++){
+
+            os << "-----------------------------------" << std::endl;
                 os << "[Region " << blockId << "] ";
                 for(int ptId = 1; ptId <= ptNum; ptId ++){
                     os << "blk[" << 
@@ -128,7 +163,8 @@ namespace smack
                 os << std::endl;
             }
             os << std::endl;
-            os << "-----------------------------------" << std::endl;
+            os << "Step ("  << i << "): loc_(" << i << ") = " << locations[i] << std::endl;
+
         }
         os << "MEMLEAK = " << getVarValuation(m, "MEMLEAK") << "  INVALID_DEREF = " << getVarValuation(m, "INVALID_DEREF") << "  INVALID_FREE = " << getVarValuation(m, "INVALID_FREE") << std::endl;
         return os.str();

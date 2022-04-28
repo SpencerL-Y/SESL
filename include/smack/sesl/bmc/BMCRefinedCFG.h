@@ -227,6 +227,39 @@ namespace smack
             RefinedBlockVertex(BlockVertexPtr origVertex, std::list<RefinedActionPtr> refActs) : vertexId(origVertex->getVertexId()), refStmts(refActs) {}
             std::list<RefinedActionPtr> getRefStmts() {return this->refStmts;}
             int getVertexId(){return this->vertexId;}
+            bool hasMemoryOperation(){
+                for(RefinedActionPtr act : this->refStmts){
+                    if(act->getActType() == ConcreteAction::ActType::ALLOC ||
+                       act->getActType() == ConcreteAction::ActType::FREE ||
+                       act->getActType() == ConcreteAction::ActType::MALLOC ||
+                       act->getActType() == ConcreteAction::ActType::STORE ||
+                       act->getActType() == ConcreteAction::ActType::LOAD){
+                           return true;
+                       }
+                }
+                return false;
+            }
+
+            bool hasDerefOperation(){
+                for(RefinedActionPtr act : this->refStmts){
+                    if(act->getActType() == ConcreteAction::ActType::ALLOC ||
+                       act->getActType() == ConcreteAction::ActType::MALLOC ||
+                       act->getActType() == ConcreteAction::ActType::STORE ||
+                       act->getActType() == ConcreteAction::ActType::LOAD){
+                           return true;
+                       }
+                }
+                return false;
+            }
+
+            bool hasFreeOperation(){
+                for(RefinedActionPtr act : this->refStmts){
+                    if(act->getActType() == ConcreteAction::ActType::FREE){
+                           return true;
+                    }
+                }
+                return false;
+            }
     };
 
     typedef std::shared_ptr<RefinedBlockVertex> RefBlockVertexPtr;

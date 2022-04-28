@@ -27,6 +27,7 @@ namespace smack
         public:
             static std::string generateDOT4Concrete(ConcreteCFGPtr concreteCfg);
             static std::string generateDOT4Refined(BMCRefinedCFGPtr refCfg);
+            static std::string generateDOT4Block(BlockCFGPtr blockCfg);
 
             
     };
@@ -35,7 +36,7 @@ namespace smack
         private:
         public:
             static std::string generateViolationTrace(z3::model m, int lengthBound);
-            static std::string genreateViolationTraceConfiguration(z3::model m, int regionNum, int ptNum, int lengthBound);
+            static std::string genreateViolationTraceConfiguration(z3::model m, std::set<std::string> origVars, int regionNum, int ptNum, int lengthBound);
     };
 } // namespace smack
 

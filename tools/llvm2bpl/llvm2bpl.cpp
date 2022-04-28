@@ -285,7 +285,7 @@ int main(int argc, char **argv) {
     pass_manager.add(new smack::ViolationPathGen(OriginFilePass));
     // BMC Verification Engine
     // pass_manager.add(new smack::BMCMemSafeVerifier());
-    // pass_manager.add(new smack::BplFilePrinter(F->os()));
+    pass_manager.add(new smack::BplFilePrinter(F->os()));
   }
 
   pass_manager.run(*module.get());

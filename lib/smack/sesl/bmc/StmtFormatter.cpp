@@ -133,7 +133,7 @@ namespace smack
             REGISTER_EXPRPTR(result);
             return result;
         } else {
-            BMCDEBUG(std::cout << "INFO: Basic Parse condition, " << origCond->getType() << std::endl;);
+            // BMCDEBUG(std::cout << "INFO: Basic Parse condition, " << origCond->getType() << std::endl;);
             return origCond;
         }
     }

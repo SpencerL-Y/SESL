@@ -1036,11 +1036,12 @@ namespace smack {
         std::list<Decl *> decls;
         std::list<Block *> blocks;
 
+        // Changed to typeDetail
         for (auto &A : F->args())
-            params.push_back({naming->get(A), type(A.getType())});
+            params.push_back({naming->get(A), typeDetail(A.getType())});
 
         if (!F->getReturnType()->isVoidTy())
-            rets.push_back({Naming::RET_VAR, type(F->getReturnType())});
+            rets.push_back({Naming::RET_VAR, typeDetail(F->getReturnType())});
 
         if (name == "malloc") {
             Type *W = F->getFunctionType()->getParamType(0);
@@ -1095,6 +1096,10 @@ namespace smack {
             callers.insert(callers.end(), more.begin(), more.end());
         }
 
+        // for(CallInst *p : callers){
+        //     SDEBUG(errs() << "currCallInst: "<< *p << "\n";);
+        // }
+
         if (callers.empty() || !F->isVarArg())
             procs.push_back(procedure(F, NULL));
 
@@ -1106,7 +1111,6 @@ namespace smack {
                     procs.push_back(D);
                 }
             }
-
         return procs;
     }
 
@@ -1272,6 +1276,7 @@ namespace smack {
         std::list<const Attr *> ax;
         std::string name = naming->get(*v);
 
+        SDEBUG(errs() << "globalDecl: " << name  << "\n");
         if (isCodeString(v))
             return decls;
 

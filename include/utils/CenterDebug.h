@@ -12,7 +12,7 @@
 #define FULL_DEBUG 1
 #define OPEN_CDEBUG 0
 #define OPEN_CFDEBUG 0
-#define OPEN_SDEBUG 0
+#define OPEN_SDEBUG 1
 
 #define OPEN_COLOR_DEBUG 1
 

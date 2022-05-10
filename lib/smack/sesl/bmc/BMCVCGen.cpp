@@ -2045,10 +2045,71 @@ namespace smack
         z3::expr notEnoughSpaceSituation = this->z3Ctx.bool_val(true);
         z3::expr enoughSpacePremise = this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - byteSize) + 1, this->tempCounter) == BOT;
         z3::expr shiftingSemantic = this->z3Ctx.bool_val(true);
-        shiftingSemantic = shiftingSemantic && this->currentRNF->getTempPtDataVar(blockId, 2* fromIndex - 1, this->tempCounter + 1) == bytes[0] &&
-        this->currentRNF->getTempPtAddrVar(blockId, 2* fromIndex - 1, this->tempCounter + 1) == startAddr;
+        shiftingSemantic = shiftingSemantic && 
+        this->currentRNF->getTempBlkAddrVar(blockId, 2* fromIndex - 1, this->tempCounter + 1) == startAddr &&
+        this->currentRNF->getTempPtAddrVar(blockId, 2* fromIndex - 1, this->tempCounter + 1) == startAddr && 
+        this->currentRNF->getTempPtDataVar(blockId, 2* fromIndex - 1, this->tempCounter + 1) == bytes[0];
         changedNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2* fromIndex - 1));
         changedNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2* fromIndex - 1));
+        changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2* fromIndex - 1));
+        for(int i = 1; i < bytes.size(); i ++){
+            shiftingSemantic = shiftingSemantic && 
+            this->currentRNF->getTempBlkAddrVar(blockId, 2*(fromIndex + i - 1), this->tempCounter + 1) == startAddr + i &&
+            this->currentRNF->getTempBlkAddrVar(blockId, 2*(fromIndex + i) - 1, this->tempCounter + 1) == startAddr + i
+            &&
+            this->currentRNF->getTempPtAddrVar(blockId, 2*(fromIndex + i) - 1, this->tempCounter + 1) == startAddr + i &&
+            this->currentRNF->getTempPtDataVar(blockId, 2*(fromIndex + i) - 1,  this->tempCounter + 1) == bytes[i];
+            changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*(fromIndex + i - 1)));
+            changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*(fromIndex + i) - 1));
+            changedNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*(fromIndex + i) - 1));
+            changedNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*(fromIndex + i) - 1));
+        }
+        shiftingSemantic = shiftingSemantic && 
+        this->currentRNF->getTempBlkAddrVar(blockId, 2* (fromIndex + byteSize - 1), this->tempCounter + 1) == startAddr + byteSize - 1 &&
+        this->currentRNF->getTempBlkAddrVar(blockId, 2* (fromIndex + byteSize) - 1, this->tempCounter + 1) == 
+        this->currentRNF->getTempBlkAddrVar(blockId, 2*toIndex - 1, this->tempCounter);
+        changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2* (fromIndex + byteSize - 1)));
+        changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2* (fromIndex + byteSize) - 1));
+        int insertedPtNum = byteSize - toIndex + fromIndex;
+        for(int i = toIndex + 1; i + insertedPtNum <= this->pointsToNum; i ++){
+            shiftingSemantic = shiftingSemantic && 
+            this->currentRNF->getTempBlkAddrVar(blockId, 2*(i + insertedPtNum), this->tempCounter + 1) == 
+            this->currentRNF->getTempBlkAddrVar(blockId, 2*i, this->tempCounter) &&
+            this->currentRNF->getTempBlkAddrVar(blockId, 2*(i + insertedPtNum) + 1, this->tempCounter + 1) == 
+            this->currentRNF->getTempBlkAddrVar(blockId, 2*i + 1, this->tempCounter) &&
+            this->currentRNF->getTempPtAddrVar(blockId, 2*(i + insertedPtNum) + 1, this->tempCounter + 1) == 
+            this->currentRNF->getTempPtAddrVar(blockId, 2*i + 1, this->tempCounter) &&
+            this->currentRNF->getTempPtDataVar(blockId, 2*(i + insertedPtNum) + 1, this->tempCounter + 1) == 
+            this->currentRNF->getTempPtDataVar(blockId, 2*i + 1, this->tempCounter);
+
+            changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*(i + insertedPtNum)));
+            changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*(i + insertedPtNum) + 1));
+            changedNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*(i + insertedPtNum) + 1));
+            changedNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*(i + insertedPtNum) + 1));
+        }
+        z3::expr pt2PtSemantic = 
+        z3::implies(notEnoughSpacePremise, notEnoughSpaceSituation) &&
+        z3::implies(enoughSpacePremise, shiftingSemantic);
+
+        return {pt2PtSemantic, changedNames};
+    }
+
+    std::pair<z3::expr, std::set<std::string>> 
+    BMCBlockVCGen::generateMemsetBlk2Pt
+    (int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize,std::vector<z3::expr> bytes){
+        std::set<std::string> changedNames;
+        z3::expr notEnoughSpacePremise = this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - byteSize) + 1, this->tempCounter) != BOT;
+        // TODObmc: change to MBL label
+        z3::expr notEnoughSpaceSituation = this->z3Ctx.bool_val(true);
+        z3::expr enoughSpacePremise = this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - byteSize) + 1, this->tempCounter) == BOT;
+        z3::expr shiftingSemantic = this->z3Ctx.bool_val(true);
+        shiftingSemantic = shiftingSemantic && 
+        this->currentRNF->getTempBlkAddrVar(blockId, 2* fromIndex - 1, this->tempCounter + 1) == startAddr &&
+        this->currentRNF->getTempPtAddrVar(blockId, 2* fromIndex - 1, this->tempCounter + 1) == startAddr && 
+        this->currentRNF->getTempPtDataVar(blockId, 2* fromIndex - 1, this->tempCounter + 1) == bytes[0];
+        changedNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2* fromIndex - 1));
+        changedNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2* fromIndex - 1));
+        changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2* fromIndex - 1));
         for(int i = 1; i < bytes.size(); i ++){
             shiftingSemantic = shiftingSemantic && 
             this->currentRNF->getTempBlkAddrVar(blockId, 2*(fromIndex + i - 1), this->tempCounter + 1) == startAddr + i &&
@@ -2090,12 +2151,6 @@ namespace smack
         z3::implies(enoughSpacePremise, shiftingSemantic);
 
         return {pt2PtSemantic, changedNames};
-    }
-
-    std::pair<z3::expr, std::set<std::string>> 
-    BMCBlockVCGen::generateMemsetBlk2Pt
-    (int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize,std::vector<z3::expr> bytes){
-
     }
 
     z3::expr BMCBlockVCGen::generateTrLoad(RefinedActionPtr loadAct, int u){

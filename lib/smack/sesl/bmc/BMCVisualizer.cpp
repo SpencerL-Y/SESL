@@ -68,7 +68,9 @@ namespace smack
             result += "\"block" + std::to_string(v->getVertexId()) + "\" [";
             result += "shape = box,";
             result += "label = \"";
+            result += std::to_string(v->getVertexId());
             std::ostringstream oss;
+
             for(const Stmt* s : v->getStmts()){
                 s->print(oss);
                 oss << "\\n\n";

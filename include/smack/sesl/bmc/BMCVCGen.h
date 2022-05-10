@@ -273,6 +273,13 @@ namespace smack
             z3::expr generateTrFree(RefinedActionPtr freeAct, int u);
             z3::expr generateTrStore(RefinedActionPtr storeAct, int u);
             z3::expr generateTrStoreByteSize(RefinedActionPtr storeAct, int u, int byteSize);
+            z3::expr generateTrStoreMemset(RefinedActionPtr storeAct, int u);
+            z3::expr generateTrMemset(RefinedActionPtr memsetAct, int u);
+            z3::expr generateMemsetReplace(RefinedActionPtr act, int u, int byteSize);
+            std::pair<z3::expr, std::set<std::string>> generateMemsetPt2Pt(int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize, std::vector<z3::expr> bytes);
+            std::pair<z3::expr, std::set<std::string>> generateMemsetPt2Blk(int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize, std::vector<z3::expr> bytes);
+            std::pair<z3::expr, std::set<std::string>> generateMemsetBlk2Blk(int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize, std::vector<z3::expr> bytes);
+            std::pair<z3::expr, std::set<std::string>> generateMemsetBlk2Pt(int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize, std::vector<z3::expr> bytes);
             z3::expr generateTrLoad(RefinedActionPtr loadAct, int u);
             z3::expr generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize);
             z3::expr generateTrUnchanged(int u);

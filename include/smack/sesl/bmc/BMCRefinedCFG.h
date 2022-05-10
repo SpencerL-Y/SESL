@@ -30,6 +30,7 @@ namespace smack
                 LOAD,
                 STORE,
                 COMMONASSIGN,
+                MEMSET,
                 OTHER
             };
         private:

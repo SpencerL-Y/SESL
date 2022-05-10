@@ -2077,15 +2077,15 @@ namespace smack
             this->currentRNF->getTempBlkAddrVar(blockId, 2*i, this->tempCounter) &&
             this->currentRNF->getTempBlkAddrVar(blockId, 2*(i + insertedPtNum) + 1, this->tempCounter + 1) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2*i + 1, this->tempCounter) &&
-            this->currentRNF->getTempPtAddrVar(blockId, 2*(i + insertedPtNum) + 1, this->tempCounter + 1) == 
-            this->currentRNF->getTempPtAddrVar(blockId, 2*i + 1, this->tempCounter) &&
-            this->currentRNF->getTempPtDataVar(blockId, 2*(i + insertedPtNum) + 1, this->tempCounter + 1) == 
-            this->currentRNF->getTempPtDataVar(blockId, 2*i + 1, this->tempCounter);
+            this->currentRNF->getTempPtAddrVar(blockId, 2*(i + insertedPtNum) - 1, this->tempCounter + 1) == 
+            this->currentRNF->getTempPtAddrVar(blockId, 2*i - 1, this->tempCounter) &&
+            this->currentRNF->getTempPtDataVar(blockId, 2*(i + insertedPtNum) - 1, this->tempCounter + 1) == 
+            this->currentRNF->getTempPtDataVar(blockId, 2*i - 1, this->tempCounter);
 
             changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*(i + insertedPtNum)));
             changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*(i + insertedPtNum) + 1));
-            changedNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*(i + insertedPtNum) + 1));
-            changedNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*(i + insertedPtNum) + 1));
+            changedNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2*(i + insertedPtNum) - 1));
+            changedNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2*(i + insertedPtNum) - 1));
         }
         z3::expr pt2PtSemantic = 
         z3::implies(notEnoughSpacePremise, notEnoughSpaceSituation) &&

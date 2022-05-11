@@ -308,9 +308,10 @@ namespace smack {
                 pointerLit(storageSize(i.getAllocatedType())),
                 integerToPointer(expr(i.getArraySize()), getIntSize(i.getArraySize()))
         );
-
         // TODO this should not be a pointer type.
-        return Stmt::call(Naming::ALLOC, {size}, {naming->get(i)});
+        auto ret = Stmt::call(Naming::ALLOC, {size}, {naming->get(i)});
+
+        return ret;
     }
 
     const Stmt *SmackRep::memcpy(const llvm::MemCpyInst &mci) {
@@ -529,6 +530,9 @@ namespace smack {
                  : (isUnsafeFloatAccess(T->getElementType(), resultTy) ? "unsafe."
                                                                        : "")) +
                 type(T->getElementType());
+        if (singleton) {
+            bindExprToValue(M, P);
+        }
         return singleton ? M : Expr::fn(N, M, SmackRep::expr(P));
     }
 
@@ -539,11 +543,11 @@ namespace smack {
     const Stmt *SmackRep::store(const Value *P, const Expr *V) {
         const PointerType *T = dyn_cast<PointerType>(P->getType());
         assert(T && "Expected pointer type.");
-        return store(regions->idx(P), T->getElementType(), expr(P), V);
+        return store(regions->idx(P), T->getElementType(), expr(P), V, P);
     }
 
     const Stmt *SmackRep::store(unsigned R, const Type *T, const Expr *P,
-                                const Expr *V) {
+                                const Expr *V, const llvm::Value* llvmValue) {
         bool bytewise = regions->get(R).bytewiseAccess();
         bool singleton = regions->get(R).isSingleton();
         const Type *resultTy = regions->get(R).getType();
@@ -553,6 +557,7 @@ namespace smack {
                           : (isUnsafeFloatAccess(T, resultTy) ? "unsafe." : "")) +
                 type(T);
         const Expr *M = Expr::id(memPath(R));
+        bindExprToValue(M, llvmValue);
         return Stmt::assign(M, singleton ? V : Expr::fn(N, M, P, V));
     }
 
@@ -1483,6 +1488,45 @@ namespace smack {
               << "\n";
         }
         return Decl::code(name, s.str());
+    }
+
+
+
+    void SmackRep::bindExprToValue(const Expr *expr, const llvm::Value *value) {
+        auto get_expr_name = [](const Expr* expr) {
+            std::stringstream s;
+            auto buffer = std::cout.rdbuf();
+            std::cout.rdbuf(s.rdbuf());
+            std::cout << expr;
+            std::string str(s.str());
+            std::cout.rdbuf(buffer);
+            return str;
+        };
+
+        auto expr_name = get_expr_name(expr);
+        if (auto GEP = dyn_cast<GetElementPtrInst>(value)) {
+            auto type = GEP->getOperand(0)->getType()->getPointerElementType();
+            auto struct_type = dyn_cast<StructType>(type);
+            int offset = 0;
+            //TODO: link fields to Boogie Variable
+            errs() << "In GEP, struct name: " << struct_type->getName() << "\n";
+        } else if (isa<const Constant>(value)) {
+            value = value->stripPointerCastsAndInvariantGroups();
+            if (auto constant = dyn_cast<Constant>(value)) {
+                if (const auto *CE = dyn_cast<const ConstantExpr>(constant)) {
+                    if (CE->getOpcode() == Instruction::GetElementPtr) {
+                        auto type = CE->getOperand(0)->getType()->getPointerElementType();
+                        auto struct_type = dyn_cast<StructType>(type);
+                        int offset = 0;
+                        //TODO: link fields to Boogie Variable
+                        errs() << "In constant GetElementPtr, struct name: " << struct_type->getName() << "\n";
+                    }
+                }
+            }
+        }else {
+            assert(false && "Can not handle this type");
+        }
+        errs() << expr_name << " ";value->print(errs()); errs() << "\n\n";
     }
 
 } // namespace smack

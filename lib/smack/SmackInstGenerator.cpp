@@ -611,7 +611,9 @@ void SmackInstGenerator::visitAtomicRMWInst(llvm::AtomicRMWInst &i) {
 void SmackInstGenerator::visitGetElementPtrInst(llvm::GetElementPtrInst &I) {
   SDEBUG(errs() << "visitGetElementPtr" << "\n");
   processInstruction(I);
-  emit(Stmt::assign(rep->expr(&I), rep->ptrArith(&I)));
+  auto lhs = rep->expr(&I);
+  rep->bindExprToValue(lhs, &I);
+  emit(Stmt::assign(lhs, rep->ptrArith(&I)));
 }
 
 /******************************************************************************/

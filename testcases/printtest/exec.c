@@ -193,16 +193,16 @@
 
 // example 8: initial test for loop
 
-// int main(){
-//     char *a = malloc(5 * sizeof(char));
-//     *(a + 1) = 2;
-//     int j = *(a + 1);
-//     for(int i = 0; i < j; i++){
-//         *(a + i) = 'a';
-//     }   
-//     // free(a);
-//     return 0;
-// }
+int main(){
+    char *a = malloc(5 * sizeof(char));
+    *(a + 1) = 2;
+    int j = *(a + 1);
+    for(int i = 0; i < j; i++){
+        *(a + i) = 'a';
+    }   
+    // free(a);
+    return 0;
+}
 
 
 // example 9: kind 

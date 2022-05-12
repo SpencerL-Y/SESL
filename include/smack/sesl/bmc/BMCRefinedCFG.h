@@ -182,6 +182,7 @@ namespace smack
         public: 
         BlockVertex(int id);
         BlockVertex(StatePtr origState, int id);
+        BlockVertex(std::list<const Stmt*> stmts, int id);
         std::list<const Stmt*> getStmts() {return this->stmts;}
         int getVertexId() {return this->vertexId;}
     };
@@ -201,6 +202,7 @@ namespace smack
 
         public:
         BlockCFG(CFGPtr origCfg);
+        BlockCFG(std::list<BlockVertexPtr> vertices, int vertexNum, std::list<std::pair<int, int>> edges, CFGPtr origCfg);
         int getVertexNum() {return this->vertexNum;}
         int getEdgeNum() {return this->edgeNum;}
         std::list<BlockVertexPtr> getVertices() {return this->vertices;}
@@ -213,7 +215,13 @@ namespace smack
         std::list<std::pair<int,int>> getEdgesStartFrom(int fromVertex);
         std::list<std::pair<int,int>> getEdgesEndWith(int toVertex);
 
+        bool isSingleSuccessor(int vertexId, std::list<std::pair<int, int>> currEdges);
+        bool isSinglePredecessor(int vertexId, std::list<std::pair<int, int>> currEdges);
+        bool hasSelfLoop(int vertexId, std::list<std::pair<int, int>> currEdges); 
+
         CFGPtr getOrigCfg(){return this->origCfg;}
+
+        std::shared_ptr<BlockCFG> simplify();
         void printBlockCFG(std::ostream& os);
 
     };

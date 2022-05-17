@@ -28,7 +28,9 @@ namespace smack
                 FREE,
                 OTHERPROC,
                 LOAD,
+                COARSELOAD,
                 STORE,
+                COARSESTORE,
                 COMMONASSIGN,
                 MEMSET,
                 OTHER
@@ -92,6 +94,9 @@ namespace smack
             int getType3(){return this->type3;}
             int getType4(){return this->type4;}
             ConcreteAction::ActType getActType(){return this->actType;}
+            void setActType(ConcreteAction::ActType type){
+                this->actType = type;
+            }
             std::set<std::string> getChangedOrigNames(){return this->changedOrigNames;}
             void print(std::ostream &os);
     };
@@ -205,7 +210,7 @@ namespace smack
         BlockCFG(std::list<BlockVertexPtr> vertices, int vertexNum, std::list<std::pair<int, int>> edges, CFGPtr origCfg);
         int getVertexNum() {return this->vertexNum;}
         int getEdgeNum() {return this->edgeNum;}
-        std::list<BlockVertexPtr> getVertices() {return this->vertices;}
+        std::list<BlockVertexPtr>& getVertices() {return this->vertices;}
         std::list<std::pair<int, int>> getEdges() {return this->edges;}
 
         BlockVertexPtr getVertex(int vertexId);
@@ -269,6 +274,18 @@ namespace smack
                 }
                 return false;
             }
+
+            void coarsenMemoryOperations(){
+                for(RefinedActionPtr act : this->refStmts){
+                    if(act->getActType() == ConcreteAction::ActType::STORE){
+                        act->setActType(ConcreteAction::ActType::COARSESTORE)
+                    } else if(act->getActType() == ConcreteAction::ActType::LOAD){
+                        act->setActType(ConcreteAction::ActType::COARSELOAD);
+                    } else {
+
+                    }
+                }
+            }
     };
 
     typedef std::shared_ptr<RefinedBlockVertex> RefBlockVertexPtr;
@@ -288,7 +305,7 @@ namespace smack
             RefinedBlockCFG(BlockCFGPtr blockCfg);
             int getVertexNum(){return this->vertexNum;}
             int getEdgeNum(){return this->edgeNum;}
-            std::list<RefBlockVertexPtr> getVertices(){return this->vertices;}
+            std::list<RefBlockVertexPtr>& getVertices(){return this->vertices;}
             std::list<int> getInitVertices(){return this->initVertices;}
             std::list<int> getFinalVertices(){return this->finalVertices;}
             RefBlockVertexPtr getVertex(int vertexId);

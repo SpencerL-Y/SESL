@@ -50,14 +50,8 @@ namespace smack
             z3::expr generateAbstraction(int u);
             // initial condition
             z3::expr generateInitialCondition();
-            // semantic conditions
-            z3::expr generateInsertBytePt(/*TODObmc*/);
-            z3::expr generateLoadBytePt(/* TODObmc*/);
-        
             void setPrimeNum(int u){this->primeNum = u;}
 
-            
-            // TODObmc: return the used var in the bnf formula
     };
     typedef std::shared_ptr<BlockNormalForm> BNFPtr;
 
@@ -118,7 +112,7 @@ namespace smack
             int tempCounter;
         public:
             BMCVCGen(BMCRefinedCFGPtr rcfg, int lb) : refCfg(rcfg), loopBound(lb) {
-                // TODObmc: need to imple:
+                
                 //1. obtain conCfgVariables from refinedCFG
                 //2. create trUtilVariables
                 //3. get normalFormVariables 
@@ -224,7 +218,7 @@ namespace smack
     typedef std::shared_ptr<ViolationTuple> VioTuplePtr;
 
     class BMCBlockVCGen {
-        private:
+        protected:
             z3::context z3Ctx;
             BMCRefinedCFGPtr refCfg;
             RefBlockCFGPtr refBlockCfg;
@@ -244,6 +238,7 @@ namespace smack
             std::list<z3::expr> currBlockInvalidDerefs;
             std::list<VioTuplePtr> allInvalidDerefs;
         public:
+            BMCBlockVCGen(){}
             BMCBlockVCGen(BMCRefinedCFGPtr rcfg, RefBlockCFGPtr bcfg, int lb): refCfg(rcfg), refBlockCfg(bcfg), loopBound(lb){
                 this->preAnalysis = std::make_shared<BMCPreAnalysis>(this->refCfg, this->loopBound);
                 this->regionNum = this->preAnalysis->computeRegNumAndPtNum().first;
@@ -344,6 +339,7 @@ namespace smack
     };
 
     typedef std::shared_ptr<BMCBlockVCGen> BMCBlockVCGenPtr;
+
 
 } // namespace smack
 

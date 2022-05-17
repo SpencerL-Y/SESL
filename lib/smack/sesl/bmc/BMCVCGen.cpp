@@ -939,7 +939,6 @@ namespace smack
                     this->currentRNF->getBlkAddrVar(blockId, 2*currLen - 1, u + 1) == BOT &&
                     this->currentRNF->getPtAddrVar(blockId, 2*currLen - 1, u + 1) == BOT &&
                     this->currentRNF->getPtDataVar(blockId, 2*currLen - 1, u + 1) == UNKNOWN;
-                // TODObmc: compute the unchanged heap vars
                 
                 changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*currLen - 2));
                 changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*currLen - 1));
@@ -1296,10 +1295,9 @@ namespace smack
         int k = this->pointsToNum;
         int j = insertPos;  
         
-        // TODObmc: not enough space
         z3::expr notSufficientSpaceSituation = z3::implies(
             this->currentRNF->getTempPtAddrVar(blockId, 2*k - 1, iu) != BOT,
-            this->z3Ctx.bool_val(true)
+            this->getBNFOverflowVar()
         );
 
         z3::expr shiftChange = this->z3Ctx.bool_val(true);
@@ -1671,7 +1669,6 @@ namespace smack
                     this->currentRNF->getTempBlkAddrVar(blockId, 2*currLen - 2, this->tempCounter + 1) == BOT &&
                     this->currentRNF->getTempPtAddrVar(blockId, 2*currLen - 1, this->tempCounter + 1) == BOT &&
                     this->currentRNF->getTempPtDataVar(blockId, 2*currLen - 1, this->tempCounter + 1) == UNKNOWN;
-                // TODObmc: compute the unchanged heap vars
                 
                 changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*currLen - 2));
                 changedOrigVarNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2*currLen - 1));
@@ -1923,7 +1920,7 @@ namespace smack
             this->tempCounter ++;
             return memsetChange;
         } else {
-            // TODObmc: add 
+            // TODObmc: add later
             return this->z3Ctx.bool_val(true);
 
         }
@@ -1936,12 +1933,14 @@ namespace smack
     (int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize,std::vector<z3::expr> bytes){
         assert(byteSize == bytes.size());
         int insertedPtNum = byteSize - toIndex + fromIndex - 1;
-        BMCDEBUG(std::cout << "isnertedPtNum(PT2PT): " << insertedPtNum << std::endl;);
+        BMCDEBUG(std::cout << "insertedPtNum(PT2PT): " << insertedPtNum << std::endl;);
         std::set<std::string> changedNames;
         z3::expr notEnoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(false) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) != BOT;
-        // TODObmc: change to MBL label
         z3::expr notEnoughSpaceSituation = this->z3Ctx.bool_val(true);
+        notEnoughSpaceSituation = notEnoughSpaceSituation &&
+        this->equalTempAndNextTempInRNF(this->currentRNF->getRNFOrigVarNames(), this->tempCounter) && 
+        this->getBNFOverflowVar();
         z3::expr enoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(true) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) == BOT;
         z3::expr shiftingSemantic = this->z3Ctx.bool_val(true);
@@ -1997,12 +1996,15 @@ namespace smack
     (int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize,std::vector<z3::expr> bytes){
         assert(byteSize == bytes.size());
         int insertedPtNum = byteSize - (toIndex - fromIndex);
-        BMCDEBUG(std::cout << "isnertedPtNum(PT2BLK): " << insertedPtNum << std::endl;);
+        BMCDEBUG(std::cout << "insertedPtNum(PT2BLK): " << insertedPtNum << std::endl;);
         std::set<std::string> changedNames;
         z3::expr notEnoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(false) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) != BOT;
-        // TODObmc: change to MBL label
         z3::expr notEnoughSpaceSituation = this->z3Ctx.bool_val(true);
+        notEnoughSpaceSituation = notEnoughSpaceSituation &&
+        this->equalTempAndNextTempInRNF(this->currentRNF->getRNFOrigVarNames(), this->tempCounter) &&
+        this->getBNFOverflowVar();
+
         z3::expr enoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(true) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) == BOT;
         z3::expr shiftingSemantic = this->z3Ctx.bool_val(true);
@@ -2063,8 +2065,10 @@ namespace smack
         std::set<std::string> changedNames;
         z3::expr notEnoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(false) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) != BOT;
-        // TODObmc: change to MBL label
         z3::expr notEnoughSpaceSituation = this->z3Ctx.bool_val(true);
+        notEnoughSpaceSituation = notEnoughSpaceSituation &&
+        this->equalTempAndNextTempInRNF(this->currentRNF->getRNFOrigVarNames(), this->tempCounter) && 
+        this->getBNFOverflowVar();
         z3::expr enoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(true) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) == BOT;
         z3::expr shiftingSemantic = this->z3Ctx.bool_val(true);
@@ -2126,8 +2130,10 @@ namespace smack
         std::set<std::string> changedNames;
         z3::expr notEnoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(false) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) != BOT;
-        // TODObmc: change to MBL label
         z3::expr notEnoughSpaceSituation = this->z3Ctx.bool_val(true);
+        notEnoughSpaceSituation = notEnoughSpaceSituation &&
+        this->equalTempAndNextTempInRNF(this->currentRNF->getRNFOrigVarNames(), this->tempCounter) && 
+        this->getBNFOverflowVar();
         z3::expr enoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(true) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) == BOT;
         z3::expr shiftingSemantic = this->z3Ctx.bool_val(true);
@@ -2324,7 +2330,6 @@ namespace smack
             }
             z3::expr arg2Equality = rhs == arg2Result;
             z3::expr arg1Equality = lhs == arg1Result;
-            // TODObmc: compute variables unchanged
             return 
                 arg2Equality && 
                 arg1Equality;
@@ -2437,10 +2442,9 @@ namespace smack
         int k = this->pointsToNum;
         int j = insertPos;  
         
-        // TODObmc: not enough space
         z3::expr notSufficientSpaceSituation = z3::implies(
             this->currentRNF->getTempPtAddrVar(blockId, 2*k - 1, iu) != BOT,
-            this->z3Ctx.bool_val(true)
+            this->getBNFOverflowVar()
         );
 
         z3::expr shiftChange = this->z3Ctx.bool_val(true);

@@ -22,6 +22,7 @@ namespace smack
         ~BMCRefiner();
         void coarsenMemoryOps(RefBlockCFGPtr origRefBlockCfg);
         void refineBlocks(RefBlockCFGPtr origRefBlockCfg, std::vector<int> verticesToBeRefined);
+        void refineBlockVertexByBound(RefBlockVertexPtr origVertex);
     };
 
     typedef std::shared_ptr<BMCRefiner> BMCRefinerPtr;

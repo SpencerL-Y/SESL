@@ -20,7 +20,7 @@ namespace smack
             BMCCEGARVCGen(BMCRefinedCFGPtr rcfg, RefBlockCFGPtr bcfg, int lb){
                 this->refiner = std::make_shared<BMCRefiner>();
                 this->refCfg = rcfg;
-                this->refBlockCfg = this->refiner->coarsenMemoryOps(bcfg);
+                this->refiner->coarsenMemoryOps(this->refBlockCfg);
                 this->loopBound = lb;
                 this->preAnalysis = std::make_shared<BMCPreAnalysis>(this->refCfg, this->loopBound);
                 this->regionNum = this->preAnalysis->computeRegNumAndPtNum().first;
@@ -70,6 +70,8 @@ namespace smack
             // Refine utilities
             void refineByTrace(std::vector<int> locTrace);
     };
+
+    typedef std::shared_ptr<BMCCEGARVCGen> BMCCEGARVCGenPtr;
 } // namespace smack
 
 

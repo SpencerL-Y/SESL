@@ -243,6 +243,9 @@ find_package(OpenSSL REQUIRED)
 message(STATUS "OPENSSL_FOUND: ${OPENSSL_FOUND}")
 include_directories(${OPENSSL_INCLUDE_DIR})
 
+find_package(smt2z3 REQUIRED CONFIG)
+message(STATUS "COMSPEN_FOUND: ${smt2z3_FOUND}")
+
 
 
 # We need the release build of sea-dsa otherwise we'll see a lot of crashes in
@@ -254,14 +257,14 @@ add_subdirectory(sea-dsa/lib/seadsa)
 set(CMAKE_BUILD_TYPE ${SMACK_BUILD_TYPE})
 
 # add link of separation logic library slah
-set(SL_DIR ${PROJECT_SOURCE_DIR}/include)
-set(SL_LIB ${PROJECT_SOURCE_DIR}/lib)
-include_directories(${SL_DIR})
-link_directories(${SL_LIB})
+# set(SL_DIR ${PROJECT_SOURCE_DIR}/include)
+# set(SL_LIB ${PROJECT_SOURCE_DIR}/lib)
+# include_directories(${SL_DIR})
+# link_directories(${SL_LIB})
 
 target_link_libraries(smackTranslator ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS} ${Z3_LIBRARIES} ${OPENSSL_LIBRARIES})
 # target_link_libraries(llvm2bpl smackTranslator utils SeaDsaAnalysis ${SL_LIB}/libslah.so ${SL_LIB}/libz3.so )
-target_link_libraries(llvm2bpl smackTranslator utils SeaDsaAnalysis ${SL_LIB}/libslah.so ${SL_LIB}/libz3.so )
+target_link_libraries(llvm2bpl smackTranslator utils SeaDsaAnalysis ComSpen::smt2z3 ${Z3_LIBRARIES})
 
 INSTALL(TARGETS llvm2bpl
   RUNTIME DESTINATION bin

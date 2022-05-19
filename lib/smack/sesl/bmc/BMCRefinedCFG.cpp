@@ -1048,4 +1048,64 @@ namespace smack
             os << "From: " << edge.first << " To: " << edge.second << std::endl;
         }
     }
+
+    std::map<int, int> RefinedBlockCFG::computeSccMap(){
+        std::map<int, std::pair<int, int>> computeTable;
+        std::map<int, int> sccResult;
+        this->sccNum = 0;
+        this->sccId = 0;
+        for(int i = 1; i <= this->vertexNum; i++){
+            computeTable[i] = {-1, -1};
+        }
+        std::list<int> emptyStack;
+        for(int v = 1; v <= this->vertexNum; v++){
+            if(computeTable[v].second == -1){
+                this->tarjanScc(v, computeTable, emptyStack, sccResult);
+            }
+        }
+        // std::cout << "SCC Result: " << std::endl;
+        // for(auto i : computeTable){
+        //     std::cout << i.first << " " << i.second.first << "," << i.second.second << std::endl;
+        // }
+        return sccResult;
+    }
+
+    void RefinedBlockCFG::tarjanScc(int curr, std::map<int, std::pair<int, int>>& currentMap, std::list<int>& currStack, std::map<int, int>& sccResult){
+        currentMap[curr].second = this->sccNum;
+        currentMap[curr].first = this->sccNum;
+        this->sccNum += 1;
+        currStack.push_back(curr);
+        for(std::pair<int, int> edge : this->edges){
+            if(edge.first == curr){
+                if(currentMap[edge.first].second == -1){
+                    this->tarjanScc(edge.second, currentMap, currStack, sccResult);
+                    currentMap[curr] = {
+                        std::min(
+                            currentMap[curr].first,
+                            currentMap[edge.first].first
+                        ), 
+                        currentMap[curr].second
+                    };
+                } else if(listHas(currStack, edge.second)){
+                    currentMap[curr] = {
+                        std::min(
+                            currentMap[curr].first,
+                            currentMap[edge.second].second
+                        ),
+                        currentMap[curr].second
+                    };
+                }
+            }
+        }
+
+        if(currentMap[curr].first == currentMap[curr].second){
+            this->sccId += 1;
+            while(currStack.back() != curr){
+                sccResult[currStack.back()] = this->sccId;
+                currStack.pop_back();
+            }
+            sccResult[curr] = this->sccId;
+            currStack.pop_back();
+        }
+    }
 } // namespace smack

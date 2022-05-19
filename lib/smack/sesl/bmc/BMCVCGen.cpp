@@ -1933,7 +1933,7 @@ namespace smack
     (int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize,std::vector<z3::expr> bytes){
         assert(byteSize == bytes.size());
         int insertedPtNum = byteSize - toIndex + fromIndex - 1;
-        BMCDEBUG(std::cout << "insertedPtNum(PT2PT): " << insertedPtNum << std::endl;);
+        // BMCDEBUG(std::cout << "insertedPtNum(PT2PT): " << insertedPtNum << std::endl;);
         std::set<std::string> changedNames;
         z3::expr notEnoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(false) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) != BOT;
@@ -1996,7 +1996,7 @@ namespace smack
     (int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize,std::vector<z3::expr> bytes){
         assert(byteSize == bytes.size());
         int insertedPtNum = byteSize - (toIndex - fromIndex);
-        BMCDEBUG(std::cout << "insertedPtNum(PT2BLK): " << insertedPtNum << std::endl;);
+        // BMCDEBUG(std::cout << "insertedPtNum(PT2BLK): " << insertedPtNum << std::endl;);
         std::set<std::string> changedNames;
         z3::expr notEnoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(false) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) != BOT;
@@ -2061,7 +2061,7 @@ namespace smack
     (int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize,std::vector<z3::expr> bytes){
         assert(byteSize == bytes.size());
         int insertedPtNum = byteSize - toIndex + fromIndex;
-        BMCDEBUG(std::cout << "isnertedPtNum(BLK2PT): " << insertedPtNum << std::endl;);
+        // BMCDEBUG(std::cout << "insertedPtNum(BLK2PT): " << insertedPtNum << std::endl;);
         std::set<std::string> changedNames;
         z3::expr notEnoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(false) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) != BOT;
@@ -2126,7 +2126,7 @@ namespace smack
     (int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize,std::vector<z3::expr> bytes){
         assert(byteSize == bytes.size());
         int insertedPtNum = byteSize - toIndex + fromIndex;
-        BMCDEBUG(std::cout << "isnertedPtNum(BLK2BLK): " << insertedPtNum << std::endl;);
+        // BMCDEBUG(std::cout << "insertedPtNum(BLK2BLK): " << insertedPtNum << std::endl;);
         std::set<std::string> changedNames;
         z3::expr notEnoughSpacePremise = insertedPtNum == 0 ? this->z3Ctx.bool_val(false) :
         this->currentRNF->getTempPtAddrVar(blockId, 2*(this->pointsToNum - insertedPtNum) + 1, this->tempCounter) != BOT;

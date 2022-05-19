@@ -9,20 +9,13 @@ namespace smack
     private:
         int refineStepWidth;
     public:
-        BMCRefiner(bool isStep, int stepWidth){
-            if(isStep){
-                assert(stepWidth > 0);
-                refineStepWidth = stepWidth;
-            } else
-            {
-                refineStepWidth = -1;
-            }
-            
+        BMCRefiner(int stepWidth){
+            this->refineStepWidth = stepWidth;
         }
-        ~BMCRefiner();
         void coarsenMemoryOps(RefBlockCFGPtr origRefBlockCfg);
         void refineBlocks(RefBlockCFGPtr origRefBlockCfg, std::vector<int> verticesToBeRefined);
         void refineBlockVertexByBound(RefBlockVertexPtr origVertex);
+        void refineEntireBlock(RefBlockVertexPtr origVertex);
     };
 
     typedef std::shared_ptr<BMCRefiner> BMCRefinerPtr;

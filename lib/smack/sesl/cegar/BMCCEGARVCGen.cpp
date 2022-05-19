@@ -450,8 +450,15 @@ namespace smack
 
 
     void BMCCEGARVCGen::refineByTrace(std::vector<int> locTrace){
-        for(int vertexId : locTrace){
-            this->refiner
-        }
+        this->refiner->refineBlocks(this->refBlockCfg, locTrace);
+        this->regionNum = this->preAnalysis->computeRegNumAndPtNum().first;
+        this->pointsToNum = this->preAnalysis->computeRegNumAndPtNum().second;
+        std::cout << "INFO: regNum " <<  this->regionNum << " ptNum " << this->pointsToNum << std::endl;
+        this->currentRNF = std::make_shared<RegionNormalForm>(this->z3Ctx, this->regionNum, this->pointsToNum, 0);
+        delete(this->existVars);
+        this->existVars = new z3::expr_vector(this->z3Ctx);
+        this->freshCounter = 0;
+        this->tempCounter = 0;
+        this->coarseLoadCounter = 0;
     }
 } // namespace smack

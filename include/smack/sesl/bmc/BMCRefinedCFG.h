@@ -278,7 +278,7 @@ namespace smack
             void coarsenMemoryOperations(){
                 for(RefinedActionPtr act : this->refStmts){
                     if(act->getActType() == ConcreteAction::ActType::STORE){
-                        act->setActType(ConcreteAction::ActType::COARSESTORE)
+                        act->setActType(ConcreteAction::ActType::COARSESTORE);
                     } else if(act->getActType() == ConcreteAction::ActType::LOAD){
                         act->setActType(ConcreteAction::ActType::COARSELOAD);
                     } else {
@@ -300,12 +300,13 @@ namespace smack
             std::list<std::pair<int, int>> edges;
             StmtFormatterPtr stmtFormatter;
             CFGPtr origCfg;
-
+            
+            int sccNum, sccId;
         public:
             RefinedBlockCFG(BlockCFGPtr blockCfg);
             int getVertexNum(){return this->vertexNum;}
             int getEdgeNum(){return this->edgeNum;}
-            std::list<RefBlockVertexPtr>& getVertices(){return this->vertices;}
+            std::list<RefBlockVertexPtr> getVertices(){return this->vertices;}
             std::list<int> getInitVertices(){return this->initVertices;}
             std::list<int> getFinalVertices(){return this->finalVertices;}
             RefBlockVertexPtr getVertex(int vertexId);
@@ -316,6 +317,8 @@ namespace smack
             CFGPtr getOrigCfg() {return this->origCfg;}
             StmtFormatterPtr getStmtFormatter(){return this->stmtFormatter;}
             void printRefBlockCFG(std::ostream& os);
+            std::map<int, int> computeSccMap();
+            void tarjanScc(int curr, std::map<int, std::pair<int, int>>& currentMap, std::list<int>& currStack, std::map<int, int>& sccResult);
     };
     typedef std::shared_ptr<RefinedBlockCFG> RefBlockCFGPtr;
 } // namespace smack

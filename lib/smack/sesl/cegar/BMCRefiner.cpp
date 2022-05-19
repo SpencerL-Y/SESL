@@ -3,6 +3,7 @@
 namespace smack
 {
     void BMCRefiner::coarsenMemoryOps(RefBlockCFGPtr refBlockCfg){
+        // std::cout << "vertices: " << refBlockCfg->getVertices().size() << std::endl; 
         for(RefBlockVertexPtr v : refBlockCfg->getVertices()){
             v->coarsenMemoryOperations();
         }
@@ -11,7 +12,21 @@ namespace smack
 
     void BMCRefiner::refineBlocks(RefBlockCFGPtr origRefBlockCfg, std::vector<int> verticesToBeRefined){
         for(RefBlockVertexPtr v : origRefBlockCfg->getVertices()){
-            this->refineBlockVertexByBound(v);
+            // this->refineBlockVertexByBound(v);
+            this->refineEntireBlock(v);
+        }
+    }
+
+
+    void BMCRefiner::refineEntireBlock(RefBlockVertexPtr origVertex){
+        for(RefinedActionPtr act : origVertex->getRefStmts()){
+            if(act->getActType() == ConcreteAction::ActType::COARSELOAD){
+                act->setActType(ConcreteAction::ActType::LOAD);
+            } else if(act->getActType() == ConcreteAction::ActType::COARSESTORE){
+                act->setActType(ConcreteAction::ActType::STORE);
+            } else {
+
+            }
         }
     }
 

@@ -200,7 +200,7 @@
 //     for(int i = 0; i < j; i++){
 //         *(a + i) = 'a';
 //     }   
-//     // free(a);
+//     free(a);
 //     return 0;
 // }
 

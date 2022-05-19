@@ -2,7 +2,8 @@
 #define BMCCEGARVERIFIER_H
 #include "llvm/Pass.h"
 #include "utils/CenterDebug.h"
-#include <z3.h>
+#include "z3++.h"
+#include <vector>
 
 namespace smack
 {
@@ -12,10 +13,14 @@ namespace smack
         public:
             static char ID;
             BMCCegarVerifier() : llvm::ModulePass(ID){};
-            ~BMCCegarVerifier(){};
             virtual bool runOnModule(llvm::Module &m); 
             virtual llvm::StringRef getPassName() const {return "BMCCegarVerifier";}
             virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
+    };
+
+    class CEUtils {
+        public: 
+            static std::vector<int> generateCegarViolationTrace(z3::model m, int maxDepth);
     };
 
 } // namespace smack

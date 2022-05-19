@@ -10,7 +10,7 @@
 
 namespace smack
 {
-    class BMCCEGARVCGen : protected BMCBlockVCGen {
+    class BMCCEGARVCGen : public BMCBlockVCGen {
         private:
             BMCRefinerPtr refiner;
             int coarseLoadCounter;
@@ -18,11 +18,12 @@ namespace smack
         public: 
             // CEGAR Semantic
             BMCCEGARVCGen(BMCRefinedCFGPtr rcfg, RefBlockCFGPtr bcfg, int lb){
-                this->refiner = std::make_shared<BMCRefiner>();
+                this->refiner = std::make_shared<BMCRefiner>(-1);
                 this->refCfg = rcfg;
+                this->refBlockCfg = bcfg;
                 this->refiner->coarsenMemoryOps(this->refBlockCfg);
                 this->loopBound = lb;
-                this->preAnalysis = std::make_shared<BMCPreAnalysis>(this->refCfg, this->loopBound);
+                this->preAnalysis = std::make_shared<BMCBlockPreAnalysis>(this->refBlockCfg, this->loopBound);
                 this->regionNum = this->preAnalysis->computeRegNumAndPtNum().first;
                 this->pointsToNum = this->preAnalysis->computeRegNumAndPtNum().second;
                 std::cout << "INFO: regNum " <<  this->regionNum << " ptNum " << this->pointsToNum << std::endl;

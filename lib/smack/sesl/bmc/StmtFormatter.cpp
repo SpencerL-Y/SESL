@@ -509,7 +509,6 @@ namespace smack
     }
 
     const Expr* StmtFormatter::parsePtrArithmeticExpr(const Expr* origArithExpr){
-        // TODObmc: imple
         // Distinguish  the case where the function is not a ptr arithmetic
         if(origArithExpr->getType() == FUNC){
             const FunExpr* ptrArithFun = (const FunExpr*) origArithExpr;
@@ -713,7 +712,6 @@ namespace smack
     // --------- call stmt parsing
 
     std::vector<RefinedActionPtr> StmtFormatter::formatCallStmt(const CallStmt* call){
-        // TODObmc: add implementation
         const Expr* arg1 = nullptr;
         const Expr* arg2 = nullptr;
         const Expr* arg3 = nullptr;
@@ -789,38 +787,31 @@ namespace smack
             resultList.push_back(refinedAct);
             return resultList;
         }  else if(!call->getProc().compare("calloc")) {
-            //TODObmc
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);
             return resultList;
         } else if(call->getProc().find("__VERIFIER") != std::string::npos){
-            //TODObmc
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);
             return resultList;
         } else if(call->getProc().find("$memcpy") != std::string::npos || call->getProc().find("memcpy") != std::string::npos ){
-            //TODObmc
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);
             return resultList;
         } else if(call->getProc().find("$memset") != std::string::npos || call->getProc().find("memset") != std::string::npos){
-            //TODObmc
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);
             return resultList;
         } else if(call->getProc().find("time") != std::string::npos) {
-            //TODObmc
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);
             return resultList;
         } else if(call->getProc().find("boogie_si_record") != std::string::npos){
-            //TODObmc
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);
             return resultList;
         } 
         else if(this->isNoSideEffectFuncName(call->getProc())) {
-            //TODObmc
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::OTHERPROC, arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);
             return resultList;

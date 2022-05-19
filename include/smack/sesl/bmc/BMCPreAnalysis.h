@@ -35,6 +35,31 @@ namespace smack
     };
 
     typedef std::shared_ptr<BMCPreAnalysis> BMCPreAnalysisPtr;
+
+    class BMCBlockPreAnalysis
+    {
+    private:
+        /* data */
+        RefBlockCFGPtr refBlockCfg;
+        int loopBound;
+        std::map<int, int> sccResult;
+    public:
+        BMCBlockPreAnalysis(RefBlockCFGPtr refBlkCfg, int loopBound) :refBlockCfg(refBlkCfg), loopBound(loopBound) {
+            this->sccResult = refBlkCfg->computeSccMap();
+            // std::cout << "SCC result: " << std::endl;
+            // for(auto i : sccResult){
+            //     std::cout << i.first << ", " << i.second << std::endl;
+            // }
+        }
+        std::pair<int, int> computeRegNumAndPtNum();
+        std::set<std::string> getProgOrigVars();
+        void getExprVarRecursive(std::list<const Expr*> exprList, std::set<std::string>& result);
+        int computeMinStoreByteLen();
+        int computeMaxStoreByteLen();
+        bool isSingleSccVertex(int vertexId);
+    };
+
+    typedef std::shared_ptr<BMCBlockPreAnalysis> BMCBlockPreAnalysisPtr;
 } // namespace smack
 
 

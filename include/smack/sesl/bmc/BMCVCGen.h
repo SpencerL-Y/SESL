@@ -225,7 +225,7 @@ namespace smack
             std::set<std::string> cfgVariables;
             std::set<std::string> trUtilVariables;
             RNFPtr currentRNF; 
-            BMCPreAnalysisPtr preAnalysis;
+            BMCBlockPreAnalysisPtr preAnalysis;
             z3::expr_vector* existVars;
 
             int loopBound;
@@ -240,7 +240,7 @@ namespace smack
         public:
             BMCBlockVCGen(){}
             BMCBlockVCGen(BMCRefinedCFGPtr rcfg, RefBlockCFGPtr bcfg, int lb): refCfg(rcfg), refBlockCfg(bcfg), loopBound(lb){
-                this->preAnalysis = std::make_shared<BMCPreAnalysis>(this->refCfg, this->loopBound);
+                this->preAnalysis = std::make_shared<BMCBlockPreAnalysis>(this->refBlockCfg, this->loopBound);
                 this->regionNum = this->preAnalysis->computeRegNumAndPtNum().first;
                 this->pointsToNum = this->preAnalysis->computeRegNumAndPtNum().second;
                 std::cout << "INFO: regNum " <<  this->regionNum << " ptNum " << this->pointsToNum << std::endl;

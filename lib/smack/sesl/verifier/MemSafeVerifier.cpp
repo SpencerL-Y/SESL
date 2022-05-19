@@ -258,7 +258,7 @@ namespace smack {
             this->trans->translate();
             z3::expr premise = this->trans->getFinalExpr();
             z3::expr consequent = 
-            (this->ctx->bool_val(true) && slah_api::newEmp(*(this->ctx)));
+            (this->ctx->bool_val(true) && ComSpen::slah_api::newEmp(*(this->ctx)));
             CFDEBUG(std::cout << "INFO: Check " << std::endl;);
             CFDEBUG(std::cout << premise << std::endl;);
             CFDEBUG(std::cout << 
@@ -266,7 +266,7 @@ namespace smack {
                     "|———— " << std::endl << 
                     "|" << std::endl<< std::endl );
             CFDEBUG(std::cout << consequent << std::endl;);
-            z3::check_result result = slah_api::checkEnt(premise, consequent);
+            z3::check_result result = ComSpen::slah_api::checkEnt(premise, consequent);
             if(result == z3::unsat){
                 //DEBUG_WITH_COLOR(std::cout << "CHECK: MemLeak Satisfied!" << std::endl, color::green);
                 return {true, 0};
@@ -351,7 +351,7 @@ namespace smack {
                     // CFDEBUG(std::cout << "CHECKING: FORMULA\n" <<  previousSH->getSymbHeap() << std::endl);
                     this->trans->translate();
                     z3::expr tempFormula = this->trans->getFinalExpr();
-                    z3::check_result pathCond = slah_api::checkSat(tempFormula);
+                    z3::check_result pathCond = ComSpen::slah_api::checkSat(tempFormula);
                     if(pathCond == z3::unsat){
                         CFDEBUG(std::cout << "END PATH FEASIBILITY CHECK ----------------------------" << std::endl;);
                         return false;
@@ -364,7 +364,7 @@ namespace smack {
         this->trans->setSymbolicHeapHExpr(this->finalSH);
         this->trans->translate();
         z3::expr finalFormula = this->trans->getFinalExpr();
-        z3::check_result finalPathCond = slah_api::checkSat(finalFormula);
+        z3::check_result finalPathCond = ComSpen::slah_api::checkSat(finalFormula);
         CFDEBUG(std::cout << "END PATH FEASIBILITY CHECK ----------------------------" << std::endl;);
         if(finalPathCond == z3::unsat){
             return false;

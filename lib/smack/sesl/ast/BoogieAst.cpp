@@ -1345,7 +1345,7 @@ namespace smack {
     }
 
     z3::expr EmpLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        z3::expr res = slah_api::newEmp(z3Ctx);
+        z3::expr res = ComSpen::slah_api::newEmp(z3Ctx);
         CDEBUG(std::cout << "in emp! " << res.to_string() << std::endl;);
         return res;
     }
@@ -1357,7 +1357,7 @@ namespace smack {
     z3::expr BytePt::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         const VarExpr *fromVar = (const VarExpr *) this->getFrom();
         const VarExpr *toVar = (const VarExpr *) this->getTo();
-        z3::expr res = slah_api::newPto(
+        z3::expr res = ComSpen::slah_api::newPto(
             z3Ctx.int_const(fromVar->name().c_str()),
             z3Ctx.int_const(toVar->name().c_str())
         );
@@ -1396,11 +1396,11 @@ namespace smack {
                   ($p_0, $p_1, $p_2, $p_3) + 2 --> $fresh_2 #
                   ($p_0, $p_1, $p_2, $p_3) + 3 --> $fresh_3
            */
-            z3::expr res = slah_api::newEmp(z3Ctx);
+            z3::expr res = ComSpen::slah_api::newEmp(z3Ctx);
             for (int i = 0; i < stepWidth; i++) {
-                res = slah_api::sep(
+                res = ComSpen::slah_api::sep(
                         res,
-                        slah_api::newPto(
+                        ComSpen::slah_api::newPto(
                                 z3Ctx.int_const((fromVar->name() + "_" + std::to_string(i)).c_str()),
                                 z3Ctx.int_const((toVar->name() + "_" + std::to_string(i)).c_str())
                         )
@@ -1408,7 +1408,7 @@ namespace smack {
                 varBounder->addVarName(fromVar->name() + "_" + std::to_string(i));
                 varBounder->addVarName(toVar->name() + "_" + std::to_string(i));
             }
-            // z3::expr res = slah_api::newPto(
+            // z3::expr res = ComSpen::slah_api::newPto(
             //   from->translateToZ3(z3Ctx, cfg, varFac, varBounder),
             //   to->translateToZ3(z3Ctx, cfg, varFac, varBounder)
             // );
@@ -1416,9 +1416,9 @@ namespace smack {
             return res;
         } else {
             // use new logic
-            z3::expr res = slah_api::newEmp(z3Ctx);
+            z3::expr res = ComSpen::slah_api::newEmp(z3Ctx);
             for(int i = 0; i < this->stepSize; i++){
-                res = slah_api::sep(
+                res = ComSpen::slah_api::sep(
                     res,
                     this->getByte(i)->translateToZ3(z3Ctx, cfg, varFac, varBounder)
                 );
@@ -1434,12 +1434,12 @@ namespace smack {
 
     z3::expr BlkLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         if (this->isEmpty()) {
-            return slah_api::newEmp(z3Ctx);
+            return ComSpen::slah_api::newEmp(z3Ctx);
         }
         auto f = from->translateToZ3(z3Ctx, cfg, varFac, varBounder);
         auto t = to->translateToZ3(z3Ctx, cfg, varFac, varBounder);
         CDEBUG(std::cout << "in blk!!! " << f.to_string() << " " << t.to_string() << std::endl;);
-        z3::expr res = slah_api::newBlk(f, t);
+        z3::expr res = ComSpen::slah_api::newBlk(f, t);
         return res;
     }
 
@@ -1466,7 +1466,7 @@ namespace smack {
     z3::expr ErrorLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
         CDEBUG(std::cout << "errorLit" << std::endl;);
         // Since error occurs, we set the pure constraint pure to false
-        return (slah_api::newEmp(z3Ctx));
+        return (ComSpen::slah_api::newEmp(z3Ctx));
     }
 
     z3::expr BoolLit::translateToZ3(z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
@@ -1638,9 +1638,9 @@ namespace smack {
             hasSpatials = true;
         }
         if(!hasSpatials){
-            resultExprList.push_back(slah_api::newEmp(z3Ctx));
+            resultExprList.push_back(ComSpen::slah_api::newEmp(z3Ctx));
         }
-        z3::expr resultExp = slah_api::newSep(resultExprList);
+        z3::expr resultExp = ComSpen::slah_api::newSep(resultExprList);
         return resultExp;
     }
 
@@ -1662,7 +1662,7 @@ namespace smack {
     z3::expr
     ErrorClause::translateToZ3
     (z3::context &z3Ctx, CFGPtr cfg, VarFactoryPtr varFac, TransToZ3VarDealerPtr varBounder) const {
-        return slah_api::newEmp(z3Ctx);
+        return ComSpen::slah_api::newEmp(z3Ctx);
     }
 
     

@@ -38,7 +38,7 @@ namespace smack{
         std::list<const RegionClause*> regionsList = shExpr->getRegions();
         if(regionsList.size() == 0){
             // if the region is empty, return empty
-            spatial = slah_api::newEmp(*z3Ctx);
+            spatial = ComSpen::slah_api::newEmp(*z3Ctx);
             return;
         } else {
             CDEBUG(std::cout << "======center test: in regions translate process======\n");
@@ -47,7 +47,7 @@ namespace smack{
                 z3::expr z3sp = r->translateToZ3(*z3Ctx, cfg, varFac, varBounder);
                 z3RegionExps.push_back(z3sp);
             }
-            z3::expr exp = slah_api::newSep(z3RegionExps);
+            z3::expr exp = ComSpen::slah_api::newSep(z3RegionExps);
             CDEBUG(std::cout << "=====center test: final spatial expresssion=====" << std::endl;)
             CDEBUG(std::cout << exp.to_string() << std::endl; )
             spatial = exp;

@@ -164,6 +164,10 @@ add_library(smackTranslator STATIC
         include/smack/sesl/bmc/StmtFormatter.h
         include/smack/sesl/bmc/BMCPreAnalysis.h
         include/smack/sesl/bmc/BMCVisualizer.h
+        include/smack/sesl/cegar/BMCCEGARVCGen.h
+        include/smack/sesl/cegar/BMCRefiner.h
+        include/smack/sesl/cegar/BMCValidator.h
+        include/smack/sesl/verifier/BMCCegarVerifier.h
         include/tinyxml/tinyxml2.h
   lib/smack/AddTiming.cpp
   lib/smack/sesl/ast/BoogieAst.cpp
@@ -215,6 +219,10 @@ add_library(smackTranslator STATIC
         lib/smack/sesl/bmc/BMCPreAnalysis.cpp
         lib/smack/sesl/bmc/StmtFormatter.cpp
         lib/smack/sesl/bmc/BMCVisualizer.cpp
+        lib/smack/sesl/cegar/BMCCEGARVCGen.cpp
+        lib/smack/sesl/cegar/BMCRefiner.cpp
+        lib/smack/sesl/cegar/BMCValidator.cpp
+        lib/smack/sesl/verifier/BMCCegarVerifier.cpp
         lib/tinyxml/tinyxml2.cpp
   )
 

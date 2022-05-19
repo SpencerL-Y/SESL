@@ -200,10 +200,12 @@
 //     for(int i = 0; i < j; i++){
 //         *(a + i) = 'a';
 //     }   
-//     // free(a);
+//     free(a);
 //     return 0;
 // }
 
+
+// example 9: kind 
 // #include <stdlib.h>
 // int *a, *b;
 // int n;

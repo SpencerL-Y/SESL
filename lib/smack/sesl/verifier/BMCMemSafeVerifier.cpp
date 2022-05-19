@@ -79,6 +79,7 @@ namespace smack
         // refinedCFG->printRefinedCFG();
         printRefinedCfg2File(refinedCFG, "./RefCfg.dot");
         BlockCFGPtr blockCFG = std::make_shared<BlockCFG>(mainGraph);
+        blockCFG = blockCFG->simplify();
         printBlockCfg2File(blockCFG, "./BlockCFG.dot");
         RefBlockCFGPtr refBlockCFG = std::make_shared<RefinedBlockCFG>(blockCFG);
         refBlockCFG->printRefBlockCFG(std::cout);
@@ -121,9 +122,9 @@ namespace smack
             
         // }
 
-        // NEW BLOCKBMCVCGEN
+        // NEW BLOCKBMCVCGE
         BMCBlockVCGenPtr blockVcg = std::make_shared<BMCBlockVCGen>(refinedCFG, refBlockCFG, 2);
-        int depth = 1;
+        int depth = 10;
         // z3::expr vc = blockVcg->generateFeasibility(depth);
         z3::expr vc = blockVcg->generateBMCVC(depth);
         std::cout << "Result: " << std::endl;

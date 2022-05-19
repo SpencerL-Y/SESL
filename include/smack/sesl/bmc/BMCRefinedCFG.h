@@ -28,8 +28,11 @@ namespace smack
                 FREE,
                 OTHERPROC,
                 LOAD,
+                COARSELOAD,
                 STORE,
+                COARSESTORE,
                 COMMONASSIGN,
+                MEMSET,
                 OTHER
             };
         private:
@@ -91,6 +94,9 @@ namespace smack
             int getType3(){return this->type3;}
             int getType4(){return this->type4;}
             ConcreteAction::ActType getActType(){return this->actType;}
+            void setActType(ConcreteAction::ActType type){
+                this->actType = type;
+            }
             std::set<std::string> getChangedOrigNames(){return this->changedOrigNames;}
             void print(std::ostream &os);
     };
@@ -181,6 +187,7 @@ namespace smack
         public: 
         BlockVertex(int id);
         BlockVertex(StatePtr origState, int id);
+        BlockVertex(std::list<const Stmt*> stmts, int id);
         std::list<const Stmt*> getStmts() {return this->stmts;}
         int getVertexId() {return this->vertexId;}
     };
@@ -200,9 +207,10 @@ namespace smack
 
         public:
         BlockCFG(CFGPtr origCfg);
+        BlockCFG(std::list<BlockVertexPtr> vertices, int vertexNum, std::list<std::pair<int, int>> edges, CFGPtr origCfg);
         int getVertexNum() {return this->vertexNum;}
         int getEdgeNum() {return this->edgeNum;}
-        std::list<BlockVertexPtr> getVertices() {return this->vertices;}
+        std::list<BlockVertexPtr>& getVertices() {return this->vertices;}
         std::list<std::pair<int, int>> getEdges() {return this->edges;}
 
         BlockVertexPtr getVertex(int vertexId);
@@ -212,7 +220,13 @@ namespace smack
         std::list<std::pair<int,int>> getEdgesStartFrom(int fromVertex);
         std::list<std::pair<int,int>> getEdgesEndWith(int toVertex);
 
+        bool isSingleSuccessor(int vertexId, std::list<std::pair<int, int>> currEdges);
+        bool isSinglePredecessor(int vertexId, std::list<std::pair<int, int>> currEdges);
+        bool hasSelfLoop(int vertexId, std::list<std::pair<int, int>> currEdges); 
+
         CFGPtr getOrigCfg(){return this->origCfg;}
+
+        std::shared_ptr<BlockCFG> simplify();
         void printBlockCFG(std::ostream& os);
 
     };
@@ -260,6 +274,18 @@ namespace smack
                 }
                 return false;
             }
+
+            void coarsenMemoryOperations(){
+                for(RefinedActionPtr act : this->refStmts){
+                    if(act->getActType() == ConcreteAction::ActType::STORE){
+                        act->setActType(ConcreteAction::ActType::COARSESTORE);
+                    } else if(act->getActType() == ConcreteAction::ActType::LOAD){
+                        act->setActType(ConcreteAction::ActType::COARSELOAD);
+                    } else {
+
+                    }
+                }
+            }
     };
 
     typedef std::shared_ptr<RefinedBlockVertex> RefBlockVertexPtr;
@@ -274,7 +300,8 @@ namespace smack
             std::list<std::pair<int, int>> edges;
             StmtFormatterPtr stmtFormatter;
             CFGPtr origCfg;
-
+            
+            int sccNum, sccId;
         public:
             RefinedBlockCFG(BlockCFGPtr blockCfg);
             int getVertexNum(){return this->vertexNum;}
@@ -290,6 +317,8 @@ namespace smack
             CFGPtr getOrigCfg() {return this->origCfg;}
             StmtFormatterPtr getStmtFormatter(){return this->stmtFormatter;}
             void printRefBlockCFG(std::ostream& os);
+            std::map<int, int> computeSccMap();
+            void tarjanScc(int curr, std::map<int, std::pair<int, int>>& currentMap, std::list<int>& currStack, std::map<int, int>& sccResult);
     };
     typedef std::shared_ptr<RefinedBlockCFG> RefBlockCFGPtr;
 } // namespace smack

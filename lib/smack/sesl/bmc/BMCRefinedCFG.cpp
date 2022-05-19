@@ -703,6 +703,12 @@ namespace smack
         this->stmts = origState->getStateBlock()->getStatements();
         this->vertexId = id;
     }
+
+
+    BlockVertex::BlockVertex(std::list<const Stmt*> stmts, int id){
+        this->stmts = stmts;
+        this->vertexId = id;
+    }
     
     BlockCFG::BlockCFG(CFGPtr origCfg){
         this->origCfg = origCfg;
@@ -761,6 +767,59 @@ namespace smack
         }
     }
 
+
+    BlockCFG::BlockCFG(std::list<BlockVertexPtr> vertices, int vertexNum, std::list<std::pair<int, int>> edges, CFGPtr origCfg){
+        int renamedVertexNum = 0;
+        std::list<std::pair<int, int>> currEdges = edges;
+        std::list<std::pair<int, int>> nextEdges;
+        std::list<BlockVertexPtr> renamedVertices;
+        for(BlockVertexPtr v : vertices){
+            assert(v->getVertexId() <= vertexNum);
+            renamedVertexNum ++;
+            BlockVertexPtr newV = std::make_shared<BlockVertex>(v->getStmts(), renamedVertexNum);
+            for(auto edge : currEdges){
+                if(edge.first == v->getVertexId() && edge.second == v->getVertexId()){
+                    nextEdges.push_back({renamedVertexNum, renamedVertexNum});
+                }
+                else if(edge.first == v->getVertexId()){
+                    nextEdges.push_back({renamedVertexNum, edge.second});
+                } else if(edge.second == v->getVertexId()){
+                    nextEdges.push_back({edge.first, renamedVertexNum});
+                } else {
+                    nextEdges.push_back(edge);
+                }
+            }
+            currEdges = nextEdges;
+            nextEdges.clear();
+            this->vertices.push_back(newV);
+        }
+        this->vertexNum = renamedVertexNum;
+        this->edges = currEdges;
+        this->edgeNum = this->edges.size();
+        
+        for(int nv = 1; nv <= this->vertexNum; nv ++){
+            bool isInit = true;
+            for(auto edge : this->edges){
+                if(nv == edge.second){
+                    isInit = false;
+                    break;
+                }
+            }
+            bool isFinal = true;
+            if(this->getVertex(nv)->getStmts().size() != 0){
+                isFinal = false;
+            }
+
+            if(isInit){
+                this->initVertices.push_back(nv);
+            }
+            if(isFinal){
+                this->finalVertices.push_back(nv);
+            }
+        }
+        this->origCfg = origCfg;
+    }
+
     BlockVertexPtr BlockCFG::getVertex(int vertexId){
         for(BlockVertexPtr v : this->vertices){
             if(v->getVertexId() == vertexId){
@@ -798,6 +857,123 @@ namespace smack
             }
         }
         return resultList;
+    }
+
+
+    bool BlockCFG::isSingleSuccessor(int vertexId, std::list<std::pair<int, int>> currEdges){
+        std::set<int> succList;
+        for(auto edge : currEdges){
+            if(edge.first == vertexId){
+                succList.insert(edge.second);
+            }
+        }
+        if(succList.size() == 1){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool BlockCFG::isSinglePredecessor(int vertexId, std::list<std::pair<int, int>> currEdges){
+        std::set<int> predList;
+        for(auto edge : currEdges){
+            if(edge.second == vertexId){
+                predList.insert(edge.first);
+            }
+        }
+        if(predList.size() == 1){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool BlockCFG::hasSelfLoop(int vertexId, std::list<std::pair<int, int>> currEdges){
+        for(auto edge : currEdges){
+            if(vertexId == edge.first && vertexId == edge.second){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    BlockCFGPtr BlockCFG::simplify(){
+        std::list<BlockVertexPtr> currVertices = this->vertices;
+        std::list<std::pair<int, int>> currEdges = this->edges;
+        std::list<BlockVertexPtr> nextVertices;
+        std::list<std::pair<int, int>> nextEdges;
+        int maxVertexId = this->vertexNum;
+        for(int vertexId = 1; vertexId <= maxVertexId; vertexId ++){
+            
+            if(this->hasSelfLoop(vertexId, currEdges)){
+                continue;
+            }
+
+            if(this->isSinglePredecessor(vertexId, currEdges)){
+                int predecessor = -1;
+                for(auto edge : currEdges){
+                    if(edge.second == vertexId){
+                        predecessor = edge.first;
+                        break;
+                    }
+                }
+                assert(predecessor > 0);
+                if(this->isSingleSuccessor(predecessor, currEdges)){
+                    std::cout << "PRED: " <<predecessor << std::endl;
+                    std::cout << "SUCC: " <<vertexId << std::endl;
+                    BlockVertexPtr predVertex, succVertex;
+                    for(BlockVertexPtr v : currVertices){
+                        if(v->getVertexId() == predecessor){
+                            predVertex = v;
+                        }
+                        if(v->getVertexId() == vertexId){
+                            succVertex = v;
+                        }
+                    }
+                    assert(predVertex != nullptr && succVertex != nullptr);
+                    std::list<const Stmt*> newStmts;
+                    for(const Stmt* s : predVertex->getStmts()){
+                        newStmts.push_back(s);
+                    }
+                    for(const Stmt* s : succVertex->getStmts()){
+                        newStmts.push_back(s);
+                    }
+                    maxVertexId ++;
+                    BlockVertexPtr newVertex = std::make_shared<BlockVertex>(newStmts, maxVertexId);
+
+                    for(BlockVertexPtr v : currVertices){
+                        if(v->getVertexId() != predecessor && v->getVertexId() != vertexId){
+                            nextVertices.push_back(v);
+                        }
+                    }
+                    nextVertices.push_back(newVertex);
+
+                    for(auto edge : currEdges){
+                        if((edge.first != vertexId && edge.first != predecessor) && 
+                           (edge.second != vertexId && edge.second != predecessor)
+                        ){
+                            nextEdges.push_back(edge);
+                        } else if(edge.second == predecessor){
+                            nextEdges.push_back({edge.first, maxVertexId});
+                        } else if(edge.first == vertexId){
+                            nextEdges.push_back({maxVertexId, edge.second});
+                        } else {
+
+                        }
+                    }
+                    currVertices = nextVertices;
+                    currEdges = nextEdges;
+                    nextVertices.clear();
+                    nextEdges.clear();
+                } else {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+        }
+        BlockCFGPtr simpliedCfg = std::make_shared<BlockCFG>(currVertices, maxVertexId, currEdges, this->origCfg);
+        return simpliedCfg;
     }
 
     void BlockCFG::printBlockCFG(std::ostream& os){
@@ -870,6 +1046,66 @@ namespace smack
         os << "Edges: " << std::endl;
         for(std::pair<int, int> edge : this->edges){
             os << "From: " << edge.first << " To: " << edge.second << std::endl;
+        }
+    }
+
+    std::map<int, int> RefinedBlockCFG::computeSccMap(){
+        std::map<int, std::pair<int, int>> computeTable;
+        std::map<int, int> sccResult;
+        this->sccNum = 0;
+        this->sccId = 0;
+        for(int i = 1; i <= this->vertexNum; i++){
+            computeTable[i] = {-1, -1};
+        }
+        std::list<int> emptyStack;
+        for(int v = 1; v <= this->vertexNum; v++){
+            if(computeTable[v].second == -1){
+                this->tarjanScc(v, computeTable, emptyStack, sccResult);
+            }
+        }
+        // std::cout << "SCC Result: " << std::endl;
+        // for(auto i : computeTable){
+        //     std::cout << i.first << " " << i.second.first << "," << i.second.second << std::endl;
+        // }
+        return sccResult;
+    }
+
+    void RefinedBlockCFG::tarjanScc(int curr, std::map<int, std::pair<int, int>>& currentMap, std::list<int>& currStack, std::map<int, int>& sccResult){
+        currentMap[curr].second = this->sccNum;
+        currentMap[curr].first = this->sccNum;
+        this->sccNum += 1;
+        currStack.push_back(curr);
+        for(std::pair<int, int> edge : this->edges){
+            if(edge.first == curr){
+                if(currentMap[edge.first].second == -1){
+                    this->tarjanScc(edge.second, currentMap, currStack, sccResult);
+                    currentMap[curr] = {
+                        std::min(
+                            currentMap[curr].first,
+                            currentMap[edge.first].first
+                        ), 
+                        currentMap[curr].second
+                    };
+                } else if(listHas(currStack, edge.second)){
+                    currentMap[curr] = {
+                        std::min(
+                            currentMap[curr].first,
+                            currentMap[edge.second].second
+                        ),
+                        currentMap[curr].second
+                    };
+                }
+            }
+        }
+
+        if(currentMap[curr].first == currentMap[curr].second){
+            this->sccId += 1;
+            while(currStack.back() != curr){
+                sccResult[currStack.back()] = this->sccId;
+                currStack.pop_back();
+            }
+            sccResult[curr] = this->sccId;
+            currStack.pop_back();
         }
     }
 } // namespace smack

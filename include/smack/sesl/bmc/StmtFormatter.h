@@ -28,7 +28,6 @@ namespace smack
         std::vector<RefinedActionPtr> formatSingleAssignStmt(const AssignStmt* assign);
         // TODObmc: watch out the order to push to the new list
         std::vector<RefinedActionPtr> formatBundleAssignStmts(std::list<const Expr*> lhsList, std::list<const Expr*> rhsList);
-        // TODObmc: imple
         bool isUnaryPtrCastFuncName(std::string funcName);
         bool isPtrArithFuncName(std::string funcName);
         const Expr* parsePtrArithmeticExpr(const Expr* origArithExpr);

@@ -22,6 +22,8 @@ namespace smack {
         StatePtr operator [] (int pos) const;
     };
 
+    typedef std::shared_ptr<ExecutionPath> ExecPathPtr;
+
     class CFGExecutor {
     private:
         CFGPtr cfg;

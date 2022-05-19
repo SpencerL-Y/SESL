@@ -50,14 +50,8 @@ namespace smack
             z3::expr generateAbstraction(int u);
             // initial condition
             z3::expr generateInitialCondition();
-            // semantic conditions
-            z3::expr generateInsertBytePt(/*TODObmc*/);
-            z3::expr generateLoadBytePt(/* TODObmc*/);
-        
             void setPrimeNum(int u){this->primeNum = u;}
 
-            
-            // TODObmc: return the used var in the bnf formula
     };
     typedef std::shared_ptr<BlockNormalForm> BNFPtr;
 
@@ -118,7 +112,7 @@ namespace smack
             int tempCounter;
         public:
             BMCVCGen(BMCRefinedCFGPtr rcfg, int lb) : refCfg(rcfg), loopBound(lb) {
-                // TODObmc: need to imple:
+                
                 //1. obtain conCfgVariables from refinedCFG
                 //2. create trUtilVariables
                 //3. get normalFormVariables 
@@ -224,14 +218,14 @@ namespace smack
     typedef std::shared_ptr<ViolationTuple> VioTuplePtr;
 
     class BMCBlockVCGen {
-        private:
+        protected:
             z3::context z3Ctx;
             BMCRefinedCFGPtr refCfg;
             RefBlockCFGPtr refBlockCfg;
             std::set<std::string> cfgVariables;
             std::set<std::string> trUtilVariables;
             RNFPtr currentRNF; 
-            BMCPreAnalysisPtr preAnalysis;
+            BMCBlockPreAnalysisPtr preAnalysis;
             z3::expr_vector* existVars;
 
             int loopBound;
@@ -244,8 +238,9 @@ namespace smack
             std::list<z3::expr> currBlockInvalidDerefs;
             std::list<VioTuplePtr> allInvalidDerefs;
         public:
+            BMCBlockVCGen(){}
             BMCBlockVCGen(BMCRefinedCFGPtr rcfg, RefBlockCFGPtr bcfg, int lb): refCfg(rcfg), refBlockCfg(bcfg), loopBound(lb){
-                this->preAnalysis = std::make_shared<BMCPreAnalysis>(this->refCfg, this->loopBound);
+                this->preAnalysis = std::make_shared<BMCBlockPreAnalysis>(this->refBlockCfg, this->loopBound);
                 this->regionNum = this->preAnalysis->computeRegNumAndPtNum().first;
                 this->pointsToNum = this->preAnalysis->computeRegNumAndPtNum().second;
                 std::cout << "INFO: regNum " <<  this->regionNum << " ptNum " << this->pointsToNum << std::endl;
@@ -273,6 +268,13 @@ namespace smack
             z3::expr generateTrFree(RefinedActionPtr freeAct, int u);
             z3::expr generateTrStore(RefinedActionPtr storeAct, int u);
             z3::expr generateTrStoreByteSize(RefinedActionPtr storeAct, int u, int byteSize);
+            z3::expr generateTrStoreMemset(RefinedActionPtr storeAct, int u);
+            z3::expr generateTrMemset(RefinedActionPtr memsetAct, int u);
+            z3::expr generateMemsetReplace(RefinedActionPtr act, int u, int byteSize);
+            std::pair<z3::expr, std::set<std::string>> generateMemsetPt2Pt(int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize, std::vector<z3::expr> bytes);
+            std::pair<z3::expr, std::set<std::string>> generateMemsetPt2Blk(int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize, std::vector<z3::expr> bytes);
+            std::pair<z3::expr, std::set<std::string>> generateMemsetBlk2Blk(int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize, std::vector<z3::expr> bytes);
+            std::pair<z3::expr, std::set<std::string>> generateMemsetBlk2Pt(int blockId, int fromIndex, int toIndex, z3::expr startAddr, int byteSize, std::vector<z3::expr> bytes);
             z3::expr generateTrLoad(RefinedActionPtr loadAct, int u);
             z3::expr generateTrLoadByteSize(RefinedActionPtr loadAct, int u, int byteSize);
             z3::expr generateTrUnchanged(int u);
@@ -337,6 +339,7 @@ namespace smack
     };
 
     typedef std::shared_ptr<BMCBlockVCGen> BMCBlockVCGenPtr;
+
 
 } // namespace smack
 

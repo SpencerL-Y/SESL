@@ -1864,7 +1864,7 @@ namespace smack
                         z3::expr pt2PtUnchanged = this->equalTempAndNextTempInRNF(pt2PtUnchangedNames, this->tempCounter);
 
                         pt2PtExpr = z3::implies(pt2PtPremise, pt2PtSemantic && pt2PtUnchanged);
-                        // regionReplace = regionReplace && pt2PtExpr;
+                        regionReplace = regionReplace && pt2PtExpr;
 
 
                         z3::expr blk2PtExpr = this->z3Ctx.bool_val(true);
@@ -1879,7 +1879,7 @@ namespace smack
                         z3::expr blk2PtUnchanged = this->equalTempAndNextTempInRNF(blk2PtUnchangedNames, this->tempCounter); 
 
                         blk2PtExpr = z3::implies(blk2PtPremise, blk2PtSemantic && blk2PtUnchanged);
-                        // regionReplace = regionReplace && blk2PtExpr;
+                        regionReplace = regionReplace && blk2PtExpr;
 
                     }
 
@@ -1897,7 +1897,7 @@ namespace smack
 
                         pt2BlkExpr = z3::implies(pt2BlkPremise, pt2BlkSemantic && pt2BlkUnchanged);
 
-                        // regionReplace = regionReplace && pt2BlkExpr;
+                        regionReplace = regionReplace && pt2BlkExpr;
                         
                         z3::expr blk2BlkExpr = this->z3Ctx.bool_val(true);
                         z3::expr blk2BlkPremise = 
@@ -1948,6 +1948,7 @@ namespace smack
         this->currentRNF->getTempPtAddrVar(blockId, 2* fromIndex - 1, this->tempCounter + 1) == startAddr;
         changedNames.insert("ptd_" + std::to_string(blockId) + "_" + std::to_string(2* fromIndex - 1));
         changedNames.insert("pta_" + std::to_string(blockId) + "_" + std::to_string(2* fromIndex - 1));
+        
         for(int i = 1; i < bytes.size(); i ++){
             shiftingSemantic = shiftingSemantic && 
             this->currentRNF->getTempBlkAddrVar(blockId, 2*(fromIndex + i - 1), this->tempCounter + 1) == startAddr + i &&
@@ -2098,7 +2099,7 @@ namespace smack
         changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2* (fromIndex + insertedPtNum - 1)));
         changedNames.insert("blka_" + std::to_string(blockId) + "_" + std::to_string(2* (fromIndex + insertedPtNum) - 1));
 
-        for(int i = toIndex + 1; i + insertedPtNum <= this->pointsToNum; i ++){
+        for(int i = toIndex; i + insertedPtNum <= this->pointsToNum; i ++){
             shiftingSemantic = shiftingSemantic && 
             this->currentRNF->getTempBlkAddrVar(blockId, 2*(i + insertedPtNum), this->tempCounter + 1) == 
             this->currentRNF->getTempBlkAddrVar(blockId, 2*i, this->tempCounter) &&

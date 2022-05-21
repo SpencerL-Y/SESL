@@ -69,7 +69,7 @@ namespace smack
             //std::cout << std::endl;
             bool pathFeasible = checker->checkPathFeasibility();
             if(!pathFeasible){
-                ValidateResPtr res = std::make_shared<ValidateResult>(false, CELocTrace);
+                ValidateResPtr res = std::make_shared<ValidateResult>(true, refineLocTrace);
 
                 BlockExecutor::ExprMemoryManager->clearMemory();
                 this->memManager.clearMemory();
@@ -78,7 +78,7 @@ namespace smack
             }
         }
 
-        ValidateResPtr res = std::make_shared<ValidateResult>(true, CELocTrace);
+        ValidateResPtr res = std::make_shared<ValidateResult>(false, refineLocTrace);
         BlockExecutor::ExprMemoryManager->clearMemory();
         this->memManager.clearMemory();
         this->origCfg->clearPathVarType();

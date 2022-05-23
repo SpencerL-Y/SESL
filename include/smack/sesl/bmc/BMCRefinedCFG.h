@@ -286,6 +286,16 @@ namespace smack
                     }
                 }
             }
+
+            bool hasCoarsenOps(){
+                for(RefinedActionPtr act : this->refStmts){
+                    if(act->getActType() == ConcreteAction::ActType::COARSELOAD || 
+                    act->getActType() == ConcreteAction::ActType::COARSESTORE){
+                        return true;
+                    }
+                }
+                return false;
+            }
     };
 
     typedef std::shared_ptr<RefinedBlockVertex> RefBlockVertexPtr;

@@ -70,6 +70,7 @@ namespace smack
 
             // Refine utilities
             void refineByTrace(std::vector<int> locTrace);
+            bool traceHasCoarseOps(std::vector<int> locTrace);
     };
 
     typedef std::shared_ptr<BMCCEGARVCGen> BMCCEGARVCGenPtr;

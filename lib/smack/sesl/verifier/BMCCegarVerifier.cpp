@@ -124,22 +124,28 @@ namespace smack
                     //     std::cout << v.name() << " = " << m.get_const_interp(v).to_string() << "\n" << std::endl;
                     // }
                     //std::cout << ViolationTraceGenerator::genreateViolationTraceConfiguration(m, blockVcg->getOrigVars(), blockVcg->getRegionNum(), blockVcg->getPointToNum(), depth);
+                
                 CELocTrace = CEUtils::generateCegarViolationTrace(m, currDepth);
                 std::cout << "Violation Trace: ";
                 for(int v : CELocTrace){
                     std::cout << " " << v;
                 }
-                auto validateResult = validator->validateCE(CELocTrace);
-                bugFound = validateResult->hasBug;
-                std::vector<int> refineTrace = validateResult->refineTrace;
-                if(!bugFound){
-                    std::cout << "Violation Trace Infeasible" << std::endl;
-                    std::cout << "Refine by Trace: ";
-                    for(int v : refineTrace){
-                        std::cout << " " << v;
+                if(!cegarVcg->traceHasCoarseOps(CELocTrace)){
+                    // If the path is concrete path
+                    bugFound = true;
+                } else {
+                    auto validateResult = validator->validateCE(CELocTrace);
+                    bugFound = validateResult->hasBug;
+                    std::vector<int> refineTrace =  validateResult->refineTrace;
+                    if(!bugFound){
+                        std::cout << "Violation Trace Infeasible" << std::endl;
+                        std::cout << "Refine by Trace: ";
+                        for(int v : refineTrace){
+                            std::cout << " " << v;
+                        }
+                        std::cout << std::endl;
+                        cegarVcg->refineByTrace(refineTrace);
                     }
-                    std::cout << std::endl;
-                    cegarVcg->refineByTrace(refineTrace);
                 }
             } else {
                 currDepth ++;

@@ -461,4 +461,12 @@ namespace smack
         this->tempCounter = 0;
         this->coarseLoadCounter = 0;
     }
+
+
+    bool BMCCEGARVCGen::traceHasCoarseOps(std::vector<int> locTrace){
+        for(int vertexId : locTrace){
+            RefBlockVertexPtr currVertex = this->refBlockCfg->getVertex(vertexId);
+            
+        }
+    }
 } // namespace smack

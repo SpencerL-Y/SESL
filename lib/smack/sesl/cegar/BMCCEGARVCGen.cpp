@@ -466,7 +466,10 @@ namespace smack
     bool BMCCEGARVCGen::traceHasCoarseOps(std::vector<int> locTrace){
         for(int vertexId : locTrace){
             RefBlockVertexPtr currVertex = this->refBlockCfg->getVertex(vertexId);
-            
+            if(currVertex->hasCoarsenOps()){
+                return true;
+            }
         }
+        return false;
     }
 } // namespace smack

@@ -19,7 +19,7 @@ namespace smack
         return "clean_" + std::to_string(blockId) + "_(" + std::to_string(u) + ")";
     }
 
-    std::string getVarValuation(z3::model m, std::string varName){
+    std::string DOTGenerator::getVarValuation(z3::model m, std::string varName){
         for(int i = 0; i < m.size(); i ++){
             if(!m[i].name().str().compare(varName)){
                 return m.get_const_interp(m[i]).to_string();
@@ -138,7 +138,7 @@ namespace smack
         for(int i = 0; i <= lengthBound; i ++){
            
             for(std::string origVar : origVars){
-                os << origVar + "_(" << i << ") = " << getVarValuation(m, origVar + "_(" + std::to_string(i) + ")") << std::endl;
+                os << origVar + "_(" << i << ") = " << DOTGenerator::getVarValuation(m, origVar + "_(" + std::to_string(i) + ")") << std::endl;
             }
 
             for(int blockId = 0; blockId < regionNum; blockId ++){
@@ -147,20 +147,20 @@ namespace smack
                 os << "[Region " << blockId << "] ";
                 for(int ptId = 1; ptId <= ptNum; ptId ++){
                     os << "blk[" << 
-                    getVarValuation(m, getBlkAddr(blockId, 2*ptId - 2, i)) << 
+                    DOTGenerator::getVarValuation(m, getBlkAddr(blockId, 2*ptId - 2, i)) << 
                     "," <<
-                    getVarValuation(m, getBlkAddr(blockId, 2*ptId - 1, i)) << 
+                    DOTGenerator::getVarValuation(m, getBlkAddr(blockId, 2*ptId - 1, i)) << 
                     "] * ";
                     os << "pt[" << 
-                    getVarValuation(m, getPtAddr(blockId, 2*ptId - 1, i)) << 
+                    DOTGenerator::getVarValuation(m, getPtAddr(blockId, 2*ptId - 1, i)) << 
                     "," <<
-                    getVarValuation(m, getPtData(blockId, 2*ptId - 1, i)) <<
+                    DOTGenerator::getVarValuation(m, getPtData(blockId, 2*ptId - 1, i)) <<
                     "] * ";
                 }
                 os << "blk[" << 
-                getVarValuation(m, getBlkAddr(blockId, 2*ptNum, i)) << 
+                DOTGenerator::getVarValuation(m, getBlkAddr(blockId, 2*ptNum, i)) << 
                 "," <<
-                getVarValuation(m, getBlkAddr(blockId, 2*ptNum + 1, i)) << 
+                DOTGenerator::getVarValuation(m, getBlkAddr(blockId, 2*ptNum + 1, i)) << 
                 "]";
                 os << std::endl;
             }
@@ -168,7 +168,7 @@ namespace smack
             os << "Step ("  << i << "): loc_(" << i << ") = " << locations[i] << std::endl;
 
         }
-        os << "MEMLEAK = " << getVarValuation(m, "MEMLEAK") << "  INVALID_DEREF = " << getVarValuation(m, "INVALID_DEREF") << "  INVALID_FREE = " << getVarValuation(m, "INVALID_FREE") << std::endl;
+        os << "MEMLEAK = " << DOTGenerator::getVarValuation(m, "MEMLEAK") << "  INVALID_DEREF = " << DOTGenerator::getVarValuation(m, "INVALID_DEREF") << "  INVALID_FREE = " << DOTGenerator::getVarValuation(m, "INVALID_FREE") << std::endl;
         return os.str();
     }
 

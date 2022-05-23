@@ -21,6 +21,8 @@ namespace smack
     class CEUtils {
         public: 
             static std::vector<int> generateCegarViolationTrace(z3::model m, int maxDepth);
+            static std::string obtainErrType(z3::model m);
+            static std::string getVarValuation(z3::model m, std::string varName);
     };
 
 } // namespace smack

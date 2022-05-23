@@ -107,6 +107,8 @@ namespace smack
         // NEW BLOCKBMCVCGE
         BMCCEGARVCGenPtr cegarVcg = std::make_shared<BMCCEGARVCGen>(refinedCFG, refBlockCFG, loopBound);
         BMCValidatorPtr validator = std::make_shared<BMCValidator>(blockCFG, program, IROrigVar2Src);
+
+        std::string errType = "NULL";
         while(currDepth <= depth && !bugFound){
         // z3::expr vc = blockVcg->generateFeasibility(depth);
             z3::expr vc = cegarVcg->generateCEGARBMCVC(currDepth);
@@ -124,7 +126,7 @@ namespace smack
                     //     std::cout << v.name() << " = " << m.get_const_interp(v).to_string() << "\n" << std::endl;
                     // }
                     //std::cout << ViolationTraceGenerator::genreateViolationTraceConfiguration(m, blockVcg->getOrigVars(), blockVcg->getRegionNum(), blockVcg->getPointToNum(), depth);
-                
+                errType = CEUtils::obtainErrType(m);
                 CELocTrace = CEUtils::generateCegarViolationTrace(m, currDepth);
                 std::cout << "Violation Trace: ";
                 for(int v : CELocTrace){
@@ -152,7 +154,7 @@ namespace smack
             }   
         }
         if(bugFound){   
-            std::cout << "CEGAR BUG FOUND: " << std::endl;
+            std::cout << "CEGAR BUG FOUND: " << errType <<  std::endl;
             for(int i : CELocTrace){
                 std::cout << i << " ";
             }
@@ -185,5 +187,27 @@ namespace smack
             resultLocCE.push_back(atoi(s.c_str()));
         }
         return resultLocCE;
+    }
+
+    std::string CEUtils::getVarValuation(z3::model m, std::string varName){
+        for(int i = 0; i < m.size(); i ++){
+            if(!m[i].name().str().compare(varName)){
+                return m.get_const_interp(m[i]).to_string();
+            }
+        }
+        return "NULL";
+    }
+
+    std::string CEUtils::obtainErrType(z3::model m){
+        std::string invalidDerefResult = getVarValuation(m, "INVALID_DEREF");
+        std::string invalidFreeResult = getVarValuation(m, "INVALID_FREE");
+        std::string memleakResult = getVarValuation(m, "MEMLEAK");
+        if(!invalidDerefResult.compare("true")){
+            return "INVALID_DEREF";
+        } else if(!invalidFreeResult.compare("true")){
+            return "INVALID_FREE";
+        } else if(!memleakResult.compare("true")){
+            return "MEMLEAK";
+        }
     }
 } // namespace smack

@@ -28,6 +28,7 @@ namespace smack
             static std::string generateDOT4Concrete(ConcreteCFGPtr concreteCfg);
             static std::string generateDOT4Refined(BMCRefinedCFGPtr refCfg);
             static std::string generateDOT4Block(BlockCFGPtr blockCfg);
+            static std::string getVarValuation(z3::model m, std::string varName);
 
             
     };

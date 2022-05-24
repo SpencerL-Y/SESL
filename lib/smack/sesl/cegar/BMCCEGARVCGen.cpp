@@ -10,12 +10,12 @@ namespace smack
             z3::expr vertexBlockSemantic = this->generateCEGARBlockSemantic(vertexId, u);
             for(std::pair<int, int> edge : this->refBlockCfg->getEdges()){
                 if(vertexId == edge.first){
-                    cfgTransImplicant = cfgTransImplicant || this->getLocVar(u + 1) == edge.second &&  vertexBlockSemantic && 
-                    this->currentRNF->generateAbstraction(u + 1);
+                    cfgTransImplicant = cfgTransImplicant || this->getLocVar(u + 1) == edge.second &&  vertexBlockSemantic;
                 }
             }
             transResult = transResult && z3::implies(cfgTransPremise, cfgTransImplicant);
         }
+        transResult = transResult &&   this->currentRNF->generateAbstraction(u + 1);
         return transResult;
     }
             // Block semantic encoding
@@ -435,9 +435,21 @@ namespace smack
         return vc;
     }
     
+    z3::expr BMCCEGARVCGen::generateValidateFeasibility(std::vector<int> CELocTrace){
+        z3::expr initConfig = this->generateRNFInitConditionAndAbstraction();
+        z3::expr pathFeasibility = this->z3Ctx.bool_val(true);
+        for(int u = 0; u < CELocTrace.size(); u ++){
+            pathFeasibility = pathFeasibility && 
+            this->generateBlockSemantic(CELocTrace[u], u) &&
+            this->currentRNF->generateAbstraction(u + 1);
+        }
+        return initConfig && pathFeasibility;
+    }
+
     // final
     z3::expr BMCCEGARVCGen::generateCEGARBMCVC(int l){
-        return this->generateFeasibility(l) && this->generateViolation(l);
+        return this->generateCEGARFeasibility(l) && this->generateViolation(l);
+
     }
 
 

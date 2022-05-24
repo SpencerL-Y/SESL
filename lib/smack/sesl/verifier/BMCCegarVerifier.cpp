@@ -98,23 +98,25 @@ namespace smack
         std::cout << "-------------PRINT CFG DOT FILE-----------" << std::endl;
 
 
-        int currDepth = 10;
-        int depth = 10;
-        int loopBound = 2;
+        int currDepth = blockCFG->getVertices().size();
+        int depth = 2*currDepth;
+        int loopBound = 3;
         bool bugFound = false;
 
         std::vector<int> CELocTrace;
         // NEW BLOCKBMCVCGE
         BMCCEGARVCGenPtr cegarVcg = std::make_shared<BMCCEGARVCGen>(refinedCFG, refBlockCFG, loopBound);
-        BMCValidatorPtr validator = std::make_shared<BMCValidator>(blockCFG, program, IROrigVar2Src);
+        // ValidatorPtr validator = std::make_shared<SEValidator>(blockCFG, program, IROrigVar2Src);
+        ValidatorPtr validator = std::make_shared<BMCValidator>(cegarVcg);
 
         std::string errType = "NULL";
+
+        z3::solver s(cegarVcg->getContext());
         while(currDepth <= depth && !bugFound){
         // z3::expr vc = blockVcg->generateFeasibility(depth);
             z3::expr vc = cegarVcg->generateCEGARBMCVC(currDepth);
             std::cout << "Result: " << std::endl;
             std::cout << vc.to_string() << std::endl;
-            z3::solver s(cegarVcg->getContext());
             s.add(vc);
             std::cout << s.check() << std::endl;
             // std::cout << s.get_model() << std::endl;
@@ -132,10 +134,12 @@ namespace smack
                 for(int v : CELocTrace){
                     std::cout << " " << v;
                 }
+                std::cout << std::endl;
                 if(!cegarVcg->traceHasCoarseOps(CELocTrace)){
                     // If the path is concrete path
                     bugFound = true;
                 } else {
+                    std::cout << "Validating CE" << std::endl;
                     auto validateResult = validator->validateCE(CELocTrace);
                     bugFound = validateResult->hasBug;
                     std::vector<int> refineTrace =  validateResult->refineTrace;
@@ -147,6 +151,9 @@ namespace smack
                         }
                         std::cout << std::endl;
                         cegarVcg->refineByTrace(refineTrace);
+                    } else {
+                        std::cout << "Violation Trace Infeasible" << std::endl;
+                        assert(bugFound);
                     }
                 }
             } else {

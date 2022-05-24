@@ -1586,12 +1586,12 @@ namespace smack
                 assert(false);
             }
         }
-        else if(refAct->getActType() == ConcreteAction::ActType::STORE){
+        else if(refAct->getActType() == ConcreteAction::ActType::STORE || refAct->getActType() == ConcreteAction::ActType::COARSESTORE){
             // z3::expr storeBranch = this->generateTrStore(refAct, u);
             z3::expr storeBranch = this->generateTrStoreMemset(refAct, u);
             return storeBranch;
         }
-        else if(refAct->getActType() == ConcreteAction::ActType::LOAD){
+        else if(refAct->getActType() == ConcreteAction::ActType::LOAD || refAct->getActType() == ConcreteAction::ActType::COARSELOAD){
             z3::expr loadBranch = this->generateTrLoad(refAct, u);
             return loadBranch;
         }

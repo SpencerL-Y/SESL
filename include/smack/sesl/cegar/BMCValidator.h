@@ -12,7 +12,11 @@
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 
 namespace smack
-{
+{   
+    class BMCCEGARVCGen;
+    typedef std::shared_ptr<BMCCEGARVCGen> BMCCEGARVCGenPtr;
+
+
     class ValidateResult {
         public: 
             bool hasBug;
@@ -21,7 +25,13 @@ namespace smack
     };
     typedef std::shared_ptr<ValidateResult> ValidateResPtr;
 
-    class BMCValidator
+    class Validator {
+        public: 
+        virtual ValidateResPtr validateCE(std::vector<int> CELocTrace) = 0;
+    };
+    typedef std::shared_ptr<Validator> ValidatorPtr;
+
+    class SEValidator : public Validator
     {
     private:
         CFGPtr origCfg;
@@ -31,7 +41,7 @@ namespace smack
         MemoryManager memManager;
     public:
 
-        BMCValidator(BlockCFGPtr obcfg, Program* prog, std::map<std::string, std::string> IROrigVar2Src){
+        SEValidator(BlockCFGPtr obcfg, Program* prog, std::map<std::string, std::string> IROrigVar2Src){
             this->origBlockCfg = obcfg;
             this->origCfg = obcfg->getOrigCfg();
             this->program = prog;
@@ -44,7 +54,20 @@ namespace smack
         std::list<const Expr*> getInitializedPures(VarFactoryPtr vf);
     };
 
+    typedef std::shared_ptr<SEValidator> SEValidatorPtr;
+
+    class BMCValidator : public Validator
+    {
+        private:
+            BMCCEGARVCGenPtr cegarVcg;
+        public: 
+            BMCValidator(BMCCEGARVCGenPtr cegarVcg) : cegarVcg(cegarVcg) {}
+            ValidateResPtr validateCE(std::vector<int> CELocTrace);
+    };
+
     typedef std::shared_ptr<BMCValidator> BMCValidatorPtr;
+
+
     
     
 } // namespace smack

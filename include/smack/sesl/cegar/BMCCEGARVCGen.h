@@ -60,6 +60,7 @@ namespace smack
             // Detailed violation situation encodings
             // feasibility and violation
             z3::expr generateCEGARFeasibility(int l);
+            z3::expr generateValidateFeasibility(std::vector<int> CELocTrace);
             
             // final
             z3::expr generateCEGARBMCVC(int l);

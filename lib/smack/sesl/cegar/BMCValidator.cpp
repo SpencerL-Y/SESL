@@ -1,9 +1,10 @@
 #include "smack/sesl/cegar/BMCValidator.h"
 #include "smack/sesl/verifier/MemSafeVerifier.h"
+#include "smack/sesl/cegar/BMCCEGARVCGen.h"
 
 namespace smack
 {
-    ValidateResPtr BMCValidator::validateCE(std::vector<int> CELocTrace){
+    ValidateResPtr SEValidator::validateCE(std::vector<int> CELocTrace){
         ExecPathPtr p = this->constructExecPathFromTrace(CELocTrace);
         StatePtr state = p->getExePath()[0];
         if(FULL_DEBUG && OPEN_EXECUTION_PATH){
@@ -90,7 +91,7 @@ namespace smack
     }
 
 
-    std::list<const Expr*> BMCValidator::getInitializedPures(VarFactoryPtr vf){
+    std::list<const Expr*> SEValidator::getInitializedPures(VarFactoryPtr vf){
         std::list<const Expr*> resultList;
         const Expr* boolTrue = Expr::lit(true);
         REGISTER_EXPRPTR(boolTrue);
@@ -105,7 +106,7 @@ namespace smack
         return resultList;
     }
 
-    ExecPathPtr BMCValidator::constructExecPathFromTrace(std::vector<int> trace){
+    ExecPathPtr SEValidator::constructExecPathFromTrace(std::vector<int> trace){
         std::vector<StatePtr> states;
         for(int vertexId : trace){
             BlockVertexPtr origBlock = this->origBlockCfg->getVertex(vertexId);
@@ -119,5 +120,22 @@ namespace smack
         return execPath;
     }
 
-    
+
+    ValidateResPtr BMCValidator::validateCE(std::vector<int> CELocTrace){
+        // TODOcegar: change to incremental checking
+        z3::expr pathFeasibility = this->cegarVcg->generateValidateFeasibility(CELocTrace);
+        std::cout << "Path feasibility: " << std::endl;
+        std::cout << pathFeasibility << std::endl;
+        z3::solver s(this->cegarVcg->getContext());
+        s.add(pathFeasibility);
+        std::cout << s.check() << std::endl;
+        z3::model m = s.get_model();
+        if(m){
+            ValidateResPtr res = std::make_shared<ValidateResult>(true, CELocTrace);
+            return res;
+        } else {
+            ValidateResPtr res = std::make_shared<ValidateResult>(false, CELocTrace);
+            return res;
+        }
+    }    
 } // namespace smack

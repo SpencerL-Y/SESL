@@ -98,16 +98,18 @@ namespace smack
         std::cout << "-------------PRINT CFG DOT FILE-----------" << std::endl;
 
 
-        int currDepth = blockCFG->getVertices().size();
+        int currDepth = refBlockCFG->getVertices().size();
         int depth = 2*currDepth;
-        int loopBound = 3;
+        int loopBound = 2;
         bool bugFound = false;
 
         std::vector<int> CELocTrace;
         // NEW BLOCKBMCVCGE
         BMCCEGARVCGenPtr cegarVcg = std::make_shared<BMCCEGARVCGen>(refinedCFG, refBlockCFG, loopBound);
+        RefBlockCFGPtr origRefBlockCfg = std::make_shared<RefinedBlockCFG>(blockCFG);
+        BMCBlockVCGenPtr concreteVcg = std::make_shared<BMCBlockVCGen>(refinedCFG, origRefBlockCfg, loopBound);
         // ValidatorPtr validator = std::make_shared<SEValidator>(blockCFG, program, IROrigVar2Src);
-        ValidatorPtr validator = std::make_shared<BMCValidator>(cegarVcg);
+        ValidatorPtr validator = std::make_shared<BMCValidator>(concreteVcg);
 
         std::string errType = "NULL";
 
@@ -116,7 +118,7 @@ namespace smack
         // z3::expr vc = blockVcg->generateFeasibility(depth);
             z3::expr vc = cegarVcg->generateCEGARBMCVC(currDepth);
             std::cout << "Result: " << std::endl;
-            std::cout << vc.to_string() << std::endl;
+            // std::cout << vc.to_string() << std::endl;
             s.add(vc);
             std::cout << s.check() << std::endl;
             // std::cout << s.get_model() << std::endl;
@@ -152,7 +154,7 @@ namespace smack
                         std::cout << std::endl;
                         cegarVcg->refineByTrace(refineTrace);
                     } else {
-                        std::cout << "Violation Trace Infeasible" << std::endl;
+                        std::cout << "Violation Trace, bug found" << std::endl;
                         assert(bugFound);
                     }
                 }

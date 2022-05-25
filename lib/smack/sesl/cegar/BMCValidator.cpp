@@ -5,6 +5,7 @@
 namespace smack
 {
     ValidateResPtr SEValidator::validateCE(std::vector<int> CELocTrace){
+        std::cout << "BEGIN EXECUTION" << std::endl;
         ExecPathPtr p = this->constructExecPathFromTrace(CELocTrace);
         StatePtr state = p->getExePath()[0];
         if(FULL_DEBUG && OPEN_EXECUTION_PATH){
@@ -12,7 +13,7 @@ namespace smack
         // initialization of the execution initial stat
         //---------------------- initializatio of SH
         // initial pure formula 
-        std::cout << "PRINT PATH: " << std::endl;
+        std::cout << "PRINT PATInfeasibleH: " << std::endl;
         for(StatePtr s : p->getExePath()){
             for(const Stmt* stmt : s->getStateBlock()->getStatements()){
                 stmt->print(std::cout);
@@ -122,20 +123,30 @@ namespace smack
 
 
     ValidateResPtr BMCValidator::validateCE(std::vector<int> CELocTrace){
-        // TODOcegar: change to incremental checking
-        z3::expr pathFeasibility = this->cegarVcg->generateValidateFeasibility(CELocTrace);
-        std::cout << "Path feasibility: " << std::endl;
-        std::cout << pathFeasibility << std::endl;
-        z3::solver s(this->cegarVcg->getContext());
-        s.add(pathFeasibility);
-        std::cout << s.check() << std::endl;
-        z3::model m = s.get_model();
-        if(m){
-            ValidateResPtr res = std::make_shared<ValidateResult>(true, CELocTrace);
-            return res;
-        } else {
-            ValidateResPtr res = std::make_shared<ValidateResult>(false, CELocTrace);
-            return res;
+        bool hasBug = true;
+        z3::expr initConfig = this->vcg->generateRNFInitConditionAndAbstraction();
+        z3::solver s(this->vcg->getContext());
+        s.add(initConfig);
+        int u = 0;
+        for(u = 0; u < CELocTrace.size(); u ++){
+            s.add(
+                this->vcg->generateBlockSemantic(CELocTrace[u], u) &&
+                this->vcg->getCurrentRNF()->generateAbstraction(u + 1)
+            );
+            std::cout << s.check() << std::endl;
+            z3::model m = s.get_model();
+            if(m){
+
+            } else {
+                hasBug = false;
+                break;
+            }
         }
+        std::vector<int> refineLocTrace;
+        for(int i = 0; i < u; i ++){
+            refineLocTrace.push_back(CELocTrace[i]);
+        }
+        ValidateResPtr validateRes = std::make_shared<ValidateResult>(hasBug, refineLocTrace);
+        return validateRes;
     }    
 } // namespace smack

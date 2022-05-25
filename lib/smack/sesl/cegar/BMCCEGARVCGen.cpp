@@ -50,6 +50,8 @@ namespace smack
                refStmt->getActType() == ConcreteAction::ActType::OTHERPROC){
                 continue;
             }
+            // std::cout << "CurrStmtSeman: " << std::endl;
+            // refStmt->print(std::cout);
             z3::expr stmtSemantic = this->generateCEGARGeneralTr(refStmt, u);
             blockSemantic = blockSemantic && stmtSemantic;
         }
@@ -294,6 +296,11 @@ namespace smack
         z3::expr storeSemantic = this->z3Ctx.bool_val(true);
         int storeSize = coarseStoreAct->getType2();
         BMCDEBUG(std::cout << "storeSize: " << storeSize <<  "storePtr: " << coarseStoreAct->getArg1() << std::endl;);
+        if(!storeSize > 0){
+            std::cout << "storeSize Error: " << std::endl;
+            coarseStoreAct->print(std::cout);
+            std::cout << std::endl;
+        }
         assert(storeSize > 0);
         
         z3::expr storedPtr = coarseStoreAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
@@ -384,9 +391,19 @@ namespace smack
     z3::expr BMCCEGARVCGen::generateCEGARTrCommonAssignNonBool(RefinedActionPtr assignAct, int u){
         int arg1Size = assignAct->getType1();
         int arg2Size = assignAct->getType2();
+        // assert(!arg1Size == -3);
+
         z3::expr lhs = assignAct->getArg1()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
         z3::expr rhs = assignAct->getArg2()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
-        if(arg1Size >= arg2Size){
+        if(arg2Size == -3){
+            z3::expr freshVar = this->getFreshVar();
+            // assign bool2Int
+            z3::expr assignEquality = lhs == freshVar;
+            z3::expr result = assignEquality &&
+            z3::implies(rhs, freshVar == 1) && 
+            z3::implies(!rhs, freshVar == 0);
+            return result;
+        } else if(arg1Size >= arg2Size){
             // normal common assign
             z3::expr assignEquality = lhs == rhs;
             z3::expr result = assignEquality;
@@ -418,7 +435,18 @@ namespace smack
 
     z3::expr BMCCEGARVCGen::generateCEGARTrCommonAssignBool(RefinedActionPtr assignAct, int u){
         z3::expr lhs = assignAct->getArg3()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
-        z3::expr rhs = assignAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
+        int val = -1;
+        if(assignAct->getArg4()->isValue()){
+            assert(assignAct->getArg4()->getType() == ExprType::INT);
+            const IntLit* intLit = (const IntLit*) assignAct->getArg4();
+            val = intLit->getVal();
+        }
+        
+        z3::expr rhs = 
+        assignAct->getArg4()->isValue() ? 
+        (val == 0 ? 
+        this->z3Ctx.bool_val(false) : this->z3Ctx.bool_val(true)) : 
+        assignAct->getArg4()->bmcTranslateToZ3(this->z3Ctx, u, this->refBlockCfg->getOrigCfg());
         z3::expr boolEquility =  z3::implies(lhs, rhs) && z3::implies(rhs, lhs);
         return boolEquility;
     }

@@ -13,8 +13,8 @@
 
 namespace smack
 {   
-    class BMCCEGARVCGen;
-    typedef std::shared_ptr<BMCCEGARVCGen> BMCCEGARVCGenPtr;
+    class BMCBlockVCGen;
+    typedef std::shared_ptr<BMCBlockVCGen> BMCBlockVCGenPtr;
 
 
     class ValidateResult {
@@ -59,9 +59,9 @@ namespace smack
     class BMCValidator : public Validator
     {
         private:
-            BMCCEGARVCGenPtr cegarVcg;
+            BMCBlockVCGenPtr vcg;
         public: 
-            BMCValidator(BMCCEGARVCGenPtr cegarVcg) : cegarVcg(cegarVcg) {}
+            BMCValidator(BMCBlockVCGenPtr vcg) : vcg(vcg) {}
             ValidateResPtr validateCE(std::vector<int> CELocTrace);
     };
 

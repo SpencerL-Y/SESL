@@ -805,25 +805,89 @@ namespace smack {
 
     z3::expr BinExpr::bmcTranslateToZ3(z3::context& z3Ctx, int u, CFGPtr cfg) const {
         z3::expr res = z3Ctx.bool_val(true);
-        const z3::expr left = lhs->bmcTranslateToZ3(z3Ctx, u, cfg);
-        const z3::expr right = rhs->bmcTranslateToZ3(z3Ctx, u, cfg);
+        z3::expr left = lhs->bmcTranslateToZ3(z3Ctx, u, cfg);
+        z3::expr right = rhs->bmcTranslateToZ3(z3Ctx, u, cfg);
         //CDEBUG(std::cout << "left: " << left.to_string() << " right: " << right.to_string() << " op: " << op
         //                 << std::endl);
         switch (op) {
             case Iff:
                 // Q: correct?
                 // A: correct.
+                if(lhs->isValue() && lhs->getType() == ExprType::INT){
+                    const IntLit* constant = (const IntLit*) lhs;
+                    if(constant->getVal() == 0){
+                        left = z3Ctx.bool_val(false);
+                    } else {
+                        left = z3Ctx.bool_val(true);
+                    }
+                }
+                if(rhs->isValue() && rhs->getType() == ExprType::INT){
+                    const IntLit* constant = (const IntLit*) rhs;
+                    if(constant->getVal() == 0){
+                        right = z3Ctx.bool_val(false);
+                    } else {
+                        right = z3Ctx.bool_val(true);
+                    }
+                }
                 res = z3::implies(left, right) && z3::implies(right, left);
                 break;
             case Imp:
                 // Q: correct?
                 // A: correct.
+                if(lhs->isValue() && lhs->getType() == ExprType::INT){
+                    const IntLit* constant = (const IntLit*) lhs;
+                    if(constant->getVal() == 0){
+                        left = z3Ctx.bool_val(false);
+                    } else {
+                        left = z3Ctx.bool_val(true);
+                    }
+                }
+                if(rhs->isValue() && rhs->getType() == ExprType::INT){
+                    const IntLit* constant = (const IntLit*) rhs;
+                    if(constant->getVal() == 0){
+                        right = z3Ctx.bool_val(false);
+                    } else {
+                        right = z3Ctx.bool_val(true);
+                    }
+                }
                 res = z3::implies(left, right);
                 break;
             case Or:
+               if(lhs->isValue() && lhs->getType() == ExprType::INT){
+                    const IntLit* constant = (const IntLit*) lhs;
+                    if(constant->getVal() == 0){
+                        left = z3Ctx.bool_val(false);
+                    } else {
+                        left = z3Ctx.bool_val(true);
+                    }
+                }
+                if(rhs->isValue() && rhs->getType() == ExprType::INT){
+                    const IntLit* constant = (const IntLit*) rhs;
+                    if(constant->getVal() == 0){
+                        right = z3Ctx.bool_val(false);
+                    } else {
+                        right = z3Ctx.bool_val(true);
+                    }
+                }
                 res = (left or right);
                 break;
             case And:
+                if(lhs->isValue() && lhs->getType() == ExprType::INT){
+                    const IntLit* constant = (const IntLit*) lhs;
+                    if(constant->getVal() == 0){
+                        left = z3Ctx.bool_val(false);
+                    } else {
+                        left = z3Ctx.bool_val(true);
+                    }
+                }
+                if(rhs->isValue() && rhs->getType() == ExprType::INT){
+                    const IntLit* constant = (const IntLit*) rhs;
+                    if(constant->getVal() == 0){
+                        right = z3Ctx.bool_val(false);
+                    } else {
+                        right = z3Ctx.bool_val(true);
+                    }
+                }
                 res = (left and right);
                 break;
             case Eq:

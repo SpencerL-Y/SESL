@@ -199,6 +199,7 @@ namespace smack
             int getPointToNum(){return this->pointsToNum;}
 
             z3::context& getContext(){return this->z3Ctx;}
+            RNFPtr getCurrentRNF(){return this->currentRNF;}
     };
 
     typedef std::shared_ptr<BMCVCGen> BMCVCGenPtr;
@@ -334,6 +335,7 @@ namespace smack
             // get functions
             z3::context& getContext(){return this->z3Ctx;}
             std::set<std::string> getOrigVars(){return this->preAnalysis->getProgOrigVars();}
+            RNFPtr getCurrentRNF(){return currentRNF;}
 
 
     };

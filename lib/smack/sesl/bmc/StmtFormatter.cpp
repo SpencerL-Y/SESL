@@ -229,7 +229,8 @@ namespace smack
                     } else if(ExprType::FUNC == origStoreDst->getType()){
                         arg1 = this->parsePtrArithmeticExpr(origStoreDst);
                         //TODObmc: check here
-                        type2 = UNKNOWN;
+                        // type2 = UNKNOWN;
+                        type2 = 1;
                     } else {
                         BMCDEBUG(std::cout << "ERROR: stored dst not allowed: " << origStoreDst << std::endl; );
                         arg1 = origStoreDst;
@@ -301,12 +302,22 @@ namespace smack
                 return resultList;
             }
         } else {
-            arg1 = lhs;
-            arg2 = rhs;
-            type1 = UNKNOWN;
-            type2 = UNKNOWN;
-            type3 = UNKNOWN;
-            type4 = UNKNOWN;
+            const VarExpr* lhsVar = (const VarExpr*) lhs;
+            if(this->getVarByteSize(lhsVar->name()) == -3){
+                arg3 = lhs;
+                arg4 = rhs;
+                type1 = UNKNOWN;
+                type2 = UNKNOWN;
+                type3 = -3;
+                type4 = -3;
+            } else {
+                arg1 = lhs;
+                arg2 = rhs;
+                type1 = UNKNOWN;
+                type2 = UNKNOWN;
+                type3 = UNKNOWN;
+                type4 = UNKNOWN;
+            }
             RefinedActionPtr refinedAct = std::make_shared<RefinedAction>(ConcreteAction::ActType::COMMONASSIGN,arg1, arg2, arg3, arg4, type1, type2, type3, type4, changedNames);
             resultList.push_back(refinedAct);
             return resultList;
@@ -512,6 +523,7 @@ namespace smack
         // Distinguish  the case where the function is not a ptr arithmetic
         if(origArithExpr->getType() == FUNC){
             const FunExpr* ptrArithFun = (const FunExpr*) origArithExpr;
+            // std::cout << "FuncName: " << ptrArithFun->name() << std::endl;
             assert(this->isPtrArithFuncName(ptrArithFun->name()));
             const Expr* resultExpr = NULL;
             const Expr* funArg1 = ptrArithFun->getArgs().front();
@@ -899,8 +911,15 @@ namespace smack
         std::pair<std::string, int> detailTypePair = this->origCfg->getGlobalVarDetailType(ptrVarName);
         std::string typeStr = detailTypePair.first;
         // std::cout << typeStr << std::endl;
-        assert(typeStr.find("ref") != std::string::npos);
-        return detailTypePair.second/8;
+        if(typeStr.find("ref") != std::string::npos){
+            if(detailTypePair.second > 0){
+                return detailTypePair.second/8;
+            } else {
+                return 1;
+            }
+        } else {
+            return 1;
+        }
     }
 
 

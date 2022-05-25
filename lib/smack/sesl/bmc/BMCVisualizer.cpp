@@ -49,6 +49,8 @@ namespace smack
     std::string DOTGenerator::generateDOT4Refined(BMCRefinedCFGPtr refCfg){
         std::string result = "digraph {\n";
         for(RefinedEdgePtr edge : refCfg->getRefinedEdges()){
+            assert(edge != nullptr);
+            edge->print(std::cout);
             std::string edgeFrom = std::to_string(edge->getFrom());
             std::string edgeTo = std::to_string(edge->getTo());
             std::string edgeLabel = "";

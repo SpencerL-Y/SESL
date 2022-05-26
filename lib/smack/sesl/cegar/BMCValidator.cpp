@@ -13,7 +13,7 @@ namespace smack
         // initialization of the execution initial stat
         //---------------------- initializatio of SH
         // initial pure formula 
-        std::cout << "PRINT PATInfeasibleH: " << std::endl;
+        std::cout << "PRINT PATH Infeasible: " << std::endl;
         for(StatePtr s : p->getExePath()){
             for(const Stmt* stmt : s->getStateBlock()->getStatements()){
                 stmt->print(std::cout);
@@ -127,13 +127,15 @@ namespace smack
         z3::expr initConfig = this->vcg->generateRNFInitConditionAndAbstraction();
         z3::solver s(this->vcg->getContext());
         s.add(initConfig);
+        // std::cout << initConfig << std::endl;
         int u = 0;
         for(u = 0; u < CELocTrace.size(); u ++){
-            s.add(
-                this->vcg->generateBlockSemantic(CELocTrace[u], u) &&
-                this->vcg->getCurrentRNF()->generateAbstraction(u + 1)
-            );
+            z3::expr transitionExpr = this->vcg->generateBlockSemantic(CELocTrace[u], u) &&
+                this->vcg->getCurrentRNF()->generateAbstraction(u + 1);
+            s.add(transitionExpr);
             std::cout << s.check() << std::endl;
+
+            // std::cout << transitionExpr << std::endl;
             z3::model m = s.get_model();
             if(m){
 

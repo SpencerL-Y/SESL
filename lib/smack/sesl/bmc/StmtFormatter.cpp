@@ -759,7 +759,6 @@ namespace smack
             resultList.push_back(refinedAct);
             return resultList;
         } else if(!call->getProc().compare("$alloc")){
-            BMCDEBUG(std::cout << "HEREEEEEEEEEEEEEE" << std::endl;);
             // array and struct allocation
             std::string retVarName = call->getReturns().front();
             changedNames.insert(retVarName);

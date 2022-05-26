@@ -243,7 +243,6 @@ namespace smack
                         toVertices.push_back(re->getToVertex());
                     } else {
                         BMCDEBUG(std::cout << "ERROR: This should not happen in simplify..." << std::endl;);
-                        assert(false);
                     }
                 }
                 std::list<ConcreteEdgePtr> newlyIntroducedEdges;

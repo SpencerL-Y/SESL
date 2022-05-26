@@ -98,7 +98,8 @@ namespace smack
         std::cout << "-------------PRINT CFG DOT FILE-----------" << std::endl;
 
 
-        int currDepth = refBlockCFG->getVertices().size();
+        int currDepth = 2;
+        refBlockCFG->getVertices().size();
         int depth = 2*currDepth;
         int loopBound = 2;
         bool bugFound = false;
@@ -129,7 +130,7 @@ namespace smack
                     //     assert(v.arity() == 0);
                     //     std::cout << v.name() << " = " << m.get_const_interp(v).to_string() << "\n" << std::endl;
                     // }
-                    //std::cout << ViolationTraceGenerator::genreateViolationTraceConfiguration(m, blockVcg->getOrigVars(), blockVcg->getRegionNum(), blockVcg->getPointToNum(), depth);
+                    std::cout << ViolationTraceGenerator::genreateViolationTraceConfiguration(m, cegarVcg->getOrigVars(), cegarVcg->getRegionNum(), cegarVcg->getPointToNum(), currDepth);
                 errType = CEUtils::obtainErrType(m);
                 CELocTrace = CEUtils::generateCegarViolationTrace(m, currDepth);
                 std::cout << "Violation Trace: ";

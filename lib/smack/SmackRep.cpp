@@ -1285,11 +1285,14 @@ namespace smack {
 
         if (const GlobalVariable *g = dyn_cast<const GlobalVariable>(v)) {
             if (g->hasInitializer()) {
+                
+                SDEBUG(errs() << "Has Initializer"  << "\n");
                 const Constant *init = g->getInitializer();
                 unsigned numElems = numElements(init);
 
                 // NOTE: all global variables have pointer type in LLVM
                 if (const PointerType *t = dyn_cast<const PointerType>(g->getType())) {
+                    SDEBUG(errs() << "Is Ptr type"  << "\n");
 
                     // in case we can determine the size of the element type ...
                     if (t->getElementType()->isSized()) {
@@ -1297,6 +1300,8 @@ namespace smack {
                         size = storageSize(t->getElementType());
                         ax.push_back(Attr::attr("global_variable"));
                         ax.push_back(Attr::attr("pointer_to_size", size * 8));
+
+                        SDEBUG(errs() << "ElementTypeSize: " << size  << "\n");
                     }
 
                         // otherwise (e.g. for function declarations), use a default size

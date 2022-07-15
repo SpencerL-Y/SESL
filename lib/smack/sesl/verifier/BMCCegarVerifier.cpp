@@ -98,7 +98,7 @@ namespace smack
         std::cout << "-------------PRINT CFG DOT FILE-----------" << std::endl;
 
 
-        int currDepth = 2;
+        int currDepth =
         refBlockCFG->getVertices().size();
         int depth = 2*currDepth;
         int loopBound = 2;

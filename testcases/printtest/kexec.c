@@ -1,11 +1,13 @@
 #include <stdlib.h>
 
-
+int j;
 int main(){
     int x;
-    int i = 0;
-    while(i < x){
-        int *j = malloc(sizeof(int));
+    j = 1;
+    int *i;
+    if(j < x){
+        i = malloc(sizeof(int) * j);
     }
+    free(i);
     return 0;
 }

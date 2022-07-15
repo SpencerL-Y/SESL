@@ -418,17 +418,39 @@
 // }
 
 
-char *a, *b;
-int n;
-int main()
-{
-  n = 10;
-  a = malloc(n * sizeof(*a));
-  b = malloc(n * sizeof(*b));
-  *b++ = 0;
-  if (b[-1])
-  { free(a); free(b); }
-  else
-  { free(a); free(b); }
+// char *a, *b;
+// int n;
+// int main()
+// {
+//   n = 10;
+//   a = malloc(n * sizeof(*a));
+//   b = malloc(n * sizeof(*b));
+//   *b++ = 0;
+//   if (b[-1])
+//   { free(a); free(b); }
+//   else
+//   { free(a); free(b); }
+//   return 0;
+// }
+
+
+extern int __VERIFIER_nondet_int(void);
+int main() {
+  int i, j;
+  int length = 1;//__VERIFIER_nondet_int();
+  if (length < 1) length = 1;
+  int *arr = __builtin_alloca (length);
+  if (!arr) return 0;
+  int *a = arr;
+	
+	for(int k = 0; k < length; k++)
+	{
+	  arr[k] = 2;//__VERIFIER_nondet_int();
+	}
+	
+  while (*a != *(arr + length - 1)) {
+    *a += *(arr + length - 1);
+    a++;
+  }
   return 0;
 }

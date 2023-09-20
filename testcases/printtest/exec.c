@@ -434,23 +434,35 @@
 // }
 
 
-extern int __VERIFIER_nondet_int(void);
-int main() {
-  int i, j;
-  int length = 1;//__VERIFIER_nondet_int();
-  if (length < 1) length = 1;
-  int *arr = __builtin_alloca (length);
-  if (!arr) return 0;
-  int *a = arr;
+// extern int __VERIFIER_nondet_int(void);
+// int main() {
+//   int i, j;
+//   int length = 1;//__VERIFIER_nondet_int();
+//   if (length < 1) length = 1;
+//   int *arr = __builtin_alloca (length);
+//   if (!arr) return 0;
+//   int *a = arr;
 	
-	for(int k = 0; k < length; k++)
-	{
-	  arr[k] = 2;//__VERIFIER_nondet_int();
-	}
+// 	for(int k = 0; k < length; k++)
+// 	{
+// 	  arr[k] = 2;//__VERIFIER_nondet_int();
+// 	}
 	
-  while (*a != *(arr + length - 1)) {
-    *a += *(arr + length - 1);
-    a++;
+//   while (*a != *(arr + length - 1)) {
+//     *a += *(arr + length - 1);
+//     a++;
+//   }
+//   return 0;
+// }
+
+int main(){
+  int a = 10;
+  {
+    int a = 20;
   }
-  return 0;
+  if(a > 10){
+    return 10;
+  } else {
+    return 0;
+  }
 }

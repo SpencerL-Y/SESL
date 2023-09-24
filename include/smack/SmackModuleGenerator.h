@@ -6,15 +6,23 @@
 
 #include "llvm/Pass.h"
 #include "llvm/IR/Value.h"
+#include "PointerTypeAnalysis.h"
 #include <map>
+#include <memory>
+
 namespace smack {
 
 class Program;
+
+typedef std::map<std::string, int> StructSet;
 
 class SmackModuleGenerator : public llvm::ModulePass {
 private:
   Program *program;
   std::map<std::string, std::string> boogieVar2SrcVarMap;
+  
+  std::shared_ptr<StructSet> structs;
+  std::shared_ptr<PointerTypeManager> pointerTypeManager;
 
 public:
   static char ID; // Pass identification, replacement for typeid

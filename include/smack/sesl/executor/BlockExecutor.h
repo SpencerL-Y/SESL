@@ -49,7 +49,7 @@ namespace smack{
         VarFactoryPtr varFactory;
         std::list<std::string> callStack;
         // for memtrack
-        std::map<std::string, std::string> IROrigVar2Src;
+        // std::map<std::string, std::string> IROrigVar2Src;
         std::map<std::string, std::string> src2IRVar;
         std::set<std::string> globalStaticVars;
         CFGPtr cfg;
@@ -152,7 +152,7 @@ namespace smack{
         // Execution Semantics
         static MemoryManagerPtr ExprMemoryManager;
 
-        BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb, std::map<std::string, std::string> IR2Src) : program(p), cfg(cfgPtr), IROrigVar2Src(IR2Src) {this->setBlock(cb); this->cfg->addVarType("$Null", "ref64");}
+        BlockExecutor(Program* p, CFGPtr cfgPtr, StatePtr cb) : program(p), cfg(cfgPtr) {this->setBlock(cb); this->cfg->addVarType("$Null", "ref64");}
 
         // --------------------- Execution for initialization
         SHExprPtr executeGlobal(SHExprPtr sh);

@@ -58,7 +58,7 @@ namespace smack
         std::cout << "------------------ START BMC ANALYSIS ------------------" << std::endl;
         SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
         Program* program = smackGen.getProgram();
-        std::map<std::string, std::string> IROrigVar2Src = smackGen.getIRVar2Source();
+        // std::map<std::string, std::string> IROrigVar2Src = smackGen.getIRVar2Source();
         std::cout << "Begin verifying" << std::endl;
         CFGUtil cfgUtil(program);
         CFGPtr mainGraph = cfgUtil.getMainCFG();

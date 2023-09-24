@@ -27,6 +27,7 @@ public:
 
   void visitBasicBlock(llvm::BasicBlock &bb);
   void visitInstruction(llvm::Instruction &i);
+  void visitGetElementPtrInst(llvm::GetElementPtrInst &I);
 
   void visitDbgValueInst(llvm::DbgValueInst &i);
 

@@ -123,6 +123,7 @@ add_library(smackTranslator STATIC
   include/smack/Naming.h
   include/smack/Regions.h
   include/smack/SmackInstGenerator.h
+      include/smack/PointerTypeAnalysis.h
       include/smack/SmackSrcNamesMapper.h
   include/smack/SmackModuleGenerator.h
   include/smack/SmackOptions.h
@@ -178,7 +179,8 @@ add_library(smackTranslator STATIC
   lib/smack/Naming.cpp
   lib/smack/Regions.cpp
   lib/smack/SmackInstGenerator.cpp
-  lib/smack/SmackSrcNamesMapper.cpp
+      lib/smack/PointerTypeAnalysis.cpp
+      lib/smack/SmackSrcNamesMapper.cpp
   lib/smack/SmackModuleGenerator.cpp
   lib/smack/SmackOptions.cpp
   lib/smack/CodifyStaticInits.cpp

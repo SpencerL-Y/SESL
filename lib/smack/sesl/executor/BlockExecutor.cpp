@@ -143,11 +143,11 @@ namespace smack{
 
         // update with memtrack utils
         
-        if(this->IROrigVar2Src.find(lhsVarOrigName) != this->IROrigVar2Src.end()){
+        // if(this->IROrigVar2Src.find(lhsVarOrigName) != this->IROrigVar2Src.end()){
             // there is a main src variable corresponds to lhsVar
             // update the srcVar  to the usedVarName
-            this->src2IRVar[this->IROrigVar2Src[lhsVarOrigName]] = lhsVarName;
-        }
+        //     this->src2IRVar[this->IROrigVar2Src[lhsVarOrigName]] = lhsVarName;
+        // }
         if(lhsVarOrigName.find("$M.") != std::string::npos){
             this->globalStaticVars.insert(lhsVarOrigName);
         }

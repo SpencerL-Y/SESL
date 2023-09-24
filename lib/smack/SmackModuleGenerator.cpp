@@ -3,6 +3,7 @@
 //
 #define DEBUG_TYPE "smack-mod-gen"
 
+#include "smack/PointerTypeAnalysis.h"
 #include "smack/SmackModuleGenerator.h"
 #include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Debug.h"
@@ -27,6 +28,8 @@ namespace smack {
 
     SmackModuleGenerator::SmackModuleGenerator() : ModulePass(ID) {
         program = new Program();
+        structs = std::make_shared<StructSet>();
+        pointerTypeManager = std::make_shared<PointerTypeManager>();
     }
 
     void SmackModuleGenerator::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
@@ -55,7 +58,15 @@ namespace smack {
             decls.insert(decls.end(), ds.begin(), ds.end());
         }
 
+        SDEBUG(errs() << "Analyzing structures...\n");
+        for (StructType* sty : M.getIdentifiedStructTypes()) {
+            std::string name = sty->getName();
+            int num = sty->getNumElements();
+            structs->insert(std::make_pair(name ,num));
+        }
+
         SDEBUG(errs() << "Analyzing functions...\n");
+        
 
         for (auto &F : M) {
 
@@ -87,17 +98,23 @@ namespace smack {
                     SDEBUG(errs() << "Generating body for " << naming.get(F) << "\n");
                     igen.visit(F);
                     SDEBUG(errs() << "\n");
+
+                    SDEBUG(errs() << "Analyzing pointer type...\n");
+                    PointerTypeAnalysis ptap(
+                        &naming, structs, pointerTypeManager);
+                    ptap.visit(F);
+                    SDEBUG(errs() << ptap << '\n');
                     
-                    if(!naming.get(F).compare("main")){
-                        SDEBUG(errs() << "Mapping boogie var name to src var name for main" << "\n");
-                        SmackSrcNamesMapper nameMapper(&naming);
-                        nameMapper.visit(F);
-                        this->boogieVar2SrcVarMap = nameMapper.getSourceNames();
-                        SDEBUG(errs() << "-------------- Printing the map --------------" << "\n");
-                        for(auto i : this->boogieVar2SrcVarMap){
-                            SDEBUG(errs() << i.first << " " << (i.second) << "\n");
-                        }
-                    }
+                    // if(!naming.get(F).compare("main")){
+                    //     SDEBUG(errs() << "Mapping boogie var name to src var name for main" << "\n");
+                    //     SmackSrcNamesMapper nameMapper(&naming);
+                    //     nameMapper.visit(F);
+                    //     this->boogieVar2SrcVarMap = nameMapper.getSourceNames();
+                    //     SDEBUG(errs() << "-------------- Printing the map --------------" << "\n");
+                    //     for(auto i : this->boogieVar2SrcVarMap){
+                    //         SDEBUG(errs() << i.first << " " << (i.second) << "\n");
+                    //     }
+                    // }
                     
                     // First execute static initializers, in the main procedure.
                     if (F.hasName() && SmackOptions::isEntryPoint(F.getName())) {
@@ -108,8 +125,8 @@ namespace smack {
                     } else if (naming.get(F).find(Naming::INIT_FUNC_PREFIX) == 0)
                         rep.addInitFunc(&F);
                 }
-                SDEBUG(errs() << "Finished analyzing function: " << naming.get(F)
-                              << "\n\n");
+                // SDEBUG(errs() << "Finished analyzing function: " << naming.get(F)
+                //               << "\n\n");
             }
 
             // MODIFIES

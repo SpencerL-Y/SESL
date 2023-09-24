@@ -57,13 +57,38 @@ void SmackSrcNamesMapper::visitBasicBlock(llvm::BasicBlock &bb) {
 }
 
 void SmackSrcNamesMapper::visitInstruction(llvm::Instruction &inst) {
-  SDEBUG(errs() << "Instruction not handled: " << inst << "\n");
+  // SDEBUG(errs() << "Instruction not handled: " << inst << "\n");
+  // if (SmackOptions::SourceLocSymbols) {
+  //   SDEBUG(errs() << inst.getOpcodeName() << "\n");
+  //   Use* opl = inst.getOperandList();
+  //   while (opl != nullptr) {
+  //     Value* val = opl->get();
+  //     if (naming->hasName(*val))
+  //       errs() << naming->get(*val) << "\n";
+  //     opl = opl->getNext();
+  //   }
+  // }
+}
+
+void SmackSrcNamesMapper::visitGetElementPtrInst(llvm::GetElementPtrInst &I) {
+  // SDEBUG(errs() << "visitGetElementPtrInst" << "\n");
+  // SDEBUG(errs() << I << "\n");
+  // const llvm::Value* v = I.getPointerOperand();
+  // if (naming->hasName(*v)) {
+  //   SDEBUG(errs() << naming->get(*v) << "\n");
+  //   for (auto idx : I.indices()) {
+  //     errs() << idx << ' ';
+  //   }
+  //   errs() << '\n';
+
+  // }
 }
 
 
 
 void SmackSrcNamesMapper::visitDbgValueInst(llvm::DbgValueInst &dvi) {
   SDEBUG(errs() << "visitDbgValue" << "\n");
+  SDEBUG(errs() << dvi << "\n");
   /*se->executeOther();
   emit(Stmt::symbheap(se->getCurrSH()));*/
   if (SmackOptions::SourceLocSymbols) {

@@ -27,15 +27,15 @@ namespace smack
         CFGPtr origCfg;
         BlockCFGPtr origBlockCfg;
         Program* program;
-        std::map<std::string, std::string> IROrigVar2Src;
+        // std::map<std::string, std::string> IROrigVar2Src;
         MemoryManager memManager;
     public:
 
-        BMCValidator(BlockCFGPtr obcfg, Program* prog, std::map<std::string, std::string> IROrigVar2Src){
+        BMCValidator(BlockCFGPtr obcfg, Program* prog){
             this->origBlockCfg = obcfg;
             this->origCfg = obcfg->getOrigCfg();
             this->program = prog;
-            this->IROrigVar2Src = IROrigVar2Src;
+            // this->IROrigVar2Src = IROrigVar2Src;
         };
 
         ValidateResPtr validateCE(std::vector<int> CELocTrace);

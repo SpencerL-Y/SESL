@@ -47,7 +47,7 @@ namespace smack
         SHExprPtr currSH = initSH;
         ExecutionStatePtr  currExecState = initialExecState;
         StatementList finalStmts;
-        BlockExecutorPtr be = std::make_shared<BlockExecutor>(this->program, this->origCfg, state, this->IROrigVar2Src);
+        BlockExecutorPtr be = std::make_shared<BlockExecutor>(this->program, this->origCfg, state);
         currExecState = be->initializeExec(currExecState);
         std::vector<int> refineLocTrace;
         for(StatePtr s : p->getExePath()){

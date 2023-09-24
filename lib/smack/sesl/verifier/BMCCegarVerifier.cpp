@@ -68,7 +68,7 @@ namespace smack
         std::cout << "------------------ START BMC ANALYSIS ------------------" << std::endl;
         SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
         Program* program = smackGen.getProgram();
-        std::map<std::string, std::string> IROrigVar2Src = smackGen.getIRVar2Source();
+        // std::map<std::string, std::string> IROrigVar2Src = smackGen.getIRVar2Source();
         std::cout << "Begin verifying" << std::endl;
         CFGUtil cfgUtil(program);
         CFGPtr mainGraph = cfgUtil.getMainCFG();
@@ -106,7 +106,7 @@ namespace smack
         std::vector<int> CELocTrace;
         // NEW BLOCKBMCVCGE
         BMCCEGARVCGenPtr cegarVcg = std::make_shared<BMCCEGARVCGen>(refinedCFG, refBlockCFG, loopBound);
-        BMCValidatorPtr validator = std::make_shared<BMCValidator>(blockCFG, program, IROrigVar2Src);
+        BMCValidatorPtr validator = std::make_shared<BMCValidator>(blockCFG, program);
         while(currDepth <= depth && !bugFound){
         // z3::expr vc = blockVcg->generateFeasibility(depth);
             z3::expr vc = cegarVcg->generateCEGARBMCVC(currDepth);

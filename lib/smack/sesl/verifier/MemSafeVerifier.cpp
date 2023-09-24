@@ -29,7 +29,7 @@ namespace smack {
         std::cout << "-----------------START MEMSAFE ANALYSIS---------------" << std::endl;
         SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
         Program* program = smackGen.getProgram();
-        std::map<std::string, std::string> IROrigVar2Src = smackGen.getIRVar2Source();
+        // std::map<std::string, std::string> IROrigVar2Src = smackGen.getIRVar2Source();
         // TODO: add the checking here.
         std::cout << "Begin verifying" << std::endl;
         CFGUtil cfgUtil(program);
@@ -95,7 +95,7 @@ namespace smack {
             SHExprPtr currSH = initSH;
             ExecutionStatePtr  currExecState = initialExecState;
             StatementList finalStmts;
-            BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, mainGraph, state, IROrigVar2Src);
+            BlockExecutorPtr be = std::make_shared<BlockExecutor>(program, mainGraph, state);
             currExecState = be->initializeExec(currExecState);
             for(StatePtr s : p.getExePath()){
                 be->setBlock(s);

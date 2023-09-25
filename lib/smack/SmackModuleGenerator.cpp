@@ -3,7 +3,6 @@
 //
 #define DEBUG_TYPE "smack-mod-gen"
 
-#include "smack/PointerTypeAnalysis.h"
 #include "smack/SmackModuleGenerator.h"
 #include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Debug.h"
@@ -29,7 +28,7 @@ namespace smack {
     SmackModuleGenerator::SmackModuleGenerator() : ModulePass(ID) {
         program = new Program();
         structs = std::make_shared<StructSet>();
-        pointerTypeManager = std::make_shared<PointerTypeManager>();
+        pointerTypeManager = std::make_shared<PointerInfoManager>();
     }
 
     void SmackModuleGenerator::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
@@ -62,7 +61,7 @@ namespace smack {
         for (StructType* sty : M.getIdentifiedStructTypes()) {
             std::string name = sty->getName();
             int num = sty->getNumElements();
-            structs->insert(std::make_pair(name ,num));
+            structs->insert(std::make_pair("%" + name ,num));
         }
 
         SDEBUG(errs() << "Analyzing functions...\n");
@@ -100,7 +99,7 @@ namespace smack {
                     SDEBUG(errs() << "\n");
 
                     SDEBUG(errs() << "Analyzing pointer type...\n");
-                    PointerTypeAnalysis ptap(
+                    PointerInfoAnalysis ptap(
                         &naming, structs, pointerTypeManager);
                     ptap.visit(F);
                     SDEBUG(errs() << ptap << '\n');

@@ -24,6 +24,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
 
+#include "seadsa/Info.hh"
+
 #include "smack/AddTiming.h"
 #include "smack/BplFilePrinter.h"
 #include "smack/CodifyStaticInits.h"
@@ -194,7 +196,7 @@ int main(int argc, char **argv) {
     //pass_manager.add(new smack::RemoveDeadDefs());
   }
   
-  //pass_manager.add(seadsa::createRemovePtrToIntPass());
+  // pass_manager.add(seadsa::createRemovePtrToIntPass());
   pass_manager.add(llvm::createLowerSwitchPass());
   // pass_manager.add(llvm::createCFGSimplificationPass());
   // Shaobo: sea-dsa is inconsistent with the pass below.
@@ -285,10 +287,10 @@ int main(int argc, char **argv) {
     // pass_manager.add(new smack::MemSafeVerifier());
     // pass_manager.add(new smack::ViolationPathGen(OriginFilePass));
     // BMC Verification Engine
-    // pass_manager.add(new smack::BMCMemSafeVerifier());
+    pass_manager.add(new smack::BMCMemSafeVerifier());
     // BMC CEGAR Verification Engine
-    pass_manager.add(new smack::BMCCegarVerifier());
-    pass_manager.add(new smack::BplFilePrinter(F->os()));
+    // pass_manager.add(new smack::BMCCegarVerifier());
+    // pass_manager.add(new smack::BplFilePrinter(F->os()));
 
   }
 
@@ -296,10 +298,6 @@ int main(int argc, char **argv) {
 
   for (auto F : files)
     delete F;
-
-
   // Symbolic Heap Test:
-  
-
   return 0;
 }

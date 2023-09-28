@@ -48,8 +48,7 @@ namespace smack
                     this->actType = ActType::FREE;
                 } else if(!callStmt->getProc().compare("$alloc")) {
                     this->actType = ActType::ALLOC;
-                }
-                else {
+                } else {
                     this->actType = ActType::OTHERPROC;
                 }
             } else if(s->getKind() == Stmt::Kind::RETURN){
@@ -73,6 +72,8 @@ namespace smack
             os << "FREE\t";
         } else if(actType == ActType::LOAD){
             os << "LOAD\t";
+        } else if(actType == ActType::ALLOC) {
+            os << "ALLOC\t";
         } else if(actType == ActType::MALLOC){
             os << "MALLOC\t";
         } else if(actType == ActType::OTHER){

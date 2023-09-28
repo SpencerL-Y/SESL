@@ -128,9 +128,7 @@ namespace smack
             std::unordered_map<std::string, int> nameToConcreteState;
             CFGPtr origCfg;
         public:
-            ConcreteCFG(
-                CFGPtr origCfg
-            );
+            ConcreteCFG(CFGPtr origCfg);
             ConcreteCFG(std::list<ConcreteEdgePtr> edges, CFGPtr origCfg);
             void printConcreteCFG();
             int getVertexNum(){return this->vertexNum;}

@@ -46,6 +46,7 @@
 #include "smack/sesl/verifier/MemSafeVerifier.h"
 #include "smack/sesl/verifier/BMCMemSafeVerifier.h"
 #include "smack/sesl/verifier/BMCCegarVerifier.h"
+#include "smack/sesl/verifier/BMCMemSafeChecker.h"
 #include "smack/sesl/witness/ViolationPathGen.h"
 
 #include "utils/Devirt.h"
@@ -287,10 +288,12 @@ int main(int argc, char **argv) {
     // pass_manager.add(new smack::MemSafeVerifier());
     // pass_manager.add(new smack::ViolationPathGen(OriginFilePass));
     // BMC Verification Engine
-    pass_manager.add(new smack::BMCMemSafeVerifier());
+    // pass_manager.add(new smack::BMCMemSafeVerifier());
     // BMC CEGAR Verification Engine
     // pass_manager.add(new smack::BMCCegarVerifier());
     // pass_manager.add(new smack::BplFilePrinter(F->os()));
+    // BMC Checker - SLHV
+    pass_manager.add(new smack::BMCMemSafeChecker());
 
   }
 

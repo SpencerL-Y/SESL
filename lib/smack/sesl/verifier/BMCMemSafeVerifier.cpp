@@ -59,41 +59,6 @@ namespace smack
         std::cout << "------------------ START BMC ANALYSIS ------------------" << std::endl;
         SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
         Program* program = smackGen.getProgram();
-
-        std::cout << " check each boogie ir begin ----------------- \n";
-        auto pm = smackGen.getPM();
-        for (auto decl : *program) {
-            if (decl->getKind() != Decl::Kind::PROCEDURE) continue;
-            if (decl->getName() != "main") continue;
-            ProcDecl* proc = (ProcDecl*)decl;
-            for (auto block : *proc) {
-                // block->print(std::cout);
-                for (auto stmt : *block) {
-                    if (stmt->getKind() != Stmt::Kind::ASSIGN &&
-                        stmt->getKind() != Stmt::Kind::CALL) continue;
-                    stmt->print(std::cout); std::cout << '\n';
-                    std::string ret;
-                    if (stmt->getKind() == Stmt::Kind::CALL) {
-                        CallStmt* callStmt = (CallStmt*)stmt;
-                        if (callStmt->getReturns().size() == 0) continue;
-                        ret = callStmt->getReturns().front();
-                    } else {
-                        AssignStmt* assignStmt = (AssignStmt*)stmt;
-                        const Expr* lhs = assignStmt->getLhs().front();
-                        if (lhs->isVar()) {
-                            ret = ((VarExpr*)lhs)->name();
-                        }
-                    }
-                    std::cout << ret << " - ";
-                    if (pm->contains(ret)) {
-                        pm->get(ret).show();
-                    }
-                    std::cout << '\n';
-                }
-            }
-        }
-        std::cout << "\n check each boogie ir end ----------------- \n";
-        return false;
         // std::map<std::string, std::string> IROrigVar2Src = smackGen.getIRVar2Source();
         std::cout << "Begin verifying" << std::endl;
         CFGUtil cfgUtil(program);

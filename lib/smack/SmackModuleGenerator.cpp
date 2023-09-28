@@ -28,7 +28,7 @@ namespace smack {
     SmackModuleGenerator::SmackModuleGenerator() : ModulePass(ID) {
         program = new Program();
         structs = std::make_shared<StructSet>();
-        pointerTypeManager = std::make_shared<PointerInfoManager>();
+        pointerInfoManager = std::make_shared<PointerInfoManager>();
     }
 
     void SmackModuleGenerator::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
@@ -100,7 +100,7 @@ namespace smack {
 
                     SDEBUG(errs() << "Analyzing pointer type...\n");
                     PointerInfoAnalysis ptap(
-                        &naming, structs, pointerTypeManager);
+                        &naming, structs, pointerInfoManager);
                     ptap.visit(F);
                     SDEBUG(errs() << ptap << '\n');
                     

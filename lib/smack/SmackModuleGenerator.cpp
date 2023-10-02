@@ -59,9 +59,15 @@ namespace smack {
 
         SDEBUG(errs() << "Analyzing structures...\n");
         for (StructType* sty : M.getIdentifiedStructTypes()) {
+            if (sty->isOpaque()) continue;
             std::string name = sty->getName();
-            int num = sty->getNumElements();
-            structs->insert(std::make_pair("%" + name ,num));
+            std::vector<StructFieldType> fields;
+            for (unsigned i = 0; i < sty->getNumElements(); i++) {
+                llvm::Type* lt = sty->getElementType(i);
+                if (lt->isPointerTy()) fields.push_back(StructFieldType::INT_LOC);
+                else fields.push_back(StructFieldType::INT_DAT);
+            }
+            structs->insert(std::make_pair("%" + name, fields));
         }
 
         SDEBUG(errs() << "Analyzing functions...\n");

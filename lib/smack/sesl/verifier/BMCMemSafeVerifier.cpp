@@ -125,7 +125,7 @@ namespace smack
 
         // NEW BLOCKBMCVCGE
         BMCBlockVCGenPtr blockVcg = std::make_shared<BMCBlockVCGen>(refinedCFG, refBlockCFG, 2);
-        int depth = 10;
+        int depth = 2;
         // z3::expr vc = blockVcg->generateFeasibility(depth);
         z3::expr vc = blockVcg->generateBMCVC(depth);
         std::cout << "Result: " << std::endl;

@@ -19,7 +19,7 @@ namespace smack {
 
 class Naming;
 
-#define POINTER_TYPE_ANALYSIS_PRINT(Ty) \
+#define LLVM_RAW_OSTREAM_PRINT(Ty) \
   inline llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, const Ty &T) { \
     T.print(OS); \
     return OS; \
@@ -54,7 +54,7 @@ public:
   }
 };
 
-POINTER_TYPE_ANALYSIS_PRINT(PointerInfo)
+LLVM_RAW_OSTREAM_PRINT(PointerInfo)
 
 class PointerInfoManager {
 
@@ -98,7 +98,7 @@ public:
   }
 };
 
-POINTER_TYPE_ANALYSIS_PRINT(PointerInfoManager)
+LLVM_RAW_OSTREAM_PRINT(PointerInfoManager)
 
 typedef std::set<std::string> PointerEq;
 
@@ -107,16 +107,18 @@ class PointerEqManager {
 private:
   int Id;
   std::map<std::string, int> idx;
+  std::map<int, std::string> eqVar;
   std::vector<PointerEq> pointerEqs;
 
 public:
-  PointerEqManager() : Id(0), idx(), pointerEqs() {}
+  PointerEqManager() : Id(0), idx(), eqVar(), pointerEqs() {}
 
   void add(std::string& pt) {
     if (idx.find(pt) != idx.end()) return;
     idx[pt] = Id++;
     pointerEqs.push_back(PointerEq());
     pointerEqs.back().insert(pt);
+    eqVar[idx[pt]] = pt;
   }
 
   void setEq(std::string& b, std::string& n) {
@@ -129,6 +131,11 @@ public:
     return idx.find(pt) != idx.end();
   }
 
+  std::string getEqVar(std::string var) {
+    assert(contains(var));
+    return eqVar[idx[var]];
+  }
+
   PointerEq getEq(std::string pn) {
     assert(contains(pn));
     return pointerEqs[idx[pn]];
@@ -136,7 +143,11 @@ public:
 
 };
 
-typedef std::map<std::string, int> StructSet;
+enum StructFieldType { INT_LOC, INT_DAT };
+typedef std::vector<StructFieldType> StructFieldTypes;
+typedef std::map<std::string, StructFieldTypes> StructSet;
+typedef std::shared_ptr<StructSet> StructSetPtr;
+typedef std::shared_ptr<PointerInfoManager> PointerInfoManagerPtr;
 
 class PointerInfoAnalysis
   : public llvm::InstVisitor<PointerInfoAnalysis> {
@@ -148,7 +159,8 @@ private:
   
   std::shared_ptr<PointerEqManager> pem;
 
-  std::string getPtoTy(llvm::Type* lt);
+  static std::string removeOpaque(std::string type);
+  static std::string getPtoTy(llvm::Type* lt);
   bool isStruct(std::string& ty);
   bool isStructPt(llvm::Type* lt);
 
@@ -171,7 +183,7 @@ public:
 
 };
 
-POINTER_TYPE_ANALYSIS_PRINT(PointerInfoAnalysis)
+LLVM_RAW_OSTREAM_PRINT(PointerInfoAnalysis)
 
 } // namespace smack
 

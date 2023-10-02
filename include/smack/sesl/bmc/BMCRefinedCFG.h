@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <memory>
+#include "smack/PointerInfoAnalysis.h"
 #include "smack/sesl/cfg/CFG.h"
 
 
@@ -69,6 +70,14 @@ namespace smack
     typedef std::shared_ptr<ConcreteEdge> ConcreteEdgePtr;
 
     class RefinedAction {
+        public:
+            struct SLHVCmd {
+                std::string ptoTy = "NONE";
+                std::string base = "NONE";
+                int field = 0;
+                StructFieldTypes ftypes = StructFieldTypes();
+            };
+
         private:
             // two byte vars
             const Expr* arg1;
@@ -83,8 +92,12 @@ namespace smack
             int type4;
             std::set<std::string> changedOrigNames;
             ConcreteAction::ActType actType;
+
+            // SLHV
+            SLHVCmd slhvcmd;
+
         public:
-            RefinedAction(ConcreteAction::ActType at, const Expr* arg1, const Expr* arg2, const Expr* arg3, const Expr* arg4, int t1, int t2, int t3, int t4, std::set<std::string> names) : actType(at), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), type1(t1), type2(t2), type3(t3), type4(t4), changedOrigNames(names){}
+            RefinedAction(ConcreteAction::ActType at, const Expr* arg1, const Expr* arg2, const Expr* arg3, const Expr* arg4, int t1, int t2, int t3, int t4, std::set<std::string> names) : actType(at), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), type1(t1), type2(t2), type3(t3), type4(t4), changedOrigNames(names), slhvcmd() {}
             const Expr* getArg1(){return arg1;}
             const Expr* getArg2(){return arg2;}
             const Expr* getArg3(){return arg3;}
@@ -99,6 +112,10 @@ namespace smack
             }
             std::set<std::string> getChangedOrigNames(){return this->changedOrigNames;}
             void print(std::ostream &os);
+
+            // SLHV
+            void setSLHVCmd(SLHVCmd cmd) { this->slhvcmd = cmd; }
+            SLHVCmd getSLHVCmd() { return this->slhvcmd; }
     };
 
     typedef std::shared_ptr<RefinedAction> RefinedActionPtr;

@@ -7,16 +7,14 @@
 #include "llvm/Pass.h"
 #include "llvm/IR/Value.h"
 #include "smack/PointerInfoAnalysis.h"
+#include <cstring>
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace smack {
 
 class Program;
-
-typedef std::map<std::string, int> StructSet;
-typedef std::shared_ptr<StructSet> StructSetPtr;
-typedef std::shared_ptr<PointerInfoManager> PointerInfoManagerPtr;
 
 class SmackModuleGenerator : public llvm::ModulePass {
 private:

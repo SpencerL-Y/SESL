@@ -2516,7 +2516,9 @@ namespace smack
     z3::expr BMCBlockVCGen::generateFeasibility(int l){
         z3::expr vc = this->generateATSInitConfiguration();
         for(int k = 0; k < l; k ++){
-            vc = vc && this->generateATSTransitionRelation(k);
+            z3::expr tvc = this->generateATSTransitionRelation(k);
+            std::cout << " ------------------------------- \n" << tvc << std::endl;
+            vc = vc && tvc;
         }
         return vc;
     }

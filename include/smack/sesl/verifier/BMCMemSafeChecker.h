@@ -6,26 +6,30 @@
 
 #include "smack/sesl/ast/BoogieAst.h"
 #include "smack/SmackModuleGenerator.h"
+#include "smack/sesl/bmc/BMCRefinedCFG.h"
 
-namespace smack
-{
-    class BMCMemSafeChecker : public llvm::ModulePass {
-        private:
-            PointerInfoManagerPtr pim;
+namespace smack {
+    
+class BMCMemSafeChecker : public llvm::ModulePass {
 
-            bool support(const Stmt* stmt);
-        public:
-            static char ID;
-            BMCMemSafeChecker() : llvm::ModulePass(ID){};
-            ~BMCMemSafeChecker(){};
-            virtual llvm::StringRef getPassName() const { return "BMCMemSafeChecker"; }
-            virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
-            
-            virtual bool runOnModule(llvm::Module &m); 
+private:
+  StructSetPtr pss;
+  PointerInfoManagerPtr pim;
 
-            // extra functions
-            void refinedProgram(Program* prog);
-    };
+  bool support(const Stmt* stmt);
+  void refinedProgram(Program* prog);
+  std::string getOrigName(std::string origName);
+  std::string getSuffName(std::string origName);
+  void setSLHVCmds(RefBlockCFGPtr refBlockCFG);
+public:
+  static char ID;
+  BMCMemSafeChecker() : llvm::ModulePass(ID){};
+  ~BMCMemSafeChecker(){};
+  virtual llvm::StringRef getPassName() const { return "BMCMemSafeChecker"; }
+  virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
+
+  virtual bool runOnModule(llvm::Module &m); 
+};
 
 } // namespace smack
 

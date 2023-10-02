@@ -161,6 +161,7 @@ add_library(smackTranslator STATIC
         include/smack/sesl/cfg/ProcManager.h
         include/smack/sesl/bmc/BMCRefinedCFG.h
         include/smack/sesl/bmc/BMCVCGen.h
+        include/smack/sesl/bmc/BMCSLHVVCGen.h
         include/smack/sesl/verifier/BMCMemSafeVerifier.h
         include/smack/sesl/bmc/StmtFormatter.h
         include/smack/sesl/bmc/BMCPreAnalysis.h
@@ -218,6 +219,7 @@ add_library(smackTranslator STATIC
         lib/smack/sesl/bmc/BMCRefinedCFG.cpp
         lib/smack/sesl/witness/ViolationPathGen.cpp
         lib/smack/sesl/bmc/BMCVCGen.cpp
+        lib/smack/sesl/bmc/BMCSLHVVCGen.cpp
         lib/smack/sesl/verifier/BMCMemSafeVerifier.cpp
         lib/smack/sesl/bmc/BMCPreAnalysis.cpp
         lib/smack/sesl/bmc/StmtFormatter.cpp

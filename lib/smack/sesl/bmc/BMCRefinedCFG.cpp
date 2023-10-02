@@ -509,6 +509,17 @@ namespace smack
             os << " <NULL>";
         }
         os << std::endl;
+        // SLHV
+        os << " |-- SLHV CMD : ";
+        os << "  Pto Type : " << slhvcmd.ptoTy;
+        os << "  Base : " << slhvcmd.base;
+        os << "  Field : " << slhvcmd.field;
+        if (slhvcmd.ftypes.size() > 0) {
+            os << " |- Field Types : ";
+            for (auto ftype : slhvcmd.ftypes)
+                os << " " << (ftype == StructFieldType::INT_LOC ? "Loc" : "Dat");
+        }
+        os << std::endl;
     }
 
     void RefinedEdge::print(std::ostream &os){

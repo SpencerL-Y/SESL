@@ -11,14 +11,25 @@
 
 namespace smack {
 
+std::string PointerInfoAnalysis::removeOpaque(std::string type) {
+  if (type.find("struct") == std::string::npos) return type;
+  if (type.find('.', 8) == std::string::npos) return type;
+  int pre_end = type.find('.', 8);
+  int suf_sta = type.size();
+  while(type[suf_sta - 1] == '*') suf_sta--;
+  std::string ptype = type.substr(0, pre_end);
+  if (suf_sta != type.size()) ptype += type.substr(suf_sta);
+  return ptype;
+}
+
 std::string PointerInfoAnalysis::getPtoTy(llvm::Type* lt) {
   assert(lt->isPointerTy());
   std::string name;
   llvm::raw_string_ostream rso(name);
   lt->print(rso);
   name = rso.str();
-  int n = name.size();
-  return name.substr(0, n - 1);
+  std::string ptype = name.substr(0, name.size() - 1);
+  return removeOpaque(ptype);
 }
 
 bool PointerInfoAnalysis::isStruct(std::string& ty) {
@@ -82,6 +93,8 @@ void PointerInfoAnalysis::visitBitCastInst(llvm::BitCastInst &I) {
     dpTy = getPtoTy(I.getSrcTy());
   else 
     dpTy = getPtoTy(I.getDestTy());
+
+  llvm::errs() << ipTy << "  " << dpTy << "\n";
 
   if (isStruct(ipTy) && isStruct(dpTy) && ipTy != dpTy) {
     assert(false && "Do not support translation between two records");
@@ -155,7 +168,7 @@ void PointerInfoAnalysis::visitGetElementPtrInst(llvm::GetElementPtrInst &I) {
 
   llvm::Value* val = I.getPointerOperand();
   assert(naming->hasName(*val));
-  pinfo.setBase(naming->get(*val));
+  pinfo.setBase(pem->getEqVar(naming->get(*val)));
 
   llvm::Value* field = I.getOperand(2);
   assert(isa<llvm::ConstantInt>(field));

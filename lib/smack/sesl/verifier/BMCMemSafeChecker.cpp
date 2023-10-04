@@ -42,7 +42,8 @@ bool BMCMemSafeChecker::support(const Stmt* stmt) {
     std::string proc = callStmt->getProc();
     return proc.find("memcpy") != std::string::npos ||
            proc.find("alloc") != std::string::npos ||
-           proc.find("malloc") != std::string::npos;
+           proc.find("malloc") != std::string::npos ||
+           proc.find("free") != std::string::npos;
   }
   return true;
 }
@@ -78,38 +79,71 @@ std::string BMCMemSafeChecker::getSuffName(std::string origName) {
   return "";
 }
 
+RefinedAction::SLHVCmd BMCMemSafeChecker::createSLHVCmdStruct(const VarExpr* vexpr) {
+  RefinedAction::SLHVCmd slhvcmd;
+  std::string var = getOrigName(vexpr->name());
+  assert(pim->contains(var));
+  auto pinfo = pim->get(var);
+  slhvcmd.type = pinfo.getType();
+  assert(pss->find(slhvcmd.type) != pss->end());
+  slhvcmd.ftypes = pss->at(slhvcmd.type);
+  return slhvcmd;
+}
+
+RefinedAction::SLHVCmd BMCMemSafeChecker::createSLHVCmdInStruct(const VarExpr* vexpr) {
+  RefinedAction::SLHVCmd slhvcmd;
+  std::string var = getOrigName(vexpr->name());
+  assert(pim->contains(var));
+  auto pinfo = pim->get(var);
+  assert(pinfo.isInStruct());
+  slhvcmd.base= pinfo.getBase() + getSuffName(vexpr->name());
+  slhvcmd.field = pinfo.getField();
+  assert(pim->contains(pinfo.getBase()));
+  std::string btype = pim->get(pinfo.getBase()).getType();
+  slhvcmd.btype = btype;
+  assert(pss->find(btype) != pss->end());
+  slhvcmd.bftypes = pss->at(btype);
+  return slhvcmd;
+}
+
 void BMCMemSafeChecker::setSLHVCmds(RefBlockCFGPtr refBlockCFG) {
   std::cout << "\n ------------------- SLHV DEBUG ---------------------------\n";
   for (auto refbvp : refBlockCFG->getVertices()) {
     std::cout << refbvp->getVertexId() << " ================================ \n";
     for(auto refActp : refbvp->getRefStmts()) {
       RefinedAction::SLHVCmd slhvcmd;
-      const Expr* vexpr = nullptr;
       // TODO add more cmds
       switch (refActp->getActType()) {    
         case ConcreteAction::ActType::ALLOC :
-        case ConcreteAction::ActType::MALLOC : 
+        case ConcreteAction::ActType::MALLOC : {
+          assert(refActp->getArg1()->isVar());
+          slhvcmd = this->createSLHVCmdStruct(
+            (const VarExpr*)refActp->getArg1()
+          );
+          break;
+        }
         case ConcreteAction::ActType::STORE: {
           assert(refActp->getArg1()->isVar());
-          vexpr = refActp->getArg1();
+          slhvcmd = this->createSLHVCmdInStruct(
+            (const VarExpr*)refActp->getArg1()
+          );
           break;
         }
         case ConcreteAction::ActType::LOAD: {
           assert(refActp->getArg2()->isVar());
-          vexpr = refActp->getArg2();
+          slhvcmd = this->createSLHVCmdInStruct(
+            (const VarExpr*)refActp->getArg2()
+          );
+          break;
+        }
+        case ConcreteAction::ActType::FREE: {
+          assert(refActp->getArg1()->isVar());
+          slhvcmd = this->createSLHVCmdStruct(
+            (const VarExpr*)refActp->getArg1()
+          );
           break;
         }
         default: break;
-      }
-      if (vexpr == nullptr) continue;
-      std::string var = getOrigName(((const VarExpr*)vexpr)->name());
-      if (pim->contains(var)) {
-        auto pinfo = pim->get(var);
-        slhvcmd.ptoTy = pinfo.getPtoTy();
-        slhvcmd.base = pinfo.getBase() + getSuffName(((const VarExpr*)vexpr)->name());
-        slhvcmd.field = pinfo.getField();
-        if (pss->find(slhvcmd.ptoTy) != pss->end())
-          slhvcmd.ftypes = pss->at(slhvcmd.ptoTy);
       }
       refActp->setSLHVCmd(slhvcmd);
     }

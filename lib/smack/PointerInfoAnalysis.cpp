@@ -58,9 +58,7 @@ void PointerInfoAnalysis::visitAllocaInst(llvm::AllocaInst &I) {
   pem->add(vname);
 
   PointerInfo pinfo;
-  pinfo.setBase(vname);
-  pinfo.setPtoTy(getPtoTy(I.getType()));
-  // llvm::errs() << pinfo << '\n';
+  pinfo.setType(getPtoTy(I.getType()));
   pim->add(vname, pinfo);
   
   llvm::errs() << pinfo << "\n";
@@ -87,7 +85,7 @@ void PointerInfoAnalysis::visitBitCastInst(llvm::BitCastInst &I) {
     assert(false && "Do not support translation between two records");
   }
   
-  std::string ipTy = sinfo.getPtoTy();
+  std::string ipTy = sinfo.getType();
   std::string dpTy = "";
   if (isStructPt(I.getSrcTy()))
     dpTy = getPtoTy(I.getSrcTy());
@@ -100,7 +98,7 @@ void PointerInfoAnalysis::visitBitCastInst(llvm::BitCastInst &I) {
     assert(false && "Do not support translation between two records");
   }
 
-  dinfo.setPtoTy(dpTy);
+  dinfo.setType(dpTy);
   pim->add(dname, dinfo);
   
   if (!isStruct(ipTy) && isStruct(dpTy)) {
@@ -123,8 +121,7 @@ void PointerInfoAnalysis::visitCallInst(llvm::CallInst &I) {
   llvm::Function* func = I.getCalledFunction();
   if (func->getName() == "malloc") {
     PointerInfo pinfo;
-    pinfo.setBase(vname);
-    pinfo.setPtoTy(getPtoTy(func->getReturnType()));
+    pinfo.setType(getPtoTy(func->getReturnType()));
     pim->add(vname, pinfo);
     llvm::errs() << pinfo << '\n';
   }
@@ -144,8 +141,9 @@ void PointerInfoAnalysis::visitLoadInst(llvm::LoadInst &I) {
   PointerInfo pinfo;
   llvm::Value* val = I.getPointerOperand();
   assert(naming->hasName(*val));
+  
   pinfo.setBase(naming->get(*val));
-  pinfo.setPtoTy(getPtoTy(I.getType()));
+  pinfo.setType(getPtoTy(I.getType()));
   pim->add(vname, pinfo);
   llvm::errs() << pinfo << "\n";
 }
@@ -165,6 +163,8 @@ void PointerInfoAnalysis::visitGetElementPtrInst(llvm::GetElementPtrInst &I) {
   if (!stype->isStructTy()) {
     assert(false && "Unsupportted type");
   }
+  pinfo.setType(getPtoTy(I.getType()));
+  pinfo.setInStruct();
 
   llvm::Value* val = I.getPointerOperand();
   assert(naming->hasName(*val));
@@ -175,7 +175,6 @@ void PointerInfoAnalysis::visitGetElementPtrInst(llvm::GetElementPtrInst &I) {
   llvm::ConstantInt* c = (llvm::ConstantInt*)(field);
   pinfo.setField(c->getSExtValue() + 1);
 
-  pinfo.setPtoTy(getPtoTy(I.getType()));
   pim->add(vname, pinfo);
   
   llvm::errs() << pinfo << "\n";

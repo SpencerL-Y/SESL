@@ -20,6 +20,9 @@ private:
   void refinedProgram(Program* prog);
   std::string getOrigName(std::string origName);
   std::string getSuffName(std::string origName);
+
+  RefinedAction::SLHVCmd createSLHVCmdStruct(const VarExpr* vexpr);
+  RefinedAction::SLHVCmd createSLHVCmdInStruct(const VarExpr* vexpr);
   void setSLHVCmds(RefBlockCFGPtr refBlockCFG);
 public:
   static char ID;

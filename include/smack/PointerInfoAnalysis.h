@@ -28,29 +28,38 @@ class Naming;
 class PointerInfo {
 
 private:
+  std::string type;
+  bool isField;
   std::string base;
   int field;
-  std::string ptoTy;
 
 public:
-  PointerInfo() : base(""), field(0), ptoTy("") {}
+  PointerInfo()
+    : type(""), isField(false),
+      base(""), field(0) {}
 
+  void setType(std::string t) { type = t; }
+  void setInStruct() { isField = true; }
   void setBase(std::string b) { base = b; }
   void setField(int f) { field = f; }
-  void setPtoTy(std::string t) { ptoTy = t; }
 
+  std::string getType() { return type; }
+  bool isInStruct() { return isField; }
   std::string getBase() { return base; }
   int getField() { return field; }
-  std::string getPtoTy() { return ptoTy; }
 
   void show() {
-    std::cout << " Base : " << base << ", Field : " << field
-      << " ---> Pto Type : " << ptoTy;
+    std::cout << " Type :" << type;
+    if (isField) {
+      std::cout << " -- Base : " << base << ", Field : " << field;
+    }
   }
 
   void print(llvm::raw_ostream& OS) const {
-    OS << " Base : " << base << ", Field : " << field
-      << " ---> Pto Type : " << ptoTy;
+    OS << " Type :" << type;
+    if (isField) {
+      OS << " -- Base : " << base << ", Field : " << field;
+    }
   }
 };
 

@@ -51,8 +51,6 @@ public:
   void assertExpr(z3::expr e) { sol.add(e); }
   std::string to_smt2();
 
-  // void resetQuantifiedVarsCounts() { qlc = qhc = qdc = 0; }
-
   void print(std::ostream& OS);
 
 };
@@ -66,8 +64,10 @@ private:
 
   std::set<std::string> inputs;
   std::map<std::string, std::string> outputs;
-  std::set<std::string> freshVars;
-  z3::expr_vector quantifiedVars;
+  std::set<std::string> localVars;
+  std::set<std::string> quantifiedVars;
+  int src;
+  std::set<int> dests;
   z3::expr semantic;
 
   z3::expr getPreOutput(std::string name, Z3ExprManager::VarType vt);
@@ -89,11 +89,20 @@ private:
 public:
   BlockSemantic(Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg)
     : z3EM(z3EM),
-      inputs(), outputs(), freshVars(),
-      quantifiedVars(z3EM->Ctx()),
-      semantic(z3EM->Ctx()) {
+      inputs(), outputs(),
+      localVars(), quantifiedVars(),
+      src(-1), dests(),
+      semantic(z3EM->Ctx().bool_val(true)) {
       this->generateSemantic(bptr, bcfg);
     }
+  
+  const std::set<std::string>& getInputs() { return inputs; }
+  const std::map<std::string, std::string>& getOutputs() { return outputs; }
+  const std::set<std::string>& getLocalVars() { return localVars; }
+  const std::set<std::string>& getQuantifiedVars() { return quantifiedVars; }
+  const int getSrc() { return src; }
+  const std::set<int> getDests() { return dests; }
+  z3::expr getSemantic() { return semantic; }
 
   void print(std::ostream& OS);
 };
@@ -106,13 +115,16 @@ private:
   Z3ExprManagerPtr z3EM;
   RefBlockCFGPtr bcfg;
   
-  std::map<int, BlockSemanticPtr> trs;
+  std::set<std::string> globalStateVars;
+  std::map<int, BlockSemanticPtr> Trs;
 
   void init();
 
 public:
   TransitionSystem(Z3ExprManagerPtr z3EM, RefBlockCFGPtr bcfg)
-    : z3EM(z3EM), bcfg(bcfg), trs() { this->init(); }
+    : z3EM(z3EM), bcfg(bcfg), Trs() { this->init(); }
+  
+  z3::expr generateOneStepVC(int step);
     
   void print(std::ostream& OS);
 };

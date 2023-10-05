@@ -103,6 +103,13 @@ z3::expr Z3ExprManager::mk_uplus(z3::expr h1, z3::expr h2) {
 
 std::string Z3ExprManager::to_smt2() {
   // TODO change the format of some cmds
+  // z3::goal g(z3EM->Ctx());
+  // g.add(this->semantic);
+  // z3::tactic t(z3EM->Ctx(), "tseitin-cnf");
+  // z3::apply_result res = t(g);
+  // for (unsigned i = 0; i < res.size(); i++) {
+  //   std::cout << res[i].as_expr() << '\n';
+  // }
   return sol.to_smt2();
 }
 
@@ -141,12 +148,10 @@ z3::expr BlockSemantic::getPreOutputByName(std::string name) {
 }
 
 void BlockSemantic::generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg) {
-  // this->z3EM->resetQuantifiedVarsCounts();
-  z3::expr blockExpr = z3EM->Ctx().bool_val(true);
   for (RefinedActionPtr act : bptr->getRefStmts()) {
     if (act->getActType() == ConcreteAction::ActType::OTHER ||
         act->getActType() == ConcreteAction::ActType::OTHERPROC) continue;
-    act->print(std::cout);
+    // act->print(std::cout);
     z3::expr actExpr(z3EM->Ctx());
     switch (act->getActType()) {
       case ConcreteAction::ActType::ASSUME:
@@ -172,26 +177,20 @@ void BlockSemantic::generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg
         actExpr = z3EM->Ctx().bool_val(true);
         break;
     }
-    // if (actExpr.is_true()) continue;
-    if (blockExpr.is_true())
-      blockExpr = actExpr;
-    else if (!actExpr.is_true())
-      blockExpr = blockExpr && actExpr;
-    std::cout << actExpr << std::endl;
-    std::cout << " ----------------------------------- \n";
+    if (actExpr.is_true()) continue;
+    if (this->semantic.is_true())
+      this->semantic = actExpr;
+    else
+      this->semantic = this->semantic && actExpr;
+    // std::cout << actExpr << std::endl;
+    // std::cout << " ----------------------------------- \n";
   }
-  z3::expr src = z3EM->mk_data("loc") == bptr->getVertexId();
-  z3::expr dest = z3EM->Ctx().bool_val(true);
+  this->src = bptr->getVertexId();
   for (std::pair<int, int> edge : bcfg->getEdges()) {
     if (bptr->getVertexId() == edge.first) {
-      if (dest.is_true())
-        dest = z3EM->mk_data("locp") == edge.second;
-      else
-        dest = dest || z3EM->mk_data("locp") == edge.second;
+      this->dests.insert(edge.second);
     }
   }
-  this->semantic = z3::implies(src, blockExpr && dest);
-
   // this->print(std::cout);
 }
 
@@ -303,8 +302,7 @@ z3::expr BlockSemantic::generateAllocAndMallocSemantic(RefinedActionPtr act) {
   z3::expr lt = this->getPreOutput(var->name(), Z3ExprManager::VarType::LOC);
   z3::expr rho = this->generateRecord(slhvcmd.type, slhvcmd.ftypes);
 
-  if (H.to_string() != "H")
-    this->freshVars.insert(H.to_string());
+  this->localVars.insert(nH.to_string());
   this->outputs["H"] = nH.to_string();
 
   return nH == z3EM->mk_uplus(H, z3EM->mk_pto(slhvcmd.type, lt, rho));
@@ -326,9 +324,9 @@ z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
 
   this->outputs[var->name()] = v.to_string();
 
-  this->quantifiedVars.push_back(h);
+  this->quantifiedVars.insert(h.to_string());
   for (auto arg : rho.args())
-    this->quantifiedVars.push_back(arg);
+    this->quantifiedVars.insert(arg.to_string());
 
   return (H == z3EM->mk_uplus(h, pt)) && (v == fi);
 }
@@ -361,12 +359,13 @@ z3::expr BlockSemantic::generateStoreSemantic(RefinedActionPtr act) {
   z3::expr v = this->getPreOutputByName(var->name());
   z3::expr fi = pt2.arg(1).arg(slhvcmd.field - 1);
 
+  this->localVars.insert(nH.to_string());
   this->outputs["H"] = nH.to_string();
 
-  this->quantifiedVars.push_back(h);
+  this->quantifiedVars.insert(h.to_string());
   for (auto arg : rho.args())
-    this->quantifiedVars.push_back(arg);
-  this->quantifiedVars.push_back(rhop.arg(slhvcmd.field - 1));
+    this->quantifiedVars.insert(arg.to_string());
+  this->quantifiedVars.insert(rhop.arg(slhvcmd.field - 1).to_string());
 
   return (H == z3EM->mk_uplus(h, pt1)) && (nH == z3EM->mk_uplus(h, pt2)) && (v == fi);
 }
@@ -383,13 +382,12 @@ z3::expr BlockSemantic::generateFreeSemantic(RefinedActionPtr act) {
   z3::expr rho = this->generateRecord(slhvcmd.type, slhvcmd.ftypes);
   z3::expr pt = z3EM->mk_pto(slhvcmd.type, lt, rho);
 
-  if (H.to_string() != "H")
-    this->freshVars.insert(H.to_string());
+  this->localVars.insert(nH.to_string());
   this->outputs["H"] = nH.to_string();
 
-  this->quantifiedVars.push_back(h);
+  this->quantifiedVars.insert(h.to_string());
   for (auto arg : rho.args())
-    this->quantifiedVars.push_back(arg);
+    this->quantifiedVars.insert(arg.to_string());
 
   return (H == z3EM->mk_uplus(h, pt)) && (nH == h);
 }
@@ -402,30 +400,39 @@ void BlockSemantic::print(std::ostream& OS) {
   for (auto p : outputs)
     OS << " (" << p.first << ", " << p.second << ")";
   OS << std::endl;
-  OS << " Fresh Variables: ";
-  for (auto var : freshVars) OS << " " << var;
+  OS << " Local Variables: ";
+  for (auto var : localVars) OS << " " << var;
   OS << std::endl;
   OS << " Quantified Variables : ";
   for (auto var : quantifiedVars) OS << " " << var;
   OS << std::endl;
-  OS << semantic << std::endl;
+  OS << " Src : " << src << '\n';
+  OS << " Dests : ";
+  for (auto dest : dests) OS << " " << dest;
+  OS << std::endl;
+  OS << " Semantic : " << semantic << '\n';
 }
 
 void TransitionSystem::init() {
   for (RefBlockVertexPtr bptr : bcfg->getVertices()) {
+    if (this->Trs.find(bptr->getVertexId()) != this->Trs.end()) continue;
     BlockSemanticPtr bsp =
       std::make_shared<BlockSemantic>(z3EM, bptr, bcfg);
-    bsp->print(std::cout);
+    this->Trs[bptr->getVertexId()] = bsp;
+    for (auto var : bsp->getInputs())
+      this->globalStateVars.insert(var);
   }
+  this->print(std::cout);
 }
 
-
 void TransitionSystem::print(std::ostream& OS) {
-  for (auto tr : trs) {
-    OS << "========== Transition for block " << tr.first << " ==========\n";
+  OS << "================ Transition System ================\n";
+  for (auto tr : Trs) {
+    OS << " BlockSemantic - " << tr.first << "\n";
     tr.second->print(OS);
-    OS << "========== Transition for block " << tr.first << " ==========\n";
+    OS << " ---------------------------------------------\n";
   }
+  OS << "================ Transition System ================\n";
 }
 
 

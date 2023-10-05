@@ -20,7 +20,6 @@ public:
 
 private:
   z3::context ctx;
-  z3::solver sol;
 
   z3::sort intLoc;
   z3::sort intHeap;
@@ -30,6 +29,10 @@ private:
 
   std::map<std::string, int> freshVarsCounts;
   int qlc, qhc, qdc;
+
+  inline std::string decl_hvar(std::string var);
+  inline std::string decl_locvar(std::string var);
+  inline std::string decl_int(std::string var);
 
 public:
   Z3ExprManager();
@@ -48,8 +51,7 @@ public:
   z3::expr mk_fresh(std::string var, VarType vt);
   z3::expr mk_quantified(VarType vt);
 
-  void assertExpr(z3::expr e) { sol.add(e); }
-  std::string to_smt2();
+  std::string to_smt2(z3::expr e);
 
   void print(std::ostream& OS);
 
@@ -96,6 +98,10 @@ public:
       this->generateSemantic(bptr, bcfg);
     }
   
+  inline bool use_global(std::string var) {
+    return outputs.find(var) != outputs.end();
+  }
+
   const std::set<std::string>& getInputs() { return inputs; }
   const std::map<std::string, std::string>& getOutputs() { return outputs; }
   const std::set<std::string>& getLocalVars() { return localVars; }
@@ -119,12 +125,15 @@ private:
   std::map<int, BlockSemanticPtr> Trs;
 
   void init();
+  inline z3::expr generateVar(std::string name);
+  z3::expr generateOneStepBlockVC(RefBlockVertexPtr bptr, int k);
 
 public:
   TransitionSystem(Z3ExprManagerPtr z3EM, RefBlockCFGPtr bcfg)
     : z3EM(z3EM), bcfg(bcfg), Trs() { this->init(); }
   
-  z3::expr generateOneStepVC(int step);
+  z3::expr generateInitVC();
+  z3::expr generateOneStepVC(int k);
     
   void print(std::ostream& OS);
 };
@@ -146,10 +155,8 @@ public:
     TrSystem = std::make_shared<TransitionSystem>(z3EM, bcfg);
   }
 
-  // Z3ExprManagerPtr getZ3EM() { return z3EM; }
-
-  z3::expr generateVC(int depth);
-  z3::expr generateFeasibility(int depth);
+  z3::expr generateVC(int k);
+  void generateSMT2(z3::expr e, std::string path);
 
 };
 

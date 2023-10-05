@@ -184,6 +184,8 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   refBlockCFG->printRefBlockCFG(std::cout);
 
   BMCSLHVVCGen vcGen(refBlockCFG, pss);
+  z3::expr vc = vcGen.generateVC(1);
+  vcGen.generateSMT2(vc, "");
 
   return false;
 }

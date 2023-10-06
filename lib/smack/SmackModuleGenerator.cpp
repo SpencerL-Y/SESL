@@ -3,6 +3,7 @@
 //
 #define DEBUG_TYPE "smack-mod-gen"
 
+#include "llvm/IR/Function.h"
 #include "smack/SmackModuleGenerator.h"
 #include "smack/sesl/ast/BoogieAst.h"
 #include "smack/Debug.h"
@@ -28,7 +29,7 @@ namespace smack {
     SmackModuleGenerator::SmackModuleGenerator() : ModulePass(ID) {
         program = new Program();
         structs = std::make_shared<StructSet>();
-        pointerInfoManager = std::make_shared<PointerInfoManager>();
+        pimSet = std::make_shared<PIMSet>();
     }
 
     void SmackModuleGenerator::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
@@ -58,10 +59,16 @@ namespace smack {
         }
 
         SDEBUG(errs() << "Analyzing structures...\n");
+        StructFieldTypes fields;
+        fields.push_back(StructFieldType::INT_DAT);
+        // TODO: Add more basic pointer type
+        structs->insert(std::make_pair("i8", fields));
+        structs->insert(std::make_pair("i32", fields));
+        structs->insert(std::make_pair("i64", fields));
         for (StructType* sty : M.getIdentifiedStructTypes()) {
             if (sty->isOpaque()) continue;
             std::string name = sty->getName();
-            std::vector<StructFieldType> fields;
+            fields.clear();
             for (unsigned i = 0; i < sty->getNumElements(); i++) {
                 llvm::Type* lt = sty->getElementType(i);
                 if (lt->isPointerTy()) fields.push_back(StructFieldType::INT_LOC);
@@ -73,7 +80,7 @@ namespace smack {
         SDEBUG(errs() << "Analyzing functions...\n");
         
 
-        for (auto &F : M) {
+        for (llvm::Function& F : M) {
 
             // Reset the counters for per-function names
             naming.reset();
@@ -104,12 +111,16 @@ namespace smack {
                     igen.visit(F);
                     SDEBUG(errs() << "\n");
 
-                    SDEBUG(errs() << "Analyzing pointer type...\n");
-                    PointerInfoAnalysis ptap(
-                        &naming, structs, pointerInfoManager);
-                    ptap.visit(F);
-                    SDEBUG(errs() << ptap << '\n');
-                    
+                    if (!F.isIntrinsic() &&
+                        F.getName().find("SMACK") == std::string::npos) {
+                        SDEBUG(errs() << "Analyzing pointer info in " + F.getName() + "\n");
+                        pimSet->insert(
+                            std::make_pair(F.getName(), std::make_shared<PointerInfoManager>())
+                        );
+                        PointerInfoAnalysis ptap(&F, &naming, structs, pimSet->at(F.getName()));
+                        ptap.visit(F);
+                        SDEBUG(errs() << ptap << '\n');
+                    }
                     // if(!naming.get(F).compare("main")){
                     //     SDEBUG(errs() << "Mapping boogie var name to src var name for main" << "\n");
                     //     SmackSrcNamesMapper nameMapper(&naming);

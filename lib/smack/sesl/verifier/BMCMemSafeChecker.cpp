@@ -17,7 +17,7 @@ namespace smack {
 
 char BMCMemSafeChecker::ID(0);
 
-bool BMCMemSafeChecker::support(const Stmt* stmt) {
+bool BMCMemSafeChecker::support(const Stmt* stmt, PointerInfoManagerPtr pim) {
   if (stmt->getKind() == Stmt::Kind::ASSUME) {
     AssumeStmt* assumeStmt = (AssumeStmt*)stmt;
     // TODO Keep some useful attrs
@@ -52,19 +52,31 @@ void BMCMemSafeChecker::refinedProgram(Program* prog) {
   for (auto decl : *prog) {
     if (decl->getKind() != Decl::Kind::PROCEDURE) continue;
     ProcDecl* proc = (ProcDecl*)decl;
+    std::cout << "\n Refine function " << proc->getName() << '\n';
+    if (pimSet->find(proc->getName()) == pimSet->end())
+      continue;
     for (auto block : *proc) {
       std::cout << "\n before deletion ------------------------ \n";
       block->print(std::cout);
       std::vector<const Stmt*> unusedStmts;
-      for (auto stmt : *block)
-        if (!support(stmt))
+      for (auto stmt : *block) {
+        if (!support(stmt, pimSet->at(proc->getName())))
             unusedStmts.push_back(stmt);
+      }
       for (auto stmt : unusedStmts)
         block->getStatements().remove(stmt);
       std::cout << "\n after deletion ------------------------ \n";
       block->print(std::cout);
     }
   }
+}
+
+PointerInfoManagerPtr BMCMemSafeChecker::getPIM(std::string var) {
+  std::string fn =
+    var.substr(0, var.size() - 1)
+    .substr(var.find('_') + 1);
+  assert(pimSet->find(fn) != pimSet->end());
+  return pimSet->at(fn);
 }
 
 std::string BMCMemSafeChecker::getOrigName(std::string origName) {
@@ -81,7 +93,8 @@ std::string BMCMemSafeChecker::getSuffName(std::string origName) {
 
 RefinedAction::SLHVCmd BMCMemSafeChecker::createSLHVCmdStruct(const VarExpr* vexpr) {
   RefinedAction::SLHVCmd slhvcmd;
-  std::string var = getOrigName(vexpr->name());
+  std::string var = this->getOrigName(vexpr->name());
+  PointerInfoManagerPtr pim = this->getPIM(vexpr->name());
   assert(pim->contains(var));
   auto pinfo = pim->get(var);
   slhvcmd.type = pinfo.getType();
@@ -92,7 +105,8 @@ RefinedAction::SLHVCmd BMCMemSafeChecker::createSLHVCmdStruct(const VarExpr* vex
 
 RefinedAction::SLHVCmd BMCMemSafeChecker::createSLHVCmdInStruct(const VarExpr* vexpr) {
   RefinedAction::SLHVCmd slhvcmd;
-  std::string var = getOrigName(vexpr->name());
+  std::string var = this->getOrigName(vexpr->name());
+  PointerInfoManagerPtr pim = this->getPIM(vexpr->name());
   assert(pim->contains(var));
   auto pinfo = pim->get(var);
   assert(pinfo.isInStruct());
@@ -158,8 +172,9 @@ void BMCMemSafeChecker::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
 bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
   pss = smackGen.getStructSet();
-  pim = smackGen.getPointerInfoManager();
+  pimSet = smackGen.getPIMSet();
   Program* program = smackGen.getProgram();
+  program->print(std::cout);
   this->refinedProgram(program);
   CFGUtil cfgUtil(program);
   CFGPtr mainGraph = cfgUtil.getMainCFG();
@@ -180,7 +195,7 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   RefBlockCFGPtr refBlockCFG = std::make_shared<RefinedBlockCFG>(blockCFG);
   // refBlockCFG->printRefBlockCFG(std::cout);
 
-  setSLHVCmds(refBlockCFG);
+  this->setSLHVCmds(refBlockCFG);
   refBlockCFG->printRefBlockCFG(std::cout);
 
   BMCSLHVVCGen vcGen(refBlockCFG, pss);

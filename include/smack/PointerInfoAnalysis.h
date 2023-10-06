@@ -6,6 +6,7 @@
 
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/IR/InstVisitor.h"
+#include "llvm/IR/Function.h"
 
 #include <iostream>
 #include <set>
@@ -68,40 +69,40 @@ LLVM_RAW_OSTREAM_PRINT(PointerInfo)
 class PointerInfoManager {
 
 private:
-  std::map<std::string, PointerInfo> pointerTypes;
+  std::map<std::string, PointerInfo> pointerInfos;
 
 public:
-  PointerInfoManager() : pointerTypes() {}
+  PointerInfoManager() : pointerInfos() {}
 
   void add(std::string var, PointerInfo pi) {
-    pointerTypes[var] = pi;
+    pointerInfos[var] = pi;
   }
 
   void update(std::string var, PointerInfo pi) {
     assert(contains(var));
-    pointerTypes[var] = pi;
+    pointerInfos[var] = pi;
   }
 
   bool contains(std::string var) {
-    return pointerTypes.find(var) != pointerTypes.end();
+    return pointerInfos.find(var) != pointerInfos.end();
   }
 
   PointerInfo get(std::string var) {
     if (!this->contains(var)) return PointerInfo();
-    return pointerTypes[var];
+    return pointerInfos[var];
   }
 
   // TODO
 
   void show() {
-    for (auto vp : pointerTypes) {
+    for (auto vp : pointerInfos) {
       std::cout << vp.first << " --> ";
       vp.second.show();
     }
   }
 
   void print(llvm::raw_ostream& OS) const {
-    for (auto vp : pointerTypes) {
+    for (auto vp : pointerInfos) {
       OS << vp.first << " --> " << vp.second << '\n';
     }
   }
@@ -161,6 +162,10 @@ typedef std::shared_ptr<PointerInfoManager> PointerInfoManagerPtr;
 class PointerInfoAnalysis
   : public llvm::InstVisitor<PointerInfoAnalysis> {
 
+public:
+  static std::string removeOpaque(std::string type);
+  static std::string getOrigType(llvm::Type* lt);
+
 private:
   Naming* naming;
   std::shared_ptr<StructSet> structs;
@@ -168,17 +173,20 @@ private:
   
   std::shared_ptr<PointerEqManager> pem;
 
-  static std::string removeOpaque(std::string type);
-  static std::string getPtoTy(llvm::Type* lt);
   bool isStruct(std::string& ty);
   bool isStructPt(llvm::Type* lt);
 
+  void init(llvm::Function* F);
+
 public:
   PointerInfoAnalysis(
-    Naming *N,
+    llvm::Function* f,
+    Naming* n,
     std::shared_ptr<StructSet> s,
     std::shared_ptr<PointerInfoManager> pim)
-    : naming(N), structs(s), pim(pim), pem(new PointerEqManager()) {}
+    : naming(n), structs(s), pim(pim), pem(new PointerEqManager()) {
+    this->init(f);
+  }
 
   void visitInstruction(llvm::Instruction &I);
 

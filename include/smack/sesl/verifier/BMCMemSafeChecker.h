@@ -14,20 +14,21 @@ class BMCMemSafeChecker : public llvm::ModulePass {
 
 private:
   StructSetPtr pss;
-  PointerInfoManagerPtr pim;
+  PIMSetPtr pimSet;
 
-  bool support(const Stmt* stmt);
+  bool support(const Stmt* stmt, PointerInfoManagerPtr pim);
   void refinedProgram(Program* prog);
-  std::string getOrigName(std::string origName);
-  std::string getSuffName(std::string origName);
+  inline PointerInfoManagerPtr getPIM(std::string var);
+  inline std::string getOrigName(std::string origName);
+  inline std::string getSuffName(std::string origName);
 
   RefinedAction::SLHVCmd createSLHVCmdStruct(const VarExpr* vexpr);
   RefinedAction::SLHVCmd createSLHVCmdInStruct(const VarExpr* vexpr);
   void setSLHVCmds(RefBlockCFGPtr refBlockCFG);
 public:
   static char ID;
-  BMCMemSafeChecker() : llvm::ModulePass(ID){};
-  ~BMCMemSafeChecker(){};
+  BMCMemSafeChecker() : llvm::ModulePass(ID) {}
+  ~BMCMemSafeChecker() {}
   virtual llvm::StringRef getPassName() const { return "BMCMemSafeChecker"; }
   virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
 

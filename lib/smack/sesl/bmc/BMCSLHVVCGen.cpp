@@ -416,9 +416,17 @@ z3::expr BlockSemantic::generateStoreSemantic(RefinedActionPtr act) {
   
 
   const Expr* e = act->getArg2();
-  assert(e->isVar());
-  const VarExpr* var = (const VarExpr*)e;
-  z3::expr v = this->getPreOutputByName(var->name());
+  z3::expr v(z3EM->Ctx());
+  if (!e->isVar()) {
+    assert(e->getType() == ExprType::INT);
+    v = this->generateExpr(e);
+  } else {
+    const VarExpr* var = (const VarExpr*)e;
+    if (var->name() == "$0.ref")
+      v = this->generateExpr(e);
+    else
+      v = this->getPreOutputByName(var->name());
+  }
   z3::expr fi = pt2.arg(1).arg(slhvcmd.field - 1);
 
   this->localVars.insert(nH.to_string());

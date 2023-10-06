@@ -16,13 +16,16 @@ namespace smack {
 
 class Program;
 
+typedef std::map<std::string, PointerInfoManagerPtr> PIMSet;
+typedef std::shared_ptr<PIMSet> PIMSetPtr;
+
 class SmackModuleGenerator : public llvm::ModulePass {
 private:
   Program *program;
   // std::map<std::string, std::string> boogieVar2SrcVarMap;
   
   StructSetPtr structs;
-  PointerInfoManagerPtr pointerInfoManager;
+  PIMSetPtr pimSet;
 
 public:
   static char ID; // Pass identification, replacement for typeid
@@ -33,7 +36,7 @@ public:
   void generateProgram(llvm::Module &m);
   Program *getProgram() { return program; }
   StructSetPtr getStructSet() { return structs; }
-  PointerInfoManagerPtr getPointerInfoManager() { return pointerInfoManager; }
+  PIMSetPtr getPIMSet() { return pimSet; }
   // std::map<std::string, std::string> getIRVar2Source() {return boogieVar2SrcVarMap; }
 };
 } // namespace smack

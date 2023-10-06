@@ -22,7 +22,7 @@ std::string PointerInfoAnalysis::removeOpaque(std::string type) {
   return ptype;
 }
 
-std::string PointerInfoAnalysis::getPtoTy(llvm::Type* lt) {
+std::string PointerInfoAnalysis::getOrigType(llvm::Type* lt) {
   assert(lt->isPointerTy());
   std::string name;
   llvm::raw_string_ostream rso(name);
@@ -37,9 +37,23 @@ bool PointerInfoAnalysis::isStruct(std::string& ty) {
 }
 
 bool PointerInfoAnalysis::isStructPt(llvm::Type* lt) {
-  std::string ty = getPtoTy(lt);
+  std::string ty = PointerInfoAnalysis::getOrigType(lt);
   return isStruct(ty);
 }
+
+void PointerInfoAnalysis::init(llvm::Function* F) {
+  for (int i = 0; i < F->arg_size(); i++) {
+    llvm::Argument* arg = F->getArg(i);
+    std::string vname = naming->get(*arg);
+    llvm::Type* type = arg->getType();
+    if (!type->isPointerTy()) continue;
+    pem->add(vname);
+    PointerInfo pinfo;
+    pinfo.setType(PointerInfoAnalysis::getOrigType(type));
+    pim->add(vname, pinfo);
+  }
+}
+
 
 void PointerInfoAnalysis::visitInstruction(llvm::Instruction &I) {
   // llvm::errs() << "pointer type analysis: visit unsurpported instruction \n";
@@ -58,7 +72,7 @@ void PointerInfoAnalysis::visitAllocaInst(llvm::AllocaInst &I) {
   pem->add(vname);
 
   PointerInfo pinfo;
-  pinfo.setType(getPtoTy(I.getType()));
+  pinfo.setType(PointerInfoAnalysis::getOrigType(I.getType()));
   pim->add(vname, pinfo);
   
   llvm::errs() << pinfo << "\n";
@@ -88,9 +102,9 @@ void PointerInfoAnalysis::visitBitCastInst(llvm::BitCastInst &I) {
   std::string ipTy = sinfo.getType();
   std::string dpTy = "";
   if (isStructPt(I.getSrcTy()))
-    dpTy = getPtoTy(I.getSrcTy());
+    dpTy = PointerInfoAnalysis::getOrigType(I.getSrcTy());
   else 
-    dpTy = getPtoTy(I.getDestTy());
+    dpTy = PointerInfoAnalysis::getOrigType(I.getDestTy());
 
   llvm::errs() << ipTy << "  " << dpTy << "\n";
 
@@ -121,7 +135,7 @@ void PointerInfoAnalysis::visitCallInst(llvm::CallInst &I) {
   llvm::Function* func = I.getCalledFunction();
   if (func->getName() == "malloc") {
     PointerInfo pinfo;
-    pinfo.setType(getPtoTy(func->getReturnType()));
+    pinfo.setType(PointerInfoAnalysis::getOrigType(func->getReturnType()));
     pim->add(vname, pinfo);
     llvm::errs() << pinfo << '\n';
   }
@@ -143,7 +157,7 @@ void PointerInfoAnalysis::visitLoadInst(llvm::LoadInst &I) {
   assert(naming->hasName(*val));
   
   pinfo.setBase(naming->get(*val));
-  pinfo.setType(getPtoTy(I.getType()));
+  pinfo.setType(PointerInfoAnalysis::getOrigType(I.getType()));
   pim->add(vname, pinfo);
   llvm::errs() << pinfo << "\n";
 }
@@ -163,7 +177,7 @@ void PointerInfoAnalysis::visitGetElementPtrInst(llvm::GetElementPtrInst &I) {
   if (!stype->isStructTy()) {
     assert(false && "Unsupportted type");
   }
-  pinfo.setType(getPtoTy(I.getType()));
+  pinfo.setType(PointerInfoAnalysis::getOrigType(I.getType()));
   pinfo.setInStruct();
 
   llvm::Value* val = I.getPointerOperand();

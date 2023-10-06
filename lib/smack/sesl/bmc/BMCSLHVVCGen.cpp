@@ -1,3 +1,4 @@
+#include <fstream>
 #include <sstream>
 #include "smack/sesl/bmc/BMCSLHVVCGen.h"
 
@@ -25,24 +26,37 @@ std::string Z3ExprManager::decl_int(std::string var) {
   return "(declare-const " + var + " Int)\n";
 }
 
+bool Z3ExprManager::is_removed(std::string cmd) {
+  return cmd[0] == ';' ||
+         cmd.find("set-info") != std::string::npos ||
+         cmd.find("declare-sort") != std::string::npos ||
+         cmd.find("declare-datatypes") != std::string::npos ||
+         (cmd.find("declare-fun") != std::string::npos && 
+          (cmd.find("uplus") != std::string::npos ||
+           cmd.find("pt") != std::string::npos));
+}
+
 void Z3ExprManager::addRecord(std::string name, StructFieldTypes ftypes) {
   int n = ftypes.size();
-  z3::symbol recordName = ctx.str_symbol(name.c_str());
+  int recordId = records.size();
+  z3::symbol recordSort =
+    ctx.str_symbol(("pt_record_" + std::to_string(recordId)).c_str());
   z3::constructors ptCS(ctx);
-  z3::symbol ptName = ctx.str_symbol(("pt_" + name).c_str());
-  z3::symbol recName = ctx.str_symbol((name + "_rec").c_str());
+  std::string ptName = "Pt_R_" + std::to_string(recordId);
+  z3::symbol ptFun = ctx.str_symbol(ptName.c_str());
+  z3::symbol recName = ctx.str_symbol((ptName + "_rec").c_str());
   std::vector<z3::symbol> accs;
   std::vector<z3::sort> sorts;
   for (int i = 0; i < n; i++)
-    accs.push_back(ctx.str_symbol((name + "_" + std::to_string(i + 1)).c_str()));
+    accs.push_back(ctx.str_symbol((ptName + "_" + std::to_string(i + 1)).c_str()));
   for (int i = 0; i < n; i++) {
     if (ftypes[i] == StructFieldType::INT_LOC)
       sorts.push_back(intLoc);
     else
       sorts.push_back(ctx.int_sort());
   }
-  ptCS.add(ptName, recName, n, accs.data(), sorts.data());
-  z3::sort rsort = ctx.datatype(recordName, ptCS);
+  ptCS.add(ptFun, recName, n, accs.data(), sorts.data());
+  z3::sort rsort = ctx.datatype(recordSort, ptCS);
   records[name] = std::make_shared<z3::sort>(rsort);
   pts[name] = std::make_shared<z3::func_decl>(z3::function("pt", intLoc, rsort, intHeap));
 }
@@ -117,33 +131,41 @@ std::string Z3ExprManager::to_smt2(z3::expr e) {
   z3::solver sol(this->ctx);
   sol.add(e);
   std::string origSmt2 = sol.to_smt2();
-  
   std::stringstream ss(origSmt2.c_str());
+  
   std::string smt2 = "(set-logic SLHV)\n" +
     this->decl_hvar("emp") +  this->decl_locvar("nil");
-  
-  for (std::string line; std::getline(ss, line, '\n');) {
-    if (line[0] == ';' ||
-        line.find("set-info") != std::string::npos ||
-        line.find("declare-sort") != std::string::npos)
-      continue;
-    if (line.find("declare-fun") != std::string::npos) {
-      int start = line.find(' ') + 1;
-      int end = line.find(' ', start);
-      std::string var = line.substr(start, end - start);
-      if (line.find("IntHeap") != std::string::npos)
+  for (auto p : records) {
+    std::string dt = "(declare-datatype ";
+    dt += p.second->to_string() + " ";
+    z3::func_decl fd = p.second->constructors().back();
+    dt += "((" + fd.name().str();
+    for (int i = 0; i < fd.arity(); i++) {
+      dt += " (" + fd.name().str() + "_" + std::to_string(i + 1) + " "
+            + fd.domain(i).to_string() + ")";
+    }
+    dt += ")))\n";
+    smt2 += dt;
+  }
+  for (std::string cmd; std::getline(ss, cmd, '\n');) {
+    if (this->is_removed(cmd)) continue;
+    if (cmd.find("declare-fun") != std::string::npos) {
+      int beginIdex = cmd.find('(');
+      int start = cmd.find(' ', beginIdex) + 1;
+      int end = cmd.find(' ', start);
+      std::string var = cmd.substr(start, end - start);
+      if (cmd.find("IntHeap") != std::string::npos)
         smt2 += this->decl_hvar(var);
-      else if (line.find("IntLoc") != std::string::npos)
+      else if (cmd.find("IntLoc") != std::string::npos)
         smt2 += this->decl_locvar(var);
-      else if (line.find("Int") != std::string::npos)
+      else if (cmd.find("Int") != std::string::npos)
         smt2 += this->decl_int(var);
       else
         assert(false && "unsupported sort!!!");
     } else {
-      smt2 += line + '\n';
+      smt2 += cmd + '\n';
     }
   }
-  
   return smt2;
 }
 
@@ -564,8 +586,13 @@ z3::expr BMCSLHVVCGen::generateVC(int k) {
   return vc;
 }
 
-void BMCSLHVVCGen::generateSMT2(z3::expr e, std::string path) {
-  std::cout << z3EM->to_smt2(e) << '\n';
+void BMCSLHVVCGen::generateSMT2(z3::expr e, std::string filename) {
+  if (filename.substr(filename.find_last_of(".") + 1) != "smt2") return;
+  std::ofstream f(filename, std::ios::out);
+  if (f) {
+    f << z3EM->to_smt2(e);
+    f.close();
+  }
 }
 
 } // namespace smack

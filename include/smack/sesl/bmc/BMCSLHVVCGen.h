@@ -33,6 +33,7 @@ private:
   inline std::string decl_hvar(std::string var);
   inline std::string decl_locvar(std::string var);
   inline std::string decl_int(std::string var);
+  bool is_removed(std::string cmd);
 
 public:
   Z3ExprManager();
@@ -156,7 +157,7 @@ public:
   }
 
   z3::expr generateVC(int k);
-  void generateSMT2(z3::expr e, std::string path);
+  void generateSMT2(z3::expr e, std::string filename);
 
 };
 

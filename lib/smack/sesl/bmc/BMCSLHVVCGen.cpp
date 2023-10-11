@@ -36,7 +36,7 @@ bool Z3ExprManager::is_removed(std::string cmd) {
            cmd.find("pt") != std::string::npos));
 }
 
-void Z3ExprManager::addRecord(std::string name, StructFieldTypes ftypes) {
+void Z3ExprManager::addRecord(std::string name, RecordFieldsTypes ftypes) {
   int n = ftypes.size();
   int recordId = records.size();
   z3::symbol recordSort =
@@ -50,7 +50,7 @@ void Z3ExprManager::addRecord(std::string name, StructFieldTypes ftypes) {
   for (int i = 0; i < n; i++)
     accs.push_back(ctx.str_symbol((ptName + "_" + std::to_string(i + 1)).c_str()));
   for (int i = 0; i < n; i++) {
-    if (ftypes[i] == StructFieldType::INT_LOC)
+    if (ftypes[i] == SLHVVarType::INT_LOC)
       sorts.push_back(intLoc);
     else
       sorts.push_back(ctx.int_sort());
@@ -86,7 +86,7 @@ z3::expr Z3ExprManager::mk_heap(std::string name) {
   return ctx.constant(name.c_str(), intHeap);
 }
 
-z3::expr Z3ExprManager::mk_fresh(std::string var, VarType vt) {
+z3::expr Z3ExprManager::mk_fresh(std::string var, SLHVVarType vt) {
   int id;
   if (freshVarsCounts.find(var) != freshVarsCounts.end()) {
     id = freshVarsCounts[var] + 1;
@@ -96,20 +96,20 @@ z3::expr Z3ExprManager::mk_fresh(std::string var, VarType vt) {
     freshVarsCounts[var] = 1;
   }
   switch (vt) {
-    case VarType::DAT : return mk_data(var + std::to_string(id));
-    case VarType::LOC : return mk_loc(var + std::to_string(id));
-    case VarType::HEAP :
+    case SLHVVarType::INT_DAT : return mk_data(var + std::to_string(id));
+    case SLHVVarType::INT_LOC : return mk_loc(var + std::to_string(id));
+    case SLHVVarType::INT_HEAP :
       assert(var == "H");
       return mk_heap(var + std::to_string(id));
     default : assert(false);
   }
 }
 
-z3::expr Z3ExprManager::mk_quantified(VarType vt) {
+z3::expr Z3ExprManager::mk_quantified(SLHVVarType vt) {
   switch (vt) {
-    case VarType::DAT : return mk_data("d" + std::to_string(qdc++));
-    case VarType::LOC : return mk_loc("l" + std::to_string(qlc++));
-    case VarType::HEAP : return mk_heap("h" + std::to_string(qhc++));
+    case SLHVVarType::INT_DAT : return mk_data("d" + std::to_string(qdc++));
+    case SLHVVarType::INT_LOC : return mk_loc("l" + std::to_string(qlc++));
+    case SLHVVarType::INT_HEAP : return mk_heap("h" + std::to_string(qhc++));
     default : assert(false);
   }
 }
@@ -182,15 +182,15 @@ void Z3ExprManager::print(std::ostream& OS) {
   OS << " Uplus ---> " << uplus << '\n';
 }
 
-z3::expr BlockSemantic::getPreOutput(std::string name, Z3ExprManager::VarType vt) {
+z3::expr BlockSemantic::getPreOutput(std::string name, SLHVVarType vt) {
   if (outputs.find(name) == outputs.end()) {
     this->inputs.insert(name);
     this->outputs[name] = name;
   }
   switch (vt) {
-    case Z3ExprManager::VarType::DAT : return z3EM->mk_data(this->outputs[name]);
-    case Z3ExprManager::VarType::LOC : return z3EM->mk_loc(this->outputs[name]);
-    case Z3ExprManager::VarType::HEAP : return z3EM->mk_heap(this->outputs[name]);
+    case SLHVVarType::INT_DAT : return z3EM->mk_data(this->outputs[name]);
+    case SLHVVarType::INT_LOC : return z3EM->mk_loc(this->outputs[name]);
+    case SLHVVarType::INT_HEAP : return z3EM->mk_heap(this->outputs[name]);
     default: assert(false);
   }
 }
@@ -198,9 +198,9 @@ z3::expr BlockSemantic::getPreOutput(std::string name, Z3ExprManager::VarType vt
 z3::expr BlockSemantic::getPreOutputByName(std::string name) {
   assert(name[1] == 'p' || name[1] == 'i');
   if (name[1] == 'p')
-    return this->getPreOutput(name, Z3ExprManager::VarType::LOC);
+    return this->getPreOutput(name, SLHVVarType::INT_LOC);
   else if(name[1] == 'i')
-    return this->getPreOutput(name, Z3ExprManager::VarType::DAT);
+    return this->getPreOutput(name, SLHVVarType::INT_DAT);
 }
 
 void BlockSemantic::generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg) {
@@ -254,13 +254,13 @@ inline z3::expr BlockSemantic::generateRecord(std::string& type, z3::expr_vector
   return z3EM->mk_record(type, args);
 }
 
-inline z3::expr BlockSemantic::generateRecord(std::string& type, StructFieldTypes& ftypes) {
+inline z3::expr BlockSemantic::generateRecord(std::string& type, RecordFieldsTypes& ftypes) {
   z3::expr_vector args(z3EM->Ctx());
   for (auto ftype : ftypes) {
-    if (ftype == StructFieldType::INT_LOC)
-      args.push_back(z3EM->mk_quantified(Z3ExprManager::VarType::LOC));
+    if (ftype == SLHVVarType::INT_LOC)
+      args.push_back(z3EM->mk_quantified(SLHVVarType::INT_LOC));
     else
-      args.push_back(z3EM->mk_quantified(Z3ExprManager::VarType::DAT));
+      args.push_back(z3EM->mk_quantified(SLHVVarType::INT_DAT));
   }
   return this->generateRecord(type, args);
 }
@@ -268,9 +268,9 @@ inline z3::expr BlockSemantic::generateRecord(std::string& type, StructFieldType
 z3::expr BlockSemantic::generateFreshVarByName(std::string name) {
   assert(name[1] == 'p' || name[1] == 'i' || name[1] == 'r');
   if (name[1] == 'p')
-    return z3EM->mk_fresh(name, Z3ExprManager::VarType::LOC);
+    return z3EM->mk_fresh(name, SLHVVarType::INT_LOC);
   else
-    return z3EM->mk_fresh(name, Z3ExprManager::VarType::DAT);
+    return z3EM->mk_fresh(name, SLHVVarType::INT_DAT);
 }
 
 z3::expr BlockSemantic::generateBinExpr(const BinExpr* e) {
@@ -305,9 +305,9 @@ z3::expr BlockSemantic::generateExpr(const Expr* e) {
     case ExprType::VAR: {
       const VarExpr* var = (const VarExpr*)e;
       if (var->name()[1] == 'p')
-        return this->getPreOutput(var->name(), Z3ExprManager::VarType::LOC);
+        return this->getPreOutput(var->name(), SLHVVarType::INT_LOC);
       else if(var->name()[1] == 'i' || var->name()[0] == 'r')
-        return this->getPreOutput(var->name(), Z3ExprManager::VarType::DAT);
+        return this->getPreOutput(var->name(), SLHVVarType::INT_DAT);
       else if(var->name() == "$0.ref")
         return z3EM->mk_loc("nil");
       else
@@ -357,9 +357,9 @@ z3::expr BlockSemantic::generateAllocAndMallocSemantic(RefinedActionPtr act) {
   assert(e->isVar());
   const VarExpr* var = (const VarExpr*)e;
   auto slhvcmd = act->getSLHVCmd();
-  z3::expr H = this->getPreOutput("H", Z3ExprManager::VarType::HEAP);
-  z3::expr nH = z3EM->mk_fresh("H", Z3ExprManager::VarType::HEAP);
-  z3::expr lt = this->getPreOutput(var->name(), Z3ExprManager::VarType::LOC);
+  z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
+  z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
+  z3::expr lt = this->getPreOutput(var->name(), SLHVVarType::INT_LOC);
   z3::expr rho = this->generateRecord(slhvcmd.type, slhvcmd.ftypes);
 
   this->localVars.insert(nH.to_string());
@@ -370,9 +370,9 @@ z3::expr BlockSemantic::generateAllocAndMallocSemantic(RefinedActionPtr act) {
 
 z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
   auto slhvcmd = act->getSLHVCmd();
-  z3::expr H = this->getPreOutput("H", Z3ExprManager::VarType::HEAP);
-  z3::expr h = z3EM->mk_quantified(Z3ExprManager::VarType::HEAP);
-  z3::expr lt = this->getPreOutput(slhvcmd.base, Z3ExprManager::VarType::LOC);
+  z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
+  z3::expr h = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
+  z3::expr lt = this->getPreOutput(slhvcmd.base, SLHVVarType::INT_LOC);
   z3::expr rho = this->generateRecord(slhvcmd.btype, slhvcmd.bftypes);
   z3::expr pt = z3EM->mk_pto(slhvcmd.btype, lt, rho);
 
@@ -395,19 +395,19 @@ z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
 
 z3::expr BlockSemantic::generateStoreSemantic(RefinedActionPtr act) {
   auto slhvcmd = act->getSLHVCmd();
-  z3::expr H = this->getPreOutput("H", Z3ExprManager::VarType::HEAP);
-  z3::expr nH = z3EM->mk_fresh("H", Z3ExprManager::VarType::HEAP);
-  z3::expr h = z3EM->mk_quantified(Z3ExprManager::VarType::HEAP);
-  z3::expr lt = this->getPreOutput(slhvcmd.base, Z3ExprManager::VarType::LOC);
+  z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
+  z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
+  z3::expr h = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
+  z3::expr lt = this->getPreOutput(slhvcmd.base, SLHVVarType::INT_LOC);
   z3::expr rho = this->generateRecord(slhvcmd.btype, slhvcmd.bftypes);
   z3::expr_vector nargs(z3EM->Ctx());
   for (int i = 0; i < rho.num_args(); i++) {
     if (i + 1 != slhvcmd.field) nargs.push_back(rho.arg(i));
     else {
-      if (slhvcmd.bftypes[slhvcmd.field - 1] == StructFieldType::INT_LOC)
-        nargs.push_back(z3EM->mk_quantified(Z3ExprManager::VarType::LOC));
+      if (slhvcmd.bftypes[slhvcmd.field - 1] == SLHVVarType::INT_LOC)
+        nargs.push_back(z3EM->mk_quantified(SLHVVarType::INT_LOC));
       else
-        nargs.push_back(z3EM->mk_quantified(Z3ExprManager::VarType::DAT));
+        nargs.push_back(z3EM->mk_quantified(SLHVVarType::INT_DAT));
     }
   }
   z3::expr rhop = this->generateRecord(slhvcmd.btype, nargs);
@@ -445,10 +445,10 @@ z3::expr BlockSemantic::generateFreeSemantic(RefinedActionPtr act) {
   assert(e->isVar());
   const VarExpr* var = (const VarExpr*)e;
   auto slhvcmd = act->getSLHVCmd();
-  z3::expr H = this->getPreOutput("H", Z3ExprManager::VarType::HEAP);
-  z3::expr nH = z3EM->mk_fresh("H", Z3ExprManager::VarType::HEAP);
-  z3::expr h = z3EM->mk_quantified(Z3ExprManager::VarType::HEAP);
-  z3::expr lt = this->getPreOutput(var->name(), Z3ExprManager::VarType::LOC);
+  z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
+  z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
+  z3::expr h = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
+  z3::expr lt = this->getPreOutput(var->name(), SLHVVarType::INT_LOC);
   z3::expr rho = this->generateRecord(slhvcmd.type, slhvcmd.ftypes);
   z3::expr pt = z3EM->mk_pto(slhvcmd.type, lt, rho);
 
@@ -494,16 +494,53 @@ void TransitionSystem::init() {
   }
   this->print(std::cout);
 }
+  
+std::list<RefBlockVertexPtr> TransitionSystem::getBlocks() {
+  return bcfg->getVertices();
+}
 
-z3::expr TransitionSystem::generateVar(std::string name) {
+std::list<int> TransitionSystem::getInitialStates() {
+  return bcfg->getInitVertices();
+}
+
+std::set<int> TransitionSystem::getSuccessors(std::set<int> u) {
+  std::set<int> v;
+  for (auto edge : bcfg->getEdges())
+    if (u.find(edge.first) != u.end())
+      v.insert(edge.second);
+  return v;
+}
+
+void TransitionSystem::print(std::ostream& OS) {
+  OS << "================ Transition System ================\n";
+  OS << " Global State Variable :";
+  for (auto var : globalStateVars) OS << " " << var;
+  OS << "\n";
+  for (auto tr : Trs) {
+    OS << " ---------------------------------------------\n";
+    OS << " BlockSemantic - " << tr.first << "\n";
+    tr.second->print(OS);
+  }
+  OS << "================ Transition System ================\n";
+}
+
+const std::set<std::string>& TransitionSystem::getGlobalStateVars() {
+  return globalStateVars;
+}
+
+BlockSemanticPtr TransitionSystem::getBlockSemantic(int b) {
+  assert(Trs.find(b) != Trs.end());
+  return Trs.at(b);
+}
+
+z3::expr BMCSLHVVCGen::generateVar(std::string name) {
   if (name[0] == 'H') return z3EM->mk_heap(name);
   if (name[1] == 'p') return z3EM->mk_loc(name);
   return z3EM->mk_data(name);
 }
 
-z3::expr TransitionSystem::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k) {
-  assert(this->Trs.find(bptr->getVertexId()) != this->Trs.end());
-  BlockSemanticPtr bsp = this->Trs[bptr->getVertexId()];
+z3::expr BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k) {
+  BlockSemanticPtr bsp = this->TrSystem->getBlockSemantic(bptr->getVertexId());
   z3::expr vc(z3EM->Ctx());
   z3::expr premise =
     z3EM->mk_data("loc_" + std::to_string(k - 1)) == bsp->getSrc();
@@ -536,7 +573,7 @@ z3::expr TransitionSystem::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k)
       ov = this->generateVar(vp.second + "_" + std::to_string(k));
     implicant = implicant && (nv == ov);
   }
-  for (auto var : globalStateVars) {
+  for (auto var : this->TrSystem->getGlobalStateVars()) {
     if (bsp->use_global(var)) continue;
     z3::expr ov = this->generateVar(var + "_" + std::to_string(k - 1));
     z3::expr nv = this->generateVar(var + "_" + std::to_string(k));
@@ -554,14 +591,24 @@ z3::expr TransitionSystem::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k)
   return !premise || implicant;
 }
 
-z3::expr TransitionSystem::generateInitVC() {
-  return z3EM->mk_heap("H_0") == z3EM->mk_heap("emp");
+z3::expr BMCSLHVVCGen::generateInitVC() {
+  z3::expr init_heap = z3EM->mk_heap("H_0") == z3EM->mk_heap("emp");
+  z3::expr init_loc = z3EM->Ctx().bool_val(true);
+  z3::expr loc_0 = z3EM->mk_data("loc_0");
+  for (auto b : this->TrSystem->getInitialStates()) {
+    if (init_loc.is_true())
+      init_loc = (loc_0 == b);
+    else
+      init_loc = init_loc && (loc_0 == b);
+  }
+  return init_heap && init_loc;
 }
 
-z3::expr TransitionSystem::generateOneStepVC(int k) {
+z3::expr BMCSLHVVCGen::generateOneStepVC(int k, const std::set<int>& blocks) {
   assert(k > 0);
   z3::expr vc = z3EM->Ctx().bool_val(true);
-  for (RefBlockVertexPtr bptr : bcfg->getVertices()) {
+  for (RefBlockVertexPtr bptr : this->TrSystem->getBlocks()) {
+    if (blocks.find(bptr->getVertexId()) == blocks.end()) continue;
     z3::expr bvc = this->generateOneStepBlockVC(bptr, k);
     vc = vc && bvc;
     // std::cout << " =====================================\n";
@@ -571,26 +618,15 @@ z3::expr TransitionSystem::generateOneStepVC(int k) {
   return vc;
 }
 
-void TransitionSystem::print(std::ostream& OS) {
-  OS << "================ Transition System ================\n";
-  OS << " Global State Variable :";
-  for (auto var : globalStateVars) OS << " " << var;
-  OS << "\n";
-  for (auto tr : Trs) {
-    OS << " ---------------------------------------------\n";
-    OS << " BlockSemantic - " << tr.first << "\n";
-    tr.second->print(OS);
-  }
-  OS << "================ Transition System ================\n";
-}
-
-
 z3::expr BMCSLHVVCGen::generateVC(int k) {
-  z3::expr vc = this->TrSystem->generateInitVC();
+  z3::expr vc = this->generateInitVC();
+  std::set<int> blocks;
+  for (int u : this->TrSystem->getInitialStates())
+    blocks.insert(u);
   for (int i = 1; i <= k; i++) {
-    vc = vc && this->TrSystem->generateOneStepVC(i);
+    if (i > 2) blocks = this->TrSystem->getSuccessors(blocks);
+    vc = vc && this->generateOneStepVC(i, blocks);
   }
-  // std::cout << vc << "\n";
   return vc;
 }
 

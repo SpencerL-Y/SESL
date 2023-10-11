@@ -73,11 +73,11 @@ namespace smack
         public:
             struct SLHVCmd {
                 std::string type = "NONE";
-                StructFieldTypes ftypes = StructFieldTypes();
+                RecordFieldsTypes ftypes = RecordFieldsTypes();
                 std::string base = "NONE";
                 std::string btype = "NONE";
                 int field = 0;
-                StructFieldTypes bftypes = StructFieldTypes();
+                RecordFieldsTypes bftypes = RecordFieldsTypes();
             };
 
         private:

@@ -515,7 +515,7 @@ namespace smack
             os << " Type : " << slhvcmd.type;
             os << " Fields : ";
             for (auto ftype : slhvcmd.ftypes)
-                os << " " << (ftype == StructFieldType::INT_LOC ? "Loc" : "Dat");
+                os << " " << (ftype == SLHVVarType::INT_LOC ? "Loc" : "Dat");
         }
         if (!slhvcmd.bftypes.empty()) {
             os << "  Base : " << slhvcmd.base;
@@ -524,7 +524,7 @@ namespace smack
             if (slhvcmd.bftypes.size() > 0) {
                 os << " Base Fields : ";
                 for (auto bftype : slhvcmd.bftypes)
-                    os << " " << (bftype == StructFieldType::INT_LOC ? "Loc" : "Dat");
+                    os << " " << (bftype == SLHVVarType::INT_LOC ? "Loc" : "Dat");
             }
         }
         os << std::endl;

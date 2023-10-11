@@ -28,7 +28,7 @@ namespace smack {
 
     SmackModuleGenerator::SmackModuleGenerator() : ModulePass(ID) {
         program = new Program();
-        structs = std::make_shared<StructSet>();
+        rm = std::make_shared<RecordManager>();
         pimSet = std::make_shared<PIMSet>();
     }
 
@@ -59,22 +59,18 @@ namespace smack {
         }
 
         SDEBUG(errs() << "Analyzing structures...\n");
-        StructFieldTypes fields;
-        fields.push_back(StructFieldType::INT_DAT);
-        // TODO: Add more basic pointer type
-        structs->insert(std::make_pair("i8", fields));
-        structs->insert(std::make_pair("i32", fields));
-        structs->insert(std::make_pair("i64", fields));
         for (StructType* sty : M.getIdentifiedStructTypes()) {
             if (sty->isOpaque()) continue;
             std::string name = sty->getName();
-            fields.clear();
+            RecordFieldsTypes ftypes;
             for (unsigned i = 0; i < sty->getNumElements(); i++) {
                 llvm::Type* lt = sty->getElementType(i);
-                if (lt->isPointerTy()) fields.push_back(StructFieldType::INT_LOC);
-                else fields.push_back(StructFieldType::INT_DAT);
+                if (lt->isPointerTy())
+                    ftypes.push_back(SLHVVarType::INT_LOC);
+                else
+                    ftypes.push_back(SLHVVarType::INT_DAT);
             }
-            structs->insert(std::make_pair("%" + name, fields));
+            rm->add("%" + name, ftypes);
         }
 
         SDEBUG(errs() << "Analyzing functions...\n");
@@ -117,7 +113,7 @@ namespace smack {
                         pimSet->insert(
                             std::make_pair(F.getName(), std::make_shared<PointerInfoManager>())
                         );
-                        PointerInfoAnalysis ptap(&F, &naming, structs, pimSet->at(F.getName()));
+                        PointerInfoAnalysis ptap(&F, &naming, rm, pimSet->at(F.getName()));
                         ptap.visit(F);
                         SDEBUG(errs() << ptap << '\n');
                     }

@@ -21,7 +21,8 @@ namespace smack {
 class Naming;
 
 #define LLVM_RAW_OSTREAM_PRINT(Ty) \
-  inline llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, const Ty &T) { \
+  inline llvm::raw_ostream& \
+  operator<<(llvm::raw_ostream &OS, const Ty &T) { \
     T.print(OS); \
     return OS; \
   }
@@ -74,23 +75,10 @@ private:
 public:
   PointerInfoManager() : pointerInfos() {}
 
-  void add(std::string var, PointerInfo pi) {
-    pointerInfos[var] = pi;
-  }
-
-  void update(std::string var, PointerInfo pi) {
-    assert(contains(var));
-    pointerInfos[var] = pi;
-  }
-
-  bool contains(std::string var) {
-    return pointerInfos.find(var) != pointerInfos.end();
-  }
-
-  PointerInfo get(std::string var) {
-    if (!this->contains(var)) return PointerInfo();
-    return pointerInfos[var];
-  }
+  void add(std::string var, PointerInfo pi);
+  void update(std::string var, PointerInfo pi);
+  bool contains(std::string var);
+  PointerInfo get(std::string var);
 
   // TODO
 
@@ -123,40 +111,48 @@ private:
 public:
   PointerEqManager() : Id(0), idx(), eqVar(), pointerEqs() {}
 
-  void add(std::string& pt) {
-    if (idx.find(pt) != idx.end()) return;
-    idx[pt] = Id++;
-    pointerEqs.push_back(PointerEq());
-    pointerEqs.back().insert(pt);
-    eqVar[idx[pt]] = pt;
-  }
-
-  void setEq(std::string& b, std::string& n) {
-    if (idx.find(b) == idx.end()) this->add(b);
-    idx[n] = idx[b];
-    pointerEqs[idx[b]].insert(n);
-  }
-
-  bool contains(std::string& pt) {
-    return idx.find(pt) != idx.end();
-  }
-
-  std::string getEqVar(std::string var) {
-    assert(contains(var));
-    return eqVar[idx[var]];
-  }
-
-  PointerEq getEq(std::string pn) {
-    assert(contains(pn));
-    return pointerEqs[idx[pn]];
-  }
+  void add(std::string& pt);
+  void setEq(std::string& b, std::string& n);
+  bool contains(std::string& pt);
+  std::string getEqVar(std::string var);
+  PointerEq getEq(std::string pn);
 
 };
 
-enum StructFieldType { INT_LOC, INT_DAT };
-typedef std::vector<StructFieldType> StructFieldTypes;
-typedef std::map<std::string, StructFieldTypes> StructSet;
-typedef std::shared_ptr<StructSet> StructSetPtr;
+enum SLHVVarType { INT_LOC, INT_DAT, INT_HEAP };
+
+typedef std::vector<SLHVVarType> RecordFieldsTypes;
+typedef std::map<std::string, RecordFieldsTypes> RecordSet;
+typedef std::map<std::string, std::map<int, int>> FieldReorderMap;
+
+class RecordManager {
+
+private:
+  RecordSet records;
+  FieldReorderMap frMap;
+
+  bool isIntPointer(std::string name);
+  void reorder(std::string record, RecordFieldsTypes& ftypes);
+
+public:
+  RecordManager() : records(), frMap() {
+    RecordFieldsTypes ftypes;
+    ftypes.push_back(SLHVVarType::INT_DAT);
+    records["ptr"] = ftypes;
+  }
+
+  void add(std::string name, RecordFieldsTypes ftypes);
+  bool contains(std::string name);
+  const RecordFieldsTypes& getFieldsTypes(std::string name);
+  const std::map<int, int>& getOrder(std::string name);
+  const RecordSet& getRecordSet();
+
+  std::string getSLHVRecordName(std::string type);
+  bool isStruct(std::string name);
+
+};
+
+typedef std::shared_ptr<RecordManager> RecordManagerPtr;
 typedef std::shared_ptr<PointerInfoManager> PointerInfoManagerPtr;
 
 class PointerInfoAnalysis
@@ -168,13 +164,9 @@ public:
 
 private:
   Naming* naming;
-  std::shared_ptr<StructSet> structs;
-  std::shared_ptr<PointerInfoManager> pim;
-  
+  RecordManagerPtr rm;
+  PointerInfoManagerPtr pim;
   std::shared_ptr<PointerEqManager> pem;
-
-  bool isStruct(std::string& ty);
-  bool isStructPt(llvm::Type* lt);
 
   void init(llvm::Function* F);
 
@@ -182,9 +174,9 @@ public:
   PointerInfoAnalysis(
     llvm::Function* f,
     Naming* n,
-    std::shared_ptr<StructSet> s,
-    std::shared_ptr<PointerInfoManager> pim)
-    : naming(n), structs(s), pim(pim), pem(new PointerEqManager()) {
+    RecordManagerPtr rm,
+    PointerInfoManagerPtr pim)
+    : naming(n), rm(rm), pim(pim), pem(new PointerEqManager()) {
     this->init(f);
   }
 

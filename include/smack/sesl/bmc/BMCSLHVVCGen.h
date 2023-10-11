@@ -15,9 +15,6 @@ namespace smack {
 
 class Z3ExprManager {
 
-public:
-  enum VarType { DAT, LOC, HEAP };
-
 private:
   z3::context ctx;
 
@@ -40,7 +37,7 @@ public:
 
   z3::context& Ctx() { return ctx; }
 
-  void addRecord(std::string name, StructFieldTypes ftypes);
+  void addRecord(std::string name, RecordFieldsTypes ftypes);
   z3::func_decl getRecord(std::string name);
   z3::expr mk_record(std::string type, z3::expr_vector args);
   inline z3::expr mk_data(std::string name);
@@ -49,8 +46,8 @@ public:
   z3::expr mk_pto(std::string type, z3::expr lt, z3::expr rho);
   z3::expr mk_uplus(z3::expr h1, z3::expr h2);
 
-  z3::expr mk_fresh(std::string var, VarType vt);
-  z3::expr mk_quantified(VarType vt);
+  z3::expr mk_fresh(std::string var, SLHVVarType vt);
+  z3::expr mk_quantified(SLHVVarType vt);
 
   std::string to_smt2(z3::expr e);
 
@@ -73,12 +70,12 @@ private:
   std::set<int> dests;
   z3::expr semantic;
 
-  z3::expr getPreOutput(std::string name, Z3ExprManager::VarType vt);
+  z3::expr getPreOutput(std::string name, SLHVVarType vt);
   z3::expr getPreOutputByName(std::string name);
 
   void generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg);
   inline z3::expr generateRecord(std::string& type, z3::expr_vector& args);
-  inline z3::expr generateRecord(std::string& type, StructFieldTypes& ftypes);
+  inline z3::expr generateRecord(std::string& type, RecordFieldsTypes& ftypes);
   z3::expr generateFreshVarByName(std::string name);
   z3::expr generateBinExpr(const BinExpr* e);
   z3::expr generateExpr(const Expr* e);
@@ -126,15 +123,17 @@ private:
   std::map<int, BlockSemanticPtr> Trs;
 
   void init();
-  inline z3::expr generateVar(std::string name);
-  z3::expr generateOneStepBlockVC(RefBlockVertexPtr bptr, int k);
 
 public:
   TransitionSystem(Z3ExprManagerPtr z3EM, RefBlockCFGPtr bcfg)
     : z3EM(z3EM), bcfg(bcfg), Trs() { this->init(); }
   
-  z3::expr generateInitVC();
-  z3::expr generateOneStepVC(int k);
+  std::list<RefBlockVertexPtr> getBlocks();
+  std::list<int> getInitialStates();
+  std::set<int> getSuccessors(std::set<int> u);
+
+  const std::set<std::string>& getGlobalStateVars();
+  BlockSemanticPtr getBlockSemantic(int b);
     
   void print(std::ostream& OS);
 };
@@ -147,10 +146,16 @@ private:
   Z3ExprManagerPtr z3EM;
   TransitionSystemPtr TrSystem;
 
+  
+  inline z3::expr generateVar(std::string name);
+  z3::expr generateOneStepBlockVC(RefBlockVertexPtr bptr, int k);
+  z3::expr generateInitVC();
+  z3::expr generateOneStepVC(int k, const std::set<int>& blocks);
+
 public:
-  BMCSLHVVCGen(RefBlockCFGPtr bcfg, StructSetPtr pss)
+  BMCSLHVVCGen(RefBlockCFGPtr bcfg, RecordManagerPtr rs)
     : z3EM(std::make_shared<Z3ExprManager>()) {
-    for (auto record : (*pss))
+    for (auto record : rs->getRecordSet())
       z3EM->addRecord(record.first, record.second);
     z3EM->print(std::cout);
     TrSystem = std::make_shared<TransitionSystem>(z3EM, bcfg);

@@ -78,7 +78,7 @@ void RecordManager::reorder(std::string record, RecordFieldsTypes& ftypes) {
 
 void RecordManager::add(std::string name, RecordFieldsTypes ftypes) {
   assert(!this->contains(name));
-  this->reorder(name, ftypes);
+  // this->reorder(name, ftypes);
   records[name] = ftypes;
 }
 
@@ -132,6 +132,7 @@ std::string PointerInfoAnalysis::getOrigType(llvm::Type* lt) {
 }
 
 void PointerInfoAnalysis::init(llvm::Function* F) {
+  llvm::errs() << (*F) << "\n";
   for (int i = 0; i < F->arg_size(); i++) {
     llvm::Argument* arg = F->getArg(i);
     std::string vname = naming->get(*arg);
@@ -145,8 +146,8 @@ void PointerInfoAnalysis::init(llvm::Function* F) {
 }
 
 void PointerInfoAnalysis::visitInstruction(llvm::Instruction &I) {
-  // llvm::errs() << "pointer type analysis: visit unsurpported instruction \n";
-  // llvm::errs() << "  " << I << '\n';
+  llvm::errs() << "pointer type analysis: visit unsurpported instruction \n";
+  llvm::errs() << "  " << I << '\n';
   // if (!naming->hasName(I)) return;
   // llvm::errs() << naming->get(I) << " " << (*I.getType()) << '\n';
 }
@@ -278,6 +279,24 @@ void PointerInfoAnalysis::visitGetElementPtrInst(llvm::GetElementPtrInst &I) {
   pim->add(vname, pinfo);
   
   llvm::errs() << pinfo << "\n";
+}
+
+
+void PointerInfoAnalysis::visitPHINode(llvm::PHINode &I) {
+  llvm::errs() << "pointer type analysis: visit phi node \n";
+  llvm::errs() << "  " << I << '\n';
+  assert(naming->hasName(I));
+  std::string vname = naming->get(I);
+  assert(!vname.empty());
+  llvm::errs() << vname << '\n';
+  pem->add(vname);
+  if (!I.getType()->isPointerTy()) return;
+
+  PointerInfo pinfo;
+  pinfo.setBase(vname);
+  pinfo.setType(PointerInfoAnalysis::getOrigType(I.getType()));
+  pim->add(vname, pinfo);
+  llvm::errs() << pinfo << "\n"; 
 }
 
 } // namespace smack

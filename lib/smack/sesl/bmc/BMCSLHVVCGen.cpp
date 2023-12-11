@@ -335,24 +335,46 @@ z3::expr BlockSemantic::generateAssignSemantic(RefinedActionPtr act) {
   z3::expr lhs = this->generateFreshVarByName(var->name());
   z3::expr rhs = this->generateExpr(arg2);
 
+  bool isPtrAssign = false;
+  z3::expr fable_passing_form = this->z3EM->Ctx().bool_val(true);
   // add update of fable passing
   if(var->name().c_str()[1] == 'p') {
+    isPtrAssign = true;
     for(std::string global_fable  : this->globalFableVars) {
       this->inputs.insert(global_fable);
+      this->outputs[global_fable] = global_fable;
+    }
+    for(std::string global_ptr : this->globalPtrVars) {
+      this->inputs.insert(global_ptr);
+      this->outputs[global_ptr] = global_ptr;
     }
     std::string modified_name = "fable_" + var->name();
     z3::expr lhs_fable_local = this->generateFreshVarByName(modified_name);
     this->inputs.insert(modified_name);
     this->localVars.insert(lhs_fable_local.to_string());
     this->outputs[modified_name] = lhs_fable_local.to_string();
+    
+    
+    for(std::string name : this->globalPtrVars) {
+      z3::expr curr_ptr_var = this->z3EM->mk_loc(name);
+      z3::expr curr_ptr_var_fable = this->z3EM->mk_data("fable_" + name);
+      fable_passing_form = fable_passing_form && z3::implies(
+        lhs == curr_ptr_var,
+        lhs_fable_local == curr_ptr_var_fable  
+      );
+    }
+    
   }
-  
-  
+
   this->inputs.insert(var->name());
   this->localVars.insert(lhs.to_string());
   this->outputs[var->name()] = lhs.to_string();
   if (!isBoolAssign) {
-    return lhs == rhs;
+    if(isPtrAssign) { 
+      return lhs == rhs && fable_passing_form;
+    } else {
+      return lhs == rhs;
+    }
   } else {
     assert(lhs.is_int() && rhs.is_bool());
     return (rhs && lhs == 1) || (!rhs && lhs == 0);
@@ -500,13 +522,14 @@ void TransitionSystem::init() {
   for (RefBlockVertexPtr bptr : bcfg->getVertices()) {
     if (this->Trs.find(bptr->getVertexId()) != this->Trs.end()) continue;
     BlockSemanticPtr bsp =
-      std::make_shared<BlockSemantic>(z3EM, bptr, bcfg, this->fable_vars);
+      std::make_shared<BlockSemantic>(z3EM, bptr, bcfg, this->fableVars, this->globalPtrVars);
     this->Trs[bptr->getVertexId()] = bsp;
     for (auto var : bsp->getInputs()) {
       this->globalStateVars.insert(var);
       if(var[1] == 'p') {
         this->globalStateVars.insert("fable_" + var);
-        this->fable_vars.insert("fable_" + var);
+        this->fableVars.insert("fable_" + var);
+        this->globalPtrVars.insert(var);
       } 
     }
   }

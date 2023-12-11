@@ -187,6 +187,7 @@ public:
   void visitCallInst(llvm::CallInst &I);
   void visitLoadInst(llvm::LoadInst &I);
   void visitGetElementPtrInst(llvm::GetElementPtrInst &I);
+  void visitPHINode(llvm::PHINode &I);
 
   void print(llvm::raw_ostream& OS) const { pim->print(OS); }
 

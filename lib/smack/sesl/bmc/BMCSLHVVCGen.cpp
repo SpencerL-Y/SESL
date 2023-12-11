@@ -197,10 +197,19 @@ z3::expr BlockSemantic::getPreOutput(std::string name, SLHVVarType vt) {
 
 z3::expr BlockSemantic::getPreOutputByName(std::string name) {
   assert(name[1] == 'p' || name[1] == 'i');
+<<<<<<< HEAD
   if (name[1] == 'p')
     return this->getPreOutput(name, SLHVVarType::INT_LOC);
   else if(name[1] == 'i')
     return this->getPreOutput(name, SLHVVarType::INT_DAT);
+=======
+  if (name[1] == 'p') {
+    return this->getPreOutput(name, Z3ExprManager::VarType::LOC);
+  }
+  else if(name[1] == 'i') {
+    return this->getPreOutput(name, Z3ExprManager::VarType::DAT);
+  }
+>>>>>>> 0dab53288d521f6f80c8efaf18b4976906f865ae
 }
 
 void BlockSemantic::generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg) {
@@ -334,11 +343,23 @@ z3::expr BlockSemantic::generateAssignSemantic(RefinedActionPtr act) {
   const VarExpr* var = (const VarExpr*)arg1;
   z3::expr lhs = this->generateFreshVarByName(var->name());
   z3::expr rhs = this->generateExpr(arg2);
+
+  // add update of fable passing
+  if(var->name().c_str()[1] == 'p') {
+    for(std::string global_fable  : this->globalFableVars) {
+      this->inputs.insert(global_fable);
+    }
+    std::string modified_name = "fable_" + var->name();
+    z3::expr lhs_fable_local = this->generateFreshVarByName(modified_name);
+    this->inputs.insert(modified_name);
+    this->localVars.insert(lhs_fable_local.to_string());
+    this->outputs[modified_name] = lhs_fable_local.to_string();
+  }
+  
   
   this->inputs.insert(var->name());
   this->localVars.insert(lhs.to_string());
   this->outputs[var->name()] = lhs.to_string();
-  
   if (!isBoolAssign) {
     return lhs == rhs;
   } else {
@@ -456,8 +477,9 @@ z3::expr BlockSemantic::generateFreeSemantic(RefinedActionPtr act) {
   this->outputs["H"] = nH.to_string();
 
   this->quantifiedVars.insert(h.to_string());
-  for (auto arg : rho.args())
+  for (auto arg : rho.args()) {
     this->quantifiedVars.insert(arg.to_string());
+  }
 
   return (H == z3EM->mk_uplus(h, pt)) && (nH == h);
 }
@@ -487,10 +509,15 @@ void TransitionSystem::init() {
   for (RefBlockVertexPtr bptr : bcfg->getVertices()) {
     if (this->Trs.find(bptr->getVertexId()) != this->Trs.end()) continue;
     BlockSemanticPtr bsp =
-      std::make_shared<BlockSemantic>(z3EM, bptr, bcfg);
+      std::make_shared<BlockSemantic>(z3EM, bptr, bcfg, this->fable_vars);
     this->Trs[bptr->getVertexId()] = bsp;
-    for (auto var : bsp->getInputs())
+    for (auto var : bsp->getInputs()) {
       this->globalStateVars.insert(var);
+      if(var[1] == 'p') {
+        this->globalStateVars.insert("fable_" + var);
+        this->fable_vars.insert("fable_" + var);
+      } 
+    }
   }
   this->print(std::cout);
 }
@@ -533,9 +560,19 @@ BlockSemanticPtr TransitionSystem::getBlockSemantic(int b) {
   return Trs.at(b);
 }
 
+<<<<<<< HEAD
 z3::expr BMCSLHVVCGen::generateVar(std::string name) {
   if (name[0] == 'H') return z3EM->mk_heap(name);
   if (name[1] == 'p') return z3EM->mk_loc(name);
+=======
+z3::expr TransitionSystem::generateVar(std::string name) {
+  if (name[0] == 'H') {
+    return z3EM->mk_heap(name);
+  }
+  if (name[1] == 'p') {
+    return z3EM->mk_loc(name);
+  }
+>>>>>>> 0dab53288d521f6f80c8efaf18b4976906f865ae
   return z3EM->mk_data(name);
 }
 
@@ -567,10 +604,12 @@ z3::expr BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k) {
   for (auto vp : bsp->getOutputs()) {
     z3::expr ov(z3EM->Ctx());
     z3::expr nv = this->generateVar(vp.first + "_" + std::to_string(k));
-    if (vp.first == vp.second)
+    if (vp.first == vp.second) {
       ov = this->generateVar(vp.first + "_" + std::to_string(k - 1));
-    else
+    }
+    else {
       ov = this->generateVar(vp.second + "_" + std::to_string(k));
+    }
     implicant = implicant && (nv == ov);
   }
   for (auto var : this->TrSystem->getGlobalStateVars()) {
@@ -582,15 +621,18 @@ z3::expr BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k) {
   // Dests
   z3::expr dests = z3EM->Ctx().bool_val(true);
   for (auto dest : bsp->getDests()) {
-    if (dests.is_true())
+    if (dests.is_true()) {
       dests = z3EM->mk_data("loc_" + std::to_string(k)) == dest;
-    else
+    }
+    else {
       dests = dests || (z3EM->mk_data("loc_" + std::to_string(k)) == dest);
+    }
   }
   implicant = implicant && dests;
   return !premise || implicant;
 }
 
+<<<<<<< HEAD
 z3::expr BMCSLHVVCGen::generateInitVC() {
   z3::expr init_heap = z3EM->mk_heap("H_0") == z3EM->mk_heap("emp");
   z3::expr init_loc = z3EM->Ctx().bool_val(true);
@@ -602,6 +644,12 @@ z3::expr BMCSLHVVCGen::generateInitVC() {
       init_loc = init_loc && (loc_0 == b);
   }
   return init_heap && init_loc;
+=======
+z3::expr TransitionSystem::generateInitVC() {
+  z3::expr heap_init =  z3EM->mk_heap("H_0") == z3EM->mk_heap("emp");
+  return heap_init;
+
+>>>>>>> 0dab53288d521f6f80c8efaf18b4976906f865ae
 }
 
 z3::expr BMCSLHVVCGen::generateOneStepVC(int k, const std::set<int>& blocks) {

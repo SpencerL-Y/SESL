@@ -69,6 +69,7 @@ private:
   std::map<std::string, std::string> outputs;
   std::set<std::string> localVars;
   std::set<std::string> quantifiedVars;
+  std::set<std::string> globalFableVars;
   int src;
   std::set<int> dests;
   z3::expr semantic;
@@ -90,11 +91,11 @@ private:
   z3::expr generateFreeSemantic(RefinedActionPtr act);
 
 public:
-  BlockSemantic(Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg)
+  BlockSemantic(Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg, std::set<std::string> global_fable_vars)
     : z3EM(z3EM),
       inputs(), outputs(),
       localVars(), quantifiedVars(),
-      src(-1), dests(),
+      src(-1), dests(), globalFableVars(global_fable_vars),
       semantic(z3EM->Ctx().bool_val(true)) {
       this->generateSemantic(bptr, bcfg);
     }
@@ -123,8 +124,8 @@ private:
   RefBlockCFGPtr bcfg;
   
   std::set<std::string> globalStateVars;
+  std::set<std::string> fable_vars;
   std::map<int, BlockSemanticPtr> Trs;
-
   void init();
   inline z3::expr generateVar(std::string name);
   z3::expr generateOneStepBlockVC(RefBlockVertexPtr bptr, int k);

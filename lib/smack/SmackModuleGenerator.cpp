@@ -68,6 +68,7 @@ namespace smack {
         for (StructType* sty : M.getIdentifiedStructTypes()) {
             if (sty->isOpaque()) continue;
             std::string name = sty->getName();
+            SDEBUG(errs() << "record struct type: " << name << "\n");
             fields.clear();
             for (unsigned i = 0; i < sty->getNumElements(); i++) {
                 llvm::Type* lt = sty->getElementType(i);

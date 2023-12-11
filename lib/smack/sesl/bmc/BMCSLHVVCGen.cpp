@@ -197,19 +197,10 @@ z3::expr BlockSemantic::getPreOutput(std::string name, SLHVVarType vt) {
 
 z3::expr BlockSemantic::getPreOutputByName(std::string name) {
   assert(name[1] == 'p' || name[1] == 'i');
-<<<<<<< HEAD
   if (name[1] == 'p')
     return this->getPreOutput(name, SLHVVarType::INT_LOC);
   else if(name[1] == 'i')
     return this->getPreOutput(name, SLHVVarType::INT_DAT);
-=======
-  if (name[1] == 'p') {
-    return this->getPreOutput(name, Z3ExprManager::VarType::LOC);
-  }
-  else if(name[1] == 'i') {
-    return this->getPreOutput(name, Z3ExprManager::VarType::DAT);
-  }
->>>>>>> 0dab53288d521f6f80c8efaf18b4976906f865ae
 }
 
 void BlockSemantic::generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg) {
@@ -560,19 +551,9 @@ BlockSemanticPtr TransitionSystem::getBlockSemantic(int b) {
   return Trs.at(b);
 }
 
-<<<<<<< HEAD
 z3::expr BMCSLHVVCGen::generateVar(std::string name) {
   if (name[0] == 'H') return z3EM->mk_heap(name);
   if (name[1] == 'p') return z3EM->mk_loc(name);
-=======
-z3::expr TransitionSystem::generateVar(std::string name) {
-  if (name[0] == 'H') {
-    return z3EM->mk_heap(name);
-  }
-  if (name[1] == 'p') {
-    return z3EM->mk_loc(name);
-  }
->>>>>>> 0dab53288d521f6f80c8efaf18b4976906f865ae
   return z3EM->mk_data(name);
 }
 
@@ -632,7 +613,6 @@ z3::expr BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k) {
   return !premise || implicant;
 }
 
-<<<<<<< HEAD
 z3::expr BMCSLHVVCGen::generateInitVC() {
   z3::expr init_heap = z3EM->mk_heap("H_0") == z3EM->mk_heap("emp");
   z3::expr init_loc = z3EM->Ctx().bool_val(true);
@@ -644,12 +624,6 @@ z3::expr BMCSLHVVCGen::generateInitVC() {
       init_loc = init_loc && (loc_0 == b);
   }
   return init_heap && init_loc;
-=======
-z3::expr TransitionSystem::generateInitVC() {
-  z3::expr heap_init =  z3EM->mk_heap("H_0") == z3EM->mk_heap("emp");
-  return heap_init;
-
->>>>>>> 0dab53288d521f6f80c8efaf18b4976906f865ae
 }
 
 z3::expr BMCSLHVVCGen::generateOneStepVC(int k, const std::set<int>& blocks) {

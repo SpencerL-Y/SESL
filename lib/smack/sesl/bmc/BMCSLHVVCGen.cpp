@@ -121,6 +121,14 @@ z3::expr Z3ExprManager::mk_pto(std::string type, z3::expr lt, z3::expr rho) {
   return pts[type]->operator()(lt, rho);
 }
 
+
+z3::expr Z3ExprManager::mk_data_pto(z3::expr lt, z3::expr data) {
+  
+}
+z3::expr Z3ExprManager::mk_loc_pto(z3::expr lt, z3::expr loc) {
+
+}
+
 z3::expr Z3ExprManager::mk_uplus(z3::expr h1, z3::expr h2) {
   assert(z3::eq(h1.get_sort(), intHeap));
   assert(z3::eq(h2.get_sort(), intHeap));

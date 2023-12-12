@@ -44,6 +44,8 @@ public:
   inline z3::expr mk_loc(std::string name);
   inline z3::expr mk_heap(std::string name);
   z3::expr mk_pto(std::string type, z3::expr lt, z3::expr rho);
+  z3::expr mk_data_pto(z3::expr lt, z3::expr data);
+  z3::expr mk_loc_pto(z3::expr lt, z3::expr loc);
   z3::expr mk_uplus(z3::expr h1, z3::expr h2);
 
   z3::expr mk_fresh(std::string var, SLHVVarType vt);

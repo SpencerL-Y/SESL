@@ -72,12 +72,7 @@ namespace smack
     class RefinedAction {
         public:
             struct SLHVCmd {
-                std::string type = "NONE";
-                Record ftypes = Record();
-                std::string base = "NONE";
-                std::string btype = "NONE";
-                int field = 0;
-                Record bftypes = Record();
+                Record record = Record();
             };
 
         private:

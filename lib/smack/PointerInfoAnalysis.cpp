@@ -91,6 +91,7 @@ bool RecordManager::contains(std::string name) {
 }
 
 const Record& RecordManager::getRecord(std::string name) {
+    llvm::errs() << name << '\n';
     assert(this->contains(name));
     return recordMap.at(name);
 }

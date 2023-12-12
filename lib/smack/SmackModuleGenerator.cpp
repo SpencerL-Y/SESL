@@ -28,7 +28,7 @@ namespace smack {
 
     SmackModuleGenerator::SmackModuleGenerator() : ModulePass(ID) {
         program = new Program();
-        rm = std::make_shared<RecordManager>();
+        recordManager = std::make_shared<RecordManager>();
         pimSet = std::make_shared<PIMSet>();
     }
 
@@ -62,12 +62,7 @@ namespace smack {
         for (StructType* sty : M.getIdentifiedStructTypes()) {
             if (sty->isOpaque()) continue;
             std::string name = sty->getName();
-<<<<<<< HEAD
-            RecordFieldsTypes ftypes;
-=======
-            SDEBUG(errs() << "record struct type: " << name << "\n");
-            fields.clear();
->>>>>>> 0dab53288d521f6f80c8efaf18b4976906f865ae
+            Record ftypes;
             for (unsigned i = 0; i < sty->getNumElements(); i++) {
                 llvm::Type* lt = sty->getElementType(i);
                 if (lt->isPointerTy())
@@ -75,7 +70,7 @@ namespace smack {
                 else
                     ftypes.push_back(SLHVVarType::INT_DAT);
             }
-            rm->add("%" + name, ftypes);
+            recordManager->add("%" + name, ftypes);
         }
 
         SDEBUG(errs() << "Analyzing functions...\n");
@@ -118,7 +113,7 @@ namespace smack {
                         pimSet->insert(
                             std::make_pair(F.getName(), std::make_shared<PointerInfoManager>())
                         );
-                        PointerInfoAnalysis ptap(&F, &naming, rm, pimSet->at(F.getName()));
+                        PointerInfoAnalysis ptap(&F, &naming, recordManager, pimSet->at(F.getName()));
                         ptap.visit(F);
                         SDEBUG(errs() << ptap << '\n');
                     }

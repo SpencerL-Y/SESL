@@ -36,7 +36,7 @@ bool Z3ExprManager::is_removed(std::string cmd) {
            cmd.find("pt") != std::string::npos));
 }
 
-void Z3ExprManager::addRecord(std::string name, RecordFieldsTypes ftypes) {
+void Z3ExprManager::addRecord(std::string name, Record ftypes) {
   int n = ftypes.size();
   int recordId = records.size();
   z3::symbol recordSort =
@@ -254,7 +254,7 @@ inline z3::expr BlockSemantic::generateRecord(std::string& type, z3::expr_vector
   return z3EM->mk_record(type, args);
 }
 
-inline z3::expr BlockSemantic::generateRecord(std::string& type, RecordFieldsTypes& ftypes) {
+inline z3::expr BlockSemantic::generateRecord(std::string& type, Record& ftypes) {
   z3::expr_vector args(z3EM->Ctx());
   for (auto ftype : ftypes) {
     if (ftype == SLHVVarType::INT_LOC)

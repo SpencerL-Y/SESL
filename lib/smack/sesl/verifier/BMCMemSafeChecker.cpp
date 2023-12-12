@@ -17,7 +17,7 @@ namespace smack {
 
 char BMCMemSafeChecker::ID(0);
 
-bool BMCMemSafeChecker::support(const Stmt* stmt, PointerInfoManagerPtr pim) {
+bool BMCMemSafeChecker::support(const Stmt* stmt, PointerInfoManagerPtr pointerInfoManager) {
   if (stmt->getKind() == Stmt::Kind::ASSUME) {
     AssumeStmt* assumeStmt = (AssumeStmt*)stmt;
     // TODO Keep some useful attrs
@@ -31,7 +31,7 @@ bool BMCMemSafeChecker::support(const Stmt* stmt, PointerInfoManagerPtr pim) {
     if (lhs->isVar()) {
       ret = ((VarExpr*)lhs)->name();
     }
-    if (pim->contains(ret)) {
+    if (pointerInfoManager->contains(ret)) {
       const FunExpr* fun = (const FunExpr*)rhs;
       // TODO delete all arithmetic
       return fun->name().find("add") == std::string::npos &&
@@ -94,34 +94,26 @@ std::string BMCMemSafeChecker::getSuffName(std::string origName) {
 RefinedAction::SLHVCmd BMCMemSafeChecker::createSLHVCmdStruct(const VarExpr* vexpr) {
   RefinedAction::SLHVCmd slhvcmd;
   std::string var = this->getOrigName(vexpr->name());
-  PointerInfoManagerPtr pim = this->getPIM(vexpr->name());
-  assert(pim->contains(var));
-  auto pinfo = pim->get(var);
-<<<<<<< HEAD
-  slhvcmd.type = rm->getSLHVRecordName(pinfo.getType());
-  slhvcmd.ftypes = rm->getFieldsTypes(slhvcmd.type);
-=======
-  pinfo.show();
+  PointerInfoManagerPtr pointerInfoManager = this->getPIM(vexpr->name());
+  assert(pointerInfoManager->contains(var));
+  auto pinfo = pointerInfoManager->get(var);
   slhvcmd.type = pinfo.getType();
-  assert(pss->find(slhvcmd.type) != pss->end());
-  slhvcmd.ftypes = pss->at(slhvcmd.type);
->>>>>>> 0dab53288d521f6f80c8efaf18b4976906f865ae
+  slhvcmd.ftypes = recordManager->getRecord(slhvcmd.type);
   return slhvcmd;
 }
 
 RefinedAction::SLHVCmd BMCMemSafeChecker::createSLHVCmdInStruct(const VarExpr* vexpr) {
   RefinedAction::SLHVCmd slhvcmd;
   std::string var = this->getOrigName(vexpr->name());
-  PointerInfoManagerPtr pim = this->getPIM(vexpr->name());
-  assert(pim->contains(var));
-  auto pinfo = pim->get(var);
-  assert(pinfo.isInStruct());
-  slhvcmd.base= pinfo.getBase() + getSuffName(vexpr->name());
-  slhvcmd.field = pinfo.getField();
-  assert(pim->contains(pinfo.getBase()));
-  std::string btype = pim->get(pinfo.getBase()).getType();
-  slhvcmd.btype = rm->getSLHVRecordName(btype);
-  slhvcmd.bftypes = rm->getFieldsTypes(btype);
+  PointerInfoManagerPtr pointerInfoManager = this->getPIM(vexpr->name());
+  assert(pointerInfoManager->contains(var));
+  auto pinfo = pointerInfoManager->get(var);
+  // slhvcmd.base= pinfo.getBa() + getSuffName(vexpr->name());
+  // slhvcmd.field = pinfo.getField();
+  // assert(pointerInfoManager->contains(pinfo.getBase()));
+  std::string btype = pinfo.getType();
+  slhvcmd.btype = btype;
+  slhvcmd.bftypes = recordManager->getRecord(btype);
   return slhvcmd;
 }
 
@@ -176,7 +168,7 @@ void BMCMemSafeChecker::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
 
 bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
-  rm = smackGen.getRM();
+  recordManager = smackGen.getRM();
   pimSet = smackGen.getPIMSet();
   Program* program = smackGen.getProgram();
   program->print(std::cout);
@@ -203,7 +195,7 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   this->setSLHVCmds(refBlockCFG);
   refBlockCFG->printRefBlockCFG(std::cout);
 
-  BMCSLHVVCGen vcGen(refBlockCFG, rm);
+  BMCSLHVVCGen vcGen(refBlockCFG, recordManager);
   z3::expr vc = vcGen.generateVC(1);
   vcGen.generateSMT2(vc, "../bin/out.smt2");
 

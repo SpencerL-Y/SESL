@@ -37,7 +37,7 @@ public:
 
   z3::context& Ctx() { return ctx; }
 
-  void addRecord(std::string name, RecordFieldsTypes ftypes);
+  void addRecord(std::string name, Record ftypes);
   z3::func_decl getRecord(std::string name);
   z3::expr mk_record(std::string type, z3::expr_vector args);
   inline z3::expr mk_data(std::string name);
@@ -76,7 +76,7 @@ private:
 
   void generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg);
   inline z3::expr generateRecord(std::string& type, z3::expr_vector& args);
-  inline z3::expr generateRecord(std::string& type, RecordFieldsTypes& ftypes);
+  inline z3::expr generateRecord(std::string& type, Record& ftypes);
   z3::expr generateFreshVarByName(std::string name);
   z3::expr generateBinExpr(const BinExpr* e);
   z3::expr generateExpr(const Expr* e);
@@ -156,7 +156,7 @@ private:
 public:
   BMCSLHVVCGen(RefBlockCFGPtr bcfg, RecordManagerPtr rs)
     : z3EM(std::make_shared<Z3ExprManager>()) {
-    for (auto record : rs->getRecordSet())
+    for (auto record : rs->getRecordMap())
       z3EM->addRecord(record.first, record.second);
     z3EM->print(std::cout);
     TrSystem = std::make_shared<TransitionSystem>(z3EM, bcfg);

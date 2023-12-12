@@ -19,7 +19,7 @@ namespace smack
         private:
             int blockId;
             int length;
-            int primeNum;
+            int primeNum;git
             z3::context* z3Ctx;
         public:
             BlockNormalForm(z3::context& ctx, int blockId, int l, int primeNum){

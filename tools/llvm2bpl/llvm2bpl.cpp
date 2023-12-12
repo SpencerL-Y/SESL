@@ -293,7 +293,7 @@ int main(int argc, char **argv) {
     // pass_manager.add(new smack::BMCCegarVerifier());
     // pass_manager.add(new smack::BplFilePrinter(F->os()));
     // BMC Checker - SLHV
-    pass_manager.add(new smack::BMCMemSafeChecker());
+    // pass_manager.add(new smack::BMCMemSafeChecker());
 
   }
 

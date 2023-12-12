@@ -13,10 +13,10 @@ namespace smack {
 class BMCMemSafeChecker : public llvm::ModulePass {
 
 private:
-  RecordManagerPtr rm;
+  RecordManagerPtr recordManager;
   PIMSetPtr pimSet;
 
-  bool support(const Stmt* stmt, PointerInfoManagerPtr pim);
+  bool support(const Stmt* stmt, PointerInfoManagerPtr pointerInfoManager);
   void refinedProgram(Program* prog);
   inline PointerInfoManagerPtr getPIM(std::string var);
   inline std::string getOrigName(std::string origName);

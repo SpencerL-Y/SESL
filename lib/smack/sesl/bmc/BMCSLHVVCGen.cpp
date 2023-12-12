@@ -5,25 +5,53 @@
 namespace smack {
 
 Z3ExprManager::Z3ExprManager()
-  : ctx(),
-    intLoc(ctx.uninterpreted_sort("IntLoc")),
-    intHeap(ctx.uninterpreted_sort("IntHeap")),
-    uplus(z3::function("uplus", intHeap, intHeap, intHeap)),
-    pts(), records(),
-    freshVarsCounts() {
-      qlc = qhc = qdc = 1;
+    : ctx(),
+      intLoc(ctx.uninterpreted_sort("IntLoc")),
+      intHeap(ctx.uninterpreted_sort("IntHeap")),
+      uplus(z3::function("uplus", intHeap, intHeap, intHeap)),
+      locadd(z3::function("locadd", intLoc, ctx.int_sort(), intLoc)),
+      pts(),
+      recordSorts(),
+      freshVarsCounts() {
+        qlc = qhc = qdc = 1;
+        pts["loc"] = this->decl_datatype(SLHVVarType::INT_LOC);
+        pts["data"] = this->decl_datatype(SLHVVarType::INT_DAT);
     }
 
+std::shared_ptr<z3::func_decl> Z3ExprManager::decl_datatype(SLHVVarType slhvVarType) {
+    assert(slhvVarType != SLHVVarType::INT_HEAP);
+    int id = slhvVarType == SLHVVarType::INT_LOC ? 0 : 1;
+    z3::symbol recordSortName =
+        ctx.str_symbol(("pt_record_" + std::to_string(id)).c_str());
+    z3::constructors ptCS(ctx);
+    std::string ptName = "Pt_R_" + std::to_string(id);
+    z3::symbol name = ctx.str_symbol(ptName.c_str());
+    z3::symbol rec = ctx.str_symbol((ptName + "_rec").c_str());
+    std::vector<z3::symbol> names;
+    std::vector<z3::sort> fields;
+    names.push_back(ctx.str_symbol(id == 0 ? "loc" : "data"));
+    if (id == 0) {
+        fields.push_back(intLoc);
+    } else {
+        fields.push_back(ctx.int_sort());
+    }
+    ptCS.add(name, rec, 1, names.data(), fields.data());
+    z3::sort recordSort = ctx.datatype(recordSortName, ptCS);
+    recordSorts[(id == 0 ? "loc" : "data")] = std::make_shared<z3::sort>(recordSort);
+    return std::make_shared<z3::func_decl>(
+        z3::function("pt", intLoc, recordSort, intHeap));
+}
+
 std::string Z3ExprManager::decl_hvar(std::string var) {
-  return "(declare-hvar " + var + " IntHeap)\n";
+    return "(declare-hvar " + var + " IntHeap)\n";
 }
 
 std::string Z3ExprManager::decl_locvar(std::string var) {
-  return "(declare-locvar " + var + " IntLoc)\n";
+    return "(declare-locvar " + var + " IntLoc)\n";
 }
 
 std::string Z3ExprManager::decl_int(std::string var) {
-  return "(declare-const " + var + " Int)\n";
+    return "(declare-const " + var + " Int)\n";
 }
 
 bool Z3ExprManager::is_removed(std::string cmd) {
@@ -36,89 +64,91 @@ bool Z3ExprManager::is_removed(std::string cmd) {
            cmd.find("pt") != std::string::npos));
 }
 
-void Z3ExprManager::addRecord(std::string name, RecordFieldsTypes ftypes) {
-  int n = ftypes.size();
-  int recordId = records.size();
-  z3::symbol recordSort =
-    ctx.str_symbol(("pt_record_" + std::to_string(recordId)).c_str());
-  z3::constructors ptCS(ctx);
-  std::string ptName = "Pt_R_" + std::to_string(recordId);
-  z3::symbol ptFun = ctx.str_symbol(ptName.c_str());
-  z3::symbol recName = ctx.str_symbol((ptName + "_rec").c_str());
-  std::vector<z3::symbol> accs;
-  std::vector<z3::sort> sorts;
-  for (int i = 0; i < n; i++)
-    accs.push_back(ctx.str_symbol((ptName + "_" + std::to_string(i + 1)).c_str()));
-  for (int i = 0; i < n; i++) {
-    if (ftypes[i] == SLHVVarType::INT_LOC)
-      sorts.push_back(intLoc);
-    else
-      sorts.push_back(ctx.int_sort());
-  }
-  ptCS.add(ptFun, recName, n, accs.data(), sorts.data());
-  z3::sort rsort = ctx.datatype(recordSort, ptCS);
-  records[name] = std::make_shared<z3::sort>(rsort);
-  pts[name] = std::make_shared<z3::func_decl>(z3::function("pt", intLoc, rsort, intHeap));
-}
+// void Z3ExprManager::addRecord(std::string name, Record ftypes) {
+//   int n = ftypes.size();
+//   int recordId = records.size();
+//   z3::symbol recordSort =
+//     ctx.str_symbol(("pt_record_" + std::to_string(recordId)).c_str());
+//   z3::constructors ptCS(ctx);
+//   std::string ptName = "Pt_R_" + std::to_string(recordId);
+//   z3::symbol ptFun = ctx.str_symbol(ptName.c_str());
+//   z3::symbol recName = ctx.str_symbol((ptName + "_rec").c_str());
+//   std::vector<z3::symbol> accs;
+//   std::vector<z3::sort> sorts;
+//   for (int i = 0; i < n; i++)
+//     accs.push_back(ctx.str_symbol((ptName + "_" + std::to_string(i + 1)).c_str()));
+//   for (int i = 0; i < n; i++) {
+//     if (ftypes[i] == SLHVVarType::INT_LOC)
+//       sorts.push_back(intLoc);
+//     else
+//       sorts.push_back(ctx.int_sort());
+//   }
+//   ptCS.add(ptFun, recName, n, accs.data(), sorts.data());
+//   z3::sort rsort = ctx.datatype(recordSort, ptCS);
+//   records[name] = std::make_shared<z3::sort>(rsort);
+//   pts[name] = std::make_shared<z3::func_decl>(z3::function("pt", intLoc, rsort, intHeap));
+// }
 
-z3::func_decl Z3ExprManager::getRecord(std::string name) {
-  assert(records.find(name) != records.end());
-  return records[name]->constructors().back();
-}
+// z3::func_decl Z3ExprManager::getRecord(std::string name) {
+//   assert(records.find(name) != records.end());
+//   return records[name]->constructors().back();
+// }
 
-z3::expr Z3ExprManager::mk_record(std::string type, z3::expr_vector args) {
-  z3::func_decl fd = this->getRecord(type);
-  return fd(args);
-}
+// z3::expr Z3ExprManager::mk_record(std::string type, z3::expr_vector args) {
+//     z3::func_decl fd = this->getRecord(type);
+//     return fd(args);
+// }
 
 z3::expr Z3ExprManager::mk_data(std::string name) {
-  assert(!name.empty());
-  return ctx.int_const(name.c_str());
+    assert(!name.empty());
+    return ctx.int_const(name.c_str());
 }
 
 z3::expr Z3ExprManager::mk_loc(std::string name) {
-  assert(!name.empty());
-  return ctx.constant(name.c_str(), intLoc);
+    assert(!name.empty());
+    return ctx.constant(name.c_str(), intLoc);
 }
 
 z3::expr Z3ExprManager::mk_heap(std::string name) {
-  assert(!name.empty());
-  return ctx.constant(name.c_str(), intHeap);
+    assert(!name.empty());
+    return ctx.constant(name.c_str(), intHeap);
 }
 
 z3::expr Z3ExprManager::mk_fresh(std::string var, SLHVVarType vt) {
-  int id;
-  if (freshVarsCounts.find(var) != freshVarsCounts.end()) {
-    id = freshVarsCounts[var] + 1;
-    freshVarsCounts[var] = id;
-  } else {
-    id = 1;
-    freshVarsCounts[var] = 1;
-  }
-  switch (vt) {
-    case SLHVVarType::INT_DAT : return mk_data(var + std::to_string(id));
-    case SLHVVarType::INT_LOC : return mk_loc(var + std::to_string(id));
-    case SLHVVarType::INT_HEAP :
-      assert(var == "H");
-      return mk_heap(var + std::to_string(id));
-    default : assert(false);
-  }
+    int id;
+    if (freshVarsCounts.find(var) != freshVarsCounts.end()) {
+        id = freshVarsCounts[var] + 1;
+        freshVarsCounts[var] = id;
+    } else {
+        id = 1;
+        freshVarsCounts[var] = 1;
+    }
+    switch (vt) {
+        case SLHVVarType::INT_DAT : return mk_data(var + std::to_string(id));
+        case SLHVVarType::INT_LOC : return mk_loc(var + std::to_string(id));
+        case SLHVVarType::INT_HEAP :
+        assert(var == "H");
+        return mk_heap(var + std::to_string(id));
+        default : assert(false);
+    }
 }
 
 z3::expr Z3ExprManager::mk_quantified(SLHVVarType vt) {
-  switch (vt) {
-    case SLHVVarType::INT_DAT : return mk_data("d" + std::to_string(qdc++));
-    case SLHVVarType::INT_LOC : return mk_loc("l" + std::to_string(qlc++));
-    case SLHVVarType::INT_HEAP : return mk_heap("h" + std::to_string(qhc++));
-    default : assert(false);
-  }
+    switch (vt) {
+        case SLHVVarType::INT_DAT : return mk_data("d" + std::to_string(qdc++));
+        case SLHVVarType::INT_LOC : return mk_loc("l" + std::to_string(qlc++));
+        case SLHVVarType::INT_HEAP : return mk_heap("h" + std::to_string(qhc++));
+        default : assert(false);
+    }
 }
 
-z3::expr Z3ExprManager::mk_pto(std::string type, z3::expr lt, z3::expr rho) {
-  assert(pts.find(type) != pts.end());
-  assert(z3::eq(lt.get_sort(), pts[type]->domain(0)));
-  assert(z3::eq(rho.get_sort(), pts[type]->domain(1)));
-  return pts[type]->operator()(lt, rho);
+z3::expr Z3ExprManager::mk_pto(z3::expr lt, z3::expr t) {
+    std::string ptType = (t.get_sort().is_int() ? "data" : "loc");
+    // TODO eliminate datatype
+    z3::expr rho = recordSorts[ptType]->constructors().back()(t);
+    assert(z3::eq(lt.get_sort(), pts[ptType]->domain(0)));
+    assert(z3::eq(rho.get_sort(), pts[ptType]->domain(1)));
+    return pts[ptType]->operator()(lt, rho);
 }
 
 
@@ -130,147 +160,166 @@ z3::expr Z3ExprManager::mk_loc_pto(z3::expr lt, z3::expr loc) {
 }
 
 z3::expr Z3ExprManager::mk_uplus(z3::expr h1, z3::expr h2) {
-  assert(z3::eq(h1.get_sort(), intHeap));
-  assert(z3::eq(h2.get_sort(), intHeap));
-  return uplus(h1, h2);
+    assert(z3::eq(h1.get_sort(), intHeap));
+    assert(z3::eq(h2.get_sort(), intHeap));
+    return uplus(h1, h2);
+}
+
+z3::expr Z3ExprManager::mk_locadd(z3::expr l1, z3::expr l2) {
+    assert(z3::eq(l1.get_sort(), intLoc));
+    assert(z3::eq(l2.get_sort(), ctx.int_sort()));
+    return locadd(l1, l2);
 }
 
 std::string Z3ExprManager::to_smt2(z3::expr e) {
-  z3::solver sol(this->ctx);
-  sol.add(e);
-  std::string origSmt2 = sol.to_smt2();
-  std::stringstream ss(origSmt2.c_str());
-  
-  std::string smt2 = "(set-logic SLHV)\n" +
-    this->decl_hvar("emp") +  this->decl_locvar("nil");
-  for (auto p : records) {
-    std::string dt = "(declare-datatype ";
-    dt += p.second->to_string() + " ";
-    z3::func_decl fd = p.second->constructors().back();
-    dt += "((" + fd.name().str();
-    for (int i = 0; i < fd.arity(); i++) {
-      dt += " (" + fd.name().str() + "_" + std::to_string(i + 1) + " "
-            + fd.domain(i).to_string() + ")";
+    z3::solver sol(this->ctx);
+    sol.add(e);
+    std::string origSmt2 = sol.to_smt2();
+    std::stringstream ss(origSmt2.c_str());
+    
+    std::string smt2 = "(set-logic SLHV)\n" +
+        this->decl_hvar("emp") +  this->decl_locvar("nil");
+    // for (auto p : records) {
+    //     std::string dt = "(declare-datatype ";
+    //     dt += p.second->to_string() + " ";
+    //     z3::func_decl fd = p.second->constructors().back();
+    //     dt += "((" + fd.name().str();
+    //     for (int i = 0; i < fd.arity(); i++) {
+    //     dt += " (" + fd.name().str() + "_" + std::to_string(i + 1) + " "
+    //             + fd.domain(i).to_string() + ")";
+    //     }
+    //     dt += ")))\n";
+    //     smt2 += dt;
+    // }
+    for (std::string cmd; std::getline(ss, cmd, '\n');) {
+        if (this->is_removed(cmd)) continue;
+        if (cmd.find("declare-fun") != std::string::npos) {
+        int beginIdex = cmd.find('(');
+        int start = cmd.find(' ', beginIdex) + 1;
+        int end = cmd.find(' ', start);
+        std::string var = cmd.substr(start, end - start);
+        if (cmd.find("IntHeap") != std::string::npos)
+            smt2 += this->decl_hvar(var);
+        else if (cmd.find("IntLoc") != std::string::npos)
+            smt2 += this->decl_locvar(var);
+        else if (cmd.find("Int") != std::string::npos)
+            smt2 += this->decl_int(var);
+        else
+            assert(false && "unsupported sort!!!");
+        } else {
+        smt2 += cmd + '\n';
+        }
     }
-    dt += ")))\n";
-    smt2 += dt;
-  }
-  for (std::string cmd; std::getline(ss, cmd, '\n');) {
-    if (this->is_removed(cmd)) continue;
-    if (cmd.find("declare-fun") != std::string::npos) {
-      int beginIdex = cmd.find('(');
-      int start = cmd.find(' ', beginIdex) + 1;
-      int end = cmd.find(' ', start);
-      std::string var = cmd.substr(start, end - start);
-      if (cmd.find("IntHeap") != std::string::npos)
-        smt2 += this->decl_hvar(var);
-      else if (cmd.find("IntLoc") != std::string::npos)
-        smt2 += this->decl_locvar(var);
-      else if (cmd.find("Int") != std::string::npos)
-        smt2 += this->decl_int(var);
-      else
-        assert(false && "unsupported sort!!!");
-    } else {
-      smt2 += cmd + '\n';
-    }
-  }
-  return smt2;
+    return smt2;
 }
 
 void Z3ExprManager::print(std::ostream& OS) {
-  OS << "Records : --------------------------------------\n"
-     << " IntLoc : " << intLoc << '\n'
-     << " IntHeap : " << intHeap << '\n';
-  for (auto record : records) {
-    OS << "   " << record.first << " ---> " << record.second->constructors().back() << '\n';
-  }
-  for (auto pt : pts) {
-    OS << "   " << pt.first << " --> " << (*pt.second) << '\n';
-  }
-  OS << " Uplus ---> " << uplus << '\n';
+    OS << "Records : --------------------------------------\n"
+        << " IntLoc : " << intLoc << '\n'
+        << " IntHeap : " << intHeap << '\n';
+    // for (auto record : records) {
+    //     OS << "   " << record.first << " ---> " << record.second->constructors().back() << '\n';
+    // }
+    for (auto pt : pts) {
+        OS << "   " << pt.first << " --> " << (*pt.second) << '\n';
+    }
+    OS << " Uplus ---> " << uplus << '\n';
 }
 
 z3::expr BlockSemantic::getPreOutput(std::string name, SLHVVarType vt) {
-  if (outputs.find(name) == outputs.end()) {
-    this->inputs.insert(name);
-    this->outputs[name] = name;
-  }
-  switch (vt) {
-    case SLHVVarType::INT_DAT : return z3EM->mk_data(this->outputs[name]);
-    case SLHVVarType::INT_LOC : return z3EM->mk_loc(this->outputs[name]);
-    case SLHVVarType::INT_HEAP : return z3EM->mk_heap(this->outputs[name]);
-    default: assert(false);
-  }
+    if (outputs.find(name) == outputs.end()) {
+        this->inputs.insert(name);
+        this->outputs[name] = name;
+    }
+    switch (vt) {
+        case SLHVVarType::INT_DAT : return z3EM->mk_data(this->outputs[name]);
+        case SLHVVarType::INT_LOC : return z3EM->mk_loc(this->outputs[name]);
+        case SLHVVarType::INT_HEAP : return z3EM->mk_heap(this->outputs[name]);
+        default: assert(false);
+    }
 }
 
 z3::expr BlockSemantic::getPreOutputByName(std::string name) {
-  assert(name[1] == 'p' || name[1] == 'i');
-  if (name[1] == 'p')
-    return this->getPreOutput(name, SLHVVarType::INT_LOC);
-  else if(name[1] == 'i')
-    return this->getPreOutput(name, SLHVVarType::INT_DAT);
+    assert(name[1] == 'p' || name[1] == 'i');
+    if (name[1] == 'p')
+        return this->getPreOutput(name, SLHVVarType::INT_LOC);
+    else if(name[1] == 'i')
+        return this->getPreOutput(name, SLHVVarType::INT_DAT);
 }
 
 void BlockSemantic::generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg) {
-  for (RefinedActionPtr act : bptr->getRefStmts()) {
-    if (act->getActType() == ConcreteAction::ActType::OTHER ||
-        act->getActType() == ConcreteAction::ActType::OTHERPROC) continue;
-    // act->print(std::cout);
-    z3::expr actExpr(z3EM->Ctx());
-    switch (act->getActType()) {
-      case ConcreteAction::ActType::ASSUME:
-        actExpr = this->generateAssumeSemantic(act);
-        break;
-      case ConcreteAction::ActType::COMMONASSIGN:
-        actExpr = this->generateAssignSemantic(act);
-        break;
-      case ConcreteAction::ActType::ALLOC:
-      case ConcreteAction::ActType::MALLOC:
-        actExpr = this->generateAllocAndMallocSemantic(act);
-        break;
-      case ConcreteAction::ActType::LOAD:
-        actExpr = this->generateLoadSemantic(act);
-        break;
-      case ConcreteAction::ActType::STORE:
-        actExpr = this->generateStoreSemantic(act);
-        break;
-      case ConcreteAction::ActType::FREE:
-        actExpr = this->generateFreeSemantic(act);
-        break;
-      default:
-        actExpr = z3EM->Ctx().bool_val(true);
-        break;
+    for (RefinedActionPtr act : bptr->getRefStmts()) {
+        if (act->getActType() == ConcreteAction::ActType::OTHER ||
+            act->getActType() == ConcreteAction::ActType::OTHERPROC) continue;
+        // act->print(std::cout);
+        z3::expr actExpr(z3EM->Ctx());
+        switch (act->getActType()) {
+        case ConcreteAction::ActType::ASSUME:
+            actExpr = this->generateAssumeSemantic(act);
+            break;
+        case ConcreteAction::ActType::COMMONASSIGN:
+            actExpr = this->generateAssignSemantic(act);
+            break;
+        case ConcreteAction::ActType::ALLOC:
+        case ConcreteAction::ActType::MALLOC:
+            actExpr = this->generateAllocAndMallocSemantic(act);
+            break;
+        case ConcreteAction::ActType::LOAD:
+            actExpr = this->generateLoadSemantic(act);
+            break;
+        case ConcreteAction::ActType::STORE:
+            actExpr = this->generateStoreSemantic(act);
+            break;
+        case ConcreteAction::ActType::FREE:
+            actExpr = this->generateFreeSemantic(act);
+            break;
+        default:
+            actExpr = z3EM->Ctx().bool_val(true);
+            break;
+        }
+        if (actExpr.is_true()) continue;
+        if (this->semantic.is_true())
+        this->semantic = actExpr;
+        else
+        this->semantic = this->semantic && actExpr;
+        // std::cout << actExpr << std::endl;
+        // std::cout << " ----------------------------------- \n";
     }
-    if (actExpr.is_true()) continue;
-    if (this->semantic.is_true())
-      this->semantic = actExpr;
-    else
-      this->semantic = this->semantic && actExpr;
-    // std::cout << actExpr << std::endl;
-    // std::cout << " ----------------------------------- \n";
-  }
-  this->src = bptr->getVertexId();
-  for (std::pair<int, int> edge : bcfg->getEdges()) {
-    if (bptr->getVertexId() == edge.first) {
-      this->dests.insert(edge.second);
+    this->src = bptr->getVertexId();
+    for (std::pair<int, int> edge : bcfg->getEdges()) {
+        if (bptr->getVertexId() == edge.first) {
+        this->dests.insert(edge.second);
+        }
     }
-  }
-  // this->print(std::cout);
+    // this->print(std::cout);
 }
 
-inline z3::expr BlockSemantic::generateRecord(std::string& type, z3::expr_vector& args) {
-  return z3EM->mk_record(type, args);
-}
-
-inline z3::expr BlockSemantic::generateRecord(std::string& type, RecordFieldsTypes& ftypes) {
-  z3::expr_vector args(z3EM->Ctx());
-  for (auto ftype : ftypes) {
-    if (ftype == SLHVVarType::INT_LOC)
-      args.push_back(z3EM->mk_quantified(SLHVVarType::INT_LOC));
-    else
-      args.push_back(z3EM->mk_quantified(SLHVVarType::INT_DAT));
-  }
-  return this->generateRecord(type, args);
+z3::expr_vector BlockSemantic::generateRecord(z3::expr lt, Record& record) {
+    z3::expr_vector sh(z3EM->Ctx());
+    z3::expr pure(z3EM->Ctx());
+    z3::expr heap(z3EM->Ctx());
+    z3::expr lastLoc(z3EM->Ctx());
+    for (int i = 0; i < record.size(); i++) {
+        z3::expr currentLoc = z3EM->mk_quantified(SLHVVarType::INT_LOC);
+        z3::expr t(z3EM->Ctx());
+        if (record[i] == SLHVVarType::INT_LOC) {
+            t = z3EM->mk_quantified(SLHVVarType::INT_LOC);
+        } else {
+            t = z3EM->mk_quantified(SLHVVarType::INT_DAT);
+        }
+        if (i == 0) {
+            pure = (lt == currentLoc);
+            heap = z3EM->mk_pto(lt, t);
+        } else {
+            pure = pure && 
+                (currentLoc == z3EM->mk_locadd(lastLoc, z3EM->Ctx().int_val(1)));
+            heap = z3EM->mk_uplus(heap, z3EM->mk_pto(lt, t));
+        }
+        lastLoc = currentLoc;
+    }
+    sh.push_back(pure);
+    sh.push_back(heap);
+    return sh;
 }
 
 z3::expr BlockSemantic::generateFreshVarByName(std::string name) {
@@ -291,8 +340,17 @@ z3::expr BlockSemantic::generateBinExpr(const BinExpr* e) {
     case BinExpr::Binary::Gt: return lhs > rhs;
     case BinExpr::Binary::Lte: return lhs <= rhs;
     case BinExpr::Binary::Gte: return lhs >= rhs;
-    case BinExpr::Binary::Plus: return lhs + rhs;
-    case BinExpr::Binary::Sub: return lhs - rhs;
+    case BinExpr::Binary::Plus: {
+        // TODO support changable
+        if (lhs.get_sort().is_int())
+            return lhs + rhs;
+        else
+            return z3EM->mk_locadd(lhs, rhs);
+    }
+    case BinExpr::Binary::Sub: {
+        return lhs - rhs;
+    }
+    case BinExpr::Binary::Times: return lhs * rhs;
     default: assert(false && "unsupported operation!!!");
   }
 }
@@ -402,107 +460,110 @@ z3::expr BlockSemantic::generateAllocAndMallocSemantic(RefinedActionPtr act) {
   z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
   z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
   z3::expr lt = this->getPreOutput(var->name(), SLHVVarType::INT_LOC);
-  z3::expr rho = this->generateRecord(slhvcmd.type, slhvcmd.ftypes);
+  z3::expr_vector sh = this->generateRecord(lt, slhvcmd.record);
 
   this->localVars.insert(nH.to_string());
   this->outputs["H"] = nH.to_string();
 
-  return nH == z3EM->mk_uplus(H, z3EM->mk_pto(slhvcmd.type, lt, rho));
+  return sh[0] && (nH == sh[1]);
 }
 
 z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
-  auto slhvcmd = act->getSLHVCmd();
-  z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
-  z3::expr h = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
-  z3::expr lt = this->getPreOutput(slhvcmd.base, SLHVVarType::INT_LOC);
-  z3::expr rho = this->generateRecord(slhvcmd.btype, slhvcmd.bftypes);
-  z3::expr pt = z3EM->mk_pto(slhvcmd.btype, lt, rho);
+  // auto slhvcmd = act->getSLHVCmd();
+  // z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
+  // z3::expr h = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
+  // z3::expr lt = this->getPreOutput(slhvcmd.base, SLHVVarType::INT_LOC);
+  // z3::expr rho = this->generateRecord(slhvcmd.btype, slhvcmd.bftypes);
+  // z3::expr pt = z3EM->mk_pto(slhvcmd.btype, lt, rho);
 
-  const Expr* e = act->getArg1();
-  assert(e->isVar());
-  const VarExpr* var = (const VarExpr*)e;
-  z3::expr v = this->generateFreshVarByName(var->name());
-  z3::expr fi = pt.arg(1).arg(slhvcmd.field - 1);
+  // const Expr* e = act->getArg1();
+  // assert(e->isVar());
+  // const VarExpr* var = (const VarExpr*)e;
+  // z3::expr v = this->generateFreshVarByName(var->name());
+  // z3::expr fi = pt.arg(1).arg(slhvcmd.field - 1);
 
-  this->inputs.insert(var->name());
-  this->localVars.insert(v.to_string());
-  this->outputs[var->name()] = v.to_string();
+  // this->inputs.insert(var->name());
+  // this->localVars.insert(v.to_string());
+  // this->outputs[var->name()] = v.to_string();
 
-  this->quantifiedVars.insert(h.to_string());
-  for (auto arg : rho.args())
-    this->quantifiedVars.insert(arg.to_string());
+  // this->quantifiedVars.insert(h.to_string());
+  // for (auto arg : rho.args())
+  //   this->quantifiedVars.insert(arg.to_string());
 
-  return (H == z3EM->mk_uplus(h, pt)) && (v == fi);
+  // return (H == z3EM->mk_uplus(h, pt)) && (v == fi);
+  return z3EM->Ctx().bool_val(true);
 }
 
 z3::expr BlockSemantic::generateStoreSemantic(RefinedActionPtr act) {
-  auto slhvcmd = act->getSLHVCmd();
-  z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
-  z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
-  z3::expr h = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
-  z3::expr lt = this->getPreOutput(slhvcmd.base, SLHVVarType::INT_LOC);
-  z3::expr rho = this->generateRecord(slhvcmd.btype, slhvcmd.bftypes);
-  z3::expr_vector nargs(z3EM->Ctx());
-  for (int i = 0; i < rho.num_args(); i++) {
-    if (i + 1 != slhvcmd.field) nargs.push_back(rho.arg(i));
-    else {
-      if (slhvcmd.bftypes[slhvcmd.field - 1] == SLHVVarType::INT_LOC)
-        nargs.push_back(z3EM->mk_quantified(SLHVVarType::INT_LOC));
-      else
-        nargs.push_back(z3EM->mk_quantified(SLHVVarType::INT_DAT));
-    }
-  }
-  z3::expr rhop = this->generateRecord(slhvcmd.btype, nargs);
-  z3::expr pt1 = z3EM->mk_pto(slhvcmd.btype, lt, rho);
-  z3::expr pt2 = z3EM->mk_pto(slhvcmd.btype, lt, rhop);
+  // auto slhvcmd = act->getSLHVCmd();
+  // z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
+  // z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
+  // z3::expr h = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
+  // z3::expr lt = this->getPreOutput(slhvcmd.base, SLHVVarType::INT_LOC);
+  // z3::expr rho = this->generateRecord(slhvcmd.btype, slhvcmd.bftypes);
+  // z3::expr_vector nargs(z3EM->Ctx());
+  // for (int i = 0; i < rho.num_args(); i++) {
+  //   if (i + 1 != slhvcmd.field) nargs.push_back(rho.arg(i));
+  //   else {
+  //     if (slhvcmd.bftypes[slhvcmd.field - 1] == SLHVVarType::INT_LOC)
+  //       nargs.push_back(z3EM->mk_quantified(SLHVVarType::INT_LOC));
+  //     else
+  //       nargs.push_back(z3EM->mk_quantified(SLHVVarType::INT_DAT));
+  //   }
+  // }
+  // z3::expr rhop = this->generateRecord(slhvcmd.btype, nargs);
+  // z3::expr pt1 = z3EM->mk_pto(slhvcmd.btype, lt, rho);
+  // z3::expr pt2 = z3EM->mk_pto(slhvcmd.btype, lt, rhop);
   
 
-  const Expr* e = act->getArg2();
-  z3::expr v(z3EM->Ctx());
-  if (!e->isVar()) {
-    assert(e->getType() == ExprType::INT);
-    v = this->generateExpr(e);
-  } else {
-    const VarExpr* var = (const VarExpr*)e;
-    if (var->name() == "$0.ref")
-      v = this->generateExpr(e);
-    else
-      v = this->getPreOutputByName(var->name());
-  }
-  z3::expr fi = pt2.arg(1).arg(slhvcmd.field - 1);
+  // const Expr* e = act->getArg2();
+  // z3::expr v(z3EM->Ctx());
+  // if (!e->isVar()) {
+  //   assert(e->getType() == ExprType::INT);
+  //   v = this->generateExpr(e);
+  // } else {
+  //   const VarExpr* var = (const VarExpr*)e;
+  //   if (var->name() == "$0.ref")
+  //     v = this->generateExpr(e);
+  //   else
+  //     v = this->getPreOutputByName(var->name());
+  // }
+  // z3::expr fi = pt2.arg(1).arg(slhvcmd.field - 1);
 
-  this->localVars.insert(nH.to_string());
-  this->outputs["H"] = nH.to_string();
+  // this->localVars.insert(nH.to_string());
+  // this->outputs["H"] = nH.to_string();
 
-  this->quantifiedVars.insert(h.to_string());
-  for (auto arg : rho.args())
-    this->quantifiedVars.insert(arg.to_string());
-  this->quantifiedVars.insert(rhop.arg(slhvcmd.field - 1).to_string());
+  // this->quantifiedVars.insert(h.to_string());
+  // for (auto arg : rho.args())
+  //   this->quantifiedVars.insert(arg.to_string());
+  // this->quantifiedVars.insert(rhop.arg(slhvcmd.field - 1).to_string());
 
-  return (H == z3EM->mk_uplus(h, pt1)) && (nH == z3EM->mk_uplus(h, pt2)) && (v == fi);
+  // return (H == z3EM->mk_uplus(h, pt1)) && (nH == z3EM->mk_uplus(h, pt2)) && (v == fi);
+    return z3EM->Ctx().bool_val(true);
 }
 
 z3::expr BlockSemantic::generateFreeSemantic(RefinedActionPtr act) {
-  const Expr* e = act->getArg1();
-  assert(e->isVar());
-  const VarExpr* var = (const VarExpr*)e;
-  auto slhvcmd = act->getSLHVCmd();
-  z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
-  z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
-  z3::expr h = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
-  z3::expr lt = this->getPreOutput(var->name(), SLHVVarType::INT_LOC);
-  z3::expr rho = this->generateRecord(slhvcmd.type, slhvcmd.ftypes);
-  z3::expr pt = z3EM->mk_pto(slhvcmd.type, lt, rho);
+  // const Expr* e = act->getArg1();
+  // assert(e->isVar());
+  // const VarExpr* var = (const VarExpr*)e;
+  // auto slhvcmd = act->getSLHVCmd();
+  // z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
+  // z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
+  // z3::expr h = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
+  // z3::expr lt = this->getPreOutput(var->name(), SLHVVarType::INT_LOC);
+  // z3::expr rho = this->generateRecord(slhvcmd.type, slhvcmd.ftypes);
+  // z3::expr pt = z3EM->mk_pto(slhvcmd.type, lt, rho);
 
-  this->localVars.insert(nH.to_string());
-  this->outputs["H"] = nH.to_string();
+  // this->localVars.insert(nH.to_string());
+  // this->outputs["H"] = nH.to_string();
 
-  this->quantifiedVars.insert(h.to_string());
-  for (auto arg : rho.args()) {
-    this->quantifiedVars.insert(arg.to_string());
-  }
+  // this->quantifiedVars.insert(h.to_string());
+  // for (auto arg : rho.args()) {
+  //   this->quantifiedVars.insert(arg.to_string());
+  // }
 
-  return (H == z3EM->mk_uplus(h, pt)) && (nH == h);
+  // return (H == z3EM->mk_uplus(h, pt)) && (nH == h);
+  return z3EM->Ctx().bool_val(true);
 }
 
 void BlockSemantic::print(std::ostream& OS) {
@@ -526,7 +587,7 @@ void BlockSemantic::print(std::ostream& OS) {
   OS << " Semantic : " << semantic << '\n';
 }
 
-void TransitionSystem::init() {
+void TREncoder::init() {
   for (RefBlockVertexPtr bptr : bcfg->getVertices()) {
     if (this->Trs.find(bptr->getVertexId()) != this->Trs.end()) continue;
     BlockSemanticPtr bsp =
@@ -544,15 +605,15 @@ void TransitionSystem::init() {
   this->print(std::cout);
 }
   
-std::list<RefBlockVertexPtr> TransitionSystem::getBlocks() {
+std::list<RefBlockVertexPtr> TREncoder::getBlocks() {
   return bcfg->getVertices();
 }
 
-std::list<int> TransitionSystem::getInitialStates() {
+std::list<int> TREncoder::getInitialStates() {
   return bcfg->getInitVertices();
 }
 
-std::set<int> TransitionSystem::getSuccessors(std::set<int> u) {
+std::set<int> TREncoder::getSuccessors(std::set<int> u) {
   std::set<int> v;
   for (auto edge : bcfg->getEdges())
     if (u.find(edge.first) != u.end())
@@ -560,7 +621,7 @@ std::set<int> TransitionSystem::getSuccessors(std::set<int> u) {
   return v;
 }
 
-void TransitionSystem::print(std::ostream& OS) {
+void TREncoder::print(std::ostream& OS) {
   OS << "================ Transition System ================\n";
   OS << " Global State Variable :";
   for (auto var : globalStateVars) OS << " " << var;
@@ -573,11 +634,11 @@ void TransitionSystem::print(std::ostream& OS) {
   OS << "================ Transition System ================\n";
 }
 
-const std::set<std::string>& TransitionSystem::getGlobalStateVars() {
+const std::set<std::string>& TREncoder::getGlobalStateVars() {
   return globalStateVars;
 }
 
-BlockSemanticPtr TransitionSystem::getBlockSemantic(int b) {
+BlockSemanticPtr TREncoder::getBlockSemantic(int b) {
   assert(Trs.find(b) != Trs.end());
   return Trs.at(b);
 }

@@ -24,7 +24,7 @@ private:
   Program *program;
   // std::map<std::string, std::string> boogieVar2SrcVarMap;
   
-  RecordManagerPtr rm;
+  RecordManagerPtr recordManager;
   PIMSetPtr pimSet;
 
 public:
@@ -35,7 +35,7 @@ public:
   virtual bool runOnModule(llvm::Module &m);
   void generateProgram(llvm::Module &m);
   Program *getProgram() { return program; }
-  RecordManagerPtr getRM() { return rm; }
+  RecordManagerPtr getRM() { return recordManager; }
   PIMSetPtr getPIMSet() { return pimSet; }
   // std::map<std::string, std::string> getIRVar2Source() {return boogieVar2SrcVarMap; }
 };

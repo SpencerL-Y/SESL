@@ -17,27 +17,29 @@ namespace smack {
 
 char BMCMemSafeChecker::ID(0);
 
-bool BMCMemSafeChecker::support(const Stmt* stmt, PointerInfoManagerPtr pim) {
+bool BMCMemSafeChecker::support(const Stmt* stmt, PointerInfoManagerPtr pointerInfoManager) {
   if (stmt->getKind() == Stmt::Kind::ASSUME) {
     AssumeStmt* assumeStmt = (AssumeStmt*)stmt;
     // TODO Keep some useful attrs
     return assumeStmt->getAttrs().size() == 0;
-  } else if (stmt->getKind() == Stmt::Kind::ASSIGN) {
-    AssignStmt* assignStmt = (AssignStmt*)stmt;
-    std::string ret;
-    const Expr* lhs = assignStmt->getLhs().front();
-    const Expr* rhs = assignStmt->getRhs().front();
-    if (rhs->getType() != ExprType::FUNC) return true;
-    if (lhs->isVar()) {
-      ret = ((VarExpr*)lhs)->name();
-    }
-    if (pim->contains(ret)) {
-      const FunExpr* fun = (const FunExpr*)rhs;
-      // TODO delete all arithmetic
-      return fun->name().find("add") == std::string::npos &&
-        fun->name().find("bitcast") == std::string::npos;
-    } else return true;
-  } else if (stmt->getKind() == Stmt::Kind::CALL) {
+  }
+  // else if (stmt->getKind() == Stmt::Kind::ASSIGN) {
+  //   AssignStmt* assignStmt = (AssignStmt*)stmt;
+  //   std::string ret;
+  //   const Expr* lhs = assignStmt->getLhs().front();
+  //   const Expr* rhs = assignStmt->getRhs().front();
+  //   if (rhs->getType() != ExprType::FUNC) return true;
+  //   if (lhs->isVar()) {
+  //     ret = ((VarExpr*)lhs)->name();
+  //   }
+    // if (pointerInfoManager->contains(ret)) {
+    //   const FunExpr* fun = (const FunExpr*)rhs;
+    //   // TODO delete all arithmetic
+    //   return fun->name().find("add") == std::string::npos &&
+    //     fun->name().find("bitcast") == std::string::npos;
+    // } else return true;
+  // } 
+  else if (stmt->getKind() == Stmt::Kind::CALL) {
     CallStmt* callStmt = (CallStmt*)stmt;
     std::string proc = callStmt->getProc();
     return proc.find("memcpy") != std::string::npos ||
@@ -71,10 +73,8 @@ void BMCMemSafeChecker::refinedProgram(Program* prog) {
   }
 }
 
-PointerInfoManagerPtr BMCMemSafeChecker::getPIM(std::string var) {
-  std::string fn =
-    var.substr(0, var.size() - 1)
-    .substr(var.find('_') + 1);
+PointerInfoManagerPtr BMCMemSafeChecker::getPIM(std::string pt) {
+  std::string fn = pt.substr(0, pt.size() - 1).substr(pt.find('_') + 1);
   assert(pimSet->find(fn) != pimSet->end());
   return pimSet->at(fn);
 }
@@ -91,30 +91,13 @@ std::string BMCMemSafeChecker::getSuffName(std::string origName) {
   return "";
 }
 
-RefinedAction::SLHVCmd BMCMemSafeChecker::createSLHVCmdStruct(const VarExpr* vexpr) {
+RefinedAction::SLHVCmd BMCMemSafeChecker::createSLHVCmd(const VarExpr* vexpr) {
   RefinedAction::SLHVCmd slhvcmd;
-  std::string var = this->getOrigName(vexpr->name());
-  PointerInfoManagerPtr pim = this->getPIM(vexpr->name());
-  assert(pim->contains(var));
-  auto pinfo = pim->get(var);
-  slhvcmd.type = rm->getSLHVRecordName(pinfo.getType());
-  slhvcmd.ftypes = rm->getFieldsTypes(slhvcmd.type);
-  return slhvcmd;
-}
-
-RefinedAction::SLHVCmd BMCMemSafeChecker::createSLHVCmdInStruct(const VarExpr* vexpr) {
-  RefinedAction::SLHVCmd slhvcmd;
-  std::string var = this->getOrigName(vexpr->name());
-  PointerInfoManagerPtr pim = this->getPIM(vexpr->name());
-  assert(pim->contains(var));
-  auto pinfo = pim->get(var);
-  assert(pinfo.isInStruct());
-  slhvcmd.base= pinfo.getBase() + getSuffName(vexpr->name());
-  slhvcmd.field = pinfo.getField();
-  assert(pim->contains(pinfo.getBase()));
-  std::string btype = pim->get(pinfo.getBase()).getType();
-  slhvcmd.btype = rm->getSLHVRecordName(btype);
-  slhvcmd.bftypes = rm->getFieldsTypes(btype);
+  std::string pt = this->getOrigName(vexpr->name());
+  PointerInfoManagerPtr pointerInfoManager = this->getPIM(vexpr->name());
+  assert(pointerInfoManager->contains(pt));
+  PointerInfo pinfo = pointerInfoManager->get(pt);
+  slhvcmd.record = recordManager->getRecord(pinfo.getPto());
   return slhvcmd;
 }
 
@@ -124,35 +107,11 @@ void BMCMemSafeChecker::setSLHVCmds(RefBlockCFGPtr refBlockCFG) {
     std::cout << refbvp->getVertexId() << " ================================ \n";
     for(auto refActp : refbvp->getRefStmts()) {
       RefinedAction::SLHVCmd slhvcmd;
-      // TODO add more cmds
       switch (refActp->getActType()) {    
         case ConcreteAction::ActType::ALLOC :
         case ConcreteAction::ActType::MALLOC : {
           assert(refActp->getArg1()->isVar());
-          slhvcmd = this->createSLHVCmdStruct(
-            (const VarExpr*)refActp->getArg1()
-          );
-          break;
-        }
-        case ConcreteAction::ActType::STORE: {
-          assert(refActp->getArg1()->isVar());
-          slhvcmd = this->createSLHVCmdInStruct(
-            (const VarExpr*)refActp->getArg1()
-          );
-          break;
-        }
-        case ConcreteAction::ActType::LOAD: {
-          assert(refActp->getArg2()->isVar());
-          slhvcmd = this->createSLHVCmdInStruct(
-            (const VarExpr*)refActp->getArg2()
-          );
-          break;
-        }
-        case ConcreteAction::ActType::FREE: {
-          assert(refActp->getArg1()->isVar());
-          slhvcmd = this->createSLHVCmdStruct(
-            (const VarExpr*)refActp->getArg1()
-          );
+          slhvcmd = this->createSLHVCmd((const VarExpr*)refActp->getArg1());
           break;
         }
         default: break;
@@ -169,7 +128,7 @@ void BMCMemSafeChecker::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
 
 bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
-  rm = smackGen.getRM();
+  recordManager = smackGen.getRM();
   pimSet = smackGen.getPIMSet();
   Program* program = smackGen.getProgram();
   program->print(std::cout);
@@ -196,9 +155,9 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   this->setSLHVCmds(refBlockCFG);
   refBlockCFG->printRefBlockCFG(std::cout);
 
-  BMCSLHVVCGen vcGen(refBlockCFG, rm);
+  BMCSLHVVCGen vcGen(refBlockCFG, recordManager);
   z3::expr vc = vcGen.generateVC(1);
-  vcGen.generateSMT2(vc, "../bin/out.smt2");
+  // vcGen.generateSMT2(vc, "../bin/out.smt2");
 
   return false;
 }

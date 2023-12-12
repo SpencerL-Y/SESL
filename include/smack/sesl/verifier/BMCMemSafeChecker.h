@@ -13,18 +13,18 @@ namespace smack {
 class BMCMemSafeChecker : public llvm::ModulePass {
 
 private:
-  RecordManagerPtr rm;
+  RecordManagerPtr recordManager;
   PIMSetPtr pimSet;
 
-  bool support(const Stmt* stmt, PointerInfoManagerPtr pim);
+  bool support(const Stmt* stmt, PointerInfoManagerPtr pointerInfoManager);
   void refinedProgram(Program* prog);
-  inline PointerInfoManagerPtr getPIM(std::string var);
+  inline PointerInfoManagerPtr getPIM(std::string pt);
   inline std::string getOrigName(std::string origName);
   inline std::string getSuffName(std::string origName);
 
-  RefinedAction::SLHVCmd createSLHVCmdStruct(const VarExpr* vexpr);
-  RefinedAction::SLHVCmd createSLHVCmdInStruct(const VarExpr* vexpr);
+  RefinedAction::SLHVCmd createSLHVCmd(const VarExpr* vexpr);
   void setSLHVCmds(RefBlockCFGPtr refBlockCFG);
+
 public:
   static char ID;
   BMCMemSafeChecker() : llvm::ModulePass(ID) {}

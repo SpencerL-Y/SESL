@@ -20,49 +20,33 @@ namespace smack {
 
 class Naming;
 
-#define LLVM_RAW_OSTREAM_PRINT(Ty) \
-  inline llvm::raw_ostream& \
-  operator<<(llvm::raw_ostream &OS, const Ty &T) { \
-    T.print(OS); \
-    return OS; \
-  }
+#define LLVM_RAW_OSTREAM_PRINT(Ty)             \
+inline llvm::raw_ostream &                     \
+operator<<(llvm::raw_ostream &OS, const Ty &T) \
+{                                              \
+    T.print(OS);                               \
+    return OS;                                 \
+}
 
 class PointerInfo {
 
 private:
-  std::string type;
-  bool isField;
-  std::string base;
-  int field;
+    std::string type;
 
 public:
-  PointerInfo()
-    : type(""), isField(false),
-      base(""), field(0) {}
+    PointerInfo() : type("") {}
+    PointerInfo(std::string ty) : type(ty) {}
 
-  void setType(std::string t) { type = t; }
-  void setInStruct() { isField = true; }
-  void setBase(std::string b) { base = b; }
-  void setField(int f) { field = f; }
+    void setType(std::string t);
+    std::string getType();
+    std::string getPto();
 
-  std::string getType() { return type; }
-  bool isInStruct() { return isField; }
-  std::string getBase() { return base; }
-  int getField() { return field; }
+    void show() { std::cout << " Type : " << type; }
 
-  void show() {
-    std::cout << " Type :" << type;
-    if (isField) {
-      std::cout << " -- Base : " << base << ", Field : " << field;
+    void print(llvm::raw_ostream &OS) const
+    {
+        OS << " Type : " << type;
     }
-  }
-
-  void print(llvm::raw_ostream& OS) const {
-    OS << " Type :" << type;
-    if (isField) {
-      OS << " -- Base : " << base << ", Field : " << field;
-    }
-  }
 };
 
 LLVM_RAW_OSTREAM_PRINT(PointerInfo)
@@ -70,127 +54,128 @@ LLVM_RAW_OSTREAM_PRINT(PointerInfo)
 class PointerInfoManager {
 
 private:
-  std::map<std::string, PointerInfo> pointerInfos;
+    std::map<std::string, PointerInfo> pointerInfoMap;
 
 public:
-  PointerInfoManager() : pointerInfos() {}
+    PointerInfoManager() : pointerInfoMap() {}
 
-  void add(std::string var, PointerInfo pi);
-  void update(std::string var, PointerInfo pi);
-  bool contains(std::string var);
-  PointerInfo get(std::string var);
+    void add(std::string pt, PointerInfo pointerInfo);
+    void update(std::string pt, PointerInfo pointerInfo);
+    bool contains(std::string pt);
+    PointerInfo get(std::string pt);
 
-  // TODO
-
-  void show() {
-    for (auto vp : pointerInfos) {
-      std::cout << vp.first << " --> ";
-      vp.second.show();
+    void show()
+    {
+        for (auto vp : pointerInfoMap)
+        {
+            std::cout << vp.first << " --> ";
+            vp.second.show();
+        }
     }
-  }
 
-  void print(llvm::raw_ostream& OS) const {
-    for (auto vp : pointerInfos) {
-      OS << vp.first << " --> " << vp.second << '\n';
+    void print(llvm::raw_ostream &OS) const
+    {
+        for (auto vp : pointerInfoMap)
+        {
+            OS << vp.first << " --> " << vp.second << '\n';
+        }
     }
-  }
 };
 
 LLVM_RAW_OSTREAM_PRINT(PointerInfoManager)
 
-typedef std::set<std::string> PointerEq;
+typedef std::set<std::string> PointerEqSet;
 
+// may be depreacted
 class PointerEqManager {
 
 private:
-  int Id;
-  std::map<std::string, int> idx;
-  std::map<int, std::string> eqVar;
-  std::vector<PointerEq> pointerEqs;
+    int Id;
+    std::map<std::string, int> idx;
+    std::map<int, std::string> primePt;
+    std::vector<PointerEqSet> pointerEqSets;
 
 public:
-  PointerEqManager() : Id(0), idx(), eqVar(), pointerEqs() {}
+    PointerEqManager()
+        : Id(0), idx(),
+          primePt(),
+          pointerEqSets() {}
 
-  void add(std::string& pt);
-  void setEq(std::string& b, std::string& n);
-  bool contains(std::string& pt);
-  std::string getEqVar(std::string var);
-  PointerEq getEq(std::string pn);
-
+    void add(std::string& pt);
+    void setEq(std::string& pt1, std::string& pt2);
+    bool contains(std::string& pt);
+    std::string getPrimePt(std::string pt);
+    PointerEqSet getPointerEqSet(std::string pt);
 };
 
 enum SLHVVarType { INT_LOC, INT_DAT, INT_HEAP };
 
-typedef std::vector<SLHVVarType> RecordFieldsTypes;
-typedef std::map<std::string, RecordFieldsTypes> RecordSet;
-typedef std::map<std::string, std::map<int, int>> FieldReorderMap;
+typedef std::vector<SLHVVarType> Record;
+typedef std::map<std::string, Record> RecordMap;
+// typedef std::map<std::string, std::map<int, int>> FieldReorderMap;
 
 class RecordManager {
 
 private:
-  RecordSet records;
-  FieldReorderMap frMap;
+    RecordMap recordMap;
+    // FieldReorderMap frMap;
 
-  bool isIntPointer(std::string name);
-  void reorder(std::string record, RecordFieldsTypes& ftypes);
+    // void reorder(std::string record, Record& ftypes);
 
 public:
-  RecordManager() : records(), frMap() {
-    RecordFieldsTypes ftypes;
-    ftypes.push_back(SLHVVarType::INT_DAT);
-    records["ptr"] = ftypes;
-  }
+    RecordManager() : recordMap() {}
 
-  void add(std::string name, RecordFieldsTypes ftypes);
-  bool contains(std::string name);
-  const RecordFieldsTypes& getFieldsTypes(std::string name);
-  const std::map<int, int>& getOrder(std::string name);
-  const RecordSet& getRecordSet();
-
-  std::string getSLHVRecordName(std::string type);
-  bool isStruct(std::string name);
-
+    void add(std::string name, Record record);
+    bool contains(std::string name);
+    const Record &getRecord(std::string name);
+    // const std::map<int, int> &getOrder(std::string name);
+    const RecordMap &getRecordMap();
 };
 
 typedef std::shared_ptr<RecordManager> RecordManagerPtr;
 typedef std::shared_ptr<PointerInfoManager> PointerInfoManagerPtr;
 
 class PointerInfoAnalysis
-  : public llvm::InstVisitor<PointerInfoAnalysis> {
+    : public llvm::InstVisitor<PointerInfoAnalysis> {
 
-public:
-  static std::string removeOpaque(std::string type);
-  static std::string getOrigType(llvm::Type* lt);
+// public:
+//     static std::string removeOpaque(std::string type);
+//     static std::string getOrigType(llvm::Type *lt);
 
 private:
-  Naming* naming;
-  RecordManagerPtr rm;
-  PointerInfoManagerPtr pim;
-  std::shared_ptr<PointerEqManager> pem;
+    Naming *naming;
+    RecordManagerPtr recordManager;
+    PointerInfoManagerPtr pointerInfoManager;
+    std::shared_ptr<PointerEqManager> pointerEqManager;
 
-  void init(llvm::Function* F);
+    void init(llvm::Function *F);
+
+    static std::string getPointerType(llvm::Type* ltype);
+    static bool compareType(const std::string type1, const std::string type2);
 
 public:
-  PointerInfoAnalysis(
-    llvm::Function* f,
-    Naming* n,
-    RecordManagerPtr rm,
-    PointerInfoManagerPtr pim)
-    : naming(n), rm(rm), pim(pim), pem(new PointerEqManager()) {
-    this->init(f);
-  }
+    PointerInfoAnalysis(
+        llvm::Function *f,
+        Naming *n,
+        RecordManagerPtr recordManager,
+        PointerInfoManagerPtr pointerInfoManager)
+        : naming(n),
+          recordManager(recordManager),
+          pointerInfoManager(pointerInfoManager),
+          pointerEqManager(new PointerEqManager()) {
+            this->init(f);
+        }
 
-  void visitInstruction(llvm::Instruction &I);
+    void visitInstruction(llvm::Instruction &I);
 
-  void visitAllocaInst(llvm::AllocaInst &I);
-  void visitBitCastInst(llvm::BitCastInst &I);
-  void visitCallInst(llvm::CallInst &I);
-  void visitLoadInst(llvm::LoadInst &I);
-  void visitGetElementPtrInst(llvm::GetElementPtrInst &I);
-  void visitPHINode(llvm::PHINode &I);
+    void visitAllocaInst(llvm::AllocaInst &I);
+    void visitBitCastInst(llvm::BitCastInst &I);
+    void visitCallInst(llvm::CallInst &I);
+    // void visitLoadInst(llvm::LoadInst &I);
+    // void visitGetElementPtrInst(llvm::GetElementPtrInst &I);
+    // void visitPHINode(llvm::PHINode &I);
 
-  void print(llvm::raw_ostream& OS) const { pim->print(OS); }
-
+    void print(llvm::raw_ostream &OS) const { pointerInfoManager->print(OS); }
 };
 
 LLVM_RAW_OSTREAM_PRINT(PointerInfoAnalysis)

@@ -511,21 +511,10 @@ namespace smack
         os << std::endl;
         // SLHV
         os << " |-- SLHV Target Configuration : ";
-        if (!slhvcmd.ftypes.empty()) {
-            os << " Type : " << slhvcmd.type;
-            os << " Fields : ";
-            for (auto ftype : slhvcmd.ftypes)
+        if (!slhvcmd.record.empty()) {
+            os << " Record : ";
+            for (auto ftype : slhvcmd.record)
                 os << " " << (ftype == SLHVVarType::INT_LOC ? "Loc" : "Dat");
-        }
-        if (!slhvcmd.bftypes.empty()) {
-            os << "  Base : " << slhvcmd.base;
-            os << "  Base Type : " << slhvcmd.btype;
-            os << "  Field : " << slhvcmd.field;
-            if (slhvcmd.bftypes.size() > 0) {
-                os << " Base Fields : ";
-                for (auto bftype : slhvcmd.bftypes)
-                    os << " " << (bftype == SLHVVarType::INT_LOC ? "Loc" : "Dat");
-            }
         }
         os << std::endl;
     }

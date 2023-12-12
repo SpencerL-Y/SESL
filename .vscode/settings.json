@@ -82,6 +82,7 @@
         "queue": "cpp",
         "stack": "cpp",
         "cstdbool": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "hash_map": "cpp"
     }
 }

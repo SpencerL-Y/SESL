@@ -68,22 +68,16 @@ PointerEqSet PointerEqManager::getPointerEqSet(std::string pt) {
   return pointerEqSets[idx[pt]];
 }
 
-// void RecordManager::reorder(std::string record, Record& ftypes) {
-//   std::map<int, int> order;
-//   int idx = 0;
-//   for (int i = 0; i < ftypes.size(); i++)
-//     if (ftypes[i] == SLHVVarType::INT_LOC)
-//       order[i] = idx++;
-//   for (int i = 0; i < ftypes.size(); i++)
-//     if (ftypes[i] == SLHVVarType::INT_DAT)
-//       order[i] = idx++;
-//   frMap[record] = order;
-//   std::sort(ftypes.begin(), ftypes.end());
-// }
+Record::Record(int id, FieldsTypes f)
+    : ID(id), fieldsTypes(f) {}
 
-void RecordManager::add(std::string name, Record record) {
+const int Record::getID() { return ID; }
+
+const FieldsTypes& Record::getFieldsTypes() { return fieldsTypes; }
+
+void RecordManager::add(std::string name, FieldsTypes fieldsTypes) {
     assert(!this->contains(name));
-    recordMap[name] = record;
+    recordMap[name] = Record(Id++, fieldsTypes);
 }
 
 bool RecordManager::contains(std::string name) {
@@ -91,7 +85,6 @@ bool RecordManager::contains(std::string name) {
 }
 
 const Record& RecordManager::getRecord(std::string name) {
-    llvm::errs() << name << '\n';
     assert(this->contains(name));
     return recordMap.at(name);
 }

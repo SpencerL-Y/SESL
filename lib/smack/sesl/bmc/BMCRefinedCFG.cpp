@@ -511,9 +511,10 @@ namespace smack
         os << std::endl;
         // SLHV
         os << " |-- SLHV Target Configuration : ";
-        if (!slhvcmd.record.empty()) {
-            os << " Record : ";
-            for (auto ftype : slhvcmd.record)
+        if (slhvcmd.record.getID() != -1) {
+            os << " Record : " << " Id - "
+                << slhvcmd.record.getID() << " | Fields - ";
+            for (auto ftype : slhvcmd.record.getFieldsTypes())
                 os << " " << (ftype == SLHVVarType::INT_LOC ? "Loc" : "Dat");
         }
         os << std::endl;
@@ -1047,6 +1048,9 @@ namespace smack
             os << "------------------------------------" << std::endl;
             os << "BlockVertex: " << vertexId << std::endl;
             for(RefinedActionPtr stmt : this->getVertex(vertexId)->getRefStmts()){
+                if (stmt->getActType() == ConcreteAction::ActType::OTHER ||
+                    stmt->getActType() == ConcreteAction::ActType::OTHERPROC)
+                    continue;
                 stmt->print(os);
                 os << std::endl;
             }

@@ -60,13 +60,13 @@ namespace smack {
 
         SDEBUG(errs() << "Analyzing structures...\n");
         // TODO: remove i8 i32
-        Record defR; defR.push_back(SLHVVarType::INT_DAT);
+        FieldsTypes defR; defR.push_back(SLHVVarType::INT_DAT);
         recordManager->add("i8", defR);
         recordManager->add("i32", defR);
         for (StructType* sty : M.getIdentifiedStructTypes()) {
             if (sty->isOpaque()) continue;
             std::string name = sty->getName();
-            Record ftypes;
+            FieldsTypes ftypes;
             for (unsigned i = 0; i < sty->getNumElements(); i++) {
                 llvm::Type* lt = sty->getElementType(i);
                 if (lt->isPointerTy())

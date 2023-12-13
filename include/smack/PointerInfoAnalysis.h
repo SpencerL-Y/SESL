@@ -108,24 +108,41 @@ public:
     PointerEqSet getPointerEqSet(std::string pt);
 };
 
-enum SLHVVarType { INT_LOC, INT_DAT, INT_HEAP };
+enum SLHVVarType { INT_LOC, INT_DAT, INT_HEAP, FALSIFICATION_BOOL };
 
-typedef std::vector<SLHVVarType> Record;
+typedef std::vector<SLHVVarType> FieldsTypes;
+
+class Record {
+
+private:
+    int ID;
+    FieldsTypes fieldsTypes;
+
+public:
+    Record() : ID(-1) {};
+    Record(int id, FieldsTypes f);
+
+    const int getID();
+    const FieldsTypes& getFieldsTypes();
+
+};
+
 typedef std::map<std::string, Record> RecordMap;
 // typedef std::map<std::string, std::map<int, int>> FieldReorderMap;
 
 class RecordManager {
 
 private:
+    int Id;
     RecordMap recordMap;
     // FieldReorderMap frMap;
 
     // void reorder(std::string record, Record& ftypes);
 
 public:
-    RecordManager() : recordMap() {}
+    RecordManager() : Id(1), recordMap() {}
 
-    void add(std::string name, Record record);
+    void add(std::string name, FieldsTypes fieldsTypes);
     bool contains(std::string name);
     const Record &getRecord(std::string name);
     // const std::map<int, int> &getOrder(std::string name);

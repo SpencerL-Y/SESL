@@ -482,18 +482,15 @@ z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
     z3::expr invalidDeref = this->getPreOutputByName(BlockSemantic::invalid_deref);
     z3::expr invalidFree = this->getPreOutputByName(BlockSemantic::invalid_free);
     z3::expr invalidDerefPrime = this->generateLocalVarByName(BlockSemantic::invalid_deref);
-    z3::expr invalidFreePrime = this->generateLocalVarByName(BlockSemantic::invalid_free);
     this->localVars.insert(invalidDerefPrime.to_string());
-    this->localVars.insert(invalidFreePrime.to_string());
     this->outputs[BlockSemantic::invalid_deref] = invalidDerefPrime.to_string();
-    this->outputs[BlockSemantic::invalid_free] = invalidFreePrime.to_string();
 
     z3::expr t1 = z3EM->mk_quantified(
         toVar->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
     z3::expr pt1 = z3EM->mk_pto(from, t1);
     z3::expr invalidDerefSemantic =
         (from == z3EM->mk_loc("nil") || H == z3EM->mk_uplus(h, pt1))
-        && invalidDerefPrime && invalidFreePrime = invalidFree;
+        && invalidDerefPrime;
     this->quantifiedVars.insert(t1.to_string());
 
     z3::expr sh(z3EM->Ctx());
@@ -507,7 +504,7 @@ z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
     }
     z3::expr premise = !invalidDeref && !invalidDerefPrime && !invalidFree;
     z3::expr memorySafetySemantic = z3::implies(premise, sh)
-        && invalidDerefPrime = invalidDeref && invalidFreePrime = invalidFree;
+        && invalidDerefPrime = invalidDeref;
 
     return invalidDerefSemantic || memorySafetySemantic;
 }
@@ -537,18 +534,15 @@ z3::expr BlockSemantic::generateStoreSemantic(RefinedActionPtr act) {
     z3::expr invalidDeref = this->getPreOutputByName(BlockSemantic::invalid_deref);
     z3::expr invalidFree = this->getPreOutputByName(BlockSemantic::invalid_free);
     z3::expr invalidDerefPrime = this->generateLocalVarByName(BlockSemantic::invalid_deref);
-    z3::expr invalidFreePrime = this->generateLocalVarByName(BlockSemantic::invalid_free);
     this->localVars.insert(invalidDerefPrime.to_string());
-    this->localVars.insert(invalidFreePrime.to_string());
     this->outputs[BlockSemantic::invalid_deref] = invalidDerefPrime.to_string();
-    this->outputs[BlockSemantic::invalid_free] = invalidFreePrime.to_string();
 
     z3::expr t1 = z3EM->mk_quantified(
         fromVar->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
     z3::expr pt1 = z3EM->mk_pto(to, t1);
     z3::expr invalidDerefSemantic =
         (to == z3EM->mk_loc("nil") || H == z3EM->mk_uplus(h0, pt1))
-        && invalidDerefPrime && invalidFreePrime = invalidFree;
+        && invalidDerefPrime;
     this->quantifiedVars.insert(t1.to_string());
 
     z3::expr t2 = z3EM->mk_quantified(
@@ -560,7 +554,7 @@ z3::expr BlockSemantic::generateStoreSemantic(RefinedActionPtr act) {
     z3::expr premise = !invalidDeref && !invalidDerefPrime && !invalidFree;
     z3::expr sh = (H == z3EM->mk_uplus(h1, pt2)) && (nH == z3EM->mk_uplus(h1, pt3));
     z3::expr memorySafetySemantic = z3::implies(premise, sh)
-        && invalidDerefPrime = invalidDeref && invalidFreePrime = invalidFree;
+        && invalidDerefPrime = invalidDeref;
 
     return invalidDerefSemantic || memorySafetySemantic;
 }

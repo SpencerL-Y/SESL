@@ -157,7 +157,7 @@ std::string Z3ExprManager::to_smt2(z3::expr e) {
     std::string smt2 = "(set-logic SLHV)\n" +
         this->decl_hvar("emp") +  this->decl_locvar("nil");    
     smt2 += "(datatype pt_record_0 ((Pt_R_0 (loc IntLoc))))\n";
-    smt2 += "(datatype pt_record_0 ((Pt_R_0 (loc IntLoc))))\n";
+    smt2 += "(datatype pt_record_1 ((Pt_R_1 (data Int))))\n";
 
     for (std::string cmd; std::getline(ss, cmd, '\n');) {
         if (this->is_removed(cmd)) continue;

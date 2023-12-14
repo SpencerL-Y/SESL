@@ -158,7 +158,7 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   BMCSLHVVCGen vcGen(refBlockCFG, recordManager);
   z3::expr vc = vcGen.generateVC(1);
   std::cout << vc << std::endl;
-  // vcGen.generateSMT2(vc, "../bin/out.smt2");
+  vcGen.generateSMT2(vc, "../bin/out.smt2");
 
   return false;
 }

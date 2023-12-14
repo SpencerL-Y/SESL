@@ -40,6 +40,10 @@ std::string Z3ExprManager::decl_int(std::string var) {
     return "(declare-const " + var + " Int)\n";
 }
 
+std::string Z3ExprManager::decl_bool(std::string var) {
+    return "(declare-const " + var + " Bool)\n";
+}
+
 bool Z3ExprManager::is_removed(std::string cmd) {
   return cmd[0] == ';' ||
          cmd.find("set-info") != std::string::npos ||
@@ -47,7 +51,8 @@ bool Z3ExprManager::is_removed(std::string cmd) {
          cmd.find("declare-datatypes") != std::string::npos ||
          (cmd.find("declare-fun") != std::string::npos && 
           (cmd.find("uplus") != std::string::npos ||
-           cmd.find("pt") != std::string::npos));
+           cmd.find("pt") != std::string::npos ||
+           cmd.find("locadd") != std::string::npos));
 }
 
 Z3ExprManager::Z3ExprManager()
@@ -146,39 +151,33 @@ std::string Z3ExprManager::to_smt2(z3::expr e) {
     z3::solver sol(this->ctx);
     sol.add(e);
     std::string origSmt2 = sol.to_smt2();
+    // std::cout << origSmt2 << '\n';
     std::stringstream ss(origSmt2.c_str());
     
     std::string smt2 = "(set-logic SLHV)\n" +
-        this->decl_hvar("emp") +  this->decl_locvar("nil");
-    // for (auto p : records) {
-    //     std::string dt = "(declare-datatype ";
-    //     dt += p.second->to_string() + " ";
-    //     z3::func_decl fd = p.second->constructors().back();
-    //     dt += "((" + fd.name().str();
-    //     for (int i = 0; i < fd.arity(); i++) {
-    //     dt += " (" + fd.name().str() + "_" + std::to_string(i + 1) + " "
-    //             + fd.domain(i).to_string() + ")";
-    //     }
-    //     dt += ")))\n";
-    //     smt2 += dt;
-    // }
+        this->decl_hvar("emp") +  this->decl_locvar("nil");    
+    smt2 += "(datatype pt_record_0 ((Pt_R_0 (loc IntLoc))))\n";
+    smt2 += "(datatype pt_record_0 ((Pt_R_0 (loc IntLoc))))\n";
+
     for (std::string cmd; std::getline(ss, cmd, '\n');) {
         if (this->is_removed(cmd)) continue;
         if (cmd.find("declare-fun") != std::string::npos) {
-        int beginIdex = cmd.find('(');
-        int start = cmd.find(' ', beginIdex) + 1;
-        int end = cmd.find(' ', start);
-        std::string var = cmd.substr(start, end - start);
-        if (cmd.find("IntHeap") != std::string::npos)
-            smt2 += this->decl_hvar(var);
-        else if (cmd.find("IntLoc") != std::string::npos)
-            smt2 += this->decl_locvar(var);
-        else if (cmd.find("Int") != std::string::npos)
-            smt2 += this->decl_int(var);
-        else
-            assert(false && "unsupported sort!!!");
+            int beginIdex = cmd.find('(');
+            int start = cmd.find(' ', beginIdex) + 1;
+            int end = cmd.find(' ', start);
+            std::string var = cmd.substr(start, end - start);
+            if (cmd.find("IntHeap") != std::string::npos)
+                smt2 += this->decl_hvar(var);
+            else if (cmd.find("IntLoc") != std::string::npos)
+                smt2 += this->decl_locvar(var);
+            else if (cmd.find("Int") != std::string::npos)
+                smt2 += this->decl_int(var);
+            else if (cmd.find("Bool") != std::string::npos)
+                smt2 += this->decl_bool(var);
+            else
+                assert(false && "unsupported sort!!!");
         } else {
-        smt2 += cmd + '\n';
+            smt2 += cmd + '\n';
         }
     }
     return smt2;

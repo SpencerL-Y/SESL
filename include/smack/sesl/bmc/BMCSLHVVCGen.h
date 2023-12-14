@@ -37,6 +37,7 @@ private:
     inline std::string decl_hvar(std::string var);
     inline std::string decl_locvar(std::string var);
     inline std::string decl_int(std::string var);
+    inline std::string decl_bool(std::string var);
     bool is_removed(std::string cmd);
 
 public:

@@ -13,6 +13,10 @@ namespace smack {
 
 #define DEFINE_PTR_TYPE(T) typedef std::shared_ptr<T> T##Ptr
 
+#define CLEAN_Z3EXPR_CONJUNC(X, Y) \
+    if (X.is_true()) { X = Y; } \
+    else if (!Y.is_true()) { X = X && Y; } 
+
 class Z3ExprManager {
 
 private:
@@ -62,26 +66,24 @@ public:
 
 DEFINE_PTR_TYPE(Z3ExprManager);
 
-typedef std::set<std::string> LocVarSet;
-typedef std::set<std::string> FableVarSet;
-typedef std::set<std::string> DataVarSet;
-DEFINE_PTR_TYPE(LocVarSet);
-DEFINE_PTR_TYPE(FableVarSet);
-DEFINE_PTR_TYPE(DataVarSet);
+typedef std::set<std::string> VarSet;
+DEFINE_PTR_TYPE(VarSet);
 
 class BlockSemantic {
 
+public:
+    static const std::string invalid_deref;
+    static const std::string invalid_free;
+
 private:
-    const std::string invalid_deref = "invalidDeref";
-    const std::string invalid_free = "invalidFree";
 
     Z3ExprManagerPtr z3EM;
-    LocVarSetPtr globalLocVars;
+    VarSetPtr globalLocVars;
 
-    std::set<std::string> inputs;
+    VarSet inputs;
+    VarSet localVars;
+    VarSet quantifiedVars;
     std::map<std::string, std::string> outputs;
-    std::set<std::string> localVars;
-    std::set<std::string> quantifiedVars;
     int src;
     std::set<int> dests;
     z3::expr semantic;
@@ -103,14 +105,14 @@ private:
     z3::expr generateFreeSemantic(RefinedActionPtr act);
 
 public:
-    BlockSemantic(Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg, LocVarSetPtr globalLocVars);
+    BlockSemantic(Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg, VarSetPtr globalLocVars);
     
     inline bool use_global(std::string var);
 
-    const std::set<std::string>& getInputs();
+    const VarSet& getInputs();
     const std::map<std::string, std::string>& getOutputs();
-    const std::set<std::string>& getLocalVars();
-    const std::set<std::string>& getQuantifiedVars();
+    const VarSet& getLocalVars();
+    const VarSet& getQuantifiedVars();
     const int getSrc();
     const std::set<int> getDests();
     z3::expr getSemantic();
@@ -126,9 +128,9 @@ private:
     Z3ExprManagerPtr z3EM;
     RefBlockCFGPtr bcfg;
     
-    LocVarSetPtr globalLocVars;
-    FableVarSetPtr globalFableVars;
-    DataVarSetPtr globalDataVars;
+    VarSetPtr globalLocVars;
+    VarSetPtr globalFableVars;
+    VarSetPtr globalDataVars;
     std::map<int, BlockSemanticPtr> Trs;
 
     void initGlobalVars();
@@ -141,9 +143,9 @@ public:
     std::list<int> getInitialStates();
     std::set<int> getSuccessors(std::set<int> u);
 
-    const LocVarSetPtr getGlobalLocVars();
-    const FableVarSetPtr getGlobalFableVars();
-    const DataVarSetPtr getGlobalDataVars();
+    VarSetPtr getGlobalLocVars();
+    VarSetPtr getGlobalFableVars();
+    VarSetPtr getGlobalDataVars();
     BlockSemanticPtr getBlockSemantic(int b);
         
     void print(std::ostream& OS);
@@ -158,6 +160,7 @@ private:
     TREncoderPtr TrEncoder;
     
     inline z3::expr generateVar(std::string name);
+    z3::expr generateUnchanged(BlockSemanticPtr bsp, VarSetPtr globalVars, const int k);
     z3::expr generateOneStepBlockVC(RefBlockVertexPtr bptr, int k);
     z3::expr generateInitVC();
     z3::expr generateOneStepVC(int k, const std::set<int>& blocks);

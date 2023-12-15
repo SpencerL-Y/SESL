@@ -327,7 +327,7 @@ z3::expr BlockSemantic::generateExpr(const Expr* e) {
             return !this->generateExpr(((NotExpr*)e)->getExpr());
         case ExprType::VAR: {
             const VarExpr* var = (const VarExpr*)e;
-            if (var->name()[1] == 'p' || var->name()[1] == 'i' || var->name()[0] == 'r')
+            if (var->name()[1] == 'p' || var->name()[1] == 'i' || var->name()[0] == 'r' || var->getType() == ExprType::BOOL)
                 return this->getPreOutputByName(var->name());
             else if(var->name() == "$0.ref")
                 return z3EM->mk_loc("nil");
@@ -381,7 +381,7 @@ z3::expr BlockSemantic::generateFablePassing(const VarExpr* var, z3::expr pt) {
         z3::expr currentLocFable = this->getPreOutputByName("fable_" + globalLocVar);
         z3::expr fablePassingForLoc = z3::implies(
             pt == currentLoc,
-            ptFable == currentLocFable  
+            ptFable == currentLocFable
         );
         CLEAN_Z3EXPR_CONJUNC(fablePassing, fablePassingForLoc);
     }
@@ -463,19 +463,19 @@ z3::expr BlockSemantic::generateAllocAndMallocSemantic(RefinedActionPtr act) {
 z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
     z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
-    z3::expr h = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
-    this->quantifiedVars.insert(h.to_string());
+    z3::expr h0 = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
+    z3::expr h1 = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
+    this->quantifiedVars.insert(h0.to_string());
+    this->quantifiedVars.insert(h1.to_string());
 
     const Expr* toExpr = act->getArg1();
     assert(toExpr->isVar());
     const VarExpr* toVar = (const VarExpr*)toExpr;
     z3::expr to = this->generateLocalVarByName(toVar->name());
-
     const Expr* fromExpr = act->getArg2();
     assert(fromExpr->isVar());
     const VarExpr* fromVar = (const VarExpr*)fromExpr;
     z3::expr from = this->getPreOutputByName(fromVar->name());
-
     this->localVars.insert(to.to_string());
     this->outputs[toVar->name()] = to.to_string();
 
@@ -489,7 +489,7 @@ z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
         toVar->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
     z3::expr pt1 = z3EM->mk_pto(from, t1);
     z3::expr invalidDerefSemantic =
-        (from == z3EM->mk_loc("nil") || H == z3EM->mk_uplus(h, pt1))
+        (from == z3EM->mk_loc("nil") || h0 == z3EM->mk_uplus(H, pt1))
         && invalidDerefPrime;
     this->quantifiedVars.insert(t1.to_string());
 
@@ -497,7 +497,7 @@ z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
     z3::expr t2 = z3EM->mk_quantified(
         toVar->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
     z3::expr pt2 = z3EM->mk_pto(from, t2);
-    sh = (H == z3EM->mk_uplus(h, pt2)) && (to == t2);
+    sh = (H == z3EM->mk_uplus(h1, pt2)) && (to == t2);
     if (toVar->name()[1] == 'p') {
         z3::expr fablePassing = this->generateFablePassing(toVar, to);
         CLEAN_Z3EXPR_CONJUNC(sh, fablePassing);
@@ -524,7 +524,6 @@ z3::expr BlockSemantic::generateStoreSemantic(RefinedActionPtr act) {
     assert(toExpr->isVar());
     const VarExpr* toVar = (const VarExpr*)toExpr;
     z3::expr to = this->getPreOutputByName(toVar->name());
-
     const Expr* fromExpr = act->getArg2();
     assert(fromExpr->isVar());
     const VarExpr* fromVar = (const VarExpr*)fromExpr;
@@ -541,7 +540,7 @@ z3::expr BlockSemantic::generateStoreSemantic(RefinedActionPtr act) {
         fromVar->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
     z3::expr pt1 = z3EM->mk_pto(to, t1);
     z3::expr invalidDerefSemantic =
-        (to == z3EM->mk_loc("nil") || H == z3EM->mk_uplus(h0, pt1))
+        (to == z3EM->mk_loc("nil") || h0 == z3EM->mk_uplus(H, pt1))
         && invalidDerefPrime;
     this->quantifiedVars.insert(t1.to_string());
 
@@ -563,20 +562,20 @@ z3::expr BlockSemantic::generateFreeSemantic(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
     z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
     z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
-    z3::expr h = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
+    z3::expr h0 = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
     this->localVars.insert(nH.to_string());
     this->outputs["H"] = nH.to_string();
-    this->quantifiedVars.insert(h.to_string());
+    this->quantifiedVars.insert(h0.to_string());
 
     const Expr* e = act->getArg1();
     assert(e->isVar());
     const VarExpr* var = (const VarExpr*)e;
-    const std::string fableVarName = "fable_" + var->name(); 
+    const std::string fableName = "fable_" + var->name(); 
     z3::expr lt = this->getPreOutputByName(var->name());
-    z3::expr fable = this->getPreOutputByName(fableVarName);
-    z3::expr fableVarPrime = this->generateLocalVarByName(fableVarName);
-    this->localVars.insert(fableVarPrime.to_string());
-    this->outputs[fableVarName] = fableVarPrime.to_string();
+    z3::expr fable = this->getPreOutputByName(fableName);
+    z3::expr fablePrime = this->generateLocalVarByName(fableName);
+    this->localVars.insert(fablePrime.to_string());
+    this->outputs[fableName] = fablePrime.to_string();
 
     z3::expr invalidDeref = this->getPreOutputByName(BlockSemantic::invalid_deref);
     z3::expr invalidFree = this->getPreOutputByName(BlockSemantic::invalid_free);
@@ -588,18 +587,20 @@ z3::expr BlockSemantic::generateFreeSemantic(RefinedActionPtr act) {
     this->outputs[BlockSemantic::invalid_free] = invalidFreePrime.to_string();
 
     z3::expr invalidFreeSemantic =
-        z3::implies(fable == 0, invalidFreePrime && (fableVarPrime == 0));
+        z3::implies(fable == 0, invalidFreePrime && (fablePrime == 0));
 
+    z3::expr premise = !invalidDeref && !invalidDerefPrime && !invalidFree;
     z3::expr recordType = this->z3EM->Ctx().bool_val(true);
     for (Record record : this->z3EM->getRecords()) {
         z3::expr_vector sh = this->generateRecord(lt, record);
         z3::expr iType = z3::implies(
             fable == record.getID(),
-            sh[0] && H == z3EM->mk_uplus(h, sh[1])
+            sh[0] && H == z3EM->mk_uplus(h0, sh[1])
         );
         CLEAN_Z3EXPR_CONJUNC(recordType, iType);
     }
-    z3::expr memorySafetySemantic = recordType && (nH == h) && fableVarPrime == 0;
+    z3::expr memorySafetySemantic = 
+        z3::implies(premise, recordType && (nH == h0) && fablePrime == 0);
 
     return invalidFreeSemantic && memorySafetySemantic;
 }

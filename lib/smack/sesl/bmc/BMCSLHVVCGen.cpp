@@ -198,10 +198,10 @@ void Z3ExprManager::print(std::ostream& OS) {
     OS << " Uplus ---> " << uplus << '\n';
 }
 
-const std::string BlockSemantic::invalid_deref = "invalidDeref";
-const std::string BlockSemantic::invalid_free = "invalidFree";
+const std::string BlockEncoding::invalid_deref = "invalidDeref";
+const std::string BlockEncoding::invalid_free = "invalidFree";
 
-z3::expr BlockSemantic::getPreOutput(std::string name, SLHVVarType vt) {
+z3::expr BlockEncoding::getPreOutput(std::string name, SLHVVarType vt) {
     std::string var;
     if (outputs.find(name) == outputs.end()) {
         this->inputs.insert(name);
@@ -218,7 +218,7 @@ z3::expr BlockSemantic::getPreOutput(std::string name, SLHVVarType vt) {
     }
 }
 
-z3::expr BlockSemantic::getPreOutputByName(std::string name) {
+z3::expr BlockEncoding::getPreOutputByName(std::string name) {
     assert(name[1] == 'p' || name[1] == 'i' || name[1] == 'r'
            || name.find("fable") != std::string::npos
            || name.find("invalid") != std::string::npos);
@@ -230,7 +230,7 @@ z3::expr BlockSemantic::getPreOutputByName(std::string name) {
         return this->getPreOutput(name, SLHVVarType::INT_DAT);
 }
 
-void BlockSemantic::generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg) {
+void BlockEncoding::generateEncoding(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg) {
     for (RefinedActionPtr act : bptr->getRefStmts()) {
         if (act->getActType() == ConcreteAction::ActType::OTHER ||
             act->getActType() == ConcreteAction::ActType::OTHERPROC) continue;
@@ -238,30 +238,30 @@ void BlockSemantic::generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg
         z3::expr actExpr(z3EM->Ctx());
         switch (act->getActType()) {
         case ConcreteAction::ActType::ASSUME:
-            actExpr = this->generateAssumeSemantic(act);
+            actExpr = this->generateAssumeEncoding(act);
             break;
         case ConcreteAction::ActType::COMMONASSIGN:
-            actExpr = this->generateAssignSemantic(act);
+            actExpr = this->generateAssignEncoding(act);
             break;
         case ConcreteAction::ActType::ALLOC:
         case ConcreteAction::ActType::MALLOC:
-            actExpr = this->generateAllocAndMallocSemantic(act);
+            actExpr = this->generateAllocAndMallocEncoding(act);
             break;
         case ConcreteAction::ActType::LOAD:
-            actExpr = this->generateLoadSemantic(act);
+            actExpr = this->generateLoadEncoding(act);
             break;
         case ConcreteAction::ActType::STORE:
-            actExpr = this->generateStoreSemantic(act);
+            actExpr = this->generateStoreEncoding(act);
             break;
         case ConcreteAction::ActType::FREE:
-            actExpr = this->generateFreeSemantic(act);
+            actExpr = this->generateFreeEncoding(act);
             break;
         default:
             actExpr = z3EM->Ctx().bool_val(true);
             break;
         }
         if (actExpr.is_true()) continue;
-        CLEAN_Z3EXPR_CONJUNC(semantic, actExpr);
+        CLEAN_Z3EXPR_CONJUNC(encoding, actExpr);
         act->print(std::cout);
         std::cout << actExpr << std::endl;
         std::cout << " ----------------------------------- \n";
@@ -275,7 +275,7 @@ void BlockSemantic::generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg
     // this->print(std::cout);
 }
 
-z3::expr BlockSemantic::generateLocalVarByName(std::string name) {
+z3::expr BlockEncoding::generateLocalVarByName(std::string name) {
     assert(name[1] == 'p' || name[1] == 'i' || name[1] == 'r'
         || name.find("fable") != std::string::npos
         || name.find("invalid") != std::string::npos);
@@ -287,7 +287,7 @@ z3::expr BlockSemantic::generateLocalVarByName(std::string name) {
         return z3EM->mk_fresh(name, SLHVVarType::INT_DAT);
 }
 
-z3::expr BlockSemantic::generateBinExpr(const BinExpr* e) {
+z3::expr BlockEncoding::generateBinExpr(const BinExpr* e) {
     z3::expr lhs = this->generateExpr(e->getLhs());
     z3::expr rhs = this->generateExpr(e->getRhs());
     switch (e->getOp())  {
@@ -312,7 +312,7 @@ z3::expr BlockSemantic::generateBinExpr(const BinExpr* e) {
     }
 }
 
-z3::expr BlockSemantic::generateExpr(const Expr* e) {
+z3::expr BlockEncoding::generateExpr(const Expr* e) {
     switch (e->getType()) {
         case ExprType::BIN:
             return this->generateBinExpr((const BinExpr*)e);
@@ -338,7 +338,7 @@ z3::expr BlockSemantic::generateExpr(const Expr* e) {
     }
 }
 
-z3::expr_vector BlockSemantic::generateRecord(z3::expr lt, Record& record) {
+z3::expr_vector BlockEncoding::generateRecord(z3::expr lt, Record& record) {
     z3::expr_vector sh(z3EM->Ctx());
     z3::expr pure = this->z3EM->Ctx().bool_val(true);
     z3::expr heap(z3EM->Ctx());
@@ -368,7 +368,7 @@ z3::expr_vector BlockSemantic::generateRecord(z3::expr lt, Record& record) {
     return sh;
 }
 
-z3::expr BlockSemantic::generateFablePassing(const VarExpr* var, z3::expr pt) {
+z3::expr BlockEncoding::generateFablePassing(const VarExpr* var, z3::expr pt) {
     assert(var->name()[1] == 'p');
     z3::expr fablePassing = z3EM->Ctx().bool_val(true);
     std::string ptFableName = "fable_" + var->name();
@@ -388,7 +388,7 @@ z3::expr BlockSemantic::generateFablePassing(const VarExpr* var, z3::expr pt) {
     return fablePassing;
 }
 
-z3::expr BlockSemantic::generateAssignSemantic(RefinedActionPtr act) {
+z3::expr BlockEncoding::generateAssignEncoding(RefinedActionPtr act) {
     bool isBoolAssign;
     const Expr* arg1;
     const Expr* arg2;
@@ -414,27 +414,27 @@ z3::expr BlockSemantic::generateAssignSemantic(RefinedActionPtr act) {
         this->generateFablePassing(var, lhs);
     }
 
-    z3::expr semantic(z3EM->Ctx());
+    z3::expr encoding(z3EM->Ctx());
     if (!isBoolAssign) {
-        semantic = (lhs == rhs);
-        CLEAN_Z3EXPR_CONJUNC(semantic, fablePassing);
+        encoding = (lhs == rhs);
+        CLEAN_Z3EXPR_CONJUNC(encoding, fablePassing);
     } else {
         assert(lhs.is_int() && rhs.is_bool());
-        semantic = (rhs && lhs == 1) || (!rhs && lhs == 0);
+        encoding = (rhs && lhs == 1) || (!rhs && lhs == 0);
     }
 
-    z3::expr invalidDeref = this->getPreOutputByName(BlockSemantic::invalid_deref);
-    z3::expr invalidFree = this->getPreOutputByName(BlockSemantic::invalid_free);
+    z3::expr invalidDeref = this->getPreOutputByName(BlockEncoding::invalid_deref);
+    z3::expr invalidFree = this->getPreOutputByName(BlockEncoding::invalid_free);
 
-    return semantic || invalidDeref || invalidFree;
+    return encoding || invalidDeref || invalidFree;
 }
 
-z3::expr BlockSemantic::generateAssumeSemantic(RefinedActionPtr act) {
+z3::expr BlockEncoding::generateAssumeEncoding(RefinedActionPtr act) {
     assert(act->getArg3() != nullptr);
     return this->generateExpr(act->getArg3());
 }
 
-z3::expr BlockSemantic::generateAllocAndMallocSemantic(RefinedActionPtr act) {
+z3::expr BlockEncoding::generateAllocAndMallocEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
     z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
     z3::expr nH = this->z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
@@ -452,15 +452,15 @@ z3::expr BlockSemantic::generateAllocAndMallocSemantic(RefinedActionPtr act) {
     this->outputs[var->name()] = lt.to_string();
     this->outputs["fable_" + var->name()] = fable.to_string();
 
-    z3::expr semantic = (sh[0] && fable == allocTypeId && 
+    z3::expr encoding = (sh[0] && fable == allocTypeId && 
         (nH == this->z3EM->mk_uplus(H, sh[1])));
-    z3::expr invalidDeref = this->getPreOutputByName(BlockSemantic::invalid_deref);
-    z3::expr invalidFree = this->getPreOutputByName(BlockSemantic::invalid_free);
+    z3::expr invalidDeref = this->getPreOutputByName(BlockEncoding::invalid_deref);
+    z3::expr invalidFree = this->getPreOutputByName(BlockEncoding::invalid_free);
 
-    return semantic || invalidDeref || invalidFree;
+    return encoding || invalidDeref || invalidFree;
 }
 
-z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
+z3::expr BlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
     z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
     z3::expr h0 = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
@@ -479,11 +479,11 @@ z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
     this->localVars.insert(to.to_string());
     this->outputs[toVar->name()] = to.to_string();
 
-    z3::expr invalidDeref = this->getPreOutputByName(BlockSemantic::invalid_deref);
-    z3::expr invalidFree = this->getPreOutputByName(BlockSemantic::invalid_free);
-    z3::expr invalidDerefPrime = this->generateLocalVarByName(BlockSemantic::invalid_deref);
+    z3::expr invalidDeref = this->getPreOutputByName(BlockEncoding::invalid_deref);
+    z3::expr invalidFree = this->getPreOutputByName(BlockEncoding::invalid_free);
+    z3::expr invalidDerefPrime = this->generateLocalVarByName(BlockEncoding::invalid_deref);
     this->localVars.insert(invalidDerefPrime.to_string());
-    this->outputs[BlockSemantic::invalid_deref] = invalidDerefPrime.to_string();
+    this->outputs[BlockEncoding::invalid_deref] = invalidDerefPrime.to_string();
 
     z3::expr t1 = z3EM->mk_quantified(
         toVar->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
@@ -509,7 +509,7 @@ z3::expr BlockSemantic::generateLoadSemantic(RefinedActionPtr act) {
     return invalidDerefSemantic || memorySafetySemantic;
 }
 
-z3::expr BlockSemantic::generateStoreSemantic(RefinedActionPtr act) {
+z3::expr BlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
     z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
     z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
@@ -530,11 +530,11 @@ z3::expr BlockSemantic::generateStoreSemantic(RefinedActionPtr act) {
     z3::expr from = this->getPreOutputByName(fromVar->name());
 
 
-    z3::expr invalidDeref = this->getPreOutputByName(BlockSemantic::invalid_deref);
-    z3::expr invalidFree = this->getPreOutputByName(BlockSemantic::invalid_free);
-    z3::expr invalidDerefPrime = this->generateLocalVarByName(BlockSemantic::invalid_deref);
+    z3::expr invalidDeref = this->getPreOutputByName(BlockEncoding::invalid_deref);
+    z3::expr invalidFree = this->getPreOutputByName(BlockEncoding::invalid_free);
+    z3::expr invalidDerefPrime = this->generateLocalVarByName(BlockEncoding::invalid_deref);
     this->localVars.insert(invalidDerefPrime.to_string());
-    this->outputs[BlockSemantic::invalid_deref] = invalidDerefPrime.to_string();
+    this->outputs[BlockEncoding::invalid_deref] = invalidDerefPrime.to_string();
 
     z3::expr t1 = z3EM->mk_quantified(
         fromVar->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
@@ -558,7 +558,7 @@ z3::expr BlockSemantic::generateStoreSemantic(RefinedActionPtr act) {
     return invalidDerefSemantic || memorySafetySemantic;
 }
 
-z3::expr BlockSemantic::generateFreeSemantic(RefinedActionPtr act) {
+z3::expr BlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
     z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
     z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
@@ -577,14 +577,14 @@ z3::expr BlockSemantic::generateFreeSemantic(RefinedActionPtr act) {
     this->localVars.insert(fablePrime.to_string());
     this->outputs[fableName] = fablePrime.to_string();
 
-    z3::expr invalidDeref = this->getPreOutputByName(BlockSemantic::invalid_deref);
-    z3::expr invalidFree = this->getPreOutputByName(BlockSemantic::invalid_free);
-    z3::expr invalidDerefPrime = this->generateLocalVarByName(BlockSemantic::invalid_deref);
-    z3::expr invalidFreePrime = this->generateLocalVarByName(BlockSemantic::invalid_free);
+    z3::expr invalidDeref = this->getPreOutputByName(BlockEncoding::invalid_deref);
+    z3::expr invalidFree = this->getPreOutputByName(BlockEncoding::invalid_free);
+    z3::expr invalidDerefPrime = this->generateLocalVarByName(BlockEncoding::invalid_deref);
+    z3::expr invalidFreePrime = this->generateLocalVarByName(BlockEncoding::invalid_free);
     this->localVars.insert(invalidDerefPrime.to_string());
     this->localVars.insert(invalidFreePrime.to_string());
-    this->outputs[BlockSemantic::invalid_deref] = invalidDerefPrime.to_string();
-    this->outputs[BlockSemantic::invalid_free] = invalidFreePrime.to_string();
+    this->outputs[BlockEncoding::invalid_deref] = invalidDerefPrime.to_string();
+    this->outputs[BlockEncoding::invalid_free] = invalidFreePrime.to_string();
 
     z3::expr invalidFreeSemantic =
         z3::implies(fable == 0, invalidFreePrime && (fablePrime == 0));
@@ -605,7 +605,7 @@ z3::expr BlockSemantic::generateFreeSemantic(RefinedActionPtr act) {
     return invalidFreeSemantic && memorySafetySemantic;
 }
 
-BlockSemantic::BlockSemantic(
+BlockEncoding::BlockEncoding(
     Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr,
     RefBlockCFGPtr bcfg, VarSetPtr glvptr)
     : z3EM(z3EM),
@@ -613,29 +613,29 @@ BlockSemantic::BlockSemantic(
       inputs(), outputs(),
       localVars(), quantifiedVars(),
       src(-1), dests(), 
-      semantic(z3EM->Ctx().bool_val(true)) {
-        this->generateSemantic(bptr, bcfg);
+      encoding(z3EM->Ctx().bool_val(true)) {
+        this->generateEncoding(bptr, bcfg);
     }
 
-bool BlockSemantic::use_global(std::string var) { 
+bool BlockEncoding::use_global(std::string var) { 
     return outputs.find(var) != outputs.end();
 }
 
-const VarSet& BlockSemantic::getInputs() { return inputs; }
+const VarSet& BlockEncoding::getInputs() { return inputs; }
 
-const std::map<std::string, std::string>& BlockSemantic::getOutputs() { return outputs; }
+const std::map<std::string, std::string>& BlockEncoding::getOutputs() { return outputs; }
 
-const VarSet& BlockSemantic::getLocalVars() { return localVars; }
+const VarSet& BlockEncoding::getLocalVars() { return localVars; }
 
-const VarSet& BlockSemantic::getQuantifiedVars() { return quantifiedVars; }
+const VarSet& BlockEncoding::getQuantifiedVars() { return quantifiedVars; }
 
-const int BlockSemantic::getSrc() { return src; }
+const int BlockEncoding::getSrc() { return src; }
 
-const std::set<int> BlockSemantic::getDests() { return dests; }
+const std::set<int> BlockEncoding::getDests() { return dests; }
 
-z3::expr BlockSemantic::getSemantic() { return semantic; }
+z3::expr BlockEncoding::getEncoding() { return encoding; }
 
-void BlockSemantic::print(std::ostream& OS) {
+void BlockEncoding::print(std::ostream& OS) {
     OS << " Inputs: ";
     for (auto var : inputs) OS << " " << var;
     OS << std::endl;
@@ -653,7 +653,7 @@ void BlockSemantic::print(std::ostream& OS) {
     OS << " Dests : ";
     for (auto dest : dests) OS << " " << dest;
     OS << std::endl;
-    OS << " Semantic : " << semantic << '\n';
+    OS << " Semantic : " << encoding << '\n';
 }
 
 TREncoder::TREncoder(Z3ExprManagerPtr z3EM, RefBlockCFGPtr bcfg)
@@ -683,8 +683,8 @@ void TREncoder::init() {
     this->initGlobalVars();
     for (RefBlockVertexPtr bptr : bcfg->getVertices()) {
         if (this->Trs.find(bptr->getVertexId()) != this->Trs.end()) continue;
-        BlockSemanticPtr bsp =
-            std::make_shared<BlockSemantic>(z3EM, bptr, bcfg, globalLocVars);
+        BlockEncodingPtr bsp =
+            std::make_shared<BlockEncoding>(z3EM, bptr, bcfg, globalLocVars);
         this->Trs[bptr->getVertexId()] = bsp;
     }
     this->print(std::cout);
@@ -698,12 +698,33 @@ std::list<int> TREncoder::getInitialStates() {
     return bcfg->getInitVertices();
 }
 
+std::list<int> TREncoder::getFinalBlocks() {
+    return bcfg->getFinalVertices();
+}
+
 std::set<int> TREncoder::getSuccessors(std::set<int> u) {
     std::set<int> v;
     for (auto edge : bcfg->getEdges())
         if (u.find(edge.first) != u.end())
         v.insert(edge.second);
     return v;
+}
+
+VarSetPtr TREncoder::getGlobalLocVars() {
+    return this->globalLocVars;
+}
+
+VarSetPtr TREncoder::getGlobalFableVars() {
+    return this->globalFableVars;
+}
+
+VarSetPtr TREncoder::getGlobalDataVars() {
+    return this->globalDataVars;
+}
+
+BlockEncodingPtr TREncoder::getBlockEncoding(int b) {
+    assert(Trs.find(b) != Trs.end());
+    return Trs.at(b);
 }
 
 void TREncoder::print(std::ostream& OS) {
@@ -719,27 +740,10 @@ void TREncoder::print(std::ostream& OS) {
     OS << "\n";
     for (auto tr : Trs) {
         OS << " ---------------------------------------------\n";
-        OS << " BlockSemantic - " << tr.first << "\n";
+        OS << " BlockEncoding - " << tr.first << "\n";
         tr.second->print(OS);
     }
     OS << "================ Transition Relation Encoding ================\n";
-}
-
-VarSetPtr TREncoder::getGlobalLocVars() {
-    return this->globalLocVars;
-}
-
-VarSetPtr TREncoder::getGlobalFableVars() {
-    return this->globalFableVars;
-}
-
-VarSetPtr TREncoder::getGlobalDataVars() {
-    return this->globalDataVars;
-}
-
-BlockSemanticPtr TREncoder::getBlockSemantic(int b) {
-    assert(Trs.find(b) != Trs.end());
-    return Trs.at(b);
 }
 
 z3::expr BMCSLHVVCGen::generateVar(std::string name) {
@@ -750,7 +754,7 @@ z3::expr BMCSLHVVCGen::generateVar(std::string name) {
 }
 
 z3::expr
-BMCSLHVVCGen::generateUnchanged(BlockSemanticPtr bsp, VarSetPtr globalVars, const int k) {
+BMCSLHVVCGen::generateUnchanged(BlockEncodingPtr bsp, VarSetPtr globalVars, const int k) {
     z3::expr unchangedSemantic = this->z3EM->Ctx().bool_val(true);
     for (auto var : *globalVars) {
         if (bsp->use_global(var)) continue;
@@ -762,12 +766,12 @@ BMCSLHVVCGen::generateUnchanged(BlockSemanticPtr bsp, VarSetPtr globalVars, cons
 }
 
 z3::expr BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k) {
-    BlockSemanticPtr bsp = this->TrEncoder->getBlockSemantic(bptr->getVertexId());
+    BlockEncodingPtr bsp = this->TrEncoder->getBlockEncoding(bptr->getVertexId());
     z3::expr vc(z3EM->Ctx());
     z3::expr premise =
         z3EM->mk_data("loc_" + std::to_string(k - 1)) == bsp->getSrc();
     z3::expr implicant(z3EM->Ctx());
-    // block semantic substitution
+    // block encoding substitution
     z3::expr_vector src(z3EM->Ctx());
     z3::expr_vector dst(z3EM->Ctx());
     src.push_back(this->generateVar("H"));
@@ -786,7 +790,7 @@ z3::expr BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k) {
         src.push_back(this->generateVar(var));
         dst.push_back(this->generateVar(var + "_" + std::to_string(k)));
     }
-    implicant = bsp->getSemantic().substitute(src, dst);
+    implicant = bsp->getEncoding().substitute(src, dst);
     // Outputs contains those global variables that are update by current
     // step. For each pair (u, v), "v" is the local variables that conveys
     // the changes of original global variable "u"
@@ -798,7 +802,7 @@ z3::expr BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k) {
             this->generateVar(globalVarSubPair.first + "_" + std::to_string(k));
         implicant = implicant && (lastStepVar == kthStepVar);
     }
-    // Generate unchanged global variables semantic
+    // Generate unchanged global variables encoding
     z3::expr unchangedLoc =
         this->generateUnchanged(bsp, this->TrEncoder->getGlobalLocVars(), k);
     z3::expr unchangedFable =
@@ -819,7 +823,7 @@ z3::expr BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k) {
         }
     }
     implicant = implicant && dests;
-    return !premise || implicant;
+    return z3::implies(premise, implicant);
 }
 
 z3::expr BMCSLHVVCGen::generateInitVC() {
@@ -829,8 +833,8 @@ z3::expr BMCSLHVVCGen::generateInitVC() {
     for (auto b : this->TrEncoder->getInitialStates()) {
         CLEAN_Z3EXPR_CONJUNC(initLoc, (loc0 == b));
     }
-    z3::expr invalidDeref = z3EM->mk_bool(BlockSemantic::invalid_deref + "_0");
-    z3::expr invalidFree = z3EM->mk_bool(BlockSemantic::invalid_free + "_0");
+    z3::expr invalidDeref = z3EM->mk_bool(BlockEncoding::invalid_deref + "_0");
+    z3::expr invalidFree = z3EM->mk_bool(BlockEncoding::invalid_free + "_0");
     return initHeap && initLoc && !invalidDeref && !invalidFree;
 }
 
@@ -854,16 +858,41 @@ BMCSLHVVCGen::BMCSLHVVCGen(RefBlockCFGPtr bcfg, RecordManagerPtr rm)
 }
 
 z3::expr BMCSLHVVCGen::generateVC(int k) {
-    z3::expr vc = this->generateInitVC();
-    std::set<int> blocks;
+    z3::expr phiInit = this->generateInitVC();
+    std::set<int> reachableBlocks;
     for (int u : this->TrEncoder->getInitialStates()) {
-        blocks.insert(u);
+        reachableBlocks.insert(u);
     }
+    std::list<int> finalBlocks = this->TrEncoder->getFinalBlocks();
+    z3::expr phiBuggy = this->z3EM->Ctx().bool_val(false);
+    z3::expr phiTr = phiInit;
     for (int i = 1; i <= k; i++) {
-        if (i > 2) blocks = this->TrEncoder->getSuccessors(blocks);
-        vc = vc && this->generateOneStepVC(i, blocks);
+        if (i > 2) reachableBlocks = this->TrEncoder->getSuccessors(reachableBlocks);
+        if (reachableBlocks.empty()) break;
+        phiTr = phiTr && this->generateOneStepVC(i, reachableBlocks);
+
+        z3::expr invalidDeref =
+            z3EM->mk_bool(BlockEncoding::invalid_deref + "_" + std::to_string(i));
+        z3::expr invalidFree =
+            z3EM->mk_bool(BlockEncoding::invalid_free + "_" + std::to_string(i));
+        z3::expr memoryLeak(z3EM->Ctx());
+        if (finalBlocks.empty()) {
+            memoryLeak = z3EM->Ctx().bool_val(false);
+        } else {
+            z3::expr locatesOnFinalBlocks = z3EM->Ctx().bool_val(false);
+            for (int u : finalBlocks) {
+                z3::expr locatesOnU = (z3EM->mk_data("loc_" + std::to_string(i)) == u);
+                CLEAN_Z3EXPR_DISJUNC(locatesOnFinalBlocks, locatesOnU);
+            }
+            z3::expr leakHeap = (z3EM->mk_heap("H_" + std::to_string(i)) == z3EM->mk_heap("emp"));
+            memoryLeak = locatesOnFinalBlocks && leakHeap;
+        }
+        z3::expr ithStepBuggyEncoding = invalidDeref || invalidFree;
+        CLEAN_Z3EXPR_DISJUNC(ithStepBuggyEncoding, memoryLeak);
+
+        CLEAN_Z3EXPR_DISJUNC(phiBuggy, phiTr && ithStepBuggyEncoding);
     }
-    return vc;
+    return phiBuggy;
 }
 
 void BMCSLHVVCGen::generateSMT2(z3::expr e, std::string filename) {

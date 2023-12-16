@@ -15,7 +15,11 @@ namespace smack {
 
 #define CLEAN_Z3EXPR_CONJUNC(X, Y) \
     if (X.is_true()) { X = Y; } \
-    else if (!Y.is_true()) { X = X && Y; } 
+    else if (!Y.is_true()) { X = X && Y; }
+
+#define CLEAN_Z3EXPR_DISJUNC(X, Y) \
+    if (X.is_false()) { X = Y; } \
+    else if (!Y.is_false()) { X = X || Y; } 
 
 class Z3ExprManager {
 
@@ -70,7 +74,7 @@ DEFINE_PTR_TYPE(Z3ExprManager);
 typedef std::set<std::string> VarSet;
 DEFINE_PTR_TYPE(VarSet);
 
-class BlockSemantic {
+class BlockEncoding {
 
 public:
     static const std::string invalid_deref;
@@ -87,26 +91,26 @@ private:
     std::map<std::string, std::string> outputs;
     int src;
     std::set<int> dests;
-    z3::expr semantic;
+    z3::expr encoding;
 
     z3::expr getPreOutput(std::string name, SLHVVarType vt);
     z3::expr getPreOutputByName(std::string name);
 
-    void generateSemantic(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg);
+    void generateEncoding(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg);
     z3::expr generateLocalVarByName(std::string name);
     z3::expr generateBinExpr(const BinExpr* e);
     z3::expr generateExpr(const Expr* e);
     z3::expr_vector generateRecord(z3::expr lt, Record& record);
     z3::expr generateFablePassing(const VarExpr* var, z3::expr pt);
-    z3::expr generateAssignSemantic(RefinedActionPtr act);
-    z3::expr generateAssumeSemantic(RefinedActionPtr act);
-    z3::expr generateAllocAndMallocSemantic(RefinedActionPtr act);
-    z3::expr generateLoadSemantic(RefinedActionPtr act);
-    z3::expr generateStoreSemantic(RefinedActionPtr act);
-    z3::expr generateFreeSemantic(RefinedActionPtr act);
+    z3::expr generateAssignEncoding(RefinedActionPtr act);
+    z3::expr generateAssumeEncoding(RefinedActionPtr act);
+    z3::expr generateAllocAndMallocEncoding(RefinedActionPtr act);
+    z3::expr generateLoadEncoding(RefinedActionPtr act);
+    z3::expr generateStoreEncoding(RefinedActionPtr act);
+    z3::expr generateFreeEncoding(RefinedActionPtr act);
 
 public:
-    BlockSemantic(Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg, VarSetPtr globalLocVars);
+    BlockEncoding(Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg, VarSetPtr globalLocVars);
     
     inline bool use_global(std::string var);
 
@@ -116,12 +120,12 @@ public:
     const VarSet& getQuantifiedVars();
     const int getSrc();
     const std::set<int> getDests();
-    z3::expr getSemantic();
+    z3::expr getEncoding();
 
     void print(std::ostream& OS);
 };
 
-DEFINE_PTR_TYPE(BlockSemantic);
+DEFINE_PTR_TYPE(BlockEncoding);
 
 class TREncoder {
 
@@ -132,7 +136,7 @@ private:
     VarSetPtr globalLocVars;
     VarSetPtr globalFableVars;
     VarSetPtr globalDataVars;
-    std::map<int, BlockSemanticPtr> Trs;
+    std::map<int, BlockEncodingPtr> Trs;
 
     void initGlobalVars();
     void init();
@@ -142,12 +146,13 @@ public:
     
     std::list<RefBlockVertexPtr> getBlocks();
     std::list<int> getInitialStates();
+    std::list<int> getFinalBlocks();
     std::set<int> getSuccessors(std::set<int> u);
 
     VarSetPtr getGlobalLocVars();
     VarSetPtr getGlobalFableVars();
     VarSetPtr getGlobalDataVars();
-    BlockSemanticPtr getBlockSemantic(int b);
+    BlockEncodingPtr getBlockEncoding(int b);
         
     void print(std::ostream& OS);
 };
@@ -161,7 +166,7 @@ private:
     TREncoderPtr TrEncoder;
     
     inline z3::expr generateVar(std::string name);
-    z3::expr generateUnchanged(BlockSemanticPtr bsp, VarSetPtr globalVars, const int k);
+    z3::expr generateUnchanged(BlockEncodingPtr bsp, VarSetPtr globalVars, const int k);
     z3::expr generateOneStepBlockVC(RefBlockVertexPtr bptr, int k);
     z3::expr generateInitVC();
     z3::expr generateOneStepVC(int k, const std::set<int>& blocks);

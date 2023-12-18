@@ -299,16 +299,19 @@ z3::expr BlockEncoding::generateBinExpr(const BinExpr* e) {
         case BinExpr::Binary::Gte: return lhs >= rhs;
         case BinExpr::Binary::Plus: {
             // TODO support changable
-            if (lhs.get_sort().is_int())
+            if (lhs.get_sort().is_int() &&
+                rhs.get_sort().is_int())
                 return lhs + rhs;
             else
                 return z3EM->mk_locadd(lhs, rhs);
         }
-        case BinExpr::Binary::Sub: {
+        case BinExpr::Binary::Minus: {
             return lhs - rhs;
         }
         case BinExpr::Binary::Times: return lhs * rhs;
-        default: assert(false && "unsupported operation!!!");
+        default: {
+            assert(false && "unsupported operation!!!");
+        }
     }
 }
 

@@ -22,8 +22,8 @@ private:
   inline std::string getOrigName(std::string origName);
   inline std::string getSuffName(std::string origName);
 
-  RefinedAction::SLHVCmd createSLHVCmd(const VarExpr* vexpr);
-  void setSLHVCmds(RefBlockCFGPtr refBlockCFG);
+  Record getPtrRecord(const VarExpr* vexpr);
+  void setSLHVCmdRecords(RefBlockCFGPtr refBlockCFG);
 
 public:
   static char ID;

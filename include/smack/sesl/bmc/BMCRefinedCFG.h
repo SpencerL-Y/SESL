@@ -72,6 +72,7 @@ namespace smack
     class RefinedAction {
         public:
             struct SLHVCmd {
+                const Expr* arg2 = nullptr;
                 Record record = Record();
             };
 
@@ -111,7 +112,8 @@ namespace smack
             void print(std::ostream &os);
 
             // SLHV
-            void setSLHVCmd(SLHVCmd cmd) { this->slhvcmd = cmd; }
+            void setSLHVCmdArg2(const Expr* e) { this->slhvcmd.arg2 = e; }
+            void setSLHVCmdRecord(Record r) { this->slhvcmd.record = r; }
             SLHVCmd getSLHVCmd() { return this->slhvcmd; }
     };
 
@@ -314,6 +316,11 @@ namespace smack
             CFGPtr origCfg;
             
             int sccNum, sccId;
+
+            // SLHV
+            std::pair<bool, int> parseConstant(const Expr* e, std::map<std::string, int>& consVarMap);
+            const Expr* constructExprByConstants(const Expr* e, std::map<std::string, int>& consVarMap);
+
         public:
             RefinedBlockCFG(BlockCFGPtr blockCfg);
             int getVertexNum(){return this->vertexNum;}
@@ -331,6 +338,9 @@ namespace smack
             void printRefBlockCFG(std::ostream& os);
             std::map<int, int> computeSccMap();
             void tarjanScc(int curr, std::map<int, std::pair<int, int>>& currentMap, std::list<int>& currStack, std::map<int, int>& sccResult);
+
+            // SLHV
+            void constantPropagation();
     };
     typedef std::shared_ptr<RefinedBlockCFG> RefBlockCFGPtr;
 } // namespace smack

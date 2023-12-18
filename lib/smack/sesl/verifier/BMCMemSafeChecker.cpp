@@ -91,32 +91,29 @@ std::string BMCMemSafeChecker::getSuffName(std::string origName) {
   return "";
 }
 
-RefinedAction::SLHVCmd BMCMemSafeChecker::createSLHVCmd(const VarExpr* vexpr) {
-  RefinedAction::SLHVCmd slhvcmd;
+Record BMCMemSafeChecker::getPtrRecord(const VarExpr* vexpr) {
   std::string pt = this->getOrigName(vexpr->name());
   PointerInfoManagerPtr pointerInfoManager = this->getPIM(vexpr->name());
   assert(pointerInfoManager->contains(pt));
   PointerInfo pinfo = pointerInfoManager->get(pt);
-  slhvcmd.record = recordManager->getRecord(pinfo.getPto());
-  return slhvcmd;
+  return recordManager->getRecord(pinfo.getPto());
 }
 
-void BMCMemSafeChecker::setSLHVCmds(RefBlockCFGPtr refBlockCFG) {
+void BMCMemSafeChecker::setSLHVCmdRecords(RefBlockCFGPtr refBlockCFG) {
   std::cout << "\n ------------------- SLHV DEBUG ---------------------------\n";
-  for (auto refbvp : refBlockCFG->getVertices()) {
-    std::cout << refbvp->getVertexId() << " ================================ \n";
-    for(auto refActp : refbvp->getRefStmts()) {
-      RefinedAction::SLHVCmd slhvcmd;
-      switch (refActp->getActType()) {    
+  for (auto bptr : refBlockCFG->getVertices()) {
+    std::cout << bptr->getVertexId() << " ================================ \n";
+    for(auto refAct : bptr->getRefStmts()) {
+      switch (refAct->getActType()) {    
         case ConcreteAction::ActType::ALLOC :
         case ConcreteAction::ActType::MALLOC : {
-          assert(refActp->getArg1()->isVar());
-          slhvcmd = this->createSLHVCmd((const VarExpr*)refActp->getArg1());
+          assert(refAct->getArg1()->isVar());
+          refAct->setSLHVCmdRecord(
+            this->getPtrRecord((const VarExpr*)refAct->getArg1()));
           break;
         }
         default: break;
       }
-      refActp->setSLHVCmd(slhvcmd);
     }
   }
 }
@@ -151,8 +148,9 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   blockCFG = blockCFG->simplify();;
   RefBlockCFGPtr refBlockCFG = std::make_shared<RefinedBlockCFG>(blockCFG);
   // refBlockCFG->printRefBlockCFG(std::cout);
+  refBlockCFG->constantPropagation();
 
-  this->setSLHVCmds(refBlockCFG);
+  this->setSLHVCmdRecords(refBlockCFG);
   refBlockCFG->printRefBlockCFG(std::cout);
 
   BMCSLHVVCGen vcGen(refBlockCFG, recordManager);

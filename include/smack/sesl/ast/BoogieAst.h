@@ -233,6 +233,10 @@ namespace smack {
 
         bool isValue() const { return false; }
 
+        bool isArith() const {
+            return op == Plus || op == Minus || op == Times || op == Div;
+        }
+
         std::list<const Expr*> getChilds() const {
             std::list<const Expr*> result;
             result.push_back(lhs);

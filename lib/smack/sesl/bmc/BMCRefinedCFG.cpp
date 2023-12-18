@@ -5,6 +5,7 @@
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 #include "smack/sesl/bmc/StmtFormatter.h"
 #include <iostream>
+#include <queue>
 
 namespace smack
 {
@@ -517,7 +518,13 @@ namespace smack
             for (auto ftype : slhvcmd.record.getFieldsTypes())
                 os << " " << (ftype == SLHVVarType::INT_LOC ? "Loc" : "Dat");
         }
-        os << std::endl;
+        os << '\n';
+        if (slhvcmd.arg2 != nullptr) {
+            os << "     SLHV Arg2 : ";
+            slhvcmd.arg2->print(std::cout);
+            os << '\n';
+        }
+        
     }
 
     void RefinedEdge::print(std::ostream &os){
@@ -1023,6 +1030,26 @@ namespace smack
         }
     }
 
+    std::list<std::pair<int,int>> RefinedBlockCFG::getEdgesStartFrom(int fromVertex) {
+        std::list<std::pair<int, int>> edges;
+        for(std::pair<int, int> edge : this->edges) {
+            if (edge.first == fromVertex) {
+                edges.push_back(edge);
+            }
+        }
+        return edges;
+    }
+
+    std::list<std::pair<int,int>> RefinedBlockCFG::getEdgesEndWith(int toVertex) {
+        std::list<std::pair<int, int>> edges;
+        for(std::pair<int, int> edge : this->edges) {
+            if (edge.second == toVertex) {
+                edges.push_back(edge);
+            }
+        }
+        return edges;
+    }
+
     bool RefinedBlockCFG::hasEdge(int fromId, int toId){
         for(auto edgePair : this->edges){
             if(edgePair.first == fromId && edgePair.second == toId){
@@ -1121,4 +1148,170 @@ namespace smack
             currStack.pop_back();
         }
     }
+
+    std::pair<bool, int>
+    RefinedBlockCFG::parseConstant(const Expr* e, std::map<std::string, int>& consVarMap) {
+        e->print(std::cout);
+        switch (e->getType()) {
+            case ExprType::BIN: {
+                const BinExpr* be = (const BinExpr*)e;
+                if (!be->isArith()) { return std::make_pair(false, 0); }
+                std::pair<bool, int> resL =
+                    this->parseConstant(be->getLhs(), consVarMap);
+                std::pair<bool, int> resR =
+                    this->parseConstant(be->getRhs(), consVarMap);
+                if (!resL.first || !resR.first) { return std::make_pair(false, 0); }
+                int num;
+                switch (be->getOp()) {
+                    case BinExpr::Binary::Plus: {
+                        num = resL.second + resR.second;
+                        break;
+                    }
+                    case BinExpr::Binary::Minus: {
+                        num = resL.second - resR.second;
+                        break;
+                    }
+                    case BinExpr::Binary::Times: {
+                        num = resL.second * resR.second;
+                        break;
+                    }
+                    default: assert(false && "not supported");
+                }
+                return std::make_pair(true, num);
+            }
+            case ExprType::INT: {
+                const IntLit* intLit = (const IntLit*)e;
+                return std::make_pair(true, intLit->getVal());
+            }
+            case ExprType::VAR: {
+                const VarExpr* var = (const VarExpr*)e;
+                if (consVarMap.find(var->name()) != consVarMap.end()) {
+                    return std::make_pair(true, consVarMap.at(var->name()));
+                }
+                return std::make_pair(false, 0);
+            }
+            default: return std::make_pair(false, 0);
+        }
+    }
+
+    
+    const Expr* RefinedBlockCFG::constructExprByConstants(const Expr* e, std::map<std::string, int>& consVarMap) {
+        switch (e->getType()) {
+            case ExprType::BIN: {
+                const BinExpr* be = (const BinExpr*)e;
+                const Expr* lhs = constructExprByConstants(be->getLhs(), consVarMap);
+                const Expr* rhs = constructExprByConstants(be->getRhs(), consVarMap);
+                bool isConsLhs = false;
+                bool isConsRhs = false;
+                long long n1, n2;
+                if (lhs->getType() == ExprType::INT) {
+                    n1 = ((const IntLit*)lhs)->getVal();
+                    isConsLhs = true;
+                }
+                if (rhs->getType() == ExprType::INT) {
+                    n2 = ((const IntLit*)rhs)->getVal();
+                    isConsRhs = true;
+                }
+                if (be->isArith()) {
+                    switch (be->getOp())  {
+                        case BinExpr::Binary::Plus:
+                            return isConsLhs && isConsRhs ? Expr::lit(n1 + n2)
+                                : isConsLhs ? (n1 == 0 ? rhs : Expr::add(lhs, rhs))
+                                : isConsRhs && n2 == 0 ? lhs : Expr::add(lhs, rhs);
+                        case BinExpr::Binary::Minus:
+                            return isConsLhs && isConsRhs ?
+                                Expr::lit(n1 - n2) : Expr::substract(lhs, rhs);
+                        case BinExpr::Binary::Times:
+                            return isConsLhs && isConsRhs ? Expr::lit(n1 * n2)
+                                : (isConsLhs && n1 == 0 || isConsRhs && n2 == 0) ?
+                                Expr::lit((long long)0) : Expr::multiply(lhs, rhs);
+                        default: { assert(false && "unsupported operation!!!");  }
+                    }
+                } else {
+                    switch (be->getOp())  {
+                        case BinExpr::Binary::Eq: return Expr::eq(lhs, rhs);
+                        case BinExpr::Binary::Neq: return Expr::neq(lhs, rhs);
+                        case BinExpr::Binary::Lt: return Expr::lt(lhs, rhs);
+                        case BinExpr::Binary::Gt: return Expr::gt(lhs, rhs);
+                        case BinExpr::Binary::Lte: return Expr::le(lhs, rhs);
+                        case BinExpr::Binary::Gte: return Expr::ge(lhs, rhs);
+                        default: { assert(false && "unsupported operation!!!");  }
+                    }
+                }
+            }
+            case ExprType::INT: {
+                const IntLit* intLit = (const IntLit*)e;
+                return Expr::lit((long long)intLit->getVal());
+            }
+            case ExprType::VAR: {
+                const VarExpr* var = (const VarExpr*)e;
+                if (consVarMap.find(var->name()) != consVarMap.end()) {
+                    return Expr::lit((long long)consVarMap.at(var->name()));
+                }
+                return new VarExpr(var->name());
+            }
+            default: assert(false);
+        }
+    }
+
+    void RefinedBlockCFG::constantPropagation() {
+        std::map<std::string, int> consVarMap;
+        std::queue<int> Q;
+        for(int u : this->initVertices) Q.push(u);
+        while(!Q.empty()) {
+            int u = Q.front(); Q.pop();
+            bool hasChanged = false;
+            for (RefinedActionPtr refAct : this->getVertex(u)->getRefStmts()) {
+                if (refAct->getActType() ==
+                    ConcreteAction::ActType::COMMONASSIGN) {
+                    if (refAct->getArg1() == nullptr) continue;
+                    std::string var =
+                        ((const VarExpr*)refAct->getArg1())->name();
+                    if (consVarMap.find(var) != consVarMap.end()) { continue; }
+                    std::pair<bool, int> res =
+                        this->parseConstant(refAct->getArg2(), consVarMap);
+                    if (res.first) {
+                        consVarMap[var] = res.second;
+                        hasChanged = true;
+                    }
+                }
+            }
+            if (!hasChanged) { continue; }
+            for (std::pair<int, int> edge : this->getEdgesStartFrom(u)) {
+                Q.push(edge.second);
+            }
+        }
+        // Propagate constants
+        for(RefBlockVertexPtr bptr : this->vertices) {
+            for (RefinedActionPtr refAct : bptr->getRefStmts()) {
+                if (refAct->getArg2() == nullptr) continue;
+                assert(refAct->getArg1()->isVar());
+                const Expr* arg2 = this->constructExprByConstants(refAct->getArg2(), consVarMap);
+                const VarExpr* var = (const VarExpr*)refAct->getArg1();
+                if (var->name()[1] == 'p') {
+                    if (arg2->getType() == ExprType::BIN) {
+                        const BinExpr* be = (const BinExpr*)arg2;
+                        assert(be->getLhs()->isVar());
+                        assert(be->getRhs()->getType() == ExprType::INT);
+                        const VarExpr* base = (const VarExpr*)be->getLhs();
+                        const int offset = ((const IntLit*)be->getRhs())->getVal();
+                        const int stepWidth = refAct->getType2();
+                        assert(stepWidth > 0 && offset % stepWidth == 0);
+                        long long newOffset = offset / stepWidth;
+                        switch (be->getOp()) {
+                        case BinExpr::Binary::Plus:
+                            arg2 = Expr::add(base, Expr::lit(newOffset));
+                            break;
+                        case BinExpr::Binary::Minus:
+                            arg2 = Expr::substract(base, Expr::lit(newOffset));
+                            break;
+                        default: assert(false);
+                        }
+                    }
+                }
+                refAct->setSLHVCmdArg2(arg2);
+            }
+        }
+    }
+
 } // namespace smack

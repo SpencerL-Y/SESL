@@ -57,12 +57,13 @@ private:
     std::map<std::string, PointerInfo> pointerInfoMap;
 
 public:
-    PointerInfoManager() : pointerInfoMap() {}
+    PointerInfoManager() {}
 
     void add(std::string pt, PointerInfo pointerInfo);
     void update(std::string pt, PointerInfo pointerInfo);
     bool contains(std::string pt);
     PointerInfo get(std::string pt);
+    PointerInfo getInfoByPtrVar(std::string var);
 
     void show()
     {
@@ -83,9 +84,24 @@ public:
 };
 
 LLVM_RAW_OSTREAM_PRINT(PointerInfoManager)
+typedef std::shared_ptr<PointerInfoManager> PointerInfoManagerPtr;
+
+class PIMSet {
+private:
+    std::map<std::string, PointerInfoManagerPtr> pimSet;
+
+public:
+    PIMSet() {}
+
+    void add(std::string func, PointerInfoManagerPtr pim);
+    bool contains(std::string func);
+    PointerInfoManagerPtr getPIM(std::string func);
+    PointerInfoManagerPtr getPIMByPtrVar(std::string pt);
+};
+
+typedef std::shared_ptr<PIMSet> PIMSetPtr;
 
 typedef std::set<std::string> PointerEqSet;
-
 // may be depreacted
 class PointerEqManager {
 
@@ -116,15 +132,17 @@ class Record {
 
 private:
     int ID;
+    int fieldByteWidth;
     FieldsTypes fieldsTypes;
 
 public:
-    Record() : ID(-1) {};
-    Record(int id, FieldsTypes f);
+    Record() : ID(0), fieldByteWidth(0) {};
+    Record(int id, int w, FieldsTypes f);
 
     const int getID();
+    int getFieldByteWidth();
+    int getFieldSize();
     const FieldsTypes& getFieldsTypes();
-
 };
 
 typedef std::map<std::string, Record> RecordMap;
@@ -142,15 +160,15 @@ private:
 public:
     RecordManager() : Id(1), recordMap() {}
 
-    void add(std::string name, FieldsTypes fieldsTypes);
+    void add(std::string name, Record record);
+    int getNewId();
     bool contains(std::string name);
-    const Record &getRecord(std::string name);
+    Record &getRecord(std::string name);
     // const std::map<int, int> &getOrder(std::string name);
     const RecordMap &getRecordMap();
 };
 
 typedef std::shared_ptr<RecordManager> RecordManagerPtr;
-typedef std::shared_ptr<PointerInfoManager> PointerInfoManagerPtr;
 
 class PointerInfoAnalysis
     : public llvm::InstVisitor<PointerInfoAnalysis> {

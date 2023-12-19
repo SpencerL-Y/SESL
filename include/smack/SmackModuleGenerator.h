@@ -16,9 +16,6 @@ namespace smack {
 
 class Program;
 
-typedef std::map<std::string, PointerInfoManagerPtr> PIMSet;
-typedef std::shared_ptr<PIMSet> PIMSetPtr;
-
 class SmackModuleGenerator : public llvm::ModulePass {
 private:
   Program *program;

@@ -114,7 +114,7 @@ namespace smack
             // SLHV
             void setSLHVCmdArg2(const Expr* e) { this->slhvcmd.arg2 = e; }
             void setSLHVCmdRecord(Record r) { this->slhvcmd.record = r; }
-            SLHVCmd getSLHVCmd() { return this->slhvcmd; }
+            SLHVCmd& getSLHVCmd() { return this->slhvcmd; }
     };
 
     typedef std::shared_ptr<RefinedAction> RefinedActionPtr;
@@ -320,6 +320,9 @@ namespace smack
             // SLHV
             std::pair<bool, int> parseConstant(const Expr* e, std::map<std::string, int>& consVarMap);
             const Expr* constructExprByConstants(const Expr* e, std::map<std::string, int>& consVarMap);
+            std::map<std::string, int> getConsVarMap();
+            void setArrayRecord(RecordManagerPtr recordManager, PIMSetPtr pimSet);
+            void convertByteOffsetToField(RecordManagerPtr recordManager, PIMSetPtr pimSet);
 
         public:
             RefinedBlockCFG(BlockCFGPtr blockCfg);
@@ -340,7 +343,7 @@ namespace smack
             void tarjanScc(int curr, std::map<int, std::pair<int, int>>& currentMap, std::list<int>& currStack, std::map<int, int>& sccResult);
 
             // SLHV
-            void constantPropagation();
+            void refineSLHVCmds(RecordManagerPtr recordManager, PIMSetPtr pimSet);
     };
     typedef std::shared_ptr<RefinedBlockCFG> RefBlockCFGPtr;
 } // namespace smack

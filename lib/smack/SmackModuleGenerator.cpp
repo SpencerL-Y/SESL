@@ -59,22 +59,24 @@ namespace smack {
         }
 
         SDEBUG(errs() << "Analyzing structures...\n");
-        // TODO: remove i8 i32
+        // TODO: remove i8
         FieldsTypes defR; defR.push_back(SLHVVarType::INT_DAT);
-        recordManager->add("i8", defR);
-        recordManager->add("i32", defR);
+        recordManager->add("i8", Record(recordManager->getNewId(), 1, defR));
+        llvm::DataLayout dl(&M);
         for (StructType* sty : M.getIdentifiedStructTypes()) {
             if (sty->isOpaque()) continue;
             std::string name = sty->getName();
+            int id = recordManager->getNewId();
+            int width = dl.getTypeStoreSize(sty) / sty->getNumElements();
             FieldsTypes ftypes;
             for (unsigned i = 0; i < sty->getNumElements(); i++) {
                 llvm::Type* lt = sty->getElementType(i);
-                if (lt->isPointerTy())
+                if (lt->isPointerTy()) 
                     ftypes.push_back(SLHVVarType::INT_LOC);
                 else
                     ftypes.push_back(SLHVVarType::INT_DAT);
             }
-            recordManager->add("%" + name, ftypes);
+            recordManager->add("%" + name, Record(id, width, ftypes));
         }
 
         SDEBUG(errs() << "Analyzing functions...\n");
@@ -114,10 +116,8 @@ namespace smack {
                     if (!F.isIntrinsic() &&
                         F.getName().find("SMACK") == std::string::npos) {
                         SDEBUG(errs() << "Analyzing pointer info in " + F.getName() + "\n");
-                        pimSet->insert(
-                            std::make_pair(F.getName(), std::make_shared<PointerInfoManager>())
-                        );
-                        PointerInfoAnalysis ptap(&F, &naming, recordManager, pimSet->at(F.getName()));
+                        pimSet->add(F.getName(), std::make_shared<PointerInfoManager>());
+                        PointerInfoAnalysis ptap(&F, &naming, recordManager, pimSet->getPIM(F.getName()));
                         ptap.visit(F);
                         SDEBUG(errs() << ptap << '\n');
                     }

@@ -55,14 +55,13 @@ void BMCMemSafeChecker::refinedProgram(Program* prog) {
     if (decl->getKind() != Decl::Kind::PROCEDURE) continue;
     ProcDecl* proc = (ProcDecl*)decl;
     std::cout << "\n Refine function " << proc->getName() << '\n';
-    if (pimSet->find(proc->getName()) == pimSet->end())
-      continue;
+    if (!pimSet->contains(proc->getName())) continue;
     for (auto block : *proc) {
       std::cout << "\n before deletion ------------------------ \n";
       block->print(std::cout);
       std::vector<const Stmt*> unusedStmts;
       for (auto stmt : *block) {
-        if (!support(stmt, pimSet->at(proc->getName())))
+        if (!support(stmt, pimSet->getPIM(proc->getName())))
             unusedStmts.push_back(stmt);
       }
       for (auto stmt : unusedStmts)
@@ -71,12 +70,6 @@ void BMCMemSafeChecker::refinedProgram(Program* prog) {
       block->print(std::cout);
     }
   }
-}
-
-PointerInfoManagerPtr BMCMemSafeChecker::getPIM(std::string pt) {
-  std::string fn = pt.substr(0, pt.size() - 1).substr(pt.find('_') + 1);
-  assert(pimSet->find(fn) != pimSet->end());
-  return pimSet->at(fn);
 }
 
 std::string BMCMemSafeChecker::getOrigName(std::string origName) {
@@ -93,9 +86,11 @@ std::string BMCMemSafeChecker::getSuffName(std::string origName) {
 
 Record BMCMemSafeChecker::getPtrRecord(const VarExpr* vexpr) {
   std::string pt = this->getOrigName(vexpr->name());
-  PointerInfoManagerPtr pointerInfoManager = this->getPIM(vexpr->name());
+  PointerInfoManagerPtr pointerInfoManager =
+    this->pimSet->getPIMByPtrVar(vexpr->name());
   assert(pointerInfoManager->contains(pt));
   PointerInfo pinfo = pointerInfoManager->get(pt);
+  std::cout << vexpr->name() << " ----- " << pinfo.getPto() << '\n';
   return recordManager->getRecord(pinfo.getPto());
 }
 
@@ -108,6 +103,7 @@ void BMCMemSafeChecker::setSLHVCmdRecords(RefBlockCFGPtr refBlockCFG) {
         case ConcreteAction::ActType::ALLOC :
         case ConcreteAction::ActType::MALLOC : {
           assert(refAct->getArg1()->isVar());
+          if (refAct->getSLHVCmd().record.getID() > 0) break;
           refAct->setSLHVCmdRecord(
             this->getPtrRecord((const VarExpr*)refAct->getArg1()));
           break;
@@ -148,7 +144,7 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   blockCFG = blockCFG->simplify();;
   RefBlockCFGPtr refBlockCFG = std::make_shared<RefinedBlockCFG>(blockCFG);
   // refBlockCFG->printRefBlockCFG(std::cout);
-  refBlockCFG->constantPropagation();
+  refBlockCFG->refineSLHVCmds(recordManager, pimSet);
 
   this->setSLHVCmdRecords(refBlockCFG);
   refBlockCFG->printRefBlockCFG(std::cout);

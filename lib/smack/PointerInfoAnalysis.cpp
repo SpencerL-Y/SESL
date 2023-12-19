@@ -40,6 +40,36 @@ PointerInfo PointerInfoManager::get(std::string pt) {
     return pointerInfoMap[pt];
 }
 
+PointerInfo PointerInfoManager::getInfoByPtrVar(std::string var) {
+    std::string origName;
+    if (var.find("_") != std::string::npos)
+        origName = var.substr(0, var.find("_"));
+    else
+        origName = var;
+    return this->get(origName);
+}
+
+void PIMSet::add(std::string func, PointerInfoManagerPtr pim) {
+    assert(pimSet.find(func) == pimSet.end());
+    pimSet[func] = pim;
+}
+
+bool PIMSet::contains(std::string func) {
+    return pimSet.find(func) != pimSet.end();
+}
+
+PointerInfoManagerPtr PIMSet::getPIM(std::string func) {
+    assert(this->contains(func));
+    return pimSet.at(func);
+}
+
+PointerInfoManagerPtr PIMSet::getPIMByPtrVar(std::string pt) {
+    std::string func = pt.substr(0, pt.size() - 1).substr(pt.find('_') + 1);
+    return this->getPIM(func);
+}
+
+
+
 void PointerEqManager::add(std::string& pt) {
     if (idx.find(pt) != idx.end()) return;
     idx[pt] = Id++;
@@ -68,23 +98,31 @@ PointerEqSet PointerEqManager::getPointerEqSet(std::string pt) {
   return pointerEqSets[idx[pt]];
 }
 
-Record::Record(int id, FieldsTypes f)
-    : ID(id), fieldsTypes(f) {}
+Record::Record(int id, int w, FieldsTypes f)
+    : ID(id), fieldByteWidth(w), fieldsTypes(f) {}
 
 const int Record::getID() { return ID; }
 
+int Record::getFieldByteWidth() { return fieldByteWidth; }
+
+int Record::getFieldSize() { return fieldsTypes.size(); }
+
 const FieldsTypes& Record::getFieldsTypes() { return fieldsTypes; }
 
-void RecordManager::add(std::string name, FieldsTypes fieldsTypes) {
+void RecordManager::add(std::string name, Record record) {
     assert(!this->contains(name));
-    recordMap[name] = Record(Id++, fieldsTypes);
+    recordMap[name] = record;
+}
+
+int RecordManager::getNewId() {
+    return this->Id++;
 }
 
 bool RecordManager::contains(std::string name) {
     return recordMap.find(name) != recordMap.end();
 }
 
-const Record& RecordManager::getRecord(std::string name) {
+Record& RecordManager::getRecord(std::string name) {
     assert(this->contains(name));
     return recordMap.at(name);
 }
@@ -164,8 +202,11 @@ void PointerInfoAnalysis::init(llvm::Function* F) {
 void PointerInfoAnalysis::visitInstruction(llvm::Instruction &I) {
     llvm::errs() << "pointer type analysis: visit unsurpported instruction \n";
     llvm::errs() << "  " << I << '\n';
-    // if (!naming->hasName(I)) return;
-    // llvm::errs() << naming->get(I) << " " << (*I.getType()) << '\n';
+    if (!naming->hasName(I) || !I.getType()->isPointerTy()) return;
+    std::string vname = naming->get(I);
+    PointerInfo pinfo;
+    pinfo.setType(PointerInfoAnalysis::getPointerType(I.getType()));
+    pointerInfoManager->add(vname, pinfo);
 }
 
 void PointerInfoAnalysis::visitAllocaInst(llvm::AllocaInst &I) {
@@ -173,7 +214,6 @@ void PointerInfoAnalysis::visitAllocaInst(llvm::AllocaInst &I) {
     llvm::errs() << "  " << I << '\n';
     assert(naming->hasName(I));
     std::string vname = naming->get(I);
-    assert(!vname.empty());
     llvm::errs() << vname << '\n';
     pointerEqManager->add(vname);
 
@@ -189,7 +229,6 @@ void PointerInfoAnalysis::visitBitCastInst(llvm::BitCastInst &I) {
     llvm::errs() << "  " << I << '\n';
     assert(naming->hasName(I));
     std::string dstPt = naming->get(I);
-    assert(!dstPt.empty());
     llvm::errs() << dstPt << '\n';
     
     llvm::Value* srcIR = I.getOperand(0);
@@ -217,7 +256,6 @@ void PointerInfoAnalysis::visitCallInst(llvm::CallInst &I) {
 
     if (!naming->hasName(I)) return;
     std::string vname = naming->get(I);
-    assert(!vname.empty());
     llvm::errs() << vname << '\n';
     pointerEqManager->add(vname);
 

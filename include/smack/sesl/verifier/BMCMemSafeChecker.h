@@ -18,7 +18,6 @@ private:
 
   bool support(const Stmt* stmt, PointerInfoManagerPtr pointerInfoManager);
   void refinedProgram(Program* prog);
-  inline PointerInfoManagerPtr getPIM(std::string pt);
   inline std::string getOrigName(std::string origName);
   inline std::string getSuffName(std::string origName);
 

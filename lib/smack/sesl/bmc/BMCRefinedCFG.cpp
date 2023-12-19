@@ -1151,7 +1151,6 @@ namespace smack
 
     std::pair<bool, int>
     RefinedBlockCFG::parseConstant(const Expr* e, std::map<std::string, int>& consVarMap) {
-        e->print(std::cout);
         switch (e->getType()) {
             case ExprType::BIN: {
                 const BinExpr* be = (const BinExpr*)e;
@@ -1324,15 +1323,17 @@ namespace smack
                     assert(be->getRhs()->getType() == ExprType::INT);
                     const VarExpr* base = (const VarExpr*)be->getLhs();
                     const int offset = ((const IntLit*)be->getRhs())->getVal();
+
                     std::string varType =
-                        pimSet->getPIMByPtrVar(var->name())
-                            ->getInfoByPtrVar(var->name()).getPto();
+                        pimSet->getPIMByPtrVar(base->name())
+                            ->getInfoByPtrVar(base->name()).getPto();
                     int stepWidth = 0;
                     if (varType.find("struct") != std::string::npos || varType == "i8") {
                        stepWidth = recordManager->getRecord(varType).getFieldByteWidth();
                     } else if (varType == "i32") stepWidth = 4;
                     else stepWidth = 8;
                     assert(stepWidth > 0 && offset % stepWidth == 0);
+
                     long long newOffset = offset / stepWidth;
                     switch (be->getOp()) {
                         case BinExpr::Binary::Plus:

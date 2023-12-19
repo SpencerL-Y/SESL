@@ -398,13 +398,13 @@ z3::expr BlockEncoding::generateAssignEncoding(RefinedActionPtr act) {
     if (act->getArg1() != nullptr) {
         isBoolAssign = false;
         arg1 = act->getArg1();
-        arg2 = act->getArg2();
+        arg2 = act->getSLHVCmd().arg2;
     } else {
         isBoolAssign = true;
         arg1 = act->getArg3();
         arg2 = act->getArg4();
     }
-    assert(arg1->isVar());
+    assert(arg1->isVar() && arg2 != nullptr);
     const VarExpr* var = (const VarExpr*)arg1;
     z3::expr lhs = this->generateLocalVarByName(var->name());
     z3::expr rhs = this->generateExpr(arg2);

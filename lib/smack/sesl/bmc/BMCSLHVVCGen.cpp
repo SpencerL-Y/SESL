@@ -149,7 +149,7 @@ z3::expr Z3ExprManager::mk_locadd(z3::expr l1, z3::expr l2) {
 
 std::string Z3ExprManager::to_smt2(z3::expr e) {
     z3::solver sol(this->ctx);
-    sol.add(e);
+    sol.add(e.simplify());
     std::string origSmt2 = sol.to_smt2();
     // std::cout << origSmt2 << '\n';
     std::stringstream ss(origSmt2.c_str());

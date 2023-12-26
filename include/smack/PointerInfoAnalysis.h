@@ -54,7 +54,10 @@ LLVM_RAW_OSTREAM_PRINT(PointerInfo)
 class PointerInfoManager {
 
 private:
+    std::map<std::string, std::string> unionSet;
     std::map<std::string, PointerInfo> pointerInfoMap;
+
+    std::string find(const std::string& pt);
 
 public:
     PointerInfoManager() {}
@@ -62,6 +65,7 @@ public:
     void add(std::string pt, PointerInfo pointerInfo);
     void update(std::string pt, PointerInfo pointerInfo);
     bool contains(std::string pt);
+    void setEq(const std::string& pt1, const std::string& pt2);
     PointerInfo get(std::string pt);
     PointerInfo getInfoByPtrVar(std::string var);
 
@@ -100,29 +104,6 @@ public:
 };
 
 typedef std::shared_ptr<PIMSet> PIMSetPtr;
-
-typedef std::set<std::string> PointerEqSet;
-// may be depreacted
-class PointerEqManager {
-
-private:
-    int Id;
-    std::map<std::string, int> idx;
-    std::map<int, std::string> primePt;
-    std::vector<PointerEqSet> pointerEqSets;
-
-public:
-    PointerEqManager()
-        : Id(0), idx(),
-          primePt(),
-          pointerEqSets() {}
-
-    void add(std::string& pt);
-    void setEq(std::string& pt1, std::string& pt2);
-    bool contains(std::string& pt);
-    std::string getPrimePt(std::string pt);
-    PointerEqSet getPointerEqSet(std::string pt);
-};
 
 enum SLHVVarType { INT_LOC, INT_DAT, INT_HEAP, FALSIFICATION_BOOL };
 
@@ -166,6 +147,8 @@ public:
     Record &getRecord(std::string name);
     // const std::map<int, int> &getOrder(std::string name);
     const RecordMap &getRecordMap();
+    
+    void print(std::ostream& OS);
 };
 
 typedef std::shared_ptr<RecordManager> RecordManagerPtr;
@@ -181,7 +164,6 @@ private:
     Naming *naming;
     RecordManagerPtr recordManager;
     PointerInfoManagerPtr pointerInfoManager;
-    std::shared_ptr<PointerEqManager> pointerEqManager;
 
     void init(llvm::Function *F);
 
@@ -196,8 +178,7 @@ public:
         PointerInfoManagerPtr pointerInfoManager)
         : naming(n),
           recordManager(recordManager),
-          pointerInfoManager(pointerInfoManager),
-          pointerEqManager(new PointerEqManager()) {
+          pointerInfoManager(pointerInfoManager) {
             this->init(f);
         }
 

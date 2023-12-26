@@ -65,7 +65,7 @@ Z3ExprManager::Z3ExprManager()
       recordSorts(),
       records(),
       freshVarsCounts() {
-        qlc = qhc = qdc = 1;
+        qhc = qahc = qlc = qdc = 1;
         pts["loc"] = this->decl_datatype(SLHVVarType::INT_LOC);
         pts["data"] = this->decl_datatype(SLHVVarType::INT_DAT);
     }
@@ -106,22 +106,28 @@ z3::expr Z3ExprManager::mk_fresh(std::string var, SLHVVarType vt) {
     }
     std::string name = var + std::to_string(freshVarsCounts[var]);
     switch (vt) {
-        case SLHVVarType::INT_DAT : return mk_data(name);
-        case SLHVVarType::INT_LOC : return mk_loc(name);
+        case SLHVVarType::INT_DAT : return this->mk_data(name);
+        case SLHVVarType::INT_LOC : return this->mk_loc(name);
         case SLHVVarType::INT_HEAP : {
-            assert(var == "H");
-            return mk_heap(name);
+            assert(var == "H" || var == "AH");
+            return this->mk_heap(name);
         }
-        case SLHVVarType::FALSIFICATION_BOOL: return mk_bool(name);
+        case SLHVVarType::FALSIFICATION_BOOL: return this->mk_bool(name);
         default : assert(false);
     }
 }
 
-z3::expr Z3ExprManager::mk_quantified(SLHVVarType vt) {
+z3::expr Z3ExprManager::mk_quantified(SLHVVarType vt, std::string pre) {
     switch (vt) {
-        case SLHVVarType::INT_DAT : return mk_data("d" + std::to_string(qdc++));
-        case SLHVVarType::INT_LOC : return mk_loc("l" + std::to_string(qlc++));
-        case SLHVVarType::INT_HEAP : return mk_heap("h" + std::to_string(qhc++));
+        case SLHVVarType::INT_DAT : return this->mk_data("d" + std::to_string(qdc++));
+        case SLHVVarType::INT_LOC : return this->mk_loc("l" + std::to_string(qlc++));
+        case SLHVVarType::INT_HEAP : {
+            if (pre == "h") {
+                return this->mk_heap(pre + std::to_string(qhc++));
+            } else if (pre== "ah") {
+                return this->mk_heap(pre + std::to_string(qahc++));
+            }
+        }
         default : assert(false);
     }
 }
@@ -198,93 +204,76 @@ void Z3ExprManager::print(std::ostream& OS) {
     OS << " Uplus ---> " << uplus << '\n';
 }
 
+
+void BlockEncoding::VarsManager::print(std::ostream& OS) {
+    OS << "   Inputs: ";
+    for (auto var : inputVars) OS << " " << var;
+    OS << std::endl;
+    OS << "   Local Variables: ";
+    for (auto var :  localVars) OS << " " << var;
+    OS << std::endl;
+    OS << "   Outputs: ";
+    for (auto p : outputsMap)
+        OS << " (" << p.first << ", " << p.second << ")";
+    OS << std::endl;
+}
+
 const std::string BlockEncoding::invalid_deref = "invalidDeref";
 const std::string BlockEncoding::invalid_free = "invalidFree";
 
-z3::expr BlockEncoding::getPreOutput(std::string name, SLHVVarType vt) {
-    std::string var;
-    if (outputs.find(name) == outputs.end()) {
-        this->inputs.insert(name);
-        var = name;
+z3::expr BlockEncoding::getLatestUpdateForGlobalVar(std::string name) {
+    SLHVVarType varTy;
+    VarSet* inputVars;
+    const std::map<std::string, std::string>* outputsMap;
+    if (name.find("invalidDeref") != std::string::npos) {
+        inputVars = &this->invalidDerefEVM.inputVars;
+        outputsMap = &this->invalidDerefEVM.outputsMap;
+        varTy = SLHVVarType::FALSIFICATION_BOOL;
+    } else if (name.find("invalidFree") != std::string::npos) {
+        inputVars = &this->invalidFreeEVM.inputVars;
+        outputsMap = &this->invalidFreeEVM.outputsMap;
+        varTy = SLHVVarType::FALSIFICATION_BOOL;
     } else {
-        var = outputs[name];
+        inputVars = &this->feasibleEVM.inputVars;
+        outputsMap = &this->feasibleEVM.outputsMap;
+        if (name[0] == 'H' || name.find("AH") != std::string::npos) {
+            varTy = SLHVVarType::INT_HEAP;
+        } else if (name[1] == 'p') {
+            varTy = SLHVVarType::INT_LOC;
+        } else if (name[1] == 'i' || name[1] == 'r' || name[1] == 'u') {
+            varTy = SLHVVarType::INT_DAT;
+        } else {
+            assert(false && "unsupported name?");
+        }
     }
-    switch (vt) {
-        case SLHVVarType::INT_DAT : return z3EM->mk_data(var);
-        case SLHVVarType::INT_LOC : return z3EM->mk_loc(var);
-        case SLHVVarType::INT_HEAP : return z3EM->mk_heap(var);
-        case SLHVVarType::FALSIFICATION_BOOL : return z3EM->mk_bool(var);
+    std::string varName;
+    if (outputsMap->find(name) == outputsMap->end()) {
+        inputVars->insert(name);
+        varName = name;
+    } else {
+        varName = outputsMap->at(name);
+    }
+    switch (varTy) {
+        case SLHVVarType::INT_DAT : return z3EM->mk_data(varName);
+        case SLHVVarType::INT_LOC : return z3EM->mk_loc(varName);
+        case SLHVVarType::INT_HEAP : return z3EM->mk_heap(varName);
+        case SLHVVarType::FALSIFICATION_BOOL : return z3EM->mk_bool(varName);
         default: assert(false);
     }
 }
 
-z3::expr BlockEncoding::getPreOutputByName(std::string name) {
-    assert(name[1] == 'p' || name[1] == 'i' || name[1] == 'r'
-           || name.find("fable") != std::string::npos
-           || name.find("invalid") != std::string::npos);
-    if (name[1] == 'p')
-        return this->getPreOutput(name, SLHVVarType::INT_LOC);
-    else if (name.find("invalid") != std::string::npos)
-        return this->getPreOutput(name, SLHVVarType::FALSIFICATION_BOOL);
-    else
-        return this->getPreOutput(name, SLHVVarType::INT_DAT);
-}
-
-void BlockEncoding::generateEncoding(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg) {
-    for (RefinedActionPtr act : bptr->getRefStmts()) {
-        if (act->getActType() == ConcreteAction::ActType::OTHER ||
-            act->getActType() == ConcreteAction::ActType::OTHERPROC) continue;
-        // act->print(std::cout);
-        z3::expr actExpr(z3EM->Ctx());
-        switch (act->getActType()) {
-        case ConcreteAction::ActType::ASSUME:
-            actExpr = this->generateAssumeEncoding(act);
-            break;
-        case ConcreteAction::ActType::COMMONASSIGN:
-            actExpr = this->generateAssignEncoding(act);
-            break;
-        case ConcreteAction::ActType::ALLOC:
-        case ConcreteAction::ActType::MALLOC:
-            actExpr = this->generateAllocAndMallocEncoding(act);
-            break;
-        case ConcreteAction::ActType::LOAD:
-            actExpr = this->generateLoadEncoding(act);
-            break;
-        case ConcreteAction::ActType::STORE:
-            actExpr = this->generateStoreEncoding(act);
-            break;
-        case ConcreteAction::ActType::FREE:
-            actExpr = this->generateFreeEncoding(act);
-            break;
-        default:
-            actExpr = z3EM->Ctx().bool_val(true);
-            break;
-        }
-        if (actExpr.is_true()) continue;
-        CLEAN_Z3EXPR_CONJUNC(encoding, actExpr);
-        act->print(std::cout);
-        std::cout << actExpr << std::endl;
-        std::cout << " ----------------------------------- \n";
-    }
-    this->src = bptr->getVertexId();
-    for (std::pair<int, int> edge : bcfg->getEdges()) {
-        if (bptr->getVertexId() == edge.first) {
-            this->dests.insert(edge.second);
-        }
-    }
-    // this->print(std::cout);
-}
-
 z3::expr BlockEncoding::generateLocalVarByName(std::string name) {
-    assert(name[1] == 'p' || name[1] == 'i' || name[1] == 'r'
-        || name.find("fable") != std::string::npos
-        || name.find("invalid") != std::string::npos);
-    if (name[1] == 'p')
-        return z3EM->mk_fresh(name, SLHVVarType::INT_LOC);
-    else if (name.find("invalid") != std::string::npos)
-        return z3EM->mk_fresh(name, SLHVVarType::FALSIFICATION_BOOL);
-    else
-        return z3EM->mk_fresh(name, SLHVVarType::INT_DAT);
+    if (name[1] == 'p') {
+        return this->z3EM->mk_fresh(name, SLHVVarType::INT_LOC);
+    } else if (name[1] == 'i' || name[1] == 'u' || name[1] == 'r') {
+        return this->z3EM->mk_fresh(name, SLHVVarType::INT_DAT);
+    } else if (name == "H" || name == "AH") {
+        return this->z3EM->mk_fresh(name, SLHVVarType::INT_HEAP);
+    } else if (name.find("invalid") != std::string::npos) {
+        return this->z3EM->mk_fresh(name, SLHVVarType::FALSIFICATION_BOOL);
+    } else {
+        assert(false && "unsupported varivalble name?");
+    }
 }
 
 z3::expr BlockEncoding::generateBinExpr(const BinExpr* e) {
@@ -330,8 +319,9 @@ z3::expr BlockEncoding::generateExpr(const Expr* e) {
             return !this->generateExpr(((NotExpr*)e)->getExpr());
         case ExprType::VAR: {
             const VarExpr* var = (const VarExpr*)e;
-            if (var->name()[1] == 'p' || var->name()[1] == 'i' || var->name()[0] == 'r' || var->getType() == ExprType::BOOL)
-                return this->getPreOutputByName(var->name());
+            if (var->name()[1] == 'p' || var->name()[1] == 'i'
+                || var->name()[0] == 'r' || var->getType() == ExprType::BOOL)
+                return this->getLatestUpdateForGlobalVar(var->name());
             else if(var->name() == "$0.ref")
                 return z3EM->mk_loc("nil");
             else
@@ -341,57 +331,36 @@ z3::expr BlockEncoding::generateExpr(const Expr* e) {
     }
 }
 
-z3::expr_vector BlockEncoding::generateRecord(z3::expr lt, Record& record) {
-    z3::expr_vector sh(z3EM->Ctx());
+z3::expr_vector BlockEncoding::generateRecord(Record& record) {
+    z3::expr_vector recordHeap(z3EM->Ctx());
+    z3::expr headLoc(this->z3EM->Ctx());
     z3::expr pure = this->z3EM->Ctx().bool_val(true);
-    z3::expr heap(z3EM->Ctx());
-    z3::expr lastLoc(z3EM->Ctx());
-    for (SLHVVarType fieldType : record.getFieldsTypes()) {
-        z3::expr currentLoc = z3EM->mk_quantified(SLHVVarType::INT_LOC);
-        z3::expr t(z3EM->Ctx());
-        if (fieldType == SLHVVarType::INT_LOC) {
-            t = z3EM->mk_quantified(SLHVVarType::INT_LOC);
-        } else {
-            t = z3EM->mk_quantified(SLHVVarType::INT_DAT);
-        }
-        this->quantifiedVars.insert(t.to_string());
-        z3::expr pto = z3EM->mk_pto(currentLoc, t);
-        if (pure.is_true()) {
-            pure = (lt == currentLoc);
+    z3::expr heap(this->z3EM->Ctx());
+    z3::expr lastLoc(this->z3EM->Ctx());
+    for (int i = 0; i < record.getFieldsTypes().size(); i++) {
+        z3::expr xl = z3EM->mk_quantified(SLHVVarType::INT_LOC);
+        z3::expr xf =
+            this->z3EM->mk_quantified(record.getFieldsTypes()[i]);
+        this->feasibleEVM.localVars.insert(xl.to_string());
+        this->feasibleEVM.localVars.insert(xf.to_string());
+        z3::expr pto = z3EM->mk_pto(xl, xf);
+        if (i == 0) {
+            headLoc = xl;
             heap = pto;
         } else {
-            pure = pure && 
-                (currentLoc == z3EM->mk_locadd(lastLoc, z3EM->Ctx().int_val(1)));
+            z3::expr diff = (xl == z3EM->mk_locadd(lastLoc, z3EM->Ctx().int_val(1)));
+            CLEAN_Z3EXPR_CONJUNC(pure, diff);
             heap = z3EM->mk_uplus(heap, pto);
         }
-        lastLoc = currentLoc;
+        lastLoc = xl;
     }
-    sh.push_back(pure);
-    sh.push_back(heap);
-    return sh;
+    recordHeap.push_back(headLoc);
+    recordHeap.push_back(pure);
+    recordHeap.push_back(heap);
+    return recordHeap;
 }
 
-z3::expr BlockEncoding::generateFablePassing(const VarExpr* var, z3::expr pt) {
-    assert(var->name()[1] == 'p');
-    z3::expr fablePassing = z3EM->Ctx().bool_val(true);
-    std::string ptFableName = "fable_" + var->name();
-    z3::expr ptFable = this->generateLocalVarByName(ptFableName);
-    this->localVars.insert(ptFable.to_string());
-    this->outputs[ptFableName] = ptFable.to_string();
-    
-    for(std::string globalLocVar : *this->globalLocVars) {
-        z3::expr currentLoc = this->getPreOutputByName(globalLocVar);
-        z3::expr currentLocFable = this->getPreOutputByName("fable_" + globalLocVar);
-        z3::expr fablePassingForLoc = z3::implies(
-            pt == currentLoc,
-            ptFable == currentLocFable
-        );
-        CLEAN_Z3EXPR_CONJUNC(fablePassing, fablePassingForLoc);
-    }
-    return fablePassing;
-}
-
-z3::expr BlockEncoding::generateAssignEncoding(RefinedActionPtr act) {
+z3::expr_vector BlockEncoding::generateAssignEncoding(RefinedActionPtr act) {
     bool isBoolAssign;
     const Expr* arg1;
     const Expr* arg2;
@@ -409,264 +378,391 @@ z3::expr BlockEncoding::generateAssignEncoding(RefinedActionPtr act) {
     z3::expr lhs = this->generateLocalVarByName(var->name());
     z3::expr rhs = this->generateExpr(arg2);
 
-    this->localVars.insert(lhs.to_string());
-    this->outputs[var->name()] = lhs.to_string();
+    this->feasibleEVM.localVars.insert(lhs.to_string());
+    this->feasibleEVM.outputsMap[var->name()] = lhs.to_string();
 
-    z3::expr fablePassing = z3EM->Ctx().bool_val(true);
-    if (var->name()[1] == 'p') {
-        this->generateFablePassing(var, lhs);
-    }
-
-    z3::expr encoding(z3EM->Ctx());
+    z3::expr feasibleEC(z3EM->Ctx());
     if (!isBoolAssign) {
-        encoding = (lhs == rhs);
-        CLEAN_Z3EXPR_CONJUNC(encoding, fablePassing);
+        feasibleEC = (lhs == rhs);
     } else {
         assert(lhs.is_int() && rhs.is_bool());
-        encoding = (rhs && lhs == 1) || (!rhs && lhs == 0);
+        feasibleEC = (rhs && lhs == 1) || (!rhs && lhs == 0);
     }
 
-    z3::expr invalidDeref = this->getPreOutputByName(BlockEncoding::invalid_deref);
-    z3::expr invalidFree = this->getPreOutputByName(BlockEncoding::invalid_free);
+    // invalid : (feasibleEC /\ !invalid) \/ invalid
+    //           invalid' = invalid (global update)
+    z3::expr invalidDeref = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
+    z3::expr invalidDerefEC = (feasibleEC && !invalidDeref) || invalidDeref;
+    z3::expr invalidFree = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
+    z3::expr invalidFreeEC = (feasibleEC && !invalidFree) || invalidFree;
 
-    return encoding || invalidDeref || invalidFree;
+    z3::expr_vector encoding(z3EM->Ctx());
+    encoding.push_back(feasibleEC);
+    encoding.push_back(invalidDerefEC);
+    encoding.push_back(invalidFreeEC);
+    return encoding;
 }
 
-z3::expr BlockEncoding::generateAssumeEncoding(RefinedActionPtr act) {
+z3::expr_vector BlockEncoding::generateAssumeEncoding(RefinedActionPtr act) {
     assert(act->getArg3() != nullptr);
-    return this->generateExpr(act->getArg3());
+    
+    z3::expr feasibleEC = this->generateExpr(act->getArg3());
+
+    // invalid : (feasibleEC && !invalid) || invalid
+    //           invalid' = invalid (global update)
+    z3::expr invalidDeref = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
+    z3::expr invalidDerefEC = (feasibleEC && !invalidDeref) || invalidDeref;
+    z3::expr invalidFree = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
+    z3::expr invalidFreeEC = (feasibleEC && !invalidFree) || invalidFree;
+    
+    z3::expr_vector encoding(z3EM->Ctx());
+    encoding.push_back(feasibleEC);
+    encoding.push_back(invalidDerefEC);
+    encoding.push_back(invalidFreeEC);
+    return encoding;
 }
 
-z3::expr BlockEncoding::generateAllocAndMallocEncoding(RefinedActionPtr act) {
+z3::expr_vector BlockEncoding::generateAllocAndMallocEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
-    z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
-    z3::expr nH = this->z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
-    this->localVars.insert(nH.to_string());
-    this->outputs["H"] = nH.to_string();
+    z3::expr H = this->getLatestUpdateForGlobalVar("H");
+    z3::expr nH = this->generateLocalVarByName("H");
+    this->feasibleEVM.localVars.insert(nH.to_string());
+    this->feasibleEVM.outputsMap["H"] = nH.to_string();
+    z3::expr AH = this->getLatestUpdateForGlobalVar("AH");
+    z3::expr nAH = this->generateLocalVarByName("AH");
+    this->feasibleEVM.localVars.insert(nAH.to_string());
+    this->feasibleEVM.outputsMap["AH"] = nAH.to_string();
 
-    const Expr* e = act->getArg1();
-    assert(e->isVar());
-    const VarExpr* var = (const VarExpr*)e;
-    z3::expr lt = this->generateLocalVarByName(var->name());
-    z3::expr_vector sh = this->generateRecord(lt, slhvcmd.record);
-    z3::expr fable = this->generateLocalVarByName("fable_" + var->name());
-    z3::expr allocTypeId = this->z3EM->Ctx().int_val(slhvcmd.record.getID());
-    this->localVars.insert(fable.to_string());
-    this->outputs[var->name()] = lt.to_string();
-    this->outputs["fable_" + var->name()] = fable.to_string();
+    assert(act->getArg1()->isVar());
+    const VarExpr* arg1 = (const VarExpr*)act->getArg1();
+    z3::expr x = this->generateLocalVarByName(arg1->name());
+    this->feasibleEVM.outputsMap[arg1->name()] = x.to_string();
+    z3::expr_vector recordHeap = this->generateRecord(slhvcmd.record);
+    z3::expr heapEC = (
+        nH == this->z3EM->mk_uplus(H, recordHeap[2])
+        && recordHeap[1] && (x == recordHeap[0]) 
+    );
+    z3::expr idx = this->z3EM->Ctx().int_val(slhvcmd.record.getID());
+    z3::expr allocHeapEC = 
+        (nAH == this->z3EM->mk_uplus(AH, this->z3EM->mk_pto(recordHeap[0], idx)));
 
-    z3::expr encoding = (sh[0] && fable == allocTypeId && 
-        (nH == this->z3EM->mk_uplus(H, sh[1])));
-    z3::expr invalidDeref = this->getPreOutputByName(BlockEncoding::invalid_deref);
-    z3::expr invalidFree = this->getPreOutputByName(BlockEncoding::invalid_free);
+    z3::expr feasibleEC = heapEC && allocHeapEC;
 
-    return encoding || invalidDeref || invalidFree;
+    // invalid : feasibleEC || invalid
+    //           invalid' = invalid (global update)
+    z3::expr invalidDeref =
+        this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
+    z3::expr invalidDerefEC = feasibleEC || invalidDeref;
+    z3::expr invalidFree =
+        this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
+    z3::expr invalidFreeEC = feasibleEC || invalidFree;
+    
+    z3::expr_vector encoding(z3EM->Ctx());
+    encoding.push_back(feasibleEC);
+    encoding.push_back(invalidDerefEC);
+    encoding.push_back(invalidFreeEC);
+    return encoding;
 }
 
-z3::expr BlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
+z3::expr_vector BlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
-    z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
-    z3::expr h0 = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
-    z3::expr h1 = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
-    this->quantifiedVars.insert(h0.to_string());
-    this->quantifiedVars.insert(h1.to_string());
+    z3::expr H = this->getLatestUpdateForGlobalVar("H");
+    z3::expr h1 = this->z3EM->mk_quantified(SLHVVarType::INT_HEAP, "h");
+    this->feasibleEVM.localVars.insert(h1.to_string());
 
-    const Expr* toExpr = act->getArg1();
-    assert(toExpr->isVar());
-    const VarExpr* toVar = (const VarExpr*)toExpr;
-    z3::expr to = this->generateLocalVarByName(toVar->name());
-    const Expr* fromExpr = act->getArg2();
-    assert(fromExpr->isVar());
-    const VarExpr* fromVar = (const VarExpr*)fromExpr;
-    z3::expr from = this->getPreOutputByName(fromVar->name());
-    this->localVars.insert(to.to_string());
-    this->outputs[toVar->name()] = to.to_string();
+    assert(act->getArg1()->isVar());
+    const VarExpr* arg1 = (const VarExpr*)act->getArg1();
+    z3::expr nxt = this->generateLocalVarByName(arg1->name());
+    this->feasibleEVM.outputsMap[arg1->name()] = nxt.to_string();
+    assert(act->getArg2()->isVar());
+    const VarExpr* arg2 = (const VarExpr*)act->getArg2();
+    z3::expr xs = this->getLatestUpdateForGlobalVar(arg2->name());
+    z3::expr x1 = this->z3EM->mk_quantified(
+        arg1->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
+    this->feasibleEVM.localVars.insert(x1.to_string());
+    
+    z3::expr feasibleEC = 
+        (H == this->z3EM->mk_uplus(h1, this->z3EM->mk_pto(xs, x1)))
+        && nxt == x1;
 
-    z3::expr invalidDeref = this->getPreOutputByName(BlockEncoding::invalid_deref);
-    z3::expr invalidFree = this->getPreOutputByName(BlockEncoding::invalid_free);
-    z3::expr invalidDerefPrime = this->generateLocalVarByName(BlockEncoding::invalid_deref);
-    this->localVars.insert(invalidDerefPrime.to_string());
-    this->outputs[BlockEncoding::invalid_deref] = invalidDerefPrime.to_string();
+    // invalidDeref
+    z3::expr h0 = this->z3EM->mk_quantified(SLHVVarType::INT_HEAP, "h");
+    z3::expr x0 = this->z3EM->mk_quantified(
+        arg1->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
+    this->invalidDerefEVM.localVars.insert(x0.to_string());
+    z3::expr invalidDeref =
+        this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
+    z3::expr invalidDerefPrime =
+        this->generateLocalVarByName(BlockEncoding::invalid_free);
+    this->invalidDerefEVM.outputsMap[BlockEncoding::invalid_deref] =
+        invalidDerefPrime.to_string();
+    
+    z3::expr errorEC = 
+        (h0 == this->z3EM->mk_uplus(H, this->z3EM->mk_pto(xs, x0))
+        || xs == this->z3EM->mk_loc("nil")) && invalidDerefPrime;
+    z3::expr memSafeEC = feasibleEC && (invalidDerefPrime == invalidDeref);
+    z3::expr faultTolerantEc =
+        invalidDeref && (invalidDerefPrime == invalidDeref);
+    z3::expr invalidDerefEC = errorEC || memSafeEC || faultTolerantEc;
 
-    z3::expr t1 = z3EM->mk_quantified(
-        toVar->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
-    z3::expr pt1 = z3EM->mk_pto(from, t1);
-    z3::expr invalidDerefSemantic =
-        (from == z3EM->mk_loc("nil") || h0 == z3EM->mk_uplus(H, pt1))
-        && invalidDerefPrime;
-    this->quantifiedVars.insert(t1.to_string());
-
-    z3::expr sh(z3EM->Ctx());
-    z3::expr t2 = z3EM->mk_quantified(
-        toVar->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
-    z3::expr pt2 = z3EM->mk_pto(from, t2);
-    sh = (H == z3EM->mk_uplus(h1, pt2)) && (to == t2);
-    if (toVar->name()[1] == 'p') {
-        z3::expr fablePassing = this->generateFablePassing(toVar, to);
-        CLEAN_Z3EXPR_CONJUNC(sh, fablePassing);
-    }
-    z3::expr premise = !invalidDeref && !invalidDerefPrime && !invalidFree;
-    z3::expr memorySafetySemantic = z3::implies(premise, sh)
-        && invalidDerefPrime = invalidDeref;
-
-    return invalidDerefSemantic || memorySafetySemantic;
+    // invalidFree : feasibleEC || invalidFree
+    //           invalidFree' = invalidFree (global update)
+    z3::expr invalidFree = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
+    z3::expr invalidFreeEC = feasibleEC || invalidFree;
+        
+    z3::expr_vector encoding(z3EM->Ctx());
+    encoding.push_back(feasibleEC);
+    encoding.push_back(invalidDerefEC);
+    encoding.push_back(invalidFreeEC);
+    return encoding;
 }
 
-z3::expr BlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
+z3::expr_vector BlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
-    z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
-    z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
-    z3::expr h0 = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
-    z3::expr h1 = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
-    this->localVars.insert(nH.to_string());
-    this->outputs["H"] = nH.to_string();
-    this->quantifiedVars.insert(h0.to_string());
-    this->quantifiedVars.insert(h1.to_string());
+    z3::expr H = this->getLatestUpdateForGlobalVar("H");
+    z3::expr nH = this->generateLocalVarByName("H");
+    z3::expr h1 = z3EM->mk_quantified(SLHVVarType::INT_HEAP, "h");
+    this->feasibleEVM.localVars.insert(nH.to_string());
+    this->feasibleEVM.localVars.insert(h1.to_string());
+    this->feasibleEVM.outputsMap["H"] = nH.to_string();
 
-    const Expr* toExpr = act->getArg1();
-    assert(toExpr->isVar());
-    const VarExpr* toVar = (const VarExpr*)toExpr;
-    z3::expr to = this->getPreOutputByName(toVar->name());
-    const Expr* fromExpr = act->getArg2();
-    assert(fromExpr->isVar());
-    const VarExpr* fromVar = (const VarExpr*)fromExpr;
-    z3::expr from = this->getPreOutputByName(fromVar->name());
+    assert(act->getArg1()->isVar());
+    const VarExpr* arg1 = (const VarExpr*)act->getArg1();
+    z3::expr xt = this->getLatestUpdateForGlobalVar(arg1->name());
+    assert(act->getArg2()->isVar());
+    const VarExpr* arg2 = (const VarExpr*)act->getArg2();
+    z3::expr xs = this->getLatestUpdateForGlobalVar(arg2->name());
+    z3::expr x1 = this->z3EM->mk_quantified(
+        xs.is_int() ? SLHVVarType::INT_DAT : SLHVVarType::INT_LOC);
+    this->feasibleEVM.localVars.insert(x1.to_string());
 
+    z3::expr feasibleEC =
+        (H == this->z3EM->mk_uplus(h1, this->z3EM->mk_pto(xt, x1)))
+        && (nH == this->z3EM->mk_uplus(h1, this->z3EM->mk_pto(xt, xs)));
 
-    z3::expr invalidDeref = this->getPreOutputByName(BlockEncoding::invalid_deref);
-    z3::expr invalidFree = this->getPreOutputByName(BlockEncoding::invalid_free);
-    z3::expr invalidDerefPrime = this->generateLocalVarByName(BlockEncoding::invalid_deref);
-    this->localVars.insert(invalidDerefPrime.to_string());
-    this->outputs[BlockEncoding::invalid_deref] = invalidDerefPrime.to_string();
+    // invalidDeref
+    z3::expr h0 = this->z3EM->mk_quantified(SLHVVarType::INT_HEAP, "h");
+    z3::expr x0 = this->z3EM->mk_quantified(
+        xs.is_int() ? SLHVVarType::INT_DAT : SLHVVarType::INT_LOC);
+    this->invalidDerefEVM.localVars.insert(x0.to_string());
+    z3::expr invalidDeref =
+        this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
+    z3::expr invalidDerefPrime = 
+        this->generateLocalVarByName(BlockEncoding::invalid_deref);
+    this->invalidDerefEVM.outputsMap[BlockEncoding::invalid_deref] =
+        invalidDerefPrime.to_string();
+    
+    z3::expr errorEC = 
+        (h0 == this->z3EM->mk_uplus(H, this->z3EM->mk_pto(xt, x0))
+        || xt == this->z3EM->mk_loc("nil")) && invalidDerefPrime;
+    z3::expr memSafeEC = feasibleEC && (invalidDerefPrime == invalidDeref);
+    z3::expr faultTolerantEc =
+        invalidDeref && (invalidDerefPrime == invalidDeref);
+    z3::expr invalidDerefEC = errorEC || memSafeEC || faultTolerantEc;
 
-    z3::expr t1 = z3EM->mk_quantified(
-        fromVar->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
-    z3::expr pt1 = z3EM->mk_pto(to, t1);
-    z3::expr invalidDerefSemantic =
-        (to == z3EM->mk_loc("nil") || h0 == z3EM->mk_uplus(H, pt1))
-        && invalidDerefPrime;
-    this->quantifiedVars.insert(t1.to_string());
-
-    z3::expr t2 = z3EM->mk_quantified(
-        fromVar->name()[1] == 'p' ? SLHVVarType::INT_LOC : SLHVVarType::INT_DAT);
-    z3::expr pt2 = z3EM->mk_pto(to, t2);
-    z3::expr pt3 = z3EM->mk_pto(to, from);
-    this->quantifiedVars.insert(t2.to_string());
-
-    z3::expr premise = !invalidDeref && !invalidDerefPrime && !invalidFree;
-    z3::expr sh = (H == z3EM->mk_uplus(h1, pt2)) && (nH == z3EM->mk_uplus(h1, pt3));
-    z3::expr memorySafetySemantic = z3::implies(premise, sh)
-        && invalidDerefPrime = invalidDeref;
-
-    return invalidDerefSemantic || memorySafetySemantic;
+    // invalidFree : feasibleEC || invalidFree
+    z3::expr invalidFree = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
+    z3::expr invalidFreeEC = feasibleEC || invalidFree;
+        
+    z3::expr_vector encoding(z3EM->Ctx());
+    encoding.push_back(feasibleEC);
+    encoding.push_back(invalidDerefEC);
+    encoding.push_back(invalidFreeEC);
+    return encoding;
 }
 
-z3::expr BlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
+z3::expr_vector BlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
-    z3::expr H = this->getPreOutput("H", SLHVVarType::INT_HEAP);
-    z3::expr nH = z3EM->mk_fresh("H", SLHVVarType::INT_HEAP);
-    z3::expr h0 = z3EM->mk_quantified(SLHVVarType::INT_HEAP);
-    this->localVars.insert(nH.to_string());
-    this->outputs["H"] = nH.to_string();
-    this->quantifiedVars.insert(h0.to_string());
+    z3::expr H = this->getLatestUpdateForGlobalVar("H");
+    z3::expr nH = this->generateLocalVarByName("H");
+    z3::expr h0 = this->z3EM->mk_quantified(SLHVVarType::INT_HEAP, "h");
+    this->feasibleEVM.localVars.insert(nH.to_string());
+    this->feasibleEVM.localVars.insert(h0.to_string());
+    this->feasibleEVM.outputsMap["H"] = nH.to_string();
+    z3::expr AH = this->getLatestUpdateForGlobalVar("AH");
+    z3::expr nAH = this->generateLocalVarByName("AH");
+    z3::expr ah0 = this->z3EM->mk_quantified(SLHVVarType::INT_HEAP, "ah");
+    z3::expr idxvar = this->z3EM->mk_quantified(SLHVVarType::INT_DAT);
+    this->feasibleEVM.localVars.insert(nAH.to_string());
+    this->feasibleEVM.localVars.insert(idxvar.to_string());
+    this->feasibleEVM.outputsMap["AH"] = nAH.to_string();
+    assert(act->getArg1()->isVar());
+    const VarExpr* arg1 = (const VarExpr*)act->getArg1(); 
+    z3::expr x = this->getLatestUpdateForGlobalVar(arg1->name());
 
-    const Expr* e = act->getArg1();
-    assert(e->isVar());
-    const VarExpr* var = (const VarExpr*)e;
-    const std::string fableName = "fable_" + var->name(); 
-    z3::expr lt = this->getPreOutputByName(var->name());
-    z3::expr fable = this->getPreOutputByName(fableName);
-    z3::expr fablePrime = this->generateLocalVarByName(fableName);
-    this->localVars.insert(fablePrime.to_string());
-    this->outputs[fableName] = fablePrime.to_string();
-
-    z3::expr invalidDeref = this->getPreOutputByName(BlockEncoding::invalid_deref);
-    z3::expr invalidFree = this->getPreOutputByName(BlockEncoding::invalid_free);
-    z3::expr invalidDerefPrime = this->generateLocalVarByName(BlockEncoding::invalid_deref);
-    z3::expr invalidFreePrime = this->generateLocalVarByName(BlockEncoding::invalid_free);
-    this->localVars.insert(invalidDerefPrime.to_string());
-    this->localVars.insert(invalidFreePrime.to_string());
-    this->outputs[BlockEncoding::invalid_deref] = invalidDerefPrime.to_string();
-    this->outputs[BlockEncoding::invalid_free] = invalidFreePrime.to_string();
-
-    z3::expr invalidFreeSemantic =
-        z3::implies(fable == 0, invalidFreePrime && (fablePrime == 0));
-
-    z3::expr premise = !invalidDeref && !invalidDerefPrime && !invalidFree;
-    z3::expr recordType = this->z3EM->Ctx().bool_val(true);
+    z3::expr allocHeap =
+        (AH == this->z3EM->mk_uplus(ah0, this->z3EM->mk_pto(x, idxvar)))
+        && nAH == ah0;
+    z3::expr recordHeap = this->z3EM->Ctx().bool_val(true);
     for (Record record : this->z3EM->getRecords()) {
-        z3::expr_vector sh = this->generateRecord(lt, record);
-        z3::expr iType = z3::implies(
-            fable == record.getID(),
-            sh[0] && H == z3EM->mk_uplus(h0, sh[1])
+        z3::expr_vector oneRecordHeap = this->generateRecord(record);
+        z3::expr ithRecordHeap = z3::implies(
+            idxvar == record.getID(),
+            H == z3EM->mk_uplus(h0, oneRecordHeap[2]) &&
+            x == oneRecordHeap[0] &&
+            nH == h0
         );
-        CLEAN_Z3EXPR_CONJUNC(recordType, iType);
+        CLEAN_Z3EXPR_CONJUNC(recordHeap, ithRecordHeap);
     }
-    z3::expr memorySafetySemantic = 
-        z3::implies(premise, recordType && (nH == h0) && fablePrime == 0);
+    z3::expr feasibleEC = allocHeap && recordHeap;
 
-    return invalidFreeSemantic && memorySafetySemantic;
+    // invalidDeref : feasibleEC || invalidDeref
+    //          invalidDeref' == invalidDeref (global update)
+    z3::expr invalidDeref = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
+    z3::expr invalidDerefEC = feasibleEC || invalidDeref;
+
+    // invalidFree
+    z3::expr invalidFree =
+        this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
+    z3::expr invalidFreePrime =
+        this->generateLocalVarByName(BlockEncoding::invalid_free);
+    this->invalidFreeEVM.localVars.insert(invalidFreePrime.to_string());
+    this->invalidFreeEVM.outputsMap[BlockEncoding::invalid_free] =
+        invalidFreePrime.to_string();
+    z3::expr ahe = this->z3EM->mk_quantified(SLHVVarType::INT_HEAP, "ah");
+    z3::expr idxvare = this->z3EM->mk_quantified(SLHVVarType::INT_DAT);
+    this->invalidFreeEVM.localVars.insert(ahe.to_string());
+    this->invalidFreeEVM.localVars.insert(idxvare.to_string());
+    
+    z3::expr errorEC =
+        (ahe == this->z3EM->mk_uplus(AH, this->z3EM->mk_pto(x, idxvare)))
+        && invalidFreePrime;
+    z3::expr memSafeEC = feasibleEC && (invalidFreePrime = invalidFree);
+    z3::expr faultTolerantEc =
+        invalidFree && (invalidFreePrime == invalidFree);
+    z3::expr invalidFreeEC = errorEC || memSafeEC || faultTolerantEc;
+
+    z3::expr_vector encoding(z3EM->Ctx());
+    encoding.push_back(feasibleEC);
+    encoding.push_back(invalidDerefEC);
+    encoding.push_back(invalidFreeEC);
+    return encoding;
+}
+
+void BlockEncoding::generateEncoding(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg) {
+    for (RefinedActionPtr act : bptr->getRefStmts()) {
+        if (act->getActType() == ConcreteAction::ActType::OTHER ||
+            act->getActType() == ConcreteAction::ActType::OTHERPROC) continue;
+        // act->print(std::cout);
+        z3::expr_vector actEncodings(z3EM->Ctx());
+        switch (act->getActType()) {
+            case ConcreteAction::ActType::ASSUME:
+                actEncodings = this->generateAssumeEncoding(act);
+                break;
+            case ConcreteAction::ActType::COMMONASSIGN:
+                actEncodings = this->generateAssignEncoding(act);
+                break;
+            case ConcreteAction::ActType::ALLOC:
+            case ConcreteAction::ActType::MALLOC:
+                actEncodings = this->generateAllocAndMallocEncoding(act);
+                break;
+            case ConcreteAction::ActType::LOAD:
+                actEncodings = this->generateLoadEncoding(act);
+                break;
+            case ConcreteAction::ActType::STORE:
+                actEncodings = this->generateStoreEncoding(act);
+                break;
+            case ConcreteAction::ActType::FREE:
+                actEncodings = this->generateFreeEncoding(act);
+                break;
+            default:
+                assert(false && "unsupported command!");
+                break;
+        }
+        assert(actEncodings.size() == 3);
+        CLEAN_Z3EXPR_CONJUNC(this->feasibleEncoding, actEncodings[0]);
+        CLEAN_Z3EXPR_CONJUNC(this->invalidDerefEncoding, actEncodings[1]);
+        CLEAN_Z3EXPR_CONJUNC(this->invalidFreeEncoding, actEncodings[2]);
+        std::cout << " ------------------------------------------------------------\n";
+        act->print(std::cout);
+        std::cout << "\nFeasible encoding : \n" << actEncodings[0] << "\n";
+        std::cout << "\nInvalidDeref encoding : \n" << actEncodings[1] << "\n";
+        std::cout << "\nInvalidFree encoding : \n" << actEncodings[2] << "\n";
+    }
+    this->src = bptr->getVertexId();
+    for (std::pair<int, int> edge : bcfg->getEdges()) {
+        if (bptr->getVertexId() == edge.first) {
+            this->dests.insert(edge.second);
+        }
+    }
+    // this->print(std::cout);
 }
 
 BlockEncoding::BlockEncoding(
     Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr,
-    RefBlockCFGPtr bcfg, VarSetPtr glvptr)
+    RefBlockCFGPtr bcfg)
     : z3EM(z3EM),
-      globalLocVars(glvptr),
-      inputs(), outputs(),
-      localVars(), quantifiedVars(),
-      src(-1), dests(), 
-      encoding(z3EM->Ctx().bool_val(true)) {
+      feasibleEVM(),
+      invalidDerefEVM(),
+      invalidFreeEVM(),
+      feasibleEncoding(z3EM->Ctx().bool_val(true)),
+      invalidDerefEncoding(z3EM->Ctx().bool_val(true)),
+      invalidFreeEncoding(z3EM->Ctx().bool_val(true)),
+      src(-1), dests() {
         this->generateEncoding(bptr, bcfg);
     }
 
 bool BlockEncoding::use_global(std::string var) { 
-    return outputs.find(var) != outputs.end();
+    return this->feasibleEVM.outputsMap.find(var)
+        != this->feasibleEVM.outputsMap.end();
 }
 
-const VarSet& BlockEncoding::getInputs() { return inputs; }
+const BlockEncoding::VarsManager& BlockEncoding::getFeasibleEVM() {
+    return this->feasibleEVM;
+}
 
-const std::map<std::string, std::string>& BlockEncoding::getOutputs() { return outputs; }
+const BlockEncoding::VarsManager& BlockEncoding::getInvalidDerefEVM() {
+    return this->invalidDerefEVM;
+}
 
-const VarSet& BlockEncoding::getLocalVars() { return localVars; }
-
-const VarSet& BlockEncoding::getQuantifiedVars() { return quantifiedVars; }
+const BlockEncoding::VarsManager& BlockEncoding::getInvalidFreeEVM() {
+    return this->invalidFreeEVM;
+}
 
 const int BlockEncoding::getSrc() { return src; }
 
 const std::set<int> BlockEncoding::getDests() { return dests; }
 
-z3::expr BlockEncoding::getEncoding() { return encoding; }
+z3::expr BlockEncoding::getFeasibleEncoding() {
+    return this->feasibleEncoding;
+}
+
+z3::expr BlockEncoding::getInvalidDerefEncoding() {
+    return this->invalidDerefEncoding;
+}
+
+z3::expr BlockEncoding::getInvalidFreeEncoding() {
+    return this->invalidFreeEncoding;
+}
 
 void BlockEncoding::print(std::ostream& OS) {
-    OS << " Inputs: ";
-    for (auto var : inputs) OS << " " << var;
-    OS << std::endl;
-    OS << " Outputs: ";
-    for (auto p : outputs)
-        OS << " (" << p.first << ", " << p.second << ")";
-    OS << std::endl;
-    OS << " Local Variables: ";
-    for (auto var : localVars) OS << " " << var;
-    OS << std::endl;
-    OS << " Quantified Variables : ";
-    for (auto var : quantifiedVars) OS << " " << var;
-    OS << std::endl;
+    OS << "\n================================================================\n";
+    OS << "Feasible Encoding : \n";
+    this->feasibleEVM.print(OS);
+    OS << "Encoding : " << this->feasibleEncoding << '\n';
+    OS << "InvalidDeref Encoding : \n";
+    this->invalidDerefEVM.print(OS);
+    OS << "Encoding : " << this->invalidDerefEncoding << '\n';
+    OS << "InvalidFree Encoding : \n";
+    this->invalidFreeEVM.print(OS);
+    OS << "Encoding : " << this->invalidFreeEncoding << '\n';
     OS << " Src : " << src << '\n';
     OS << " Dests : ";
     for (auto dest : dests) OS << " " << dest;
     OS << std::endl;
-    OS << " Semantic : " << encoding << '\n';
+    OS << "\n================================================================\n";
 }
 
 TREncoder::TREncoder(Z3ExprManagerPtr z3EM, RefBlockCFGPtr bcfg)
     : z3EM(z3EM), bcfg(bcfg),
+      globalHeapVars(std::make_shared<VarSet>()),
       globalLocVars(std::make_shared<VarSet>()),
-      globalFableVars(std::make_shared<VarSet>()),
       globalDataVars(std::make_shared<VarSet>()),
       Trs() { this->init(); }
 
 void TREncoder::initGlobalVars() {
+    this->globalHeapVars->insert("H");
+    this->globalHeapVars->insert("AH");
     for (RefBlockVertexPtr bptr : bcfg->getVertices()) {
         for (RefinedActionPtr act : bptr->getRefStmts()) {
             const Expr* e = act->getArg1();
@@ -674,7 +770,6 @@ void TREncoder::initGlobalVars() {
             const VarExpr* var = (const VarExpr*)e;
             if (var->name()[1] == 'p') {
                 this->globalLocVars->insert(var->name());
-                this->globalFableVars->insert("fable_" + var->name());
             } else {
                 this->globalDataVars->insert(var->name());
             }
@@ -684,11 +779,11 @@ void TREncoder::initGlobalVars() {
 
 void TREncoder::init() {
     this->initGlobalVars();
-    for (RefBlockVertexPtr bptr : bcfg->getVertices()) {
+    for (RefBlockVertexPtr bptr : this->getBlocks()) {
         if (this->Trs.find(bptr->getVertexId()) != this->Trs.end()) continue;
-        BlockEncodingPtr bsp =
-            std::make_shared<BlockEncoding>(z3EM, bptr, bcfg, globalLocVars);
-        this->Trs[bptr->getVertexId()] = bsp;
+        BlockEncodingPtr bep =
+            std::make_shared<BlockEncoding>(z3EM, bptr, bcfg);
+        this->Trs[bptr->getVertexId()] = bep;
     }
     this->print(std::cout);
 }
@@ -713,12 +808,12 @@ std::set<int> TREncoder::getSuccessors(std::set<int> u) {
     return v;
 }
 
-VarSetPtr TREncoder::getGlobalLocVars() {
-    return this->globalLocVars;
+VarSetPtr TREncoder::getGlobalHeapVars() {
+    return this->globalHeapVars;
 }
 
-VarSetPtr TREncoder::getGlobalFableVars() {
-    return this->globalFableVars;
+VarSetPtr TREncoder::getGlobalLocVars() {
+    return this->globalLocVars;
 }
 
 VarSetPtr TREncoder::getGlobalDataVars() {
@@ -734,9 +829,6 @@ void TREncoder::print(std::ostream& OS) {
     OS << "================ Transition Relation Encoding ================\n";
     OS << " Global Location Variable :";
     for (auto var : *globalLocVars) OS << " " << var;
-    OS << "\n";
-    OS << " Global Fable Variable :";
-    for (auto var : *globalFableVars) OS << " " << var;
     OS << "\n";
     OS << " Global Data Variable :";
     for (auto var : *globalDataVars) OS << " " << var;
@@ -757,68 +849,130 @@ z3::expr BMCSLHVVCGen::generateVar(std::string name) {
 }
 
 z3::expr
-BMCSLHVVCGen::generateUnchanged(BlockEncodingPtr bsp, VarSetPtr globalVars, const int k) {
-    z3::expr unchangedSemantic = this->z3EM->Ctx().bool_val(true);
+BMCSLHVVCGen::generateUnchanged(BlockEncodingPtr bep, VarSetPtr globalVars, const int k) {
+    z3::expr unchangedEncoding = this->z3EM->Ctx().bool_val(true);
     for (auto var : *globalVars) {
-        if (bsp->use_global(var)) continue;
+        if (bep->use_global(var)) continue;
         z3::expr lastStepVar = this->generateVar(var + "_" + std::to_string(k - 1));
         z3::expr kthStepVar = this->generateVar(var + "_" + std::to_string(k));
-        unchangedSemantic= unchangedSemantic& (lastStepVar == kthStepVar);
+        unchangedEncoding= unchangedEncoding& (lastStepVar == kthStepVar);
     }
-    return unchangedSemantic;
+    return unchangedEncoding;
 }
 
-z3::expr BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k) {
-    BlockEncodingPtr bsp = this->TrEncoder->getBlockEncoding(bptr->getVertexId());
+z3::expr
+BMCSLHVVCGen::generateUnchangedInvalid(BlockEncodingPtr bep, SLHVBuggyType bty, const int k) {
+    if (bty == SLHVBuggyType::MEMLEAK) {
+        return this->z3EM->Ctx().bool_val(true);
+    }
+    const BlockEncoding::VarsManager& vm
+        = (bty == SLHVBuggyType::INVALIDDEREF ?
+            bep->getInvalidDerefEVM() : bep->getInvalidFreeEVM());
+    std::string invalidName;
+    if (bty == SLHVBuggyType::INVALIDDEREF) {
+        invalidName = BlockEncoding::invalid_deref;
+    } else {
+        invalidName = BlockEncoding::invalid_free;
+    }
+    if (vm.outputsMap.find(invalidName) != vm.outputsMap.end()) {
+        return this->z3EM->Ctx().bool_val(true);
+    }
+    z3::expr latestLocalVar =
+        this->generateVar(invalidName + "_" + std::to_string(k - 1));
+    z3::expr kthStepInvalid =
+        this->generateVar(invalidName + "_" + std::to_string(k));
+    return latestLocalVar == kthStepInvalid;
+}
+
+z3::expr
+BMCSLHVVCGen::generateOutputs(const BlockEncoding::VarsManager& vm, const int k) {
+    z3::expr sub = this->z3EM->Ctx().bool_val(true);
+    for (auto globalVarSubPair : vm.outputsMap) {
+        assert(globalVarSubPair.first != globalVarSubPair.second);
+        z3::expr latestLocalVar =
+            this->generateVar(globalVarSubPair.second + "_" + std::to_string(k));
+        z3::expr kthStepVar =
+            this->generateVar(globalVarSubPair.first + "_" + std::to_string(k));
+        z3::expr varSub = (kthStepVar == latestLocalVar);
+        CLEAN_Z3EXPR_CONJUNC(sub, varSub);
+    }
+    return sub;
+}
+
+z3::expr
+BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k, SLHVBuggyType bty) {
+    BlockEncodingPtr bep = this->TrEncoder->getBlockEncoding(bptr->getVertexId());
     z3::expr vc(z3EM->Ctx());
     z3::expr premise =
-        z3EM->mk_data("loc_" + std::to_string(k - 1)) == bsp->getSrc();
+        z3EM->mk_data("loc_" + std::to_string(k - 1)) == bep->getSrc();
     z3::expr implicant(z3EM->Ctx());
     // block encoding substitution
     z3::expr_vector src(z3EM->Ctx());
     z3::expr_vector dst(z3EM->Ctx());
-    src.push_back(this->generateVar("H"));
-    dst.push_back(this->generateVar("H_" + std::to_string(k - 1)));
     // Inputs are used to connect some global variables updated by last step 
-    for (auto var : bsp->getInputs()) {
+    for (auto var : bep->getFeasibleEVM().inputVars) {
         src.push_back(this->generateVar(var));
         dst.push_back(this->generateVar(var + "_" + std::to_string(k - 1)));
     }
-    // Local and quantified variables are fresh, just add a tag "_k"
-    for (auto var : bsp->getLocalVars()) {
+    // Quantified(Local) variables are fresh, just add a tag "_k"
+    for (auto var : bep->getFeasibleEVM().localVars) {
         src.push_back(this->generateVar(var));
         dst.push_back(this->generateVar(var + "_" + std::to_string(k)));
     }
-    for (auto var : bsp->getQuantifiedVars()) {
-        src.push_back(this->generateVar(var));
-        dst.push_back(this->generateVar(var + "_" + std::to_string(k)));
+    // Buggy Varialbes Substitution
+    if (bty != SLHVBuggyType::MEMLEAK) {
+        const BlockEncoding::VarsManager& buggyEVM
+            = (bty == SLHVBuggyType::INVALIDDEREF ?
+                bep->getInvalidDerefEVM() : bep->getInvalidFreeEVM());
+        for (auto var : buggyEVM.inputVars) {
+            src.push_back(this->generateVar(var));
+            dst.push_back(this->generateVar(var + "_" + std::to_string(k - 1)));
+        }
+        for (auto var : buggyEVM.localVars) {
+            src.push_back(this->generateVar(var));
+            dst.push_back(this->generateVar(var + "_" + std::to_string(k)));
+        }
     }
-    implicant = bsp->getEncoding().substitute(src, dst);
+
+    z3::expr blockEncoding(this->z3EM->Ctx());
+    if (bty == SLHVBuggyType::INVALIDDEREF) {
+        blockEncoding = bep->getInvalidDerefEncoding();
+    } else if (bty == SLHVBuggyType::INVALIDFREE) {
+        blockEncoding = bep->getInvalidFreeEncoding();
+    } else {
+        blockEncoding = bep->getFeasibleEncoding();
+    }
+
+    implicant = blockEncoding.substitute(src, dst);
     // Outputs contains those global variables that are update by current
     // step. For each pair (u, v), "v" is the local variables that conveys
     // the changes of original global variable "u"
-    for (auto globalVarSubPair : bsp->getOutputs()) {
-        assert(globalVarSubPair.first != globalVarSubPair.second);
-        z3::expr lastStepVar =
-            this->generateVar(globalVarSubPair.second + "_" + std::to_string(k));
-        z3::expr kthStepVar =
-            this->generateVar(globalVarSubPair.first + "_" + std::to_string(k));
-        implicant = implicant && (lastStepVar == kthStepVar);
+    z3::expr feasibleOutputs = this->generateOutputs(bep->getFeasibleEVM(), k);
+    z3::expr buggyOutputs = this->z3EM->Ctx().bool_val(true);
+    if (bty == SLHVBuggyType::INVALIDDEREF) {
+        buggyOutputs = this->generateOutputs(bep->getInvalidDerefEVM(), k);
+    } else if (bty == SLHVBuggyType::INVALIDFREE) {
+        buggyOutputs = this->generateOutputs(bep->getInvalidDerefEVM(), k);
     }
+    z3::expr outputsEncoding = feasibleOutputs && buggyOutputs;
+    CLEAN_Z3EXPR_CONJUNC(implicant, outputsEncoding);
+
     // Generate unchanged global variables encoding
+    z3::expr unchangedHeap =
+        this->generateUnchanged(bep, this->TrEncoder->getGlobalHeapVars(), k);
     z3::expr unchangedLoc =
-        this->generateUnchanged(bsp, this->TrEncoder->getGlobalLocVars(), k);
-    z3::expr unchangedFable =
-        this->generateUnchanged(bsp, this->TrEncoder->getGlobalFableVars(), k);
+        this->generateUnchanged(bep, this->TrEncoder->getGlobalLocVars(), k);
     z3::expr unchangedData =
-        this->generateUnchanged(bsp, this->TrEncoder->getGlobalDataVars(), k);
+        this->generateUnchanged(bep, this->TrEncoder->getGlobalDataVars(), k);
+    z3::expr unchangedInvalid = this->generateUnchangedInvalid(bep, bty, k);
+    CLEAN_Z3EXPR_CONJUNC(implicant, unchangedHeap);
     CLEAN_Z3EXPR_CONJUNC(implicant, unchangedLoc);
-    CLEAN_Z3EXPR_CONJUNC(implicant, unchangedFable);
     CLEAN_Z3EXPR_CONJUNC(implicant, unchangedData);
+    CLEAN_Z3EXPR_CONJUNC(implicant, unchangedInvalid);
 
     // Dests
     z3::expr dests = z3EM->Ctx().bool_val(true);
-    for (auto dest : bsp->getDests()) {
+    for (auto dest : bep->getDests()) {
         if (dests.is_true()) {
             dests = z3EM->mk_data("loc_" + std::to_string(k)) == dest;
         } else {
@@ -829,39 +983,36 @@ z3::expr BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k) {
     return z3::implies(premise, implicant);
 }
 
-z3::expr BMCSLHVVCGen::generateInitVC() {
-    z3::expr initHeap = z3EM->mk_heap("H_0") == z3EM->mk_heap("emp");
-    z3::expr initLoc = z3EM->Ctx().bool_val(true);
-    z3::expr loc0 = z3EM->mk_data("loc_0");
+z3::expr BMCSLHVVCGen::generateInitVC(SLHVBuggyType bty) {
+    z3::expr initHeap = this->z3EM->mk_heap("H_0") == z3EM->mk_heap("emp");
+    z3::expr initAllocHeap = this->z3EM->mk_heap("AH_0") == z3EM->mk_heap("emp");
+    z3::expr initLoc = this->z3EM->Ctx().bool_val(true);
+    z3::expr loc0 = this->z3EM->mk_data("loc_0");
     for (auto b : this->TrEncoder->getInitialStates()) {
         CLEAN_Z3EXPR_CONJUNC(initLoc, (loc0 == b));
     }
-    z3::expr invalidDeref = z3EM->mk_bool(BlockEncoding::invalid_deref + "_0");
-    z3::expr invalidFree = z3EM->mk_bool(BlockEncoding::invalid_free + "_0");
-    return initHeap && initLoc && !invalidDeref && !invalidFree;
+    z3::expr init =initHeap && initAllocHeap && initLoc;
+    if (bty == SLHVBuggyType::INVALIDDEREF)
+        return init && !this->z3EM->mk_bool(BlockEncoding::invalid_deref + "_0");
+    else if (bty == SLHVBuggyType::INVALIDFREE)
+        return init && !z3EM->mk_bool(BlockEncoding::invalid_free + "_0");
+    return init;
 }
 
-z3::expr BMCSLHVVCGen::generateOneStepVC(int k, const std::set<int>& blocks) {
+z3::expr
+BMCSLHVVCGen::generateOneStepVC(int k, const std::set<int>& blocks, SLHVBuggyType bty) {
     assert(k > 0);
     z3::expr vc = z3EM->Ctx().bool_val(true);
     for (RefBlockVertexPtr bptr : this->TrEncoder->getBlocks()) {
         if (blocks.find(bptr->getVertexId()) == blocks.end()) continue;
-        z3::expr bvc = this->generateOneStepBlockVC(bptr, k);
-        CLEAN_Z3EXPR_CONJUNC(vc, bvc);
+        z3::expr blockVC = this->generateOneStepBlockVC(bptr, k, bty);
+        CLEAN_Z3EXPR_CONJUNC(vc, blockVC);
     }
     return vc;
 }
 
-BMCSLHVVCGen::BMCSLHVVCGen(RefBlockCFGPtr bcfg, RecordManagerPtr rm)
-    : z3EM(std::make_shared<Z3ExprManager>()) {
-    for (auto p : rm->getRecordMap())
-        z3EM->addRecord(p.second);
-    z3EM->print(std::cout);
-    TrEncoder = std::make_shared<TREncoder>(z3EM, bcfg);
-}
-
-z3::expr BMCSLHVVCGen::generateVC(int k) {
-    z3::expr phiInit = this->generateInitVC();
+z3::expr BMCSLHVVCGen::generateVC(const int k, SLHVBuggyType bty) {
+    z3::expr phiInit = this->generateInitVC(bty);
     std::set<int> reachableBlocks;
     for (int u : this->TrEncoder->getInitialStates()) {
         reachableBlocks.insert(u);
@@ -870,32 +1021,56 @@ z3::expr BMCSLHVVCGen::generateVC(int k) {
     z3::expr phiBuggy = this->z3EM->Ctx().bool_val(false);
     z3::expr phiTr = phiInit;
     for (int i = 1; i <= k; i++) {
-        if (i > 2) reachableBlocks = this->TrEncoder->getSuccessors(reachableBlocks);
-        if (reachableBlocks.empty()) break;
-        phiTr = phiTr && this->generateOneStepVC(i, reachableBlocks);
-
-        z3::expr invalidDeref =
-            z3EM->mk_bool(BlockEncoding::invalid_deref + "_" + std::to_string(i));
-        z3::expr invalidFree =
-            z3EM->mk_bool(BlockEncoding::invalid_free + "_" + std::to_string(i));
-        z3::expr memoryLeak(z3EM->Ctx());
-        if (finalBlocks.empty()) {
-            memoryLeak = z3EM->Ctx().bool_val(false);
-        } else {
-            z3::expr locatesOnFinalBlocks = z3EM->Ctx().bool_val(false);
-            for (int u : finalBlocks) {
-                z3::expr locatesOnU = (z3EM->mk_data("loc_" + std::to_string(i)) == u);
-                CLEAN_Z3EXPR_DISJUNC(locatesOnFinalBlocks, locatesOnU);
-            }
-            z3::expr leakHeap = (z3EM->mk_heap("H_" + std::to_string(i)) == z3EM->mk_heap("emp"));
-            memoryLeak = locatesOnFinalBlocks && leakHeap;
+        if (i > 2) {
+            reachableBlocks = this->TrEncoder->getSuccessors(reachableBlocks);
         }
-        z3::expr ithStepBuggyEncoding = invalidDeref || invalidFree;
-        CLEAN_Z3EXPR_DISJUNC(ithStepBuggyEncoding, memoryLeak);
+        if (reachableBlocks.empty())  { break; }
+        phiTr = phiTr && this->generateOneStepVC(i, reachableBlocks, bty);
 
+        z3::expr ithStepBuggyEncoding(this->z3EM->Ctx());
+        if (bty == SLHVBuggyType::INVALIDDEREF) {
+            ithStepBuggyEncoding = this->z3EM
+                ->mk_bool(BlockEncoding::invalid_deref + "_" + std::to_string(i));
+        } else if (bty == SLHVBuggyType::INVALIDFREE) {
+            ithStepBuggyEncoding = this->z3EM
+                ->mk_bool(BlockEncoding::invalid_free + "_" + std::to_string(i));
+        } else {
+            if (finalBlocks.empty()) {
+                ithStepBuggyEncoding = this->z3EM->Ctx().bool_val(false);
+            } else {
+                z3::expr locatesOnFinalBlocks = z3EM->Ctx().bool_val(false);
+                for (int u : finalBlocks) {
+                    z3::expr locatesOnU = 
+                        (z3EM->mk_data("loc_" + std::to_string(i)) == u);
+                    CLEAN_Z3EXPR_DISJUNC(locatesOnFinalBlocks, locatesOnU);
+                }
+                z3::expr ithHeap = this->z3EM->mk_heap("H_" + std::to_string(i));
+                z3::expr ithAllocHeap = this->z3EM->mk_heap("AH_" + std::to_string(i));
+                z3::expr empHeap = this->z3EM->mk_heap("emp");
+                ithStepBuggyEncoding =
+                    locatesOnFinalBlocks
+                    && (ithHeap == empHeap) && (ithAllocHeap == empHeap);
+            }
+        }
         CLEAN_Z3EXPR_DISJUNC(phiBuggy, phiTr && ithStepBuggyEncoding);
     }
     return phiBuggy;
+}
+
+BMCSLHVVCGen::BMCSLHVVCGen(RefBlockCFGPtr bcfg, RecordManagerPtr rm)
+    : z3EM(std::make_shared<Z3ExprManager>()) {
+    rm->print(std::cout);
+    for (auto p : rm->getRecordMap())
+        z3EM->addRecord(p.second);
+    TrEncoder = std::make_shared<TREncoder>(z3EM, bcfg);
+}
+
+z3::expr_vector BMCSLHVVCGen::generateVC(int k) {
+    z3::expr_vector vcSet(this->z3EM->Ctx());
+    vcSet.push_back(this->generateVC(k, SLHVBuggyType::INVALIDDEREF));
+    vcSet.push_back(this->generateVC(k, SLHVBuggyType::INVALIDFREE));
+    vcSet.push_back(this->generateVC(k, SLHVBuggyType::MEMLEAK));
+    return vcSet;
 }
 
 void BMCSLHVVCGen::generateSMT2(z3::expr e, std::string filename) {

@@ -35,7 +35,7 @@ private:
     std::vector<Record> records;
 
     std::map<std::string, int> freshVarsCounts;
-    int qlc, qhc, qdc;
+    int qhc, qahc, qlc, qdc;
 
     inline std::shared_ptr<z3::func_decl> decl_datatype(SLHVVarType slhvVarType);
     inline std::string decl_hvar(std::string var);
@@ -61,7 +61,7 @@ public:
     z3::expr mk_locadd(z3::expr l1, z3::expr l2);
 
     z3::expr mk_fresh(std::string var, SLHVVarType varType);
-    z3::expr mk_quantified(SLHVVarType varType);
+    z3::expr mk_quantified(SLHVVarType varType, std::string pre = "");
 
     std::string to_smt2(z3::expr e);
 
@@ -77,50 +77,61 @@ DEFINE_PTR_TYPE(VarSet);
 class BlockEncoding {
 
 public:
+    struct VarsManager {
+        // inputVars  - connect the output variables in last step
+        // localVars  - quantified variables, some of which are used 
+        //              for passing change of global variables
+        // outputsMap - recording the last change of global variables
+        VarSet inputVars;
+        VarSet localVars;
+        std::map<std::string, std::string> outputsMap;
+        
+        void print(std::ostream& OS);
+    };
+
     static const std::string invalid_deref;
     static const std::string invalid_free;
 
 private:
-
     Z3ExprManagerPtr z3EM;
-    VarSetPtr globalLocVars;
 
-    VarSet inputs;
-    VarSet localVars;
-    VarSet quantifiedVars;
-    std::map<std::string, std::string> outputs;
+    VarsManager feasibleEVM;
+    VarsManager invalidDerefEVM;
+    VarsManager invalidFreeEVM;
+    z3::expr feasibleEncoding;
+    z3::expr invalidDerefEncoding;
+    z3::expr invalidFreeEncoding;
+    
     int src;
     std::set<int> dests;
-    z3::expr encoding;
 
-    z3::expr getPreOutput(std::string name, SLHVVarType vt);
-    z3::expr getPreOutputByName(std::string name);
-
-    void generateEncoding(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg);
+    z3::expr getLatestUpdateForGlobalVar(std::string name);
     z3::expr generateLocalVarByName(std::string name);
     z3::expr generateBinExpr(const BinExpr* e);
     z3::expr generateExpr(const Expr* e);
-    z3::expr_vector generateRecord(z3::expr lt, Record& record);
-    z3::expr generateFablePassing(const VarExpr* var, z3::expr pt);
-    z3::expr generateAssignEncoding(RefinedActionPtr act);
-    z3::expr generateAssumeEncoding(RefinedActionPtr act);
-    z3::expr generateAllocAndMallocEncoding(RefinedActionPtr act);
-    z3::expr generateLoadEncoding(RefinedActionPtr act);
-    z3::expr generateStoreEncoding(RefinedActionPtr act);
-    z3::expr generateFreeEncoding(RefinedActionPtr act);
+    z3::expr_vector generateRecord(Record& record);
+    // z3::expr generateFablePassing(const VarExpr* var, z3::expr pt);
+    z3::expr_vector generateAssignEncoding(RefinedActionPtr act);
+    z3::expr_vector generateAssumeEncoding(RefinedActionPtr act);
+    z3::expr_vector generateAllocAndMallocEncoding(RefinedActionPtr act);
+    z3::expr_vector generateLoadEncoding(RefinedActionPtr act);
+    z3::expr_vector generateStoreEncoding(RefinedActionPtr act);
+    z3::expr_vector generateFreeEncoding(RefinedActionPtr act);
+    void generateEncoding(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg);
 
 public:
-    BlockEncoding(Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg, VarSetPtr globalLocVars);
+    BlockEncoding(Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg);
     
     inline bool use_global(std::string var);
 
-    const VarSet& getInputs();
-    const std::map<std::string, std::string>& getOutputs();
-    const VarSet& getLocalVars();
-    const VarSet& getQuantifiedVars();
+    const VarsManager& getFeasibleEVM();
+    const VarsManager& getInvalidDerefEVM();
+    const VarsManager& getInvalidFreeEVM();
     const int getSrc();
     const std::set<int> getDests();
-    z3::expr getEncoding();
+    z3::expr getFeasibleEncoding();
+    z3::expr getInvalidDerefEncoding();
+    z3::expr getInvalidFreeEncoding();
 
     void print(std::ostream& OS);
 };
@@ -133,8 +144,8 @@ private:
     Z3ExprManagerPtr z3EM;
     RefBlockCFGPtr bcfg;
     
+    VarSetPtr globalHeapVars;
     VarSetPtr globalLocVars;
-    VarSetPtr globalFableVars;
     VarSetPtr globalDataVars;
     std::map<int, BlockEncodingPtr> Trs;
 
@@ -149,8 +160,8 @@ public:
     std::list<int> getFinalBlocks();
     std::set<int> getSuccessors(std::set<int> u);
 
+    VarSetPtr getGlobalHeapVars();
     VarSetPtr getGlobalLocVars();
-    VarSetPtr getGlobalFableVars();
     VarSetPtr getGlobalDataVars();
     BlockEncodingPtr getBlockEncoding(int b);
         
@@ -159,6 +170,8 @@ public:
 
 DEFINE_PTR_TYPE(TREncoder);
 
+enum SLHVBuggyType { INVALIDDEREF, INVALIDFREE, MEMLEAK };
+
 class BMCSLHVVCGen {
 
 private:
@@ -166,15 +179,18 @@ private:
     TREncoderPtr TrEncoder;
     
     inline z3::expr generateVar(std::string name);
-    z3::expr generateUnchanged(BlockEncodingPtr bsp, VarSetPtr globalVars, const int k);
-    z3::expr generateOneStepBlockVC(RefBlockVertexPtr bptr, int k);
-    z3::expr generateInitVC();
-    z3::expr generateOneStepVC(int k, const std::set<int>& blocks);
+    z3::expr generateUnchanged(BlockEncodingPtr bep, VarSetPtr globalVars, const int k);
+    z3::expr generateUnchangedInvalid(BlockEncodingPtr bep, SLHVBuggyType bty, const int k);
+    z3::expr generateOutputs(const BlockEncoding::VarsManager& vm, const int k);
+    z3::expr generateOneStepBlockVC(RefBlockVertexPtr bptr, int k, SLHVBuggyType bty);
+    z3::expr generateInitVC(SLHVBuggyType bty);
+    z3::expr generateOneStepVC(int k, const std::set<int>& blocks, SLHVBuggyType bty);
+    z3::expr generateVC(const int k, SLHVBuggyType bty);
 
 public:
     BMCSLHVVCGen(RefBlockCFGPtr bcfg, RecordManagerPtr rm);
 
-    z3::expr generateVC(int k);
+    z3::expr_vector generateVC(int k);
     void generateSMT2(z3::expr e, std::string filename);
 
 };

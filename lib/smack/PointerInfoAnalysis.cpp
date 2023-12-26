@@ -21,23 +21,38 @@ std::string PointerInfo::getPto() {
     return type.substr(0, type.size() - 1);
 }
 
+std::string PointerInfoManager::find(const std::string& pt) {
+    if (this->unionSet.find(pt) == this->unionSet.end()) {
+        this->unionSet[pt] = pt;
+    }
+    return this->unionSet.at(pt) == pt ? pt
+        : this->unionSet[pt] = this->find(this->unionSet.at(pt));
+}
+
 void PointerInfoManager::add(std::string pt, PointerInfo pointerInfo) {
     assert(!this->contains(pt));
     pointerInfoMap[pt] = pointerInfo;
+    this->unionSet[pt] = pt;
 }
 
 void PointerInfoManager::update(std::string pt, PointerInfo pointerInfo) {
     assert(this->contains(pt));
-    pointerInfoMap[pt] = pointerInfo;
+    pointerInfoMap[this->find(pt)] = pointerInfo;
 }
 
 bool PointerInfoManager::contains(std::string pt) {
-    return pointerInfoMap.find(pt) != pointerInfoMap.end();
+    return this->unionSet.find(pt) != this->unionSet.end();
+}
+
+void PointerInfoManager::setEq(const std::string& pt1, const std::string& pt2) {
+    std::string rt1 = this->find(pt1);
+    std::string rt2 = this->find(pt2);
+    this->unionSet[rt2] = rt1;
 }
 
 PointerInfo PointerInfoManager::get(std::string pt) {
-    if (!this->contains(pt)) return PointerInfo();
-    return pointerInfoMap[pt];
+    assert(this->contains(pt));
+    return pointerInfoMap[this->find(pt)];
 }
 
 PointerInfo PointerInfoManager::getInfoByPtrVar(std::string var) {
@@ -66,36 +81,6 @@ PointerInfoManagerPtr PIMSet::getPIM(std::string func) {
 PointerInfoManagerPtr PIMSet::getPIMByPtrVar(std::string pt) {
     std::string func = pt.substr(0, pt.size() - 1).substr(pt.find('_') + 1);
     return this->getPIM(func);
-}
-
-
-
-void PointerEqManager::add(std::string& pt) {
-    if (idx.find(pt) != idx.end()) return;
-    idx[pt] = Id++;
-    pointerEqSets.push_back(PointerEqSet());
-    pointerEqSets.back().insert(pt);
-    primePt[idx[pt]] = pt;
-}
-
-void PointerEqManager::setEq(std::string& pt1, std::string& pt2) {
-    assert(this->contains(pt1) && !this->contains(pt2));
-    idx[pt2] = idx[pt1];
-    pointerEqSets[idx[pt1]].insert(pt2);
-}
-
-bool PointerEqManager::contains(std::string& pt) {
-    return idx.find(pt) != idx.end();
-}
-
-std::string PointerEqManager::getPrimePt(std::string pt) {
-    assert(this->contains(pt));
-    return primePt[idx[pt]];
-}
-
-PointerEqSet PointerEqManager::getPointerEqSet(std::string pt) {
-  assert(contains(pt));
-  return pointerEqSets[idx[pt]];
 }
 
 Record::Record(int id, int w, FieldsTypes f)
@@ -135,6 +120,22 @@ Record& RecordManager::getRecord(std::string name) {
 // }
 
 const RecordMap& RecordManager::getRecordMap() { return recordMap; }
+
+void RecordManager::print(std::ostream& OS) {
+    OS << "========================== Records ===================================\n";
+    OS << "Number : " << this->recordMap.size() << '\n';
+    for (auto p : this->recordMap) {
+        OS << "  Name : " << p.first << '\n';
+        OS << "  ID - " << p.second.getID()
+            << " | ByteWidth - " << p.second.getFieldByteWidth() << '\n';
+        OS << "  FieldTypes : ";
+        for (auto ty : p.second.getFieldsTypes()) {
+            OS << (ty == SLHVVarType::INT_DAT ? " Dat" : " Loc");
+        }
+        OS << '\n';
+    }
+    OS << "========================== Records ===================================\n";
+}
 
 // std::string PointerInfoAnalysis::removeOpaque(std::string type) {
 //     if (type.find("struct") == std::string::npos) return type;
@@ -192,7 +193,6 @@ void PointerInfoAnalysis::init(llvm::Function* F) {
         std::string vname = naming->get(*arg);
         llvm::Type* ltype = arg->getType();
         if (!ltype->isPointerTy()) continue;
-        pointerEqManager->add(vname);
         PointerInfo pinfo;
         pinfo.setType(PointerInfoAnalysis::getPointerType(ltype));
         pointerInfoManager->add(vname, pinfo);
@@ -215,7 +215,6 @@ void PointerInfoAnalysis::visitAllocaInst(llvm::AllocaInst &I) {
     assert(naming->hasName(I));
     std::string vname = naming->get(I);
     llvm::errs() << vname << '\n';
-    pointerEqManager->add(vname);
 
     PointerInfo pinfo;
     pinfo.setType(PointerInfoAnalysis::getPointerType(I.getType()));
@@ -230,22 +229,21 @@ void PointerInfoAnalysis::visitBitCastInst(llvm::BitCastInst &I) {
     assert(naming->hasName(I));
     std::string dstPt = naming->get(I);
     llvm::errs() << dstPt << '\n';
-    
+
     llvm::Value* srcIR = I.getOperand(0);
     assert(naming->hasName(*srcIR));
     std::string srcPt = naming->get(*srcIR);
-    if (!pointerEqManager->contains(srcPt)) return;
-    pointerEqManager->setEq(srcPt, dstPt);
+    if (!srcIR->getType()->isPointerTy()) return;
+    this->pointerInfoManager->setEq(srcPt, dstPt);
 
-    std::string primePt = pointerEqManager->getPrimePt(srcPt);
     std::string srcPtType = PointerInfoAnalysis::getPointerType(I.getSrcTy());
     std::string dstPtType = PointerInfoAnalysis::getPointerType(I.getDestTy());
     
     if (PointerInfoAnalysis::compareType(srcPtType, dstPtType)) {
         PointerInfo pinfo(dstPtType);
-        pointerInfoManager->update(primePt, pinfo);
+        this->pointerInfoManager->update(dstPt, pinfo);
     }
-    llvm::errs() << pointerInfoManager->get(primePt) << "\n";
+    llvm::errs() << this->pointerInfoManager->get(dstPt) << "\n";
 }
 
 void PointerInfoAnalysis::visitCallInst(llvm::CallInst &I) {
@@ -257,7 +255,6 @@ void PointerInfoAnalysis::visitCallInst(llvm::CallInst &I) {
     if (!naming->hasName(I)) return;
     std::string vname = naming->get(I);
     llvm::errs() << vname << '\n';
-    pointerEqManager->add(vname);
 
     if (func->getName() == "malloc") {
         PointerInfo pinfo;

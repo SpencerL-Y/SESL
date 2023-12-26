@@ -149,9 +149,13 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   refBlockCFG->printRefBlockCFG(std::cout);
 
   BMCSLHVVCGen vcGen(refBlockCFG, recordManager);
-  z3::expr vc = vcGen.generateVC(1);
-  std::cout << vc << std::endl;
-  vcGen.generateSMT2(vc, "../bin/out.smt2");
+  z3::expr_vector vcSet = vcGen.generateVC(1);
+  std::cout << vcSet[0] << std::endl;
+  // std::cout << vcSet[1] << std::endl;
+  // std::cout << vcSet[2] << std::endl;
+  vcGen.generateSMT2(vcSet[0], "../bin/invalidDeref.smt2");
+  vcGen.generateSMT2(vcSet[1], "../bin/invalidFree.smt2");
+  vcGen.generateSMT2(vcSet[2], "../bin/invalidMemLeak.smt2");
 
   return false;
 }

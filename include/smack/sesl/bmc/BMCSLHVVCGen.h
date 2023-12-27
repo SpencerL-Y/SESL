@@ -101,34 +101,28 @@ private:
     z3::expr feasibleEncoding;
     z3::expr invalidDerefEncoding;
     z3::expr invalidFreeEncoding;
-    
-    int src;
-    std::set<int> dests;
 
     z3::expr getLatestUpdateForGlobalVar(std::string name);
     z3::expr generateLocalVarByName(std::string name);
     z3::expr generateBinExpr(const BinExpr* e);
     z3::expr generateExpr(const Expr* e);
     z3::expr_vector generateRecord(Record& record);
-    // z3::expr generateFablePassing(const VarExpr* var, z3::expr pt);
     z3::expr_vector generateAssignEncoding(RefinedActionPtr act);
     z3::expr_vector generateAssumeEncoding(RefinedActionPtr act);
     z3::expr_vector generateAllocAndMallocEncoding(RefinedActionPtr act);
     z3::expr_vector generateLoadEncoding(RefinedActionPtr act);
     z3::expr_vector generateStoreEncoding(RefinedActionPtr act);
     z3::expr_vector generateFreeEncoding(RefinedActionPtr act);
-    void generateEncoding(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg);
+    void generateEncoding(RefinedEdgePtr edge);
 
 public:
-    BlockEncoding(Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg);
+    BlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge);
     
     inline bool use_global(std::string var);
 
     const VarsManager& getFeasibleEVM();
     const VarsManager& getInvalidDerefEVM();
     const VarsManager& getInvalidFreeEVM();
-    const int getSrc();
-    const std::set<int> getDests();
     z3::expr getFeasibleEncoding();
     z3::expr getInvalidDerefEncoding();
     z3::expr getInvalidFreeEncoding();
@@ -142,28 +136,28 @@ class TREncoder {
 
 private:
     Z3ExprManagerPtr z3EM;
-    RefBlockCFGPtr bcfg;
+    BMCRefinedCFGPtr refinedCFG;
     
     VarSetPtr globalHeapVars;
     VarSetPtr globalLocVars;
     VarSetPtr globalDataVars;
-    std::map<int, BlockEncodingPtr> Trs;
+    std::map<RefinedEdgePtr, BlockEncodingPtr> Trs;
 
     void initGlobalVars();
     void init();
 
 public:
-    TREncoder(Z3ExprManagerPtr z3EM, RefBlockCFGPtr bcfg);
-    
-    std::list<RefBlockVertexPtr> getBlocks();
-    std::list<int> getInitialStates();
-    std::list<int> getFinalBlocks();
+    TREncoder(Z3ExprManagerPtr z3EM, BMCRefinedCFGPtr refinedCFG);
+
+    std::set<int> getInitialLocations();
+    std::set<int> getFinalLocations();
     std::set<int> getSuccessors(std::set<int> u);
+    std::list<RefinedEdgePtr> getEdges();
 
     VarSetPtr getGlobalHeapVars();
     VarSetPtr getGlobalLocVars();
     VarSetPtr getGlobalDataVars();
-    BlockEncodingPtr getBlockEncoding(int b);
+    BlockEncodingPtr getBlockEncoding(RefinedEdgePtr e);
         
     void print(std::ostream& OS);
 };
@@ -182,13 +176,13 @@ private:
     z3::expr generateUnchanged(BlockEncodingPtr bep, VarSetPtr globalVars, const int k);
     z3::expr generateUnchangedInvalid(BlockEncodingPtr bep, SLHVBuggyType bty, const int k);
     z3::expr generateOutputs(const BlockEncoding::VarsManager& vm, const int k);
-    z3::expr generateOneStepBlockVC(RefBlockVertexPtr bptr, int k, SLHVBuggyType bty);
+    z3::expr generateOneStepBlockVC(RefinedEdgePtr edge, int k, SLHVBuggyType bty);
     z3::expr generateInitVC(SLHVBuggyType bty);
-    z3::expr generateOneStepVC(int k, const std::set<int>& blocks, SLHVBuggyType bty);
+    z3::expr generateOneStepVC(int k, const std::set<int>& locations, SLHVBuggyType bty);
     z3::expr generateVC(const int k, SLHVBuggyType bty);
 
 public:
-    BMCSLHVVCGen(RefBlockCFGPtr bcfg, RecordManagerPtr rm);
+    BMCSLHVVCGen(BMCRefinedCFGPtr refinedCFG, RecordManagerPtr rm);
 
     z3::expr_vector generateVC(int k);
     void generateSMT2(z3::expr e, std::string filename);

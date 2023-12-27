@@ -389,12 +389,12 @@ z3::expr_vector BlockEncoding::generateAssignEncoding(RefinedActionPtr act) {
         feasibleEC = (rhs && lhs == 1) || (!rhs && lhs == 0);
     }
 
-    // invalid : (feasibleEC /\ !invalid) \/ invalid
+    // invalid : feasibleEC || invalid
     //           invalid' = invalid (global update)
     z3::expr invalidDeref = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
-    z3::expr invalidDerefEC = (feasibleEC && !invalidDeref) || invalidDeref;
+    z3::expr invalidDerefEC = feasibleEC || invalidDeref;
     z3::expr invalidFree = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
-    z3::expr invalidFreeEC = (feasibleEC && !invalidFree) || invalidFree;
+    z3::expr invalidFreeEC = feasibleEC || invalidFree;
 
     z3::expr_vector encoding(z3EM->Ctx());
     encoding.push_back(feasibleEC);
@@ -408,12 +408,12 @@ z3::expr_vector BlockEncoding::generateAssumeEncoding(RefinedActionPtr act) {
     
     z3::expr feasibleEC = this->generateExpr(act->getArg3());
 
-    // invalid : (feasibleEC && !invalid) || invalid
+    // invalid : feasibleEC || invalid
     //           invalid' = invalid (global update)
     z3::expr invalidDeref = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
-    z3::expr invalidDerefEC = (feasibleEC && !invalidDeref) || invalidDeref;
+    z3::expr invalidDerefEC = feasibleEC || invalidDeref;
     z3::expr invalidFree = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
-    z3::expr invalidFreeEC = (feasibleEC && !invalidFree) || invalidFree;
+    z3::expr invalidFreeEC = feasibleEC || invalidFree;
     
     z3::expr_vector encoding(z3EM->Ctx());
     encoding.push_back(feasibleEC);
@@ -627,7 +627,7 @@ z3::expr_vector BlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
     z3::expr errorEC =
         (ahe == this->z3EM->mk_uplus(AH, this->z3EM->mk_pto(x, idxvare)))
         && invalidFreePrime;
-    z3::expr memSafeEC = feasibleEC && (invalidFreePrime = invalidFree);
+    z3::expr memSafeEC = feasibleEC && (invalidFreePrime == invalidFree);
     z3::expr faultTolerantEc =
         invalidFree && (invalidFreePrime == invalidFree);
     z3::expr invalidFreeEC = errorEC || memSafeEC || faultTolerantEc;
@@ -639,8 +639,8 @@ z3::expr_vector BlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
     return encoding;
 }
 
-void BlockEncoding::generateEncoding(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg) {
-    for (RefinedActionPtr act : bptr->getRefStmts()) {
+void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
+    for (RefinedActionPtr act : edge->getRefinedActions()) {
         if (act->getActType() == ConcreteAction::ActType::OTHER ||
             act->getActType() == ConcreteAction::ActType::OTHERPROC) continue;
         // act->print(std::cout);
@@ -679,27 +679,18 @@ void BlockEncoding::generateEncoding(RefBlockVertexPtr bptr, RefBlockCFGPtr bcfg
         std::cout << "\nInvalidDeref encoding : \n" << actEncodings[1] << "\n";
         std::cout << "\nInvalidFree encoding : \n" << actEncodings[2] << "\n";
     }
-    this->src = bptr->getVertexId();
-    for (std::pair<int, int> edge : bcfg->getEdges()) {
-        if (bptr->getVertexId() == edge.first) {
-            this->dests.insert(edge.second);
-        }
-    }
     // this->print(std::cout);
 }
 
-BlockEncoding::BlockEncoding(
-    Z3ExprManagerPtr z3EM, RefBlockVertexPtr bptr,
-    RefBlockCFGPtr bcfg)
+BlockEncoding::BlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge)
     : z3EM(z3EM),
       feasibleEVM(),
       invalidDerefEVM(),
       invalidFreeEVM(),
       feasibleEncoding(z3EM->Ctx().bool_val(true)),
       invalidDerefEncoding(z3EM->Ctx().bool_val(true)),
-      invalidFreeEncoding(z3EM->Ctx().bool_val(true)),
-      src(-1), dests() {
-        this->generateEncoding(bptr, bcfg);
+      invalidFreeEncoding(z3EM->Ctx().bool_val(true)) {
+        this->generateEncoding(edge);
     }
 
 bool BlockEncoding::use_global(std::string var) { 
@@ -719,10 +710,6 @@ const BlockEncoding::VarsManager& BlockEncoding::getInvalidFreeEVM() {
     return this->invalidFreeEVM;
 }
 
-const int BlockEncoding::getSrc() { return src; }
-
-const std::set<int> BlockEncoding::getDests() { return dests; }
-
 z3::expr BlockEncoding::getFeasibleEncoding() {
     return this->feasibleEncoding;
 }
@@ -736,25 +723,20 @@ z3::expr BlockEncoding::getInvalidFreeEncoding() {
 }
 
 void BlockEncoding::print(std::ostream& OS) {
-    OS << "\n================================================================\n";
     OS << "Feasible Encoding : \n";
     this->feasibleEVM.print(OS);
-    OS << "Encoding : " << this->feasibleEncoding << '\n';
+    OS << "Encoding : " << this->feasibleEncoding << "\n\n";
     OS << "InvalidDeref Encoding : \n";
     this->invalidDerefEVM.print(OS);
-    OS << "Encoding : " << this->invalidDerefEncoding << '\n';
+    OS << "Encoding : " << this->invalidDerefEncoding << "\n\n";
     OS << "InvalidFree Encoding : \n";
     this->invalidFreeEVM.print(OS);
-    OS << "Encoding : " << this->invalidFreeEncoding << '\n';
-    OS << " Src : " << src << '\n';
-    OS << " Dests : ";
-    for (auto dest : dests) OS << " " << dest;
+    OS << "Encoding : " << this->invalidFreeEncoding << "\n\n";
     OS << std::endl;
-    OS << "\n================================================================\n";
 }
 
-TREncoder::TREncoder(Z3ExprManagerPtr z3EM, RefBlockCFGPtr bcfg)
-    : z3EM(z3EM), bcfg(bcfg),
+TREncoder::TREncoder(Z3ExprManagerPtr z3EM, BMCRefinedCFGPtr refinedCFG)
+    : z3EM(z3EM), refinedCFG(refinedCFG),
       globalHeapVars(std::make_shared<VarSet>()),
       globalLocVars(std::make_shared<VarSet>()),
       globalDataVars(std::make_shared<VarSet>()),
@@ -763,8 +745,8 @@ TREncoder::TREncoder(Z3ExprManagerPtr z3EM, RefBlockCFGPtr bcfg)
 void TREncoder::initGlobalVars() {
     this->globalHeapVars->insert("H");
     this->globalHeapVars->insert("AH");
-    for (RefBlockVertexPtr bptr : bcfg->getVertices()) {
-        for (RefinedActionPtr act : bptr->getRefStmts()) {
+    for(RefinedEdgePtr edge : refinedCFG->getRefinedEdges()) {
+        for (RefinedActionPtr act : edge->getRefinedActions()) {
             const Expr* e = act->getArg1();
             if (e == nullptr || !e->isVar()) continue;
             const VarExpr* var = (const VarExpr*)e;
@@ -779,33 +761,34 @@ void TREncoder::initGlobalVars() {
 
 void TREncoder::init() {
     this->initGlobalVars();
-    for (RefBlockVertexPtr bptr : this->getBlocks()) {
-        if (this->Trs.find(bptr->getVertexId()) != this->Trs.end()) continue;
-        BlockEncodingPtr bep =
-            std::make_shared<BlockEncoding>(z3EM, bptr, bcfg);
-        this->Trs[bptr->getVertexId()] = bep;
+    for (RefinedEdgePtr edge : this->refinedCFG->getRefinedEdges()) {
+        if (this->Trs.find(edge) != this->Trs.end()) continue;
+        BlockEncodingPtr bep = std::make_shared<BlockEncoding>(z3EM, edge);
+        this->Trs[edge] = bep;
     }
     this->print(std::cout);
 }
-  
-std::list<RefBlockVertexPtr> TREncoder::getBlocks() {
-    return bcfg->getVertices();
+
+std::set<int> TREncoder::getInitialLocations() {
+    return this->refinedCFG->getInitVertices();
 }
 
-std::list<int> TREncoder::getInitialStates() {
-    return bcfg->getInitVertices();
-}
-
-std::list<int> TREncoder::getFinalBlocks() {
-    return bcfg->getFinalVertices();
+std::set<int> TREncoder::getFinalLocations() {
+    return this->refinedCFG->getFinalVertices();
 }
 
 std::set<int> TREncoder::getSuccessors(std::set<int> u) {
     std::set<int> v;
-    for (auto edge : bcfg->getEdges())
-        if (u.find(edge.first) != u.end())
-        v.insert(edge.second);
+    for (int x : u) {
+        for (RefinedEdgePtr e : this->refinedCFG->getEdgesStartFrom(x)) {
+            v.insert(e->getTo());
+        }
+    }
     return v;
+}
+
+std::list<RefinedEdgePtr> TREncoder::getEdges() {
+    return refinedCFG->getRefinedEdges();
 }
 
 VarSetPtr TREncoder::getGlobalHeapVars() {
@@ -820,9 +803,9 @@ VarSetPtr TREncoder::getGlobalDataVars() {
     return this->globalDataVars;
 }
 
-BlockEncodingPtr TREncoder::getBlockEncoding(int b) {
-    assert(Trs.find(b) != Trs.end());
-    return Trs.at(b);
+BlockEncodingPtr TREncoder::getBlockEncoding(RefinedEdgePtr e) {
+    assert(Trs.find(e) != Trs.end());
+    return Trs.at(e);
 }
 
 void TREncoder::print(std::ostream& OS) {
@@ -835,7 +818,8 @@ void TREncoder::print(std::ostream& OS) {
     OS << "\n";
     for (auto tr : Trs) {
         OS << " ---------------------------------------------\n";
-        OS << " BlockEncoding - " << tr.first << "\n";
+        OS << " BlockEncoding - ";
+        tr.first->print(OS); OS << '\n';
         tr.second->print(OS);
     }
     OS << "================ Transition Relation Encoding ================\n";
@@ -900,11 +884,11 @@ BMCSLHVVCGen::generateOutputs(const BlockEncoding::VarsManager& vm, const int k)
 }
 
 z3::expr
-BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k, SLHVBuggyType bty) {
-    BlockEncodingPtr bep = this->TrEncoder->getBlockEncoding(bptr->getVertexId());
+BMCSLHVVCGen::generateOneStepBlockVC(RefinedEdgePtr edge, int k, SLHVBuggyType bty) {
+    BlockEncodingPtr bep = this->TrEncoder->getBlockEncoding(edge);
     z3::expr vc(z3EM->Ctx());
     z3::expr premise =
-        z3EM->mk_data("loc_" + std::to_string(k - 1)) == bep->getSrc();
+        z3EM->mk_data("loc_" + std::to_string(k - 1)) == edge->getFrom();
     z3::expr implicant(z3EM->Ctx());
     // block encoding substitution
     z3::expr_vector src(z3EM->Ctx());
@@ -970,16 +954,8 @@ BMCSLHVVCGen::generateOneStepBlockVC(RefBlockVertexPtr bptr, int k, SLHVBuggyTyp
     CLEAN_Z3EXPR_CONJUNC(implicant, unchangedData);
     CLEAN_Z3EXPR_CONJUNC(implicant, unchangedInvalid);
 
-    // Dests
-    z3::expr dests = z3EM->Ctx().bool_val(true);
-    for (auto dest : bep->getDests()) {
-        if (dests.is_true()) {
-            dests = z3EM->mk_data("loc_" + std::to_string(k)) == dest;
-        } else {
-            dests = dests || (z3EM->mk_data("loc_" + std::to_string(k)) == dest);
-        }
-    }
-    implicant = implicant && dests;
+    implicant = implicant &&
+        (this->z3EM->mk_data("loc_" + std::to_string(k)) == edge->getTo());
     return z3::implies(premise, implicant);
 }
 
@@ -988,24 +964,24 @@ z3::expr BMCSLHVVCGen::generateInitVC(SLHVBuggyType bty) {
     z3::expr initAllocHeap = this->z3EM->mk_heap("AH_0") == z3EM->mk_heap("emp");
     z3::expr initLoc = this->z3EM->Ctx().bool_val(true);
     z3::expr loc0 = this->z3EM->mk_data("loc_0");
-    for (auto b : this->TrEncoder->getInitialStates()) {
+    for (auto b : this->TrEncoder->getInitialLocations()) {
         CLEAN_Z3EXPR_CONJUNC(initLoc, (loc0 == b));
     }
     z3::expr init =initHeap && initAllocHeap && initLoc;
     if (bty == SLHVBuggyType::INVALIDDEREF)
         return init && !this->z3EM->mk_bool(BlockEncoding::invalid_deref + "_0");
     else if (bty == SLHVBuggyType::INVALIDFREE)
-        return init && !z3EM->mk_bool(BlockEncoding::invalid_free + "_0");
+        return init && !this->z3EM->mk_bool(BlockEncoding::invalid_free + "_0");
     return init;
 }
 
 z3::expr
-BMCSLHVVCGen::generateOneStepVC(int k, const std::set<int>& blocks, SLHVBuggyType bty) {
+BMCSLHVVCGen::generateOneStepVC(int k, const std::set<int>& locations, SLHVBuggyType bty) {
     assert(k > 0);
     z3::expr vc = z3EM->Ctx().bool_val(true);
-    for (RefBlockVertexPtr bptr : this->TrEncoder->getBlocks()) {
-        if (blocks.find(bptr->getVertexId()) == blocks.end()) continue;
-        z3::expr blockVC = this->generateOneStepBlockVC(bptr, k, bty);
+    for (RefinedEdgePtr edge : this->TrEncoder->getEdges()) {
+        if (locations.find(edge->getFrom()) == locations.end()) continue;
+        z3::expr blockVC = this->generateOneStepBlockVC(edge, k, bty);
         CLEAN_Z3EXPR_CONJUNC(vc, blockVC);
     }
     return vc;
@@ -1013,19 +989,20 @@ BMCSLHVVCGen::generateOneStepVC(int k, const std::set<int>& blocks, SLHVBuggyTyp
 
 z3::expr BMCSLHVVCGen::generateVC(const int k, SLHVBuggyType bty) {
     z3::expr phiInit = this->generateInitVC(bty);
-    std::set<int> reachableBlocks;
-    for (int u : this->TrEncoder->getInitialStates()) {
-        reachableBlocks.insert(u);
+    std::set<int> reachableLocations;
+    for (int u : this->TrEncoder->getInitialLocations()) {
+        reachableLocations.insert(u);
     }
-    std::list<int> finalBlocks = this->TrEncoder->getFinalBlocks();
+    std::set<int> finalBlocks = this->TrEncoder->getFinalLocations();
     z3::expr phiBuggy = this->z3EM->Ctx().bool_val(false);
     z3::expr phiTr = phiInit;
     for (int i = 1; i <= k; i++) {
         if (i > 2) {
-            reachableBlocks = this->TrEncoder->getSuccessors(reachableBlocks);
+            reachableLocations =
+                this->TrEncoder->getSuccessors(reachableLocations);
         }
-        if (reachableBlocks.empty())  { break; }
-        phiTr = phiTr && this->generateOneStepVC(i, reachableBlocks, bty);
+        if (reachableLocations.empty())  { break; }
+        phiTr = phiTr && this->generateOneStepVC(i, reachableLocations, bty);
 
         z3::expr ithStepBuggyEncoding(this->z3EM->Ctx());
         if (bty == SLHVBuggyType::INVALIDDEREF) {
@@ -1057,12 +1034,11 @@ z3::expr BMCSLHVVCGen::generateVC(const int k, SLHVBuggyType bty) {
     return phiBuggy;
 }
 
-BMCSLHVVCGen::BMCSLHVVCGen(RefBlockCFGPtr bcfg, RecordManagerPtr rm)
+BMCSLHVVCGen::BMCSLHVVCGen(BMCRefinedCFGPtr refinedCFG, RecordManagerPtr rm)
     : z3EM(std::make_shared<Z3ExprManager>()) {
     rm->print(std::cout);
-    for (auto p : rm->getRecordMap())
-        z3EM->addRecord(p.second);
-    TrEncoder = std::make_shared<TREncoder>(z3EM, bcfg);
+    for (auto p : rm->getRecordMap()) { z3EM->addRecord(p.second); }
+    this->TrEncoder = std::make_shared<TREncoder>(z3EM, refinedCFG);
 }
 
 z3::expr_vector BMCSLHVVCGen::generateVC(int k) {

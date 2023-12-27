@@ -22,7 +22,7 @@ private:
   inline std::string getSuffName(std::string origName);
 
   Record getPtrRecord(const VarExpr* vexpr);
-  void setSLHVCmdRecords(RefBlockCFGPtr refBlockCFG);
+  void setSLHVCmdRecords(BMCRefinedCFGPtr refinedCFG);
 
 public:
   static char ID;

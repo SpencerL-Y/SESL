@@ -535,6 +535,219 @@ namespace smack
         }
     }
 
+    std::pair<bool, int> BMCRefinedCFG::parseConstant(const Expr* e, std::map<std::string, int>& consVarMap) {
+        switch (e->getType()) {
+            case ExprType::BIN: {
+                const BinExpr* be = (const BinExpr*)e;
+                if (!be->isArith()) { return std::make_pair(false, 0); }
+                std::pair<bool, int> resL =
+                    this->parseConstant(be->getLhs(), consVarMap);
+                std::pair<bool, int> resR =
+                    this->parseConstant(be->getRhs(), consVarMap);
+                if (!resL.first || !resR.first) { return std::make_pair(false, 0); }
+                int num;
+                switch (be->getOp()) {
+                    case BinExpr::Binary::Plus: {
+                        num = resL.second + resR.second;
+                        break;
+                    }
+                    case BinExpr::Binary::Minus: {
+                        num = resL.second - resR.second;
+                        break;
+                    }
+                    case BinExpr::Binary::Times: {
+                        num = resL.second * resR.second;
+                        break;
+                    }
+                    default: assert(false && "not supported");
+                }
+                return std::make_pair(true, num);
+            }
+            case ExprType::INT: {
+                const IntLit* intLit = (const IntLit*)e;
+                return std::make_pair(true, intLit->getVal());
+            }
+            case ExprType::VAR: {
+                const VarExpr* var = (const VarExpr*)e;
+                if (consVarMap.find(var->name()) != consVarMap.end()) {
+                    return std::make_pair(true, consVarMap.at(var->name()));
+                }
+                return std::make_pair(false, 0);
+            }
+            default: return std::make_pair(false, 0);
+        }
+    }
+    
+    const Expr* BMCRefinedCFG::constructExprByConstants(const Expr* e, std::map<std::string, int>& consVarMap) {
+        switch (e->getType()) {
+            case ExprType::BIN: {
+                const BinExpr* be = (const BinExpr*)e;
+                const Expr* lhs = constructExprByConstants(be->getLhs(), consVarMap);
+                const Expr* rhs = constructExprByConstants(be->getRhs(), consVarMap);
+                bool isConsLhs = false;
+                bool isConsRhs = false;
+                long long n1, n2;
+                if (lhs->getType() == ExprType::INT) {
+                    n1 = ((const IntLit*)lhs)->getVal();
+                    isConsLhs = true;
+                }
+                if (rhs->getType() == ExprType::INT) {
+                    n2 = ((const IntLit*)rhs)->getVal();
+                    isConsRhs = true;
+                }
+                switch (be->getOp())  {
+                    case BinExpr::Binary::Plus:
+                        return isConsLhs && isConsRhs ? Expr::lit(n1 + n2)
+                            : isConsLhs ? (n1 == 0 ? rhs : Expr::add(lhs, rhs))
+                            : isConsRhs && n2 == 0 ? lhs : Expr::add(lhs, rhs);
+                    case BinExpr::Binary::Minus:
+                        return isConsLhs && isConsRhs ?
+                            Expr::lit(n1 - n2) : Expr::substract(lhs, rhs);
+                    case BinExpr::Binary::Times:
+                        return isConsLhs && isConsRhs ? Expr::lit(n1 * n2)
+                            : (isConsLhs && n1 == 0 || isConsRhs && n2 == 0) ?
+                            Expr::lit((long long)0) : Expr::multiply(lhs, rhs);
+                    case BinExpr::Binary::Eq: return Expr::eq(lhs, rhs);
+                    case BinExpr::Binary::Neq: return Expr::neq(lhs, rhs);
+                    case BinExpr::Binary::Lt: return Expr::lt(lhs, rhs);
+                    case BinExpr::Binary::Gt: return Expr::gt(lhs, rhs);
+                    case BinExpr::Binary::Lte: return Expr::le(lhs, rhs);
+                    case BinExpr::Binary::Gte: return Expr::ge(lhs, rhs);
+                    default: { assert(false && "unsupported operation!!!");  }
+                }
+            }
+            case ExprType::INT: {
+                const IntLit* intLit = (const IntLit*)e;
+                return Expr::lit((long long)intLit->getVal());
+            }
+            case ExprType::VAR: {
+                const VarExpr* var = (const VarExpr*)e;
+                if (consVarMap.find(var->name()) != consVarMap.end()) {
+                    return Expr::lit((long long)consVarMap.at(var->name()));
+                }
+                return new VarExpr(var->name());
+            }
+            default: assert(false);
+        }
+    }
+    
+    std::map<std::string, int> BMCRefinedCFG::getConsVarMap() {
+        std::map<std::string, int> consVarMap;
+        std::queue<int> Q;
+        for(int u : this->initVertices) Q.push(u);
+        while(!Q.empty()) {
+            int u = Q.front(); Q.pop();
+            bool hasChanged = false;
+            for (RefinedEdgePtr edge : this->getEdgesStartFrom(u)) {
+                for (RefinedActionPtr refAct : edge->getRefinedActions()) {
+                    if (refAct->getActType() ==
+                        ConcreteAction::ActType::COMMONASSIGN) {
+                        if (refAct->getArg1() == nullptr) continue;
+                        std::string var =
+                            ((const VarExpr*)refAct->getArg1())->name();
+                        if (consVarMap.find(var) != consVarMap.end()) { continue; }
+                        std::pair<bool, int> res =
+                            this->parseConstant(refAct->getArg2(), consVarMap);
+                        if (res.first) {
+                            consVarMap[var] = res.second;
+                            hasChanged = true;
+                        }
+                    }
+                }
+            }
+            if (!hasChanged) { continue; }
+            for (RefinedEdgePtr edge : this->getEdgesStartFrom(u)) {
+                Q.push(edge->getTo());
+            }
+        }
+        return consVarMap;
+    }
+
+    void BMCRefinedCFG::setArrayRecord(RecordManagerPtr recordManager, PIMSetPtr pimSet) {
+        for(RefinedEdgePtr edge : this->refinedEdges) {
+            for (RefinedActionPtr refAct : edge->getRefinedActions()) {
+                if (refAct->getActType() != ConcreteAction::ActType::MALLOC) { continue; }
+                RefinedAction::SLHVCmd& slhvcmd = refAct->getSLHVCmd();
+                int byteSize = -1;
+                if (slhvcmd.arg2->getType() == ExprType::INT) {
+                    byteSize = ((const IntLit*)slhvcmd.arg2)->getVal();
+                }
+                assert(byteSize != -1 && "Array must have fix size");
+                const VarExpr* var = (const VarExpr*)refAct->getArg1();
+                std::string varType =
+                    pimSet->getPIMByPtrVar(var->name())
+                        ->getInfoByPtrVar(var->name()).getPto();
+                if (varType.find("struct") != std::string::npos || varType == "i8") { continue; }
+                int stepWidth = 0;
+                if (varType == "i32") stepWidth = 4;
+                else stepWidth = 8;
+                assert(stepWidth > 0 && byteSize % stepWidth == 0);
+                FieldsTypes ftypes;
+                for (int i = 0; i < byteSize / stepWidth; i++) {
+                    ftypes.push_back(SLHVVarType::INT_DAT);
+                }
+                std::string name = varType + "_" + std::to_string(ftypes.size());
+                Record record = Record(recordManager->getNewId(), stepWidth, ftypes);
+                recordManager->add(name, record);
+                slhvcmd.record = record;
+            }
+        }
+    }
+
+    void BMCRefinedCFG::convertByteOffsetToField(RecordManagerPtr recordManager, PIMSetPtr pimSet) {
+        for(RefinedEdgePtr edge : this->refinedEdges) {
+            for (RefinedActionPtr refAct : edge->getRefinedActions()) {
+                RefinedAction::SLHVCmd& slhvcmd = refAct->getSLHVCmd();
+                if (slhvcmd.arg2 == nullptr) { continue; }
+                const VarExpr* var = (const VarExpr*)refAct->getArg1();
+                if (var->name()[1] != 'p') continue;
+                if (slhvcmd.arg2->getType() == ExprType::BIN) {
+                    const BinExpr* be = (const BinExpr*)slhvcmd.arg2;
+                    // do not support pointer arithmetic with variables
+                    assert(be->getLhs()->isVar());
+                    assert(be->getRhs()->getType() == ExprType::INT);
+                    const VarExpr* base = (const VarExpr*)be->getLhs();
+                    const int offset = ((const IntLit*)be->getRhs())->getVal();
+
+                    std::string varType = pimSet->getPIMByPtrVar(base->name())
+                            ->getInfoByPtrVar(base->name()).getPto();
+                    int stepWidth = 0;
+                    if (varType.find("struct") != std::string::npos || varType == "i8") {
+                       stepWidth = recordManager->getRecord(varType).getFieldByteWidth();
+                    } else if (varType == "i32") stepWidth = 4;
+                    else stepWidth = 8;
+                    assert(stepWidth > 0 && offset % stepWidth == 0);
+
+                    long long newOffset = offset / stepWidth;
+                    switch (be->getOp()) {
+                        case BinExpr::Binary::Plus:
+                            slhvcmd.arg2 = Expr::add(base, Expr::lit(newOffset));
+                            break;
+                        case BinExpr::Binary::Minus:
+                            slhvcmd.arg2 = Expr::substract(base, Expr::lit(newOffset));
+                            break;
+                        default: assert(false);
+                    }
+                }
+            }
+        }
+    }
+
+    void BMCRefinedCFG::refineSLHVCmds(RecordManagerPtr recordManager, PIMSetPtr pimSet) {
+        std::map<std::string, int> consVarMap = this->getConsVarMap();
+        // Propagate constants
+        for(RefinedEdgePtr edge : this->refinedEdges) {
+            for (RefinedActionPtr refAct : edge->getRefinedActions()) {
+                if (refAct->getArg2() == nullptr) continue;
+                assert(refAct->getArg1()->isVar());
+                const Expr* arg2 = this->constructExprByConstants(refAct->getArg2(), consVarMap);
+                refAct->setSLHVCmdArg2(arg2);
+            }
+        }
+        this->setArrayRecord(recordManager, pimSet);
+        this->convertByteOffsetToField(recordManager, pimSet);
+    }
+
     BMCRefinedCFG::BMCRefinedCFG(ConcreteCFGPtr conCfg){
         this->stmtFormatter = std::make_shared<StmtFormatter>(conCfg->getOrigCfg());
         // TODObmc: this should be problematic since variables appears not only restricts in the cfg vars, but also constDecls
@@ -1147,221 +1360,6 @@ namespace smack
             sccResult[curr] = this->sccId;
             currStack.pop_back();
         }
-    }
-
-    std::pair<bool, int>
-    RefinedBlockCFG::parseConstant(const Expr* e, std::map<std::string, int>& consVarMap) {
-        switch (e->getType()) {
-            case ExprType::BIN: {
-                const BinExpr* be = (const BinExpr*)e;
-                if (!be->isArith()) { return std::make_pair(false, 0); }
-                std::pair<bool, int> resL =
-                    this->parseConstant(be->getLhs(), consVarMap);
-                std::pair<bool, int> resR =
-                    this->parseConstant(be->getRhs(), consVarMap);
-                if (!resL.first || !resR.first) { return std::make_pair(false, 0); }
-                int num;
-                switch (be->getOp()) {
-                    case BinExpr::Binary::Plus: {
-                        num = resL.second + resR.second;
-                        break;
-                    }
-                    case BinExpr::Binary::Minus: {
-                        num = resL.second - resR.second;
-                        break;
-                    }
-                    case BinExpr::Binary::Times: {
-                        num = resL.second * resR.second;
-                        break;
-                    }
-                    default: assert(false && "not supported");
-                }
-                return std::make_pair(true, num);
-            }
-            case ExprType::INT: {
-                const IntLit* intLit = (const IntLit*)e;
-                return std::make_pair(true, intLit->getVal());
-            }
-            case ExprType::VAR: {
-                const VarExpr* var = (const VarExpr*)e;
-                if (consVarMap.find(var->name()) != consVarMap.end()) {
-                    return std::make_pair(true, consVarMap.at(var->name()));
-                }
-                return std::make_pair(false, 0);
-            }
-            default: return std::make_pair(false, 0);
-        }
-    }
-
-    
-    const Expr* RefinedBlockCFG::constructExprByConstants(const Expr* e, std::map<std::string, int>& consVarMap) {
-        switch (e->getType()) {
-            case ExprType::BIN: {
-                const BinExpr* be = (const BinExpr*)e;
-                const Expr* lhs = constructExprByConstants(be->getLhs(), consVarMap);
-                const Expr* rhs = constructExprByConstants(be->getRhs(), consVarMap);
-                bool isConsLhs = false;
-                bool isConsRhs = false;
-                long long n1, n2;
-                if (lhs->getType() == ExprType::INT) {
-                    n1 = ((const IntLit*)lhs)->getVal();
-                    isConsLhs = true;
-                }
-                if (rhs->getType() == ExprType::INT) {
-                    n2 = ((const IntLit*)rhs)->getVal();
-                    isConsRhs = true;
-                }
-                switch (be->getOp())  {
-                    case BinExpr::Binary::Plus:
-                        return isConsLhs && isConsRhs ? Expr::lit(n1 + n2)
-                            : isConsLhs ? (n1 == 0 ? rhs : Expr::add(lhs, rhs))
-                            : isConsRhs && n2 == 0 ? lhs : Expr::add(lhs, rhs);
-                    case BinExpr::Binary::Minus:
-                        return isConsLhs && isConsRhs ?
-                            Expr::lit(n1 - n2) : Expr::substract(lhs, rhs);
-                    case BinExpr::Binary::Times:
-                        return isConsLhs && isConsRhs ? Expr::lit(n1 * n2)
-                            : (isConsLhs && n1 == 0 || isConsRhs && n2 == 0) ?
-                            Expr::lit((long long)0) : Expr::multiply(lhs, rhs);
-                    case BinExpr::Binary::Eq: return Expr::eq(lhs, rhs);
-                    case BinExpr::Binary::Neq: return Expr::neq(lhs, rhs);
-                    case BinExpr::Binary::Lt: return Expr::lt(lhs, rhs);
-                    case BinExpr::Binary::Gt: return Expr::gt(lhs, rhs);
-                    case BinExpr::Binary::Lte: return Expr::le(lhs, rhs);
-                    case BinExpr::Binary::Gte: return Expr::ge(lhs, rhs);
-                    default: { assert(false && "unsupported operation!!!");  }
-                }
-            }
-            case ExprType::INT: {
-                const IntLit* intLit = (const IntLit*)e;
-                return Expr::lit((long long)intLit->getVal());
-            }
-            case ExprType::VAR: {
-                const VarExpr* var = (const VarExpr*)e;
-                if (consVarMap.find(var->name()) != consVarMap.end()) {
-                    return Expr::lit((long long)consVarMap.at(var->name()));
-                }
-                return new VarExpr(var->name());
-            }
-            default: assert(false);
-        }
-    }
-
-    
-    std::map<std::string, int> RefinedBlockCFG::getConsVarMap() {
-        std::map<std::string, int> consVarMap;
-        std::queue<int> Q;
-        for(int u : this->initVertices) Q.push(u);
-        while(!Q.empty()) {
-            int u = Q.front(); Q.pop();
-            bool hasChanged = false;
-            for (RefinedActionPtr refAct : this->getVertex(u)->getRefStmts()) {
-                if (refAct->getActType() ==
-                    ConcreteAction::ActType::COMMONASSIGN) {
-                    if (refAct->getArg1() == nullptr) continue;
-                    std::string var =
-                        ((const VarExpr*)refAct->getArg1())->name();
-                    if (consVarMap.find(var) != consVarMap.end()) { continue; }
-                    std::pair<bool, int> res =
-                        this->parseConstant(refAct->getArg2(), consVarMap);
-                    if (res.first) {
-                        consVarMap[var] = res.second;
-                        hasChanged = true;
-                    }
-                }
-            }
-            if (!hasChanged) { continue; }
-            for (std::pair<int, int> edge : this->getEdgesStartFrom(u)) {
-                Q.push(edge.second);
-            }
-        }
-        return consVarMap;
-    }
-
-    void RefinedBlockCFG::setArrayRecord(RecordManagerPtr recordManager, PIMSetPtr pimSet) {
-        for(RefBlockVertexPtr bptr : this->vertices) {
-            for (RefinedActionPtr refAct : bptr->getRefStmts()) {
-                if (refAct->getActType() != ConcreteAction::ActType::MALLOC) { continue; }
-                RefinedAction::SLHVCmd& slhvcmd = refAct->getSLHVCmd();
-                int byteSize = -1;
-                if (slhvcmd.arg2->getType() == ExprType::INT) {
-                    byteSize = ((const IntLit*)slhvcmd.arg2)->getVal();
-                }
-                assert(byteSize != -1 && "Array must have fix size");
-                const VarExpr* var = (const VarExpr*)refAct->getArg1();
-                std::string varType =
-                    pimSet->getPIMByPtrVar(var->name())
-                        ->getInfoByPtrVar(var->name()).getPto();
-                if (varType.find("struct") != std::string::npos || varType == "i8") { continue; }
-                int stepWidth = 0;
-                if (varType == "i32") stepWidth = 4;
-                else stepWidth = 8;
-                assert(stepWidth > 0 && byteSize % stepWidth == 0);
-                FieldsTypes ftypes;
-                for (int i = 0; i < byteSize / stepWidth; i++) {
-                    ftypes.push_back(SLHVVarType::INT_DAT);
-                }
-                std::string name = varType + "_" + std::to_string(ftypes.size());
-                Record record = Record(recordManager->getNewId(), stepWidth, ftypes);
-                recordManager->add(name, record);
-                slhvcmd.record = record;
-            }
-        }
-    }
-
-    void RefinedBlockCFG::convertByteOffsetToField(RecordManagerPtr recordManager, PIMSetPtr pimSet) {
-        for(RefBlockVertexPtr bptr : this->vertices) {
-            for (RefinedActionPtr refAct : bptr->getRefStmts()) {
-                RefinedAction::SLHVCmd& slhvcmd = refAct->getSLHVCmd();
-                if (slhvcmd.arg2 == nullptr) { continue; }
-                const VarExpr* var = (const VarExpr*)refAct->getArg1();
-                if (var->name()[1] != 'p') continue;
-                if (slhvcmd.arg2->getType() == ExprType::BIN) {
-                    const BinExpr* be = (const BinExpr*)slhvcmd.arg2;
-                    // do not support pointer arithmetic with variables
-                    assert(be->getLhs()->isVar());
-                    assert(be->getRhs()->getType() == ExprType::INT);
-                    const VarExpr* base = (const VarExpr*)be->getLhs();
-                    const int offset = ((const IntLit*)be->getRhs())->getVal();
-
-                    std::string varType =
-                        pimSet->getPIMByPtrVar(base->name())
-                            ->getInfoByPtrVar(base->name()).getPto();
-                    int stepWidth = 0;
-                    if (varType.find("struct") != std::string::npos || varType == "i8") {
-                       stepWidth = recordManager->getRecord(varType).getFieldByteWidth();
-                    } else if (varType == "i32") stepWidth = 4;
-                    else stepWidth = 8;
-                    assert(stepWidth > 0 && offset % stepWidth == 0);
-
-                    long long newOffset = offset / stepWidth;
-                    switch (be->getOp()) {
-                        case BinExpr::Binary::Plus:
-                            slhvcmd.arg2 = Expr::add(base, Expr::lit(newOffset));
-                            break;
-                        case BinExpr::Binary::Minus:
-                            slhvcmd.arg2 = Expr::substract(base, Expr::lit(newOffset));
-                            break;
-                        default: assert(false);
-                    }
-                }
-            }
-        }
-    }
-
-    void RefinedBlockCFG::refineSLHVCmds(RecordManagerPtr recordManager, PIMSetPtr pimSet) {
-        std::map<std::string, int> consVarMap = this->getConsVarMap();
-        // Propagate constants
-        for(RefBlockVertexPtr bptr : this->vertices) {
-            for (RefinedActionPtr refAct : bptr->getRefStmts()) {
-                if (refAct->getArg2() == nullptr) continue;
-                assert(refAct->getArg1()->isVar());
-                const Expr* arg2 = this->constructExprByConstants(refAct->getArg2(), consVarMap);
-                refAct->setSLHVCmdArg2(arg2);
-            }
-        }
-        this->setArrayRecord(recordManager, pimSet);
-        this->convertByteOffsetToField(recordManager, pimSet);
     }
 
 } // namespace smack

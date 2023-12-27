@@ -93,11 +93,12 @@ Record BMCMemSafeChecker::getPtrRecord(const VarExpr* vexpr) {
   return recordManager->getRecord(pinfo.getPto());
 }
 
-void BMCMemSafeChecker::setSLHVCmdRecords(RefBlockCFGPtr refBlockCFG) {
-  std::cout << "\n ------------------- SLHV DEBUG ---------------------------\n";
-  for (auto bptr : refBlockCFG->getVertices()) {
-    std::cout << bptr->getVertexId() << " ================================ \n";
-    for(auto refAct : bptr->getRefStmts()) {
+void BMCMemSafeChecker::setSLHVCmdRecords(BMCRefinedCFGPtr refinedCFG) {
+  std::cout << "\n ------------------- Set SLHVCmd Recod ---------------------------\n";
+  for (RefinedEdgePtr edge : refinedCFG->getRefinedEdges()) {
+    std::cout << "=============" << " From: " << edge->getFrom()
+      << " To: " << edge->getTo() << " ==================== \n";
+    for(RefinedActionPtr refAct : edge->getRefinedActions()) {
       switch (refAct->getActType()) {    
         case ConcreteAction::ActType::ALLOC :
         case ConcreteAction::ActType::MALLOC : {
@@ -111,6 +112,7 @@ void BMCMemSafeChecker::setSLHVCmdRecords(RefBlockCFGPtr refBlockCFG) {
       }
     }
   }
+  std::cout << "\n ------------------- Set SLHVCmd Recod ---------------------------\n";
 }
 
 void BMCMemSafeChecker::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
@@ -138,21 +140,17 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   conCfg = conCfg->simplify();
   // conCfg->printConcreteCFG();
   BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
-  // refinedCFG->printRefinedCFG();
-  BlockCFGPtr blockCFG = std::make_shared<BlockCFG>(mainGraph);
-  blockCFG = blockCFG->simplify();
-  RefBlockCFGPtr refBlockCFG = std::make_shared<RefinedBlockCFG>(blockCFG);
-  // refBlockCFG->printRefBlockCFG(std::cout);
-  refBlockCFG->refineSLHVCmds(recordManager, pimSet);
+  refinedCFG->printRefinedCFG();
+  refinedCFG->refineSLHVCmds(recordManager, pimSet);
 
-  this->setSLHVCmdRecords(refBlockCFG);
-  refBlockCFG->printRefBlockCFG(std::cout);
+  this->setSLHVCmdRecords(refinedCFG);
+  refinedCFG->printRefinedCFG();
 
-  BMCSLHVVCGen vcGen(refBlockCFG, recordManager);
+  BMCSLHVVCGen vcGen(refinedCFG, recordManager);
   z3::expr_vector vcSet = vcGen.generateVC(1);
-  std::cout << vcSet[0] << std::endl;
-  // std::cout << vcSet[1] << std::endl;
-  // std::cout << vcSet[2] << std::endl;
+  std::cout << "\nInvalidDeref :\n" << vcSet[0] << std::endl;
+  std::cout << "\nInvalidFree :\n" << vcSet[1] << std::endl;
+  std::cout << "\nMemLeak :\n" << vcSet[2] << std::endl;
   vcGen.generateSMT2(vcSet[0], "../bin/invalidDeref.smt2");
   vcGen.generateSMT2(vcSet[1], "../bin/invalidFree.smt2");
   vcGen.generateSMT2(vcSet[2], "../bin/invalidMemLeak.smt2");

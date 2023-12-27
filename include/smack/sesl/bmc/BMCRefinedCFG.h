@@ -169,6 +169,14 @@ namespace smack
             CFGPtr origCfg;
             StmtFormatterPtr stmtFormatter;
             int sccNum, sccId;
+
+            // SLHV
+            std::pair<bool, int> parseConstant(const Expr* e, std::map<std::string, int>& consVarMap);
+            const Expr* constructExprByConstants(const Expr* e, std::map<std::string, int>& consVarMap);
+            std::map<std::string, int> getConsVarMap();
+            void setArrayRecord(RecordManagerPtr recordManager, PIMSetPtr pimSet);
+            void convertByteOffsetToField(RecordManagerPtr recordManager, PIMSetPtr pimSet);
+
         public:
         // TODObmc: add self loop and tag for exit vertex
             BMCRefinedCFG(ConcreteCFGPtr conCfg);
@@ -188,6 +196,9 @@ namespace smack
             StmtFormatterPtr getStmtFormatter(){return this->stmtFormatter;}
 
             void printRefinedCFG();
+
+            // SLHV
+            void refineSLHVCmds(RecordManagerPtr recordManager, PIMSetPtr pimSet);
     };
 
     typedef std::shared_ptr<BMCRefinedCFG> BMCRefinedCFGPtr;
@@ -317,13 +328,6 @@ namespace smack
             
             int sccNum, sccId;
 
-            // SLHV
-            std::pair<bool, int> parseConstant(const Expr* e, std::map<std::string, int>& consVarMap);
-            const Expr* constructExprByConstants(const Expr* e, std::map<std::string, int>& consVarMap);
-            std::map<std::string, int> getConsVarMap();
-            void setArrayRecord(RecordManagerPtr recordManager, PIMSetPtr pimSet);
-            void convertByteOffsetToField(RecordManagerPtr recordManager, PIMSetPtr pimSet);
-
         public:
             RefinedBlockCFG(BlockCFGPtr blockCfg);
             int getVertexNum(){return this->vertexNum;}
@@ -341,9 +345,6 @@ namespace smack
             void printRefBlockCFG(std::ostream& os);
             std::map<int, int> computeSccMap();
             void tarjanScc(int curr, std::map<int, std::pair<int, int>>& currentMap, std::list<int>& currStack, std::map<int, int>& sccResult);
-
-            // SLHV
-            void refineSLHVCmds(RecordManagerPtr recordManager, PIMSetPtr pimSet);
     };
     typedef std::shared_ptr<RefinedBlockCFG> RefBlockCFGPtr;
 } // namespace smack

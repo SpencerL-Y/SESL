@@ -94,7 +94,7 @@ Record BMCMemSafeChecker::getPtrRecord(const VarExpr* vexpr) {
 }
 
 void BMCMemSafeChecker::setSLHVCmdRecords(BMCRefinedCFGPtr refinedCFG) {
-  std::cout << "\n ------------------- Set SLHVCmd Recod ---------------------------\n";
+  std::cout << "\n ------------------- Set SLHVCmd Record ---------------------------\n";
   for (RefinedEdgePtr edge : refinedCFG->getRefinedEdges()) {
     std::cout << "=============" << " From: " << edge->getFrom()
       << " To: " << edge->getTo() << " ==================== \n";
@@ -112,7 +112,7 @@ void BMCMemSafeChecker::setSLHVCmdRecords(BMCRefinedCFGPtr refinedCFG) {
       }
     }
   }
-  std::cout << "\n ------------------- Set SLHVCmd Recod ---------------------------\n";
+  std::cout << "\n ------------------- Set SLHVCmd Record ---------------------------\n";
 }
 
 void BMCMemSafeChecker::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
@@ -142,6 +142,7 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
   refinedCFG->printRefinedCFG();
   refinedCFG->refineSLHVCmds(recordManager, pimSet);
+  recordManager->print(std::cout);
 
   this->setSLHVCmdRecords(refinedCFG);
   refinedCFG->printRefinedCFG();

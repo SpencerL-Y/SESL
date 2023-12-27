@@ -225,6 +225,7 @@ z3::expr BlockEncoding::getLatestUpdateForGlobalVar(std::string name) {
     SLHVVarType varTy;
     VarSet* inputVars;
     const std::map<std::string, std::string>* outputsMap;
+    if (name == "$0.ref") { return this->z3EM->mk_loc("nil"); }
     if (name.find("invalidDeref") != std::string::npos) {
         inputVars = &this->invalidDerefEVM.inputVars;
         outputsMap = &this->invalidDerefEVM.outputsMap;

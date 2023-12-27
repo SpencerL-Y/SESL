@@ -18,7 +18,8 @@ std::string PointerInfo::getType() { return type; }
 
 std::string PointerInfo::getPto() {
     assert(!type.empty());
-    return type.substr(0, type.size() - 1);
+    std::string ptoTy = type.substr(0, type.size() - 1);
+    return ptoTy.back() == '*' ? "i8" : ptoTy;
 }
 
 std::string PointerInfoManager::find(const std::string& pt) {

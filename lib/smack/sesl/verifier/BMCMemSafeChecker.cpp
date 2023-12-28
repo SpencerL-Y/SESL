@@ -93,22 +93,24 @@ Record BMCMemSafeChecker::getPtrRecord(const VarExpr* vexpr) {
   return recordManager->getRecord(pinfo.getPto());
 }
 
-void BMCMemSafeChecker::setSLHVCmdRecords(BMCRefinedCFGPtr refinedCFG) {
+void BMCMemSafeChecker::setSLHVCmdRecords(BMCRefinedBlockCFGPtr refinedBlockCFG) {
   std::cout << "\n ------------------- Set SLHVCmd Record ---------------------------\n";
-  for (RefinedEdgePtr edge : refinedCFG->getRefinedEdges()) {
-    std::cout << "=============" << " From: " << edge->getFrom()
-      << " To: " << edge->getTo() << " ==================== \n";
-    for(RefinedActionPtr refAct : edge->getRefinedActions()) {
-      switch (refAct->getActType()) {    
-        case ConcreteAction::ActType::ALLOC :
-        case ConcreteAction::ActType::MALLOC : {
-          assert(refAct->getArg1()->isVar());
-          if (refAct->getSLHVCmd().record.getID() > 0) break;
-          refAct->setSLHVCmdRecord(
-            this->getPtrRecord((const VarExpr*)refAct->getArg1()));
-          break;
+  for (int u = 1; u <= refinedBlockCFG->getVertexNum(); u++) {
+    for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(u)) {
+      std::cout << "=============" << " From: " << edge->getFrom()
+        << " To: " << edge->getTo() << " ==================== \n";
+      for(RefinedActionPtr refAct : edge->getRefinedActions()) {
+        switch (refAct->getActType()) {    
+          case ConcreteAction::ActType::ALLOC :
+          case ConcreteAction::ActType::MALLOC : {
+            assert(refAct->getArg1()->isVar());
+            if (refAct->getSLHVCmd().record.getID() > 0) break;
+            refAct->setSLHVCmdRecord(
+              this->getPtrRecord((const VarExpr*)refAct->getArg1()));
+            break;
+          }
+          default: break;
         }
-        default: break;
       }
     }
   }
@@ -135,26 +137,24 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   mainGraph->printVarInfo();
   std::cout << std::endl;
   std::cout << "-------------PRINT CFG END-----------" << std::endl;
-  
-  ConcreteCFGPtr conCfg = std::make_shared<ConcreteCFG>(mainGraph);
-  conCfg = conCfg->simplify();
-  // conCfg->printConcreteCFG();
-  BMCRefinedCFGPtr refinedCFG = std::make_shared<BMCRefinedCFG>(conCfg);
-  refinedCFG->printRefinedCFG();
-  refinedCFG->refineSLHVCmds(recordManager, pimSet);
+
+  BMCRefinedBlockCFGPtr refinedBlockCFG = std::make_shared<BMCRefinedBlockCFG>(mainGraph);
+  refinedBlockCFG->print(std::cout);
+  BMCSLHVPreAnalysisPtr slhvPreAnalysis = std::make_shared<BMCSLHVPreAnalysis>(recordManager, pimSet);
+  slhvPreAnalysis->refineSLHVCmds(refinedBlockCFG);
+
   recordManager->print(std::cout);
+  this->setSLHVCmdRecords(refinedBlockCFG);
+  refinedBlockCFG->print(std::cout);
 
-  this->setSLHVCmdRecords(refinedCFG);
-  refinedCFG->printRefinedCFG();
-
-  BMCSLHVVCGen vcGen(refinedCFG, recordManager);
-  z3::expr_vector vcSet = vcGen.generateVC(1);
-  std::cout << "\nInvalidDeref :\n" << vcSet[0] << std::endl;
-  std::cout << "\nInvalidFree :\n" << vcSet[1] << std::endl;
-  std::cout << "\nMemLeak :\n" << vcSet[2] << std::endl;
-  vcGen.generateSMT2(vcSet[0], "../bin/invalidDeref.smt2");
-  vcGen.generateSMT2(vcSet[1], "../bin/invalidFree.smt2");
-  vcGen.generateSMT2(vcSet[2], "../bin/invalidMemLeak.smt2");
+  BMCSLHVVCGen slhvVCGen(refinedBlockCFG, recordManager);
+  z3::expr_vector slhvVCs = slhvVCGen.generateVC(10);
+  std::cout << "\nInvalidDeref :\n" << slhvVCs[0] << std::endl;
+  std::cout << "\nInvalidFree :\n" << slhvVCs[1] << std::endl;
+  std::cout << "\nMemLeak :\n" << slhvVCs[2] << std::endl;
+  slhvVCGen.generateSMT2(slhvVCs[0], "../bin/invalidDeref.smt2");
+  slhvVCGen.generateSMT2(slhvVCs[1], "../bin/invalidFree.smt2");
+  slhvVCGen.generateSMT2(slhvVCs[2], "../bin/invalidMemLeak.smt2");
 
   return false;
 }

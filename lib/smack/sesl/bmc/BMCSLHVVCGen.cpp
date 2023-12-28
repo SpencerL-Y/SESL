@@ -736,8 +736,8 @@ void BlockEncoding::print(std::ostream& OS) {
     OS << std::endl;
 }
 
-TREncoder::TREncoder(Z3ExprManagerPtr z3EM, BMCRefinedCFGPtr refinedCFG)
-    : z3EM(z3EM), refinedCFG(refinedCFG),
+TREncoder::TREncoder(Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr refinedBlockCFG)
+    : z3EM(z3EM), refinedBlockCFG(refinedBlockCFG),
       globalHeapVars(std::make_shared<VarSet>()),
       globalLocVars(std::make_shared<VarSet>()),
       globalDataVars(std::make_shared<VarSet>()),
@@ -746,15 +746,17 @@ TREncoder::TREncoder(Z3ExprManagerPtr z3EM, BMCRefinedCFGPtr refinedCFG)
 void TREncoder::initGlobalVars() {
     this->globalHeapVars->insert("H");
     this->globalHeapVars->insert("AH");
-    for(RefinedEdgePtr edge : refinedCFG->getRefinedEdges()) {
-        for (RefinedActionPtr act : edge->getRefinedActions()) {
-            const Expr* e = act->getArg1();
-            if (e == nullptr || !e->isVar()) continue;
-            const VarExpr* var = (const VarExpr*)e;
-            if (var->name()[1] == 'p') {
-                this->globalLocVars->insert(var->name());
-            } else {
-                this->globalDataVars->insert(var->name());
+    for (int u = 1; u <= this->refinedBlockCFG->getVertexNum(); u++) {
+        for(RefinedEdgePtr edge : this->refinedBlockCFG->getEdgesStartFrom(u)) {
+            for (RefinedActionPtr act : edge->getRefinedActions()) {
+                const Expr* e = act->getArg1();
+                if (e == nullptr || !e->isVar()) continue;
+                const VarExpr* var = (const VarExpr*)e;
+                if (var->name()[1] == 'p') {
+                    this->globalLocVars->insert(var->name());
+                } else {
+                    this->globalDataVars->insert(var->name());
+                }
             }
         }
     }
@@ -762,34 +764,36 @@ void TREncoder::initGlobalVars() {
 
 void TREncoder::init() {
     this->initGlobalVars();
-    for (RefinedEdgePtr edge : this->refinedCFG->getRefinedEdges()) {
-        if (this->Trs.find(edge) != this->Trs.end()) continue;
-        BlockEncodingPtr bep = std::make_shared<BlockEncoding>(z3EM, edge);
-        this->Trs[edge] = bep;
+    for (int u = 1; u <= this->refinedBlockCFG->getVertexNum(); u++) {
+        for(RefinedEdgePtr edge : this->refinedBlockCFG->getEdgesStartFrom(u)) {
+            if (this->Trs.find(edge) != this->Trs.end()) continue;
+            BlockEncodingPtr bep = std::make_shared<BlockEncoding>(z3EM, edge);
+            this->Trs[edge] = bep;
+        }
     }
     this->print(std::cout);
 }
 
-std::set<int> TREncoder::getInitialLocations() {
-    return this->refinedCFG->getInitVertices();
+int TREncoder::getInitialLocation() {
+    return this->refinedBlockCFG->getInitVertex();
 }
 
 std::set<int> TREncoder::getFinalLocations() {
-    return this->refinedCFG->getFinalVertices();
+    return this->refinedBlockCFG->getFinalVertices();
 }
 
 std::set<int> TREncoder::getSuccessors(std::set<int> u) {
     std::set<int> v;
     for (int x : u) {
-        for (RefinedEdgePtr e : this->refinedCFG->getEdgesStartFrom(x)) {
+        for (RefinedEdgePtr e : this->refinedBlockCFG->getEdgesStartFrom(x)) {
             v.insert(e->getTo());
         }
     }
     return v;
 }
 
-std::list<RefinedEdgePtr> TREncoder::getEdges() {
-    return refinedCFG->getRefinedEdges();
+const std::vector<RefinedEdgePtr>& TREncoder::getEdgesStartFrom(const int u) {
+    return this->refinedBlockCFG->getEdgesStartFrom(u);
 }
 
 VarSetPtr TREncoder::getGlobalHeapVars() {
@@ -963,11 +967,8 @@ BMCSLHVVCGen::generateOneStepBlockVC(RefinedEdgePtr edge, int k, SLHVBuggyType b
 z3::expr BMCSLHVVCGen::generateInitVC(SLHVBuggyType bty) {
     z3::expr initHeap = this->z3EM->mk_heap("H_0") == z3EM->mk_heap("emp");
     z3::expr initAllocHeap = this->z3EM->mk_heap("AH_0") == z3EM->mk_heap("emp");
-    z3::expr initLoc = this->z3EM->Ctx().bool_val(true);
-    z3::expr loc0 = this->z3EM->mk_data("loc_0");
-    for (auto b : this->TrEncoder->getInitialLocations()) {
-        CLEAN_Z3EXPR_CONJUNC(initLoc, (loc0 == b));
-    }
+    z3::expr initLoc =
+        this->z3EM->mk_data("loc_0") == this->TrEncoder->getInitialLocation();
     z3::expr init =initHeap && initAllocHeap && initLoc;
     if (bty == SLHVBuggyType::INVALIDDEREF)
         return init && !this->z3EM->mk_bool(BlockEncoding::invalid_deref + "_0");
@@ -980,10 +981,11 @@ z3::expr
 BMCSLHVVCGen::generateOneStepVC(int k, const std::set<int>& locations, SLHVBuggyType bty) {
     assert(k > 0);
     z3::expr vc = z3EM->Ctx().bool_val(true);
-    for (RefinedEdgePtr edge : this->TrEncoder->getEdges()) {
-        if (locations.find(edge->getFrom()) == locations.end()) continue;
-        z3::expr blockVC = this->generateOneStepBlockVC(edge, k, bty);
-        CLEAN_Z3EXPR_CONJUNC(vc, blockVC);
+    for (int u : locations) {
+        for (RefinedEdgePtr edge : this->TrEncoder->getEdgesStartFrom(u)) {
+            z3::expr blockVC = this->generateOneStepBlockVC(edge, k, bty);
+            CLEAN_Z3EXPR_CONJUNC(vc, blockVC);
+        }
     }
     return vc;
 }
@@ -991,10 +993,9 @@ BMCSLHVVCGen::generateOneStepVC(int k, const std::set<int>& locations, SLHVBuggy
 z3::expr BMCSLHVVCGen::generateVC(const int k, SLHVBuggyType bty) {
     z3::expr phiInit = this->generateInitVC(bty);
     std::set<int> reachableLocations;
-    for (int u : this->TrEncoder->getInitialLocations()) {
-        reachableLocations.insert(u);
-    }
+    reachableLocations.insert(this->TrEncoder->getInitialLocation());
     std::set<int> finalBlocks = this->TrEncoder->getFinalLocations();
+
     z3::expr phiBuggy = this->z3EM->Ctx().bool_val(false);
     z3::expr phiTr = phiInit;
     for (int i = 1; i <= k; i++) {
@@ -1035,11 +1036,11 @@ z3::expr BMCSLHVVCGen::generateVC(const int k, SLHVBuggyType bty) {
     return phiBuggy;
 }
 
-BMCSLHVVCGen::BMCSLHVVCGen(BMCRefinedCFGPtr refinedCFG, RecordManagerPtr rm)
+BMCSLHVVCGen::BMCSLHVVCGen(BMCRefinedBlockCFGPtr refinedBlockCFG, RecordManagerPtr rm)
     : z3EM(std::make_shared<Z3ExprManager>()) {
     rm->print(std::cout);
     for (auto p : rm->getRecordMap()) { z3EM->addRecord(p.second); }
-    this->TrEncoder = std::make_shared<TREncoder>(z3EM, refinedCFG);
+    this->TrEncoder = std::make_shared<TREncoder>(z3EM, refinedBlockCFG);
 }
 
 z3::expr_vector BMCSLHVVCGen::generateVC(int k) {

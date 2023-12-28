@@ -136,7 +136,7 @@ class TREncoder {
 
 private:
     Z3ExprManagerPtr z3EM;
-    BMCRefinedCFGPtr refinedCFG;
+    BMCRefinedBlockCFGPtr refinedBlockCFG;
     
     VarSetPtr globalHeapVars;
     VarSetPtr globalLocVars;
@@ -147,12 +147,12 @@ private:
     void init();
 
 public:
-    TREncoder(Z3ExprManagerPtr z3EM, BMCRefinedCFGPtr refinedCFG);
+    TREncoder(Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr refinedBlockCFG);
 
-    std::set<int> getInitialLocations();
+    int getInitialLocation();
     std::set<int> getFinalLocations();
     std::set<int> getSuccessors(std::set<int> u);
-    std::list<RefinedEdgePtr> getEdges();
+    const std::vector<RefinedEdgePtr>& getEdgesStartFrom(const int u);
 
     VarSetPtr getGlobalHeapVars();
     VarSetPtr getGlobalLocVars();
@@ -182,7 +182,7 @@ private:
     z3::expr generateVC(const int k, SLHVBuggyType bty);
 
 public:
-    BMCSLHVVCGen(BMCRefinedCFGPtr refinedCFG, RecordManagerPtr rm);
+    BMCSLHVVCGen(BMCRefinedBlockCFGPtr refinedBlockCFG, RecordManagerPtr rm);
 
     z3::expr_vector generateVC(int k);
     void generateSMT2(z3::expr e, std::string filename);

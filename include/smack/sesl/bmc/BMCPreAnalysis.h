@@ -2,6 +2,7 @@
 #define BMCPREANALYSIS_H
 #include <map>
 #include <list>
+#include <queue>
 
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 #include "smack/sesl/cfg/CFG.h"
@@ -60,6 +61,28 @@ namespace smack
     };
 
     typedef std::shared_ptr<BMCBlockPreAnalysis> BMCBlockPreAnalysisPtr;
+
+    class BMCSLHVPreAnalysis {
+        private:
+            RecordManagerPtr recordManager;
+            PIMSetPtr pimSet;
+
+            std::map<std::string, int> consVarMap;
+
+            std::pair<bool, int> parseConstant(const Expr* e);
+            const Expr* constructExprByConstants(const Expr* e);
+            void computeConstantVar(BMCRefinedBlockCFGPtr refinedBlockCFG);
+            void setArrayRecord(BMCRefinedBlockCFGPtr refinedBlockCFG);
+            void convertByteOffsetToField(BMCRefinedBlockCFGPtr refinedBlockCFG);
+
+        public:
+            BMCSLHVPreAnalysis(RecordManagerPtr rm, PIMSetPtr ps);
+
+            void refineSLHVCmds(BMCRefinedBlockCFGPtr refinedBlockCFG);
+    };
+
+    typedef std::shared_ptr<BMCSLHVPreAnalysis> BMCSLHVPreAnalysisPtr;
+
 } // namespace smack
 
 

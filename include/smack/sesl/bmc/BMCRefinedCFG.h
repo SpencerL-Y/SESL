@@ -170,13 +170,6 @@ namespace smack
             StmtFormatterPtr stmtFormatter;
             int sccNum, sccId;
 
-            // SLHV
-            std::pair<bool, int> parseConstant(const Expr* e, std::map<std::string, int>& consVarMap);
-            const Expr* constructExprByConstants(const Expr* e, std::map<std::string, int>& consVarMap);
-            std::map<std::string, int> getConsVarMap();
-            void setArrayRecord(RecordManagerPtr recordManager, PIMSetPtr pimSet);
-            void convertByteOffsetToField(RecordManagerPtr recordManager, PIMSetPtr pimSet);
-
         public:
         // TODObmc: add self loop and tag for exit vertex
             BMCRefinedCFG(ConcreteCFGPtr conCfg);
@@ -196,25 +189,59 @@ namespace smack
             StmtFormatterPtr getStmtFormatter(){return this->stmtFormatter;}
 
             void printRefinedCFG();
-
-            // SLHV
-            void refineSLHVCmds(RecordManagerPtr recordManager, PIMSetPtr pimSet);
     };
 
     typedef std::shared_ptr<BMCRefinedCFG> BMCRefinedCFGPtr;
 
+    // used by slhv encoding
+    class BMCRefinedBlockCFG {
+        private:
+            struct UnionSet {
+                std::map<int, int> mp;
+                
+                int find(int x) {
+                    if (mp.find(x) == mp.end()) { mp[x] = x; }
+                    return x == mp[x] ? x : x = this->find(mp[x]);
+                }
+                void link(int x, int y) { mp[this->find(y)] = this->find(x); }
+            };
+
+        private:
+            int N;
+            std::vector<std::vector<RefinedEdgePtr>> refinedBlockCFG;
+            int initVertex;
+            std::set<int> finalVertices;
+
+            inline int createVertex();
+            void createEdge(const int from, const int to, std::vector<RefinedActionPtr> acts);
+            inline bool supported(RefinedActionPtr act);
+
+        public:
+            BMCRefinedBlockCFG(CFGPtr cfg);
+
+            const int getVertexNum();
+            const int getInitVertex();
+            const std::set<int>& getFinalVertices();
+            const std::vector<RefinedEdgePtr>& getEdgesStartFrom(const int u);
+
+            void print(ostream& OS);
+
+    };
+
+    typedef std::shared_ptr<BMCRefinedBlockCFG> BMCRefinedBlockCFGPtr;
+
     // To reduce the size of formula, we use BlockCFG instead
     class BlockVertex {
         private:
-        std::list<const Stmt*> stmts;
-        int vertexId;
+            std::list<const Stmt*> stmts;
+            int vertexId;
 
         public: 
-        BlockVertex(int id);
-        BlockVertex(StatePtr origState, int id);
-        BlockVertex(std::list<const Stmt*> stmts, int id);
-        std::list<const Stmt*> getStmts() {return this->stmts;}
-        int getVertexId() {return this->vertexId;}
+            BlockVertex(int id);
+            BlockVertex(StatePtr origState, int id);
+            BlockVertex(std::list<const Stmt*> stmts, int id);
+            std::list<const Stmt*> getStmts() {return this->stmts;}
+            int getVertexId() {return this->vertexId;}
     };
 
     typedef std::shared_ptr<BlockVertex> BlockVertexPtr;
@@ -222,37 +249,37 @@ namespace smack
 
     class BlockCFG{
         private:
-        int vertexNum;
-        int edgeNum;
-        std::list<BlockVertexPtr> vertices;
-        std::list<int> initVertices;
-        std::list<int> finalVertices;
-        std::list<std::pair<int, int>> edges;
-        CFGPtr origCfg;
+            int vertexNum;
+            int edgeNum;
+            std::list<BlockVertexPtr> vertices;
+            std::list<int> initVertices;
+            std::list<int> finalVertices;
+            std::list<std::pair<int, int>> edges;
+            CFGPtr origCfg;
 
         public:
-        BlockCFG(CFGPtr origCfg);
-        BlockCFG(std::list<BlockVertexPtr> vertices, int vertexNum, std::list<std::pair<int, int>> edges, CFGPtr origCfg);
-        int getVertexNum() {return this->vertexNum;}
-        int getEdgeNum() {return this->edgeNum;}
-        std::list<BlockVertexPtr>& getVertices() {return this->vertices;}
-        std::list<std::pair<int, int>> getEdges() {return this->edges;}
+            BlockCFG(CFGPtr origCfg);
+            BlockCFG(std::list<BlockVertexPtr> vertices, int vertexNum, std::list<std::pair<int, int>> edges, CFGPtr origCfg);
+            int getVertexNum() {return this->vertexNum;}
+            int getEdgeNum() {return this->edgeNum;}
+            std::list<BlockVertexPtr>& getVertices() {return this->vertices;}
+            std::list<std::pair<int, int>> getEdges() {return this->edges;}
 
-        BlockVertexPtr getVertex(int vertexId);
-        bool hasEdge(int fromId, int toId);
-        std::list<int> getInitVertices(){return this->initVertices;}
-        std::list<int> getFinalVertices(){return this->finalVertices;}
-        std::list<std::pair<int,int>> getEdgesStartFrom(int fromVertex);
-        std::list<std::pair<int,int>> getEdgesEndWith(int toVertex);
+            BlockVertexPtr getVertex(int vertexId);
+            bool hasEdge(int fromId, int toId);
+            std::list<int> getInitVertices(){return this->initVertices;}
+            std::list<int> getFinalVertices(){return this->finalVertices;}
+            std::list<std::pair<int,int>> getEdgesStartFrom(int fromVertex);
+            std::list<std::pair<int,int>> getEdgesEndWith(int toVertex);
 
-        bool isSingleSuccessor(int vertexId, std::list<std::pair<int, int>> currEdges);
-        bool isSinglePredecessor(int vertexId, std::list<std::pair<int, int>> currEdges);
-        bool hasSelfLoop(int vertexId, std::list<std::pair<int, int>> currEdges); 
+            bool isSingleSuccessor(int vertexId, std::list<std::pair<int, int>> currEdges);
+            bool isSinglePredecessor(int vertexId, std::list<std::pair<int, int>> currEdges);
+            bool hasSelfLoop(int vertexId, std::list<std::pair<int, int>> currEdges); 
 
-        CFGPtr getOrigCfg(){return this->origCfg;}
+            CFGPtr getOrigCfg(){return this->origCfg;}
 
-        std::shared_ptr<BlockCFG> simplify();
-        void printBlockCFG(std::ostream& os);
+            std::shared_ptr<BlockCFG> simplify();
+            void printBlockCFG(std::ostream& os);
 
     };
 

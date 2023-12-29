@@ -148,7 +148,7 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   refinedBlockCFG->print(std::cout);
 
   BMCSLHVVCGen slhvVCGen(refinedBlockCFG, recordManager);
-  z3::expr_vector slhvVCs = slhvVCGen.generateVC(10);
+  z3::expr_vector slhvVCs = slhvVCGen.generateVC(3);
   std::cout << "\nInvalidDeref :\n" << slhvVCs[0] << std::endl;
   std::cout << "\nInvalidFree :\n" << slhvVCs[1] << std::endl;
   std::cout << "\nMemLeak :\n" << slhvVCs[2] << std::endl;

@@ -179,6 +179,7 @@ private:
     z3::expr generateOneStepBlockVC(RefinedEdgePtr edge, int k, SLHVBuggyType bty);
     z3::expr generateInitVC(SLHVBuggyType bty);
     z3::expr generateOneStepVC(int k, const std::set<int>& locations, SLHVBuggyType bty);
+    z3::expr generateKthStepBuggy(const int k, const std::set<int>& locations, SLHVBuggyType bty);
     z3::expr generateVC(const int k, SLHVBuggyType bty);
 
 public:

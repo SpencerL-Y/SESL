@@ -547,6 +547,19 @@ namespace smack
             std::make_shared<RefinedEdge>(acts, from, to, -1));
     }
 
+    void BMCRefinedBlockCFG::createFinalLoop() {
+        assert(this->finalVertices.size() > 0);
+        std::vector<RefinedActionPtr> acts;
+        acts.push_back(std::make_shared<RefinedAction>(
+            ConcreteAction::ActType::ASSUME,
+            nullptr, nullptr, new BoolLit(true), nullptr, 0, 0, 1, 0,
+            std::set<std::string>()
+        ));
+        for (int u : this->finalVertices) {
+            this->createEdge(u, u, acts);
+        }
+    }
+
     inline bool BMCRefinedBlockCFG::supported(RefinedActionPtr act) {
         return act->getActType() != ConcreteAction::ActType::OTHER &&
                act->getActType() != ConcreteAction::ActType::OTHERPROC;
@@ -603,11 +616,12 @@ namespace smack
         this->initVertex = refinedLocMap[
             unionSet.find(cfgLocId[cfg->getEntryBlockName() + "_entry"])
         ];
-        for (int i = 1; i <= this->N; i++) {
-            if (this->getEdgesStartFrom(i).size() == 0) {
-                this->finalVertices.insert(i);
+        for (int u = 1; u <= this->N; u++) {
+            if (this->getEdgesStartFrom(u).size() == 0) {
+                this->finalVertices.insert(u);
             }
         }
+        this->createFinalLoop();
     }
 
     const int BMCRefinedBlockCFG::getVertexNum() {

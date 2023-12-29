@@ -439,10 +439,9 @@ z3::expr_vector BlockEncoding::generateAllocAndMallocEncoding(RefinedActionPtr a
     z3::expr x = this->generateLocalVarByName(arg1->name());
     this->feasibleEVM.outputsMap[arg1->name()] = x.to_string();
     z3::expr_vector recordHeap = this->generateRecord(slhvcmd.record);
-    z3::expr heapEC = (
-        nH == this->z3EM->mk_uplus(H, recordHeap[2])
-        && recordHeap[1] && (x == recordHeap[0]) 
-    );
+    z3::expr heapEC = (nH == this->z3EM->mk_uplus(H, recordHeap[2]));
+    CLEAN_Z3EXPR_CONJUNC(heapEC, recordHeap[1]);
+    heapEC = (heapEC && (x == recordHeap[0]));
     z3::expr idx = this->z3EM->Ctx().int_val(slhvcmd.record.getID());
     z3::expr allocHeapEC = 
         (nAH == this->z3EM->mk_uplus(AH, this->z3EM->mk_pto(recordHeap[0], idx)));
@@ -990,50 +989,50 @@ BMCSLHVVCGen::generateOneStepVC(int k, const std::set<int>& locations, SLHVBuggy
     return vc;
 }
 
+
+z3::expr BMCSLHVVCGen::generateKthStepBuggy(const int k, const std::set<int>& locations, SLHVBuggyType bty) {
+    std::set<int> finalLocations = this->TrEncoder->getFinalLocations();
+    z3::expr buggyEncoding = this->z3EM->Ctx().bool_val(false);
+    if (bty == SLHVBuggyType::INVALIDDEREF) {
+        buggyEncoding = this->z3EM
+            ->mk_bool(BlockEncoding::invalid_deref + "_" + std::to_string(k));
+    } else if (bty == SLHVBuggyType::INVALIDFREE) {
+        buggyEncoding = this->z3EM
+            ->mk_bool(BlockEncoding::invalid_free + "_" + std::to_string(k));
+    } else {
+        z3::expr finalLocs = z3EM->Ctx().bool_val(false);
+        for (int u : locations) {
+            if (finalLocations.find(u) == finalLocations.end()) { continue; }
+            z3::expr locatesOnU = 
+                (z3EM->mk_data("loc_" + std::to_string(k)) == u);
+            CLEAN_Z3EXPR_DISJUNC(finalLocs, locatesOnU);
+        }
+        z3::expr kthHeap = this->z3EM->mk_heap("H_" + std::to_string(k));
+        z3::expr kthAllocHeap = this->z3EM->mk_heap("AH_" + std::to_string(k));
+        z3::expr empHeap = this->z3EM->mk_heap("emp");
+        buggyEncoding = 
+            finalLocs && (kthHeap == empHeap) && (kthAllocHeap == empHeap);
+    }
+    return buggyEncoding;
+}
+
 z3::expr BMCSLHVVCGen::generateVC(const int k, SLHVBuggyType bty) {
     z3::expr phiInit = this->generateInitVC(bty);
     std::set<int> reachableLocations;
     reachableLocations.insert(this->TrEncoder->getInitialLocation());
     std::set<int> finalBlocks = this->TrEncoder->getFinalLocations();
 
-    z3::expr phiBuggy = this->z3EM->Ctx().bool_val(false);
     z3::expr phiTr = phiInit;
     for (int i = 1; i <= k; i++) {
-        if (i > 2) {
+        if (i > 1) {
             reachableLocations =
                 this->TrEncoder->getSuccessors(reachableLocations);
         }
+        assert(reachableLocations.size() > 0);
         if (reachableLocations.empty())  { break; }
         phiTr = phiTr && this->generateOneStepVC(i, reachableLocations, bty);
-
-        z3::expr ithStepBuggyEncoding(this->z3EM->Ctx());
-        if (bty == SLHVBuggyType::INVALIDDEREF) {
-            ithStepBuggyEncoding = this->z3EM
-                ->mk_bool(BlockEncoding::invalid_deref + "_" + std::to_string(i));
-        } else if (bty == SLHVBuggyType::INVALIDFREE) {
-            ithStepBuggyEncoding = this->z3EM
-                ->mk_bool(BlockEncoding::invalid_free + "_" + std::to_string(i));
-        } else {
-            if (finalBlocks.empty()) {
-                ithStepBuggyEncoding = this->z3EM->Ctx().bool_val(false);
-            } else {
-                z3::expr locatesOnFinalBlocks = z3EM->Ctx().bool_val(false);
-                for (int u : finalBlocks) {
-                    z3::expr locatesOnU = 
-                        (z3EM->mk_data("loc_" + std::to_string(i)) == u);
-                    CLEAN_Z3EXPR_DISJUNC(locatesOnFinalBlocks, locatesOnU);
-                }
-                z3::expr ithHeap = this->z3EM->mk_heap("H_" + std::to_string(i));
-                z3::expr ithAllocHeap = this->z3EM->mk_heap("AH_" + std::to_string(i));
-                z3::expr empHeap = this->z3EM->mk_heap("emp");
-                ithStepBuggyEncoding =
-                    locatesOnFinalBlocks
-                    && (ithHeap == empHeap) && (ithAllocHeap == empHeap);
-            }
-        }
-        CLEAN_Z3EXPR_DISJUNC(phiBuggy, phiTr && ithStepBuggyEncoding);
     }
-    return phiBuggy;
+    return phiTr && this->generateKthStepBuggy(k, reachableLocations, bty);
 }
 
 BMCSLHVVCGen::BMCSLHVVCGen(BMCRefinedBlockCFGPtr refinedBlockCFG, RecordManagerPtr rm)

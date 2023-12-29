@@ -214,6 +214,7 @@ namespace smack
 
             inline int createVertex();
             void createEdge(const int from, const int to, std::vector<RefinedActionPtr> acts);
+            void createFinalLoop();
             inline bool supported(RefinedActionPtr act);
 
         public:

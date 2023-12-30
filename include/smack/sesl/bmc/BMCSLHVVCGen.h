@@ -8,6 +8,7 @@
 #include "z3++.h"
 #include "smack/PointerInfoAnalysis.h"
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
+#include "smack/sesl/bmc/BMCPreAnalysis.h"
 
 namespace smack {
 
@@ -94,6 +95,7 @@ public:
 
 private:
     Z3ExprManagerPtr z3EM;
+    VarsSLHVTypeMapPtr varsSLHVTypeMap;
 
     VarsManager feasibleEVM;
     VarsManager invalidDerefEVM;
@@ -116,7 +118,7 @@ private:
     void generateEncoding(RefinedEdgePtr edge);
 
 public:
-    BlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge);
+    BlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarsSLHVTypeMapPtr vtm);
     
     inline bool use_global(std::string var);
 
@@ -143,11 +145,11 @@ private:
     VarSetPtr globalDataVars;
     std::map<RefinedEdgePtr, BlockEncodingPtr> Trs;
 
-    void initGlobalVars();
-    void init();
+    void initGlobalVars(VarsSLHVTypeMapPtr vtm);
+    void init(VarsSLHVTypeMapPtr vtm);
 
 public:
-    TREncoder(Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr refinedBlockCFG);
+    TREncoder(Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr rbcfg, VarsSLHVTypeMapPtr vtm);
 
     int getInitialLocation();
     std::set<int> getFinalLocations();
@@ -183,7 +185,7 @@ private:
     z3::expr generateVC(const int k, SLHVBuggyType bty);
 
 public:
-    BMCSLHVVCGen(BMCRefinedBlockCFGPtr refinedBlockCFG, RecordManagerPtr rm);
+    BMCSLHVVCGen(BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarsSLHVTypeMapPtr vtm);
 
     z3::expr_vector generateVC(int k);
     void generateSMT2(z3::expr e, std::string filename);

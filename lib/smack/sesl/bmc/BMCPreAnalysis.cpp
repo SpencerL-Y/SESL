@@ -325,12 +325,10 @@ namespace smack
             bool hasChanged = false;
             for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(u)) {
                 for (RefinedActionPtr act : edge->getRefinedActions()) {
-                    if (act->getActType() ==
-                        ConcreteAction::ActType::COMMONASSIGN) {
+                    if (act->getActType() == ConcreteAction::ActType::COMMONASSIGN) {
                         if (act->getArg1() == nullptr) continue;
                         std::string var =
                             ((const VarExpr*)act->getArg1())->name();
-                        if (this->consVarMap.find(var) != this->consVarMap.end()) { continue; }
                         std::pair<bool, int> res = this->parseConstant(act->getArg2());
                         if (res.first) {
                             this->consVarMap[var] = res.second;
@@ -372,7 +370,9 @@ namespace smack
                     }
                     std::string name = varType + "_" + std::to_string(ftypes.size());
                     Record record = Record(this->recordManager->getNewId(), stepWidth, ftypes);
-                    this->recordManager->add(name, record);
+                    if (!this->recordManager->contains(name)) {
+                        this->recordManager->add(name, record);
+                    }
                     slhvcmd.record = record;
                 }
             }
@@ -420,8 +420,108 @@ namespace smack
         }
     }
 
+    SLHVVarType BMCSLHVPreAnalysis::getVarsSLHVTypeFromExpr(const Expr* e) {
+        switch (e->getType()) {
+            case ExprType::BIN: {
+                const BinExpr* be = (const BinExpr*)e;
+                SLHVVarType lhsTy = this->getVarsSLHVTypeFromExpr(be->getLhs());
+                SLHVVarType rhsTy = this->getVarsSLHVTypeFromExpr(be->getRhs());
+                switch (be->getOp())  {
+                    case BinExpr::Binary::Plus:
+                    case BinExpr::Binary::Minus:
+                    case BinExpr::Binary::Times: {
+                        if (lhsTy == rhsTy) return lhsTy;
+                        assert(lhsTy == SLHVVarType::INT_LOC || 
+                            rhsTy == SLHVVarType::INT_LOC);
+                        return SLHVVarType::INT_LOC;
+                    }
+                    case BinExpr::Binary::Eq:
+                    case BinExpr::Binary::Neq:
+                    case BinExpr::Binary::Lt:
+                    case BinExpr::Binary::Gt:
+                    case BinExpr::Binary::Lte:
+                    case BinExpr::Binary::Gte: {
+                        return SLHVVarType::SLHV_BOOL;
+                    }
+                    default: { assert(false && "unsupported operation!!!");  }
+                }
+            }
+            case ExprType::BOOL: return SLHVVarType::SLHV_BOOL;
+            case ExprType::INT: return SLHVVarType::INT_DAT;
+            case ExprType::NOT:
+                return this->getVarsSLHVTypeFromExpr(((NotExpr*)e)->getExpr());
+            case ExprType::VAR: {
+                const VarExpr* var = (const VarExpr*)e;
+                if (this->varsSLHVTypeMap->find(var->name())
+                    == this->varsSLHVTypeMap->end()) {
+                    SLHVVarType ty;
+                    if (var->name()[1] == 'p') { ty = SLHVVarType::INT_LOC; }
+                    else if(var->name()[1] == 'i') { ty = SLHVVarType::INT_DAT; }
+                    else assert(false && "what?");
+                    (*this->varsSLHVTypeMap)[var->name()] = ty;
+                }
+                return this->varsSLHVTypeMap->at(var->name());
+            }
+            default: assert(false);
+        }
+    }
+
+    void BMCSLHVPreAnalysis::setVarsSLHVType(RefinedActionPtr act) {
+        switch (act->getActType()) {
+            case ConcreteAction::ActType::MALLOC:
+            case ConcreteAction::ActType::ALLOC:
+            case ConcreteAction::ActType::STORE:
+            case ConcreteAction::ActType::FREE: {
+                if (act->getArg2() != nullptr) {
+                    this->getVarsSLHVTypeFromExpr(act->getArg2());
+                }
+                const VarExpr* x = (const VarExpr*)act->getArg1();
+                (*this->varsSLHVTypeMap)[x->name()] = SLHVVarType::INT_LOC;
+                break;
+            }
+            case ConcreteAction::ActType::LOAD: {
+                const VarExpr* x = (const VarExpr*)act->getArg1();
+                SLHVVarType ty;
+                if (x->name()[1] == 'p') { ty = SLHVVarType::INT_LOC; }
+                else if (x->name()[1] == 'i') { ty = SLHVVarType::INT_DAT; }
+                else assert(false);
+                (*this->varsSLHVTypeMap)[x->name()] = ty;
+                break;
+            }
+            default: {
+                if (act->getArg1() != nullptr) {
+                    assert(act->getArg1()->isVar());
+                    const VarExpr* x = (const VarExpr*)act->getArg1();
+                    int ty = this->getVarsSLHVTypeFromExpr(act->getArg2());
+                    if (x->name()[1] == 'p') {
+                        assert(ty == SLHVVarType::INT_LOC);
+                    }
+                    else if (x->name()[1] == 'i') {
+                        assert(ty == SLHVVarType::INT_DAT);
+                    }
+                    (*this->varsSLHVTypeMap)[x->name()] = SLHVVarType(ty);
+                } else if (act->getArg3()->isVar()) {
+                    const VarExpr* x = (const VarExpr*)act->getArg3();
+                    int ty = this->getVarsSLHVTypeFromExpr(act->getArg4());
+                    if (x->name()[1] == 'i') { ty = SLHVVarType::INT_DAT; }
+                    (*this->varsSLHVTypeMap)[x->name()] = SLHVVarType(ty);
+                } else if (act->getArg3() != nullptr) {
+                    this->getVarsSLHVTypeFromExpr(act->getArg3());
+                }
+            }
+        }
+    }
+
     BMCSLHVPreAnalysis::BMCSLHVPreAnalysis(RecordManagerPtr rm, PIMSetPtr ps)
-        : recordManager(rm), pimSet(ps), consVarMap() {}
+        : recordManager(rm), pimSet(ps),
+          varsSLHVTypeMap(std::make_shared<VarsSLHVTypeMap>()),
+          consVarMap() {
+        (*varsSLHVTypeMap)["H"] = SLHVVarType::INT_HEAP;
+        (*varsSLHVTypeMap)["AH"] = SLHVVarType::INT_HEAP;
+        (*varsSLHVTypeMap)["$0.ref"] = SLHVVarType::INT_LOC;
+        (*varsSLHVTypeMap)["invalidDeref"] = SLHVVarType::SLHV_BOOL;
+        (*varsSLHVTypeMap)["invalidFree"] = SLHVVarType::SLHV_BOOL;
+    }
 
     void BMCSLHVPreAnalysis::refineSLHVCmds(BMCRefinedBlockCFGPtr refinedBlockCFG) {
         this->computeConstantVar(refinedBlockCFG);
@@ -429,6 +529,7 @@ namespace smack
         for(int u = 1; u <= refinedBlockCFG->getVertexNum(); u++) {
             for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(u)) {
                 for (RefinedActionPtr act : edge->getRefinedActions()) {
+                    this->setVarsSLHVType(act);
                     if (act->getArg2() == nullptr) continue;
                     assert(act->getArg1()->isVar());
                     const Expr* arg2 = this->constructExprByConstants(act->getArg2());
@@ -440,5 +541,8 @@ namespace smack
         this->convertByteOffsetToField(refinedBlockCFG);
     }
 
+    VarsSLHVTypeMapPtr BMCSLHVPreAnalysis::getVarsSLHVTypeMap() {
+        return this->varsSLHVTypeMap;
+    }
 
 } // namespace smack

@@ -105,7 +105,7 @@ public:
 
 typedef std::shared_ptr<PIMSet> PIMSetPtr;
 
-enum SLHVVarType { INT_LOC, INT_DAT, INT_HEAP, FALSIFICATION_BOOL };
+enum SLHVVarType { INT_LOC, INT_DAT, INT_HEAP, SLHV_BOOL };
 
 typedef std::vector<SLHVVarType> FieldsTypes;
 

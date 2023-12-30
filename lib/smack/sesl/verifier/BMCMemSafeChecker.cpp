@@ -45,7 +45,8 @@ bool BMCMemSafeChecker::support(const Stmt* stmt, PointerInfoManagerPtr pointerI
     return proc.find("memcpy") != std::string::npos ||
            proc.find("alloc") != std::string::npos ||
            proc.find("malloc") != std::string::npos ||
-           proc.find("free") != std::string::npos;
+           proc.find("free") != std::string::npos ||
+           proc.find("__VERIFIER_nondet_int") != std::string::npos;
   }
   return true;
 }
@@ -143,12 +144,33 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   BMCSLHVPreAnalysisPtr slhvPreAnalysis = std::make_shared<BMCSLHVPreAnalysis>(recordManager, pimSet);
   slhvPreAnalysis->refineSLHVCmds(refinedBlockCFG);
 
-  recordManager->print(std::cout);
+  // recordManager->print(std::cout);
   this->setSLHVCmdRecords(refinedBlockCFG);
   refinedBlockCFG->print(std::cout);
 
-  BMCSLHVVCGen slhvVCGen(refinedBlockCFG, recordManager);
-  z3::expr_vector slhvVCs = slhvVCGen.generateVC(3);
+  std::cout << " ========================== SLHV Var Type ==========\n";
+  for (auto p : *slhvPreAnalysis->getVarsSLHVTypeMap()) {
+    std::cout << p.first << " ";
+    std::string ss;
+    switch (p.second)
+    {
+    case SLHVVarType::INT_DAT: ss = "Dat"; break;
+    case SLHVVarType::INT_LOC: ss = "Loc"; break;
+    case SLHVVarType::INT_HEAP: ss = "Heap"; break;
+    case SLHVVarType::SLHV_BOOL: ss = "Bool"; break;
+    default:
+      assert(false);
+      break;
+    }
+    std::cout << ss << '\n';
+  }
+
+  BMCSLHVVCGen slhvVCGen(
+    refinedBlockCFG,
+    recordManager,
+    slhvPreAnalysis->getVarsSLHVTypeMap()
+  );
+  z3::expr_vector slhvVCs = slhvVCGen.generateVC(1);
   std::cout << "\nInvalidDeref :\n" << slhvVCs[0] << std::endl;
   std::cout << "\nInvalidFree :\n" << slhvVCs[1] << std::endl;
   std::cout << "\nMemLeak :\n" << slhvVCs[2] << std::endl;

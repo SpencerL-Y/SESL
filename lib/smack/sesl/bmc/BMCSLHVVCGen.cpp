@@ -743,22 +743,6 @@ void TREncoder::initGlobalVars(VarsSLHVTypeMapPtr vtm) {
                 break;
         }
     }
-    // this->globalHeapVars->insert("H");
-    // this->globalHeapVars->insert("AH");
-    // for (int u = 1; u <= this->refinedBlockCFG->getVertexNum(); u++) {
-    //     for(RefinedEdgePtr edge : this->refinedBlockCFG->getEdgesStartFrom(u)) {
-    //         for (RefinedActionPtr act : edge->getRefinedActions()) {
-    //             const Expr* e = act->getArg1();
-    //             if (e == nullptr || !e->isVar()) continue;
-    //             const VarExpr* var = (const VarExpr*)e;
-    //             if (var->name()[1] == 'p') {
-    //                 this->globalLocVars->insert(var->name());
-    //             } else {
-    //                 this->globalDataVars->insert(var->name());
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 void TREncoder::init(VarsSLHVTypeMapPtr vtm) {

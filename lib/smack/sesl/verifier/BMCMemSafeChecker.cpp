@@ -140,30 +140,30 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   std::cout << "-------------PRINT CFG END-----------" << std::endl;
 
   BMCRefinedBlockCFGPtr refinedBlockCFG = std::make_shared<BMCRefinedBlockCFG>(mainGraph);
-  refinedBlockCFG->print(std::cout);
+  // refinedBlockCFG->print(std::cout);
   BMCSLHVPreAnalysisPtr slhvPreAnalysis = std::make_shared<BMCSLHVPreAnalysis>(recordManager, pimSet);
   slhvPreAnalysis->refineSLHVCmds(refinedBlockCFG);
 
-  // recordManager->print(std::cout);
+  recordManager->print(std::cout);
   this->setSLHVCmdRecords(refinedBlockCFG);
   refinedBlockCFG->print(std::cout);
 
-  std::cout << " ========================== SLHV Var Type ==========\n";
-  for (auto p : *slhvPreAnalysis->getVarsSLHVTypeMap()) {
-    std::cout << p.first << " ";
-    std::string ss;
-    switch (p.second)
-    {
-    case SLHVVarType::INT_DAT: ss = "Dat"; break;
-    case SLHVVarType::INT_LOC: ss = "Loc"; break;
-    case SLHVVarType::INT_HEAP: ss = "Heap"; break;
-    case SLHVVarType::SLHV_BOOL: ss = "Bool"; break;
-    default:
-      assert(false);
-      break;
-    }
-    std::cout << ss << '\n';
-  }
+  // std::cout << " ========================== SLHV Var Type ==========\n";
+  // for (auto p : *slhvPreAnalysis->getVarsSLHVTypeMap()) {
+  //   std::cout << p.first << " ";
+  //   std::string ss;
+  //   switch (p.second)
+  //   {
+  //   case SLHVVarType::INT_DAT: ss = "Dat"; break;
+  //   case SLHVVarType::INT_LOC: ss = "Loc"; break;
+  //   case SLHVVarType::INT_HEAP: ss = "Heap"; break;
+  //   case SLHVVarType::SLHV_BOOL: ss = "Bool"; break;
+  //   default:
+  //     assert(false);
+  //     break;
+  //   }
+  //   std::cout << ss << '\n';
+  // }
 
   BMCSLHVVCGen slhvVCGen(
     refinedBlockCFG,

@@ -1,10 +1,15 @@
 #ifndef BMCVCGEN_H
 #define BMCVCGEN_H
 
-#include <z3.h>
-#include <set>
+#include <cstring>
+#include <iostream>
+#include <fstream>
 #include <list>
 #include <map>
+#include <memory>
+#include <set>
+#include <vector>
+#include "z3++.h"
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 #include "smack/sesl/bmc/StmtFormatter.h"
 #include "smack/sesl/bmc/BMCPreAnalysis.h"
@@ -16,7 +21,7 @@
 namespace smack
 {
     class BlockNormalForm {
-        private:
+        protected:
             int blockId;
             int length;
             int primeNum;
@@ -56,7 +61,7 @@ namespace smack
     typedef std::shared_ptr<BlockNormalForm> BNFPtr;
 
     class RegionNormalForm {
-        private:
+        protected:
             int maxRegionNum;
             int primeNum;
             int length;
@@ -96,7 +101,7 @@ namespace smack
 
 
     class BMCVCGen {
-        private:
+        protected:
             z3::context z3Ctx;
             BMCRefinedCFGPtr refCfg;
             std::set<std::string> cfgVariables;
@@ -205,7 +210,7 @@ namespace smack
 
 
     class ViolationTuple {
-        private:
+        protected:
         int step;
         int location;
         std::list<z3::expr> exprList;
@@ -340,6 +345,195 @@ namespace smack
 
     typedef std::shared_ptr<BMCBlockVCGen> BMCBlockVCGenPtr;
 
+// Framework by Yutian Zhu
+
+#define DEFINE_PTR_TYPE(T) typedef std::shared_ptr<T> T##Ptr
+
+#define CLEAN_Z3EXPR_CONJUNC(X, Y) \
+    if (X.is_true()) { X = Y; } \
+    else if (!Y.is_true()) { X = X && Y; }
+
+#define CLEAN_Z3EXPR_DISJUNC(X, Y) \
+    if (X.is_false()) { X = Y; } \
+    else if (!Y.is_false()) { X = X || Y; } 
+
+enum BuggyType { INVALIDDEREF, INVALIDFREE, MEMLEAK };
+typedef std::set<std::string> VarSet;
+typedef int VarEnumType;
+typedef std::map<std::string, int> VarTypeSet;
+
+DEFINE_PTR_TYPE(VarSet);
+DEFINE_PTR_TYPE(VarTypeSet);
+
+class Z3ExprManager {
+
+protected:
+    z3::context ctx;
+
+    std::map<std::string, std::shared_ptr<z3::sort>> sorts;
+    std::map<std::string, std::shared_ptr<z3::func_decl>> functions;
+    std::vector<Record> records;
+
+    std::map<std::string, int> freshVarsCounts;
+    std::map<std::string, int> quantifiedVarsCounts;
+    std::map<std::string, std::shared_ptr<z3::sort>> quantifiedVarsSorts;
+
+    virtual void initSorts() = 0;
+    virtual void initFunctions() = 0;
+    virtual void initQuantifiedVars() = 0;
+
+    inline const int getFreshVarCount(std::string var);
+    inline const int getQuantifitedVarCount(std::string pre);
+
+public:
+    Z3ExprManager();
+
+    z3::context& Ctx();
+    
+    void addRecord(Record record);
+    std::vector<Record>& getRecords();
+    
+    z3::sort getSort(std::string name);
+    z3::func_decl getFunc(std::string name);
+
+    inline z3::expr mk_constant(std::string name, z3::sort sort);
+
+    z3::expr mk_int(std::string var);
+    z3::expr mk_bool(std::string var);
+
+    virtual z3::expr mk_loc(std::string var) = 0;
+    virtual z3::expr mk_heap(std::string var) = 0;
+    virtual z3::expr mk_pto(z3::expr x, z3::expr y) = 0;
+    virtual z3::expr mk_sep(z3::expr h1, z3::expr h2) = 0;
+    virtual z3::expr mk_loc_arith(z3::expr l1, z3::expr l2, BinExpr::Binary op) = 0;
+
+    virtual z3::expr mk_fresh(std::string var, z3::sort sort);
+    virtual z3::expr mk_quantified(std::string pre);
+
+    virtual std::string to_smt2(z3::expr e) = 0;
+
+    void print(std::ostream& os);
+};
+
+DEFINE_PTR_TYPE(Z3ExprManager);
+
+class BlockEncoding {
+
+public:
+    struct VarsManager {
+        // inputVars  - connect the output variables in last step
+        // localVars  - quantified variables, some of which are used 
+        //              for passing change of global variables
+        // outputsMap - recording the last change of global variables
+        VarSet inputVars;
+        VarSet localVars;
+        std::map<std::string, std::string> outputsMap;
+        
+        void print(std::ostream& os);
+    };
+
+    static const std::string invalid_deref;
+    static const std::string invalid_free;
+
+protected:
+    Z3ExprManagerPtr z3EM;
+    VarTypeSetPtr varsTypeMap;
+
+    VarsManager feasibleVM;
+    VarsManager invalidDerefVM;
+    VarsManager invalidFreeVM;
+    z3::expr feasibleEncoding;
+    z3::expr invalidDerefEncoding;
+    z3::expr invalidFreeEncoding;
+
+    // Variables' types is an "enum", according to the specific theory
+    int getVarTypeByName(std::string name);
+    virtual z3::expr generateVarByType(std::string name, int type) = 0;
+    virtual z3::expr generateNullptr() = 0;
+
+    virtual z3::expr getLatestUpdateForGlobalVar(std::string name);
+    virtual z3::expr generateLocalVarByName(std::string name);
+    virtual z3::expr generateArithExpr(BinExpr::Binary op, z3::expr lhs, z3::expr rhs);
+    z3::expr generateBinExpr(const BinExpr* e);
+    z3::expr generateExpr(const Expr* e);
+
+    virtual z3::expr_vector generateAssignEncoding(RefinedActionPtr act) = 0;
+    virtual z3::expr_vector generateAssumeEncoding(RefinedActionPtr act) = 0;
+    virtual z3::expr_vector generateAllocAndMallocEncoding(RefinedActionPtr act) = 0;
+    virtual z3::expr_vector generateLoadEncoding(RefinedActionPtr act) = 0;
+    virtual z3::expr_vector generateStoreEncoding(RefinedActionPtr act) = 0;
+    virtual z3::expr_vector generateFreeEncoding(RefinedActionPtr act) = 0;
+
+    void generateEncoding(RefinedEdgePtr edge);
+
+public:
+    BlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarTypeSetPtr vts);
+    
+    inline bool use_global(std::string var);
+
+    inline const VarsManager& getFeasibleVM();
+    inline const VarsManager& getInvalidDerefVM();
+    inline const VarsManager& getInvalidFreeVM();
+    inline z3::expr getFeasibleEncoding();
+    inline z3::expr getInvalidDerefEncoding();
+    inline z3::expr getInvalidFreeEncoding();
+
+    void print(std::ostream& os);
+};
+
+DEFINE_PTR_TYPE(BlockEncoding);
+
+class TREncoder {
+
+protected:
+    Z3ExprManagerPtr z3EM;
+    BMCRefinedBlockCFGPtr refinedBlockCFG;
+    
+    std::map<VarEnumType, VarSetPtr> globalVars;
+    std::map<RefinedEdgePtr, BlockEncodingPtr> blockEncodings;
+
+    virtual void init(VarTypeSetPtr vts) = 0;
+
+public:
+    TREncoder(Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr rbcfg, VarTypeSetPtr vts);
+
+    int getInitialLocation();
+    std::set<int> getFinalLocations();
+    std::set<int> getSuccessors(std::set<int> u);
+    const std::vector<RefinedEdgePtr>& getEdgesStartFrom(const int u);
+
+    std::map<VarEnumType, VarSetPtr>& getGlobalVars();
+    VarSetPtr getGlobalVarSet(VarEnumType ty);
+    BlockEncodingPtr getBlockEncoding(RefinedEdgePtr e);
+
+    void print(std::ostream& os);
+};
+
+DEFINE_PTR_TYPE(TREncoder);
+
+// Rename the 
+class BMCBLOCKVCGen {
+
+protected:
+    Z3ExprManagerPtr z3EM;
+    TREncoderPtr TrEncoder;
+    
+    virtual z3::expr generateVar(std::string name) = 0;
+    z3::expr generateUnchanged(BlockEncodingPtr bep, VarSetPtr globalVars, const int k);
+    z3::expr generateUnchangedInvalid(BlockEncodingPtr bep, BuggyType bty, const int k);
+    z3::expr generateOutputs(const BlockEncoding::VarsManager& vm, const int k);
+    z3::expr generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty);
+    virtual z3::expr generateInitVC(BuggyType bty) = 0;
+    z3::expr generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty);
+    z3::expr generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty);
+    z3::expr generateVC(const int k, BuggyType bty);
+
+public:
+    BMCBLOCKVCGen() {};
+
+    z3::expr_vector generateVC(int k);
+    void generateSMT2(z3::expr e, std::string filename);
+};
 
 } // namespace smack
 

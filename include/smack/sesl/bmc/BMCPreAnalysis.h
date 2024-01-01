@@ -62,15 +62,15 @@ namespace smack
 
     typedef std::shared_ptr<BMCBlockPreAnalysis> BMCBlockPreAnalysisPtr;
 
-    typedef std::map<std::string, SLHVVarType> VarsSLHVTypeMap;
-    typedef std::shared_ptr<VarsSLHVTypeMap> VarsSLHVTypeMapPtr;
-
+    typedef std::map<std::string, int> VarTypeSet;
+    typedef std::shared_ptr<VarTypeSet> VarTypeSetPtr;
+    
     class BMCSLHVPreAnalysis {
         private:
             RecordManagerPtr recordManager;
             PIMSetPtr pimSet;
 
-            VarsSLHVTypeMapPtr varsSLHVTypeMap;
+            VarTypeSetPtr varTypeSet;
             std::map<std::string, int> consVarMap;
 
             std::pair<bool, int> parseConstant(const Expr* e);
@@ -85,7 +85,7 @@ namespace smack
             BMCSLHVPreAnalysis(RecordManagerPtr rm, PIMSetPtr ps);
 
             void refineSLHVCmds(BMCRefinedBlockCFGPtr refinedBlockCFG);
-            VarsSLHVTypeMapPtr getVarsSLHVTypeMap();
+            VarTypeSetPtr getVarTypeSet();
     };
 
     typedef std::shared_ptr<BMCSLHVPreAnalysis> BMCSLHVPreAnalysisPtr;

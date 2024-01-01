@@ -450,8 +450,7 @@ namespace smack
                 return this->getVarsSLHVTypeFromExpr(((NotExpr*)e)->getExpr());
             case ExprType::VAR: {
                 const VarExpr* var = (const VarExpr*)e;
-                if (this->varsSLHVTypeMap->find(var->name())
-                    == this->varsSLHVTypeMap->end()) {
+                if (this->varTypeSet->find(var->name()) == this->varTypeSet->end()) {
                     SLHVVarType ty;
                     if (var->name()[1] == 'p') { ty = SLHVVarType::INT_LOC; }
                     else if(var->name()[1] == 'i') { ty = SLHVVarType::INT_DAT; }
@@ -459,9 +458,9 @@ namespace smack
                         std::cout << " ????????????????? => ";
                         std::cout << var->name() << '\n';
                     }
-                    (*this->varsSLHVTypeMap)[var->name()] = ty;
+                    (*this->varTypeSet)[var->name()] = ty;
                 }
-                return this->varsSLHVTypeMap->at(var->name());
+                return SLHVVarType(this->varTypeSet->at(var->name()));
             }
             default: assert(false);
         }
@@ -477,7 +476,7 @@ namespace smack
                     this->getVarsSLHVTypeFromExpr(act->getArg2());
                 }
                 const VarExpr* x = (const VarExpr*)act->getArg1();
-                (*this->varsSLHVTypeMap)[x->name()] = SLHVVarType::INT_LOC;
+                (*this->varTypeSet)[x->name()] = SLHVVarType::INT_LOC;
                 break;
             }
             case ConcreteAction::ActType::LOAD: {
@@ -486,7 +485,7 @@ namespace smack
                 if (x->name()[1] == 'p') { ty = SLHVVarType::INT_LOC; }
                 else if (x->name()[1] == 'i') { ty = SLHVVarType::INT_DAT; }
                 else assert(false);
-                (*this->varsSLHVTypeMap)[x->name()] = ty;
+                (*this->varTypeSet)[x->name()] = ty;
                 break;
             }
             default: {
@@ -499,12 +498,12 @@ namespace smack
                     } else if (x->name()[1] == 'i') {
                         assert(ty == SLHVVarType::INT_DAT);
                     }
-                    (*this->varsSLHVTypeMap)[x->name()] = ty;
+                    (*this->varTypeSet)[x->name()] = ty;
                 } else if (act->getArg3()->isVar()) {
                     const VarExpr* x = (const VarExpr*)act->getArg3();
                     SLHVVarType ty = this->getVarsSLHVTypeFromExpr(act->getArg4());
                     if (x->name()[1] == 'i') { ty = SLHVVarType::INT_DAT; }
-                    (*this->varsSLHVTypeMap)[x->name()] = ty;
+                    (*this->varTypeSet)[x->name()] = ty;
                 } else if (act->getArg3() != nullptr) {
                     this->getVarsSLHVTypeFromExpr(act->getArg3());
                 }
@@ -514,13 +513,13 @@ namespace smack
 
     BMCSLHVPreAnalysis::BMCSLHVPreAnalysis(RecordManagerPtr rm, PIMSetPtr ps)
         : recordManager(rm), pimSet(ps),
-          varsSLHVTypeMap(std::make_shared<VarsSLHVTypeMap>()),
+          varTypeSet(std::make_shared<VarTypeSet>()),
           consVarMap() {
-        (*varsSLHVTypeMap)["H"] = SLHVVarType::INT_HEAP;
-        (*varsSLHVTypeMap)["AH"] = SLHVVarType::INT_HEAP;
-        (*varsSLHVTypeMap)["$0.ref"] = SLHVVarType::INT_LOC;
-        (*varsSLHVTypeMap)["invalidDeref"] = SLHVVarType::SLHV_BOOL;
-        (*varsSLHVTypeMap)["invalidFree"] = SLHVVarType::SLHV_BOOL;
+        (*varTypeSet)["H"] = SLHVVarType::INT_HEAP;
+        (*varTypeSet)["AH"] = SLHVVarType::INT_HEAP;
+        (*varTypeSet)["$0.ref"] = SLHVVarType::INT_LOC;
+        (*varTypeSet)["invalidDeref"] = SLHVVarType::SLHV_BOOL;
+        (*varTypeSet)["invalidFree"] = SLHVVarType::SLHV_BOOL;
     }
 
     void BMCSLHVPreAnalysis::refineSLHVCmds(BMCRefinedBlockCFGPtr refinedBlockCFG) {
@@ -550,8 +549,8 @@ namespace smack
         this->convertByteOffsetToField(refinedBlockCFG);
     }
 
-    VarsSLHVTypeMapPtr BMCSLHVPreAnalysis::getVarsSLHVTypeMap() {
-        return this->varsSLHVTypeMap;
+    VarTypeSetPtr BMCSLHVPreAnalysis::getVarTypeSet() {
+        return this->varTypeSet;
     }
 
 } // namespace smack

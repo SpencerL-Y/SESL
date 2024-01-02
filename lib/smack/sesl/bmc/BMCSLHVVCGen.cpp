@@ -102,7 +102,9 @@ bool SLHVZ3ExprManager::is_removed(std::string cmd) {
          (cmd.find("declare-fun") != std::string::npos && 
           (cmd.find("uplus") != std::string::npos ||
            cmd.find("pt") != std::string::npos ||
-           cmd.find("locadd") != std::string::npos));
+           cmd.find("locadd") != std::string::npos ||
+           cmd.find("nil") != std::string::npos ||
+           cmd.find("emp") != std::string::npos));
 }
 
 z3::expr SLHVZ3ExprManager::mk_loc(std::string var) {

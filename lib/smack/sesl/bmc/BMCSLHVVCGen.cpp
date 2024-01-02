@@ -12,15 +12,23 @@ SLHVZ3ExprManager::SLHVZ3ExprManager()
 }
 
 void SLHVZ3ExprManager::initSorts() {
-    this->sorts["IntLoc"] =
+    this->sorts[SLHVVarType::INT_LOC] =
         std::make_shared<z3::sort>(this->ctx.uninterpreted_sort("IntLoc"));
-    this->sorts["IntHeap"] =
+    this->sorts[SLHVVarType::INT_HEAP] =
         std::make_shared<z3::sort>(this->ctx.uninterpreted_sort("IntHeap"));
+    this->sorts[SLHVVarType::INT_DAT] =
+        std::make_shared<z3::sort>(this->ctx.int_sort());
+    this->sorts[SLHVVarType::SLHV_BOOL] =
+        std::make_shared<z3::sort>(this->ctx.bool_sort());
+    this->sortsEnumId["IntLoc"] = SLHVVarType::INT_LOC;
+    this->sortsEnumId["IntHeap"] = SLHVVarType::INT_HEAP;
+    this->sortsEnumId[this->ctx.int_sort().to_string()] = SLHVVarType::INT_DAT;
+    this->sortsEnumId[this->ctx.bool_sort().to_string()] = SLHVVarType::SLHV_BOOL;
 }
 
 void SLHVZ3ExprManager::initFunctions() {
-    z3::sort intHeap = this->getSort("IntHeap");
-    z3::sort intLoc = this->getSort("IntLoc");
+    z3::sort intHeap = this->getSort(SLHVVarType::INT_HEAP);
+    z3::sort intLoc = this->getSort(SLHVVarType::INT_LOC);
     this->functions["uplus"] = 
         std::make_shared<z3::func_decl>(ctx.function("uplus", intHeap, intHeap, intHeap));
     this->functions["locadd"] = 
@@ -30,14 +38,14 @@ void SLHVZ3ExprManager::initFunctions() {
 }
 
 void SLHVZ3ExprManager::initQuantifiedVars() {
-    this->quantifiedVarsCounts["l"] = 1;
-    this->quantifiedVarsSorts["l"] = this->sorts["IntLoc"];
-    this->quantifiedVarsCounts["h"] = 1;
-    this->quantifiedVarsSorts["h"] = this->sorts["IntHeap"];
-    this->quantifiedVarsCounts["ah"] = 1;
-    this->quantifiedVarsSorts["ah"] = this->sorts["IntHeap"];
-    this->quantifiedVarsCounts["d"] = 1;
-    this->quantifiedVarsSorts["d"] = std::make_shared<z3::sort>(this->ctx.int_sort());
+    this->quantifiedVarsCounts["l"] = 0;
+    this->quantifiedVarsSorts["l"] = this->sorts[SLHVVarType::INT_LOC];
+    this->quantifiedVarsCounts["h"] = 0;
+    this->quantifiedVarsSorts["h"] = this->sorts[SLHVVarType::INT_HEAP];
+    this->quantifiedVarsCounts["ah"] = 0;
+    this->quantifiedVarsSorts["ah"] = this->sorts[SLHVVarType::INT_HEAP];
+    this->quantifiedVarsCounts["d"] = 0;
+    this->quantifiedVarsSorts["d"] = this->sorts[SLHVVarType::INT_DAT];
 }
 
 std::shared_ptr<z3::func_decl> SLHVZ3ExprManager::decl_datatype(SLHVVarType slhvVarType) {
@@ -53,15 +61,20 @@ std::shared_ptr<z3::func_decl> SLHVZ3ExprManager::decl_datatype(SLHVVarType slhv
     std::vector<z3::sort> fields;
     names.push_back(ctx.str_symbol(id == 0 ? "loc" : "data"));
     if (id == 0) {
-        fields.push_back(this->getSort("IntLoc"));
+        fields.push_back(this->getSort(SLHVVarType::INT_LOC));
     } else {
         fields.push_back(ctx.int_sort());
     }
     ptCS.add(name, rec, 1, names.data(), fields.data());
     z3::sort recordSort = ctx.datatype(recordSortName, ptCS);
-    this->sorts[(id == 0 ? "pt_loc" : "pt_data")] = std::make_shared<z3::sort>(recordSort);
+    std::string ptSortName = (id == 0 ? "pt_loc" : "pt_data");
+    int sortEnumId = this->sortsEnumId.size();
+    this->sorts[sortEnumId] = std::make_shared<z3::sort>(recordSort);
+    this->sortsEnumId[ptSortName] = sortEnumId;
     return std::make_shared<z3::func_decl>(
-        z3::function("pt", this->getSort("IntLoc"), recordSort, this->getSort("IntHeap"))
+        z3::function("pt",
+            this->getSort(SLHVVarType::INT_LOC),
+            recordSort, this->getSort(SLHVVarType::INT_HEAP))
     );
 }
 
@@ -93,33 +106,34 @@ bool SLHVZ3ExprManager::is_removed(std::string cmd) {
 }
 
 z3::expr SLHVZ3ExprManager::mk_loc(std::string var) {
-    return this->mk_constant(var, this->getSort("IntLoc"));
+    return this->mk_constant(var, this->getSort(SLHVVarType::INT_LOC));
 }
 
 z3::expr SLHVZ3ExprManager::mk_heap(std::string var) {
-    return this->mk_constant(var, this->getSort("IntHeap"));
+    return this->mk_constant(var, this->getSort(SLHVVarType::INT_HEAP));
 }
 
 z3::expr SLHVZ3ExprManager::mk_pto(z3::expr lt, z3::expr t) {
-    std::string ptType = (t.get_sort().is_int() ? "pt_data" : "pt_loc");
+    std::string ptName = (t.get_sort().is_int() ? "pt_data" : "pt_loc");
     // TODO eliminate datatype
-    z3::expr rho = this->getSort(ptType).constructors().back()(t);
-    z3::func_decl pt = this->getFunc(ptType);
+    int enumId = this->getSortEnumId(ptName);
+    z3::expr rho = this->getSort(enumId).constructors().back()(t);
+    z3::func_decl pt = this->getFunc(ptName);
     assert(z3::eq(lt.get_sort(), pt.domain(0)));
     assert(z3::eq(rho.get_sort(), pt.domain(1)));
     return pt(lt, rho);
 }
 
 z3::expr SLHVZ3ExprManager::mk_sep(z3::expr h1, z3::expr h2) {
-    assert(z3::eq(h1.get_sort(), this->getSort("IntHeap")));
-    assert(z3::eq(h2.get_sort(), this->getSort("IntHeap")));
+    assert(z3::eq(h1.get_sort(), this->getSort(SLHVVarType::INT_HEAP)));
+    assert(z3::eq(h2.get_sort(), this->getSort(SLHVVarType::INT_HEAP)));
     return this->getFunc("uplus")(h1, h2);
 }
 
 z3::expr SLHVZ3ExprManager::mk_loc_arith(
     z3::expr l1, z3::expr l2, BinExpr::Binary op) {
     assert(op == BinExpr::Binary::Plus);
-    assert(z3::eq(l1.get_sort(), this->getSort("IntLoc")));
+    assert(z3::eq(l1.get_sort(), this->getSort(SLHVVarType::INT_LOC)));
     assert(z3::eq(l2.get_sort(), ctx.int_sort()));
     return this->getFunc("locadd")(l1, l2);
 }
@@ -183,8 +197,8 @@ z3::expr_vector SLHVBlockEncoding::generateRecord(Record& record) {
     z3::expr heap(this->z3EM->Ctx());
     z3::expr lastLoc(this->z3EM->Ctx());
     for (int i = 0; i < record.getFieldsTypes().size(); i++) {
-        z3::expr xl = this->z3EM->mk_quantified("l");
-        z3::expr xf = this->z3EM->mk_quantified(
+        z3::expr xl = this->generateQuantifiedVarByPre("l");
+        z3::expr xf = this->generateQuantifiedVarByPre(
             record.getFieldsTypes()[i] == SLHVVarType::INT_DAT ? "d" : "l"
         );
         this->feasibleVM.localVars.insert(xl.to_string());
@@ -209,16 +223,14 @@ z3::expr_vector SLHVBlockEncoding::generateRecord(Record& record) {
 }
 
 z3::expr SLHVBlockEncoding::generateVarByType(std::string name, int type) {
+    assert(type < 4);
     SLHVVarType ty = (SLHVVarType)type;
+    (*this->varsTypeMap)[name] = type;
     switch (ty) {
-        case SLHVVarType::INT_DAT:
-            return this->z3EM->mk_fresh(name, this->z3EM->Ctx().int_sort());
-        case SLHVVarType::INT_LOC:
-            return this->z3EM->mk_fresh(name, this->z3EM->getSort("IntLoc"));
-        case SLHVVarType::INT_HEAP: 
-            return this->z3EM->mk_fresh(name, this->z3EM->getSort("IntHeap"));
-        case SLHVVarType::SLHV_BOOL: 
-            return this->z3EM->mk_fresh(name, this->z3EM->Ctx().bool_sort());
+        case SLHVVarType::INT_DAT: return this->z3EM->mk_int(name);
+        case SLHVVarType::INT_LOC: return this->z3EM->mk_loc(name);
+        case SLHVVarType::INT_HEAP: return this->z3EM->mk_heap(name);
+        case SLHVVarType::SLHV_BOOL: return this->z3EM->mk_bool(name);
         default: assert(false);
     }
 }
@@ -351,7 +363,7 @@ z3::expr_vector SLHVBlockEncoding::generateAllocAndMallocEncoding(RefinedActionP
 z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
     z3::expr H = this->getLatestUpdateForGlobalVar("H");
-    z3::expr h1 = this->z3EM->mk_quantified("h");
+    z3::expr h1 = this->generateQuantifiedVarByPre("h");
     this->feasibleVM.localVars.insert(h1.to_string());
 
     assert(act->getArg1()->isVar());
@@ -361,7 +373,7 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
     assert(act->getArg2()->isVar());
     const VarExpr* arg2 = (const VarExpr*)act->getArg2();
     z3::expr xs = this->getLatestUpdateForGlobalVar(arg2->name());
-    z3::expr x1 = this->z3EM->mk_quantified(arg1->name()[1] == 'p' ? "l" : "d");
+    z3::expr x1 = this->generateQuantifiedVarByPre(arg1->name()[1] == 'p' ? "l" : "d");
     this->feasibleVM.localVars.insert(x1.to_string());
     
     z3::expr feasibleEC = 
@@ -369,8 +381,8 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
         && nxt == x1;
 
     // invalidDeref
-    z3::expr h0 = this->z3EM->mk_quantified("h");
-    z3::expr x0 = this->z3EM->mk_quantified(arg1->name()[1] == 'p' ? "l" : "d");
+    z3::expr h0 = this->generateQuantifiedVarByPre("h");
+    z3::expr x0 = this->generateQuantifiedVarByPre(arg1->name()[1] == 'p' ? "l" : "d");
     this->invalidDerefVM.localVars.insert(x0.to_string());
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
@@ -404,7 +416,7 @@ z3::expr_vector SLHVBlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
     z3::expr H = this->getLatestUpdateForGlobalVar("H");
     z3::expr nH = this->generateLocalVarByName("H");
-    z3::expr h1 = this->z3EM->mk_quantified("h");
+    z3::expr h1 = this->generateQuantifiedVarByPre("h");
     this->feasibleVM.localVars.insert(nH.to_string());
     this->feasibleVM.localVars.insert(h1.to_string());
     this->feasibleVM.outputsMap["H"] = nH.to_string();
@@ -422,7 +434,7 @@ z3::expr_vector SLHVBlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
             ((const IntLit*)act->getArg2())->getVal()
         );
     }
-    z3::expr x1 = this->z3EM->mk_quantified(xs.is_int() ? "d" : "l");
+    z3::expr x1 = this->generateQuantifiedVarByPre(xs.is_int() ? "d" : "l");
     this->feasibleVM.localVars.insert(x1.to_string());
 
     z3::expr feasibleEC =
@@ -430,8 +442,8 @@ z3::expr_vector SLHVBlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
         && (nH == this->z3EM->mk_sep(h1, this->z3EM->mk_pto(xt, xs)));
 
     // invalidDeref
-    z3::expr h0 = this->z3EM->mk_quantified("h");
-    z3::expr x0 = this->z3EM->mk_quantified(xs.is_int() ? "d" : "l");
+    z3::expr h0 = this->generateQuantifiedVarByPre("h");
+    z3::expr x0 = this->generateQuantifiedVarByPre(xs.is_int() ? "d" : "l");
     this->invalidDerefVM.localVars.insert(x0.to_string());
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
@@ -463,14 +475,14 @@ z3::expr_vector SLHVBlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
     z3::expr H = this->getLatestUpdateForGlobalVar("H");
     z3::expr nH = this->generateLocalVarByName("H");
-    z3::expr h0 = this->z3EM->mk_quantified("h");
+    z3::expr h0 = this->generateQuantifiedVarByPre("h");
     this->feasibleVM.localVars.insert(nH.to_string());
     this->feasibleVM.localVars.insert(h0.to_string());
     this->feasibleVM.outputsMap["H"] = nH.to_string();
     z3::expr AH = this->getLatestUpdateForGlobalVar("AH");
     z3::expr nAH = this->generateLocalVarByName("AH");
-    z3::expr ah0 = this->z3EM->mk_quantified("ah");
-    z3::expr idxvar = this->z3EM->mk_quantified("d");
+    z3::expr ah0 = this->generateQuantifiedVarByPre("ah");
+    z3::expr idxvar = this->generateQuantifiedVarByPre("d");
     this->feasibleVM.localVars.insert(nAH.to_string());
     this->feasibleVM.localVars.insert(idxvar.to_string());
     this->feasibleVM.outputsMap["AH"] = nAH.to_string();
@@ -507,8 +519,8 @@ z3::expr_vector SLHVBlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
     this->invalidFreeVM.localVars.insert(invalidFreePrime.to_string());
     this->invalidFreeVM.outputsMap[BlockEncoding::invalid_free] =
         invalidFreePrime.to_string();
-    z3::expr ahe = this->z3EM->mk_quantified("ah");
-    z3::expr idxvare = this->z3EM->mk_quantified("d");
+    z3::expr ahe = this->generateQuantifiedVarByPre("ah");
+    z3::expr idxvare = this->generateQuantifiedVarByPre("d");
     this->invalidFreeVM.localVars.insert(ahe.to_string());
     this->invalidFreeVM.localVars.insert(idxvare.to_string());
     
@@ -593,7 +605,7 @@ void SLHVTREncoder::init(VarTypeSetPtr vts) {
             this->blockEncodings[edge] = bep;
         }
     }
-    this->print(std::cout);
+    // this->print(std::cout);
 }
 
 void SLHVTREncoder::print(std::ostream& os) {
@@ -613,11 +625,17 @@ void SLHVTREncoder::print(std::ostream& os) {
     os << "================ Transition Relation Encoding ================\n";
 }
 
-z3::expr BMCSLHVVCGen::generateVar(std::string name) {
-    if (name[0] == 'H') return z3EM->mk_heap(name);
-    if (name[1] == 'p') return z3EM->mk_loc(name);
-    if (name.find("invalid") != std::string::npos) return z3EM->mk_bool(name);
-    return z3EM->mk_int(name);
+z3::expr BMCSLHVVCGen::generateVar(std::string name, const int k = 0) {
+    SLHVVarType ty = SLHVVarType(this->TrEncoder->getVarType(name));
+    std::string var = name;
+    if (k > 0) { var = var + "_" + std::to_string(k); }
+    switch (ty) {
+        case SLHVVarType::INT_DAT: return this->z3EM->mk_int(var);
+        case SLHVVarType::INT_LOC: return this->z3EM->mk_loc(var);
+        case SLHVVarType::INT_HEAP: return this->z3EM->mk_heap(var);
+        case SLHVVarType::SLHV_BOOL: return this->z3EM->mk_bool(var);
+        default: assert(false);
+    }
 }
 
 z3::expr BMCSLHVVCGen::generateInitVC(BuggyType bty) {
@@ -637,7 +655,7 @@ z3::expr BMCSLHVVCGen::generateInitVC(BuggyType bty) {
 BMCSLHVVCGen::BMCSLHVVCGen(
     BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts) {
     this->z3EM = std::make_shared<SLHVZ3ExprManager>();
-    rm->print(std::cout);
+    // rm->print(std::cout);
     for (auto p : rm->getRecordMap()) { this->z3EM->addRecord(p.second); }
     this->TrEncoder = std::make_shared<SLHVTREncoder>(z3EM, rbcfg, vts);
 }

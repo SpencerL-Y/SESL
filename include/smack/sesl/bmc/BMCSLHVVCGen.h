@@ -98,7 +98,7 @@ class BMCSLHVVCGen : public BMCBLOCKVCGen{
 
 private:
     
-    z3::expr generateVar(std::string name);
+    z3::expr generateVar(std::string name, const int k);
     z3::expr generateInitVC(BuggyType bty);
     z3::expr generatePremiseForKthStep();
 

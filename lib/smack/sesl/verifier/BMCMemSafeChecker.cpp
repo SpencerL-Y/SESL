@@ -148,32 +148,31 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   this->setSLHVCmdRecords(refinedBlockCFG);
   refinedBlockCFG->print(std::cout);
 
-  std::cout << " ========================== SLHV Var Type ==========\n";
-  for (auto p : *slhvPreAnalysis->getVarTypeSet()) {
-    std::cout << p.first << " ";
-    std::string ss;
-    switch (p.second)
-    {
-    case SLHVVarType::INT_DAT: ss = "Dat"; break;
-    case SLHVVarType::INT_LOC: ss = "Loc"; break;
-    case SLHVVarType::INT_HEAP: ss = "Heap"; break;
-    case SLHVVarType::SLHV_BOOL: ss = "Bool"; break;
-    default:
-      assert(false);
-      break;
-    }
-    std::cout << ss << '\n';
-  }
-
   BMCSLHVVCGen slhvVCGen(
     refinedBlockCFG,
     recordManager,
     slhvPreAnalysis->getVarTypeSet()
   );
+  // std::cout << " ========================== SLHV Var Type ==========\n";
+  // for (auto p : *slhvPreAnalysis->getVarTypeSet()) {
+  //   std::cout << p.first << " ";
+  //   std::string ss;
+  //   switch (p.second)
+  //   {
+  //   case SLHVVarType::INT_DAT: ss = "Dat"; break;
+  //   case SLHVVarType::INT_LOC: ss = "Loc"; break;
+  //   case SLHVVarType::INT_HEAP: ss = "Heap"; break;
+  //   case SLHVVarType::SLHV_BOOL: ss = "Bool"; break;
+  //   default:
+  //     assert(false);
+  //     break;
+  //   }
+  //   std::cout << ss << '\n';
+  // }
   z3::expr_vector slhvVCs = slhvVCGen.generateVC(1);
-  std::cout << "\nInvalidDeref :\n" << slhvVCs[0] << std::endl;
-  std::cout << "\nInvalidFree :\n" << slhvVCs[1] << std::endl;
-  std::cout << "\nMemLeak :\n" << slhvVCs[2] << std::endl;
+  // std::cout << "\nInvalidDeref :\n" << slhvVCs[0] << std::endl;
+  // std::cout << "\nInvalidFree :\n" << slhvVCs[1] << std::endl;
+  // std::cout << "\nMemLeak :\n" << slhvVCs[2] << std::endl;
   slhvVCGen.generateSMT2(slhvVCs[0], "../bin/invalidDeref.smt2");
   slhvVCGen.generateSMT2(slhvVCs[1], "../bin/invalidFree.smt2");
   slhvVCGen.generateSMT2(slhvVCs[2], "../bin/invalidMemLeak.smt2");

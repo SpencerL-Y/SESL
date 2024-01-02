@@ -370,7 +370,8 @@ class Z3ExprManager {
 protected:
     z3::context ctx;
 
-    std::map<std::string, std::shared_ptr<z3::sort>> sorts;
+    std::map<int, std::shared_ptr<z3::sort>> sorts;
+    std::map<std::string, int> sortsEnumId;
     std::map<std::string, std::shared_ptr<z3::func_decl>> functions;
     std::vector<Record> records;
 
@@ -393,7 +394,8 @@ public:
     void addRecord(Record record);
     std::vector<Record>& getRecords();
     
-    z3::sort getSort(std::string name);
+    z3::sort getSort(int ty);
+    const int getSortEnumId(std::string sort);
     z3::func_decl getFunc(std::string name);
 
     inline z3::expr mk_constant(std::string name, z3::sort sort);
@@ -453,6 +455,7 @@ protected:
 
     virtual z3::expr getLatestUpdateForGlobalVar(std::string name);
     virtual z3::expr generateLocalVarByName(std::string name);
+    virtual z3::expr generateQuantifiedVarByPre(std::string pre);
     virtual z3::expr generateArithExpr(BinExpr::Binary op, z3::expr lhs, z3::expr rhs);
     z3::expr generateBinExpr(const BinExpr* e);
     z3::expr generateExpr(const Expr* e);
@@ -488,6 +491,7 @@ class TREncoder {
 protected:
     Z3ExprManagerPtr z3EM;
     BMCRefinedBlockCFGPtr refinedBlockCFG;
+    VarTypeSetPtr varsTypeMap;
     
     std::map<VarEnumType, VarSetPtr> globalVars;
     std::map<RefinedEdgePtr, BlockEncodingPtr> blockEncodings;
@@ -502,7 +506,8 @@ public:
     std::set<int> getSuccessors(std::set<int> u);
     const std::vector<RefinedEdgePtr>& getEdgesStartFrom(const int u);
 
-    std::map<VarEnumType, VarSetPtr>& getGlobalVars();
+    const std::map<VarEnumType, VarSetPtr>& getGlobalVars();
+    const int getVarType(std::string var);
     VarSetPtr getGlobalVarSet(VarEnumType ty);
     BlockEncodingPtr getBlockEncoding(RefinedEdgePtr e);
 
@@ -518,7 +523,7 @@ protected:
     Z3ExprManagerPtr z3EM;
     TREncoderPtr TrEncoder;
     
-    virtual z3::expr generateVar(std::string name) = 0;
+    virtual z3::expr generateVar(std::string name, const int k = 0) = 0;
     z3::expr generateUnchanged(BlockEncodingPtr bep, VarSetPtr globalVars, const int k);
     z3::expr generateUnchangedInvalid(BlockEncodingPtr bep, BuggyType bty, const int k);
     z3::expr generateOutputs(const BlockEncoding::VarsManager& vm, const int k);

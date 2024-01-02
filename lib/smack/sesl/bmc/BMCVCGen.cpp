@@ -2700,6 +2700,7 @@ namespace smack
 Z3ExprManager::Z3ExprManager()
     : ctx(),
       sorts(),
+      sortsEnumId(),
       functions(),
       records(),
       freshVarsCounts(),
@@ -2707,18 +2708,18 @@ Z3ExprManager::Z3ExprManager()
       quantifiedVarsSorts() {}
 
 const int Z3ExprManager::getFreshVarCount(std::string var) {
-    if (freshVarsCounts.find(var) != freshVarsCounts.end()) {
-        freshVarsCounts[var] = freshVarsCounts[var] + 1;
+    if (this->freshVarsCounts.find(var) != this->freshVarsCounts.end()) {
+        this->freshVarsCounts[var] = this->freshVarsCounts[var] + 1;
     } else {
-        freshVarsCounts[var] = 1;
+        this->freshVarsCounts[var] = 1;
     }
-    return freshVarsCounts[var];
+    return this->freshVarsCounts[var];
 }
 
 const int Z3ExprManager::getQuantifitedVarCount(std::string pre) {
-    assert(quantifiedVarsCounts.find(pre) != quantifiedVarsCounts.end());
-    quantifiedVarsCounts[pre] = quantifiedVarsCounts[pre] + 1;
-    return freshVarsCounts[pre];
+    assert(this->quantifiedVarsCounts.find(pre) != this->quantifiedVarsCounts.end());
+    this->quantifiedVarsCounts[pre] = this->quantifiedVarsCounts[pre] + 1;
+    return this->quantifiedVarsCounts[pre];
 }
 
 z3::context& Z3ExprManager::Ctx() { return ctx; }
@@ -2731,9 +2732,14 @@ std::vector<Record>& Z3ExprManager::getRecords() {
     return this->records;
 }
 
-z3::sort Z3ExprManager::getSort(std::string name) {
-    assert(this->sorts.find(name) != this->sorts.end());
-    return *this->sorts.at(name);
+z3::sort Z3ExprManager::getSort(int ty) {
+    assert(this->sorts.find(ty) != this->sorts.end());
+    return *this->sorts.at(ty);
+}
+
+const int Z3ExprManager::getSortEnumId(std::string sort) {
+    assert(this->sortsEnumId.find(sort) != this->sortsEnumId.end());
+    return this->sortsEnumId.at(sort);
 }
 
 z3::func_decl Z3ExprManager::getFunc(std::string name) {
@@ -2833,7 +2839,18 @@ z3::expr BlockEncoding::getLatestUpdateForGlobalVar(std::string name) {
 }
 
 z3::expr BlockEncoding::generateLocalVarByName(std::string name) {
-    return this->generateVarByType(name, this->getVarTypeByName(name));
+    int ty = this->getVarTypeByName(name);
+    z3::sort sort = this->z3EM->getSort(ty);
+    z3::expr var = this->z3EM->mk_fresh(name, sort);
+    (*this->varsTypeMap)[var.to_string()] = ty;
+    return var;
+}
+
+z3::expr BlockEncoding::generateQuantifiedVarByPre(std::string pre) {
+    z3::expr var = this->z3EM->mk_quantified(pre);
+    int ty = this->z3EM->getSortEnumId(var.get_sort().to_string());
+    (*this->varsTypeMap)[var.to_string()] = ty;
+    return var;
 }
 
 z3::expr BlockEncoding::generateArithExpr(BinExpr::Binary op, z3::expr lhs, z3::expr rhs) {
@@ -2917,11 +2934,11 @@ void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
         CLEAN_Z3EXPR_CONJUNC(this->feasibleEncoding, actEncodings[0]);
         CLEAN_Z3EXPR_CONJUNC(this->invalidDerefEncoding, actEncodings[1]);
         CLEAN_Z3EXPR_CONJUNC(this->invalidFreeEncoding, actEncodings[2]);
-        std::cout << " ------------------------------------------------------------\n";
-        act->print(std::cout);
-        std::cout << "\nFeasible encoding : \n" << actEncodings[0] << "\n";
-        std::cout << "\nInvalidDeref encoding : \n" << actEncodings[1] << "\n";
-        std::cout << "\nInvalidFree encoding : \n" << actEncodings[2] << "\n";
+        // std::cout << " ------------------------------------------------------------\n";
+        // act->print(std::cout);
+        // std::cout << "\nFeasible encoding : \n" << actEncodings[0] << "\n";
+        // std::cout << "\nInvalidDeref encoding : \n" << actEncodings[1] << "\n";
+        // std::cout << "\nInvalidFree encoding : \n" << actEncodings[2] << "\n";
     }
 }
 
@@ -2971,6 +2988,7 @@ TREncoder::TREncoder(
     Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr rbcfg, VarTypeSetPtr vts)
     : z3EM(z3EM),
       refinedBlockCFG(rbcfg),
+      varsTypeMap(vts),
       globalVars(),
       blockEncodings() {}
 
@@ -2996,8 +3014,13 @@ const std::vector<RefinedEdgePtr>& TREncoder::getEdgesStartFrom(const int u) {
     return this->refinedBlockCFG->getEdgesStartFrom(u);
 }
 
-std::map<VarEnumType, VarSetPtr>& TREncoder::getGlobalVars() {
+const std::map<VarEnumType, VarSetPtr>& TREncoder::getGlobalVars() {
     return this->globalVars;
+}
+
+const int TREncoder::getVarType(std::string var) {
+    assert(this->varsTypeMap->find(var) != this->varsTypeMap->end());
+    return this->varsTypeMap->at(var);
 }
 
 VarSetPtr TREncoder::getGlobalVarSet(VarEnumType ty) {
@@ -3012,16 +3035,20 @@ BlockEncodingPtr TREncoder::getBlockEncoding(RefinedEdgePtr e) {
 
 void TREncoder::print(std::ostream& os) {
     os << "================ Transition Relation Encoding ================\n";
-    // os << " Global Location Variable :";
-    // for (auto var : *globalLocVars) os << " " << var;
-    // os << "\n";
-    // os << " Global Data Variable :";
-    // for (auto var : *globalDataVars) os << " " << var;
-    // os << "\n";
+    os << " Global Variables :";
+    for (auto cat_vars : this->globalVars) {
+        std::cout << " Category : " << cat_vars.first << " --";
+        for(auto var : *cat_vars.second) {
+            std::cout << " " << var;
+        }
+        std::cout << '\n';
+    }
     for (auto tr : this->blockEncodings) {
         os << " ---------------------------------------------\n";
         os << " BlockEncoding - ";
-        tr.first->print(os); os << '\n';
+        // tr.first->print(os); os << '\n';
+        os << " From : " << tr.first->getFrom() << " " << " To : "
+            << tr.first->getTo() << '\n';
         tr.second->print(os);
     }
     os << "================ Transition Relation Encoding ================\n";
@@ -3032,8 +3059,8 @@ BMCBLOCKVCGen::generateUnchanged(BlockEncodingPtr bep, VarSetPtr globalVars, con
     z3::expr unchangedEncoding = this->z3EM->Ctx().bool_val(true);
     for (auto var : *globalVars) {
         if (bep->use_global(var)) continue;
-        z3::expr lastStepVar = this->generateVar(var + "_" + std::to_string(k - 1));
-        z3::expr kthStepVar = this->generateVar(var + "_" + std::to_string(k));
+        z3::expr lastStepVar = this->generateVar(var, k - 1);
+        z3::expr kthStepVar = this->generateVar(var, k);
         unchangedEncoding= unchangedEncoding && (lastStepVar == kthStepVar);
     }
     return unchangedEncoding;
@@ -3056,10 +3083,8 @@ BMCBLOCKVCGen::generateUnchangedInvalid(BlockEncodingPtr bep, BuggyType bty, con
     if (vm.outputsMap.find(invalidName) != vm.outputsMap.end()) {
         return this->z3EM->Ctx().bool_val(true);
     }
-    z3::expr latestLocalVar =
-        this->generateVar(invalidName + "_" + std::to_string(k - 1));
-    z3::expr kthStepInvalid =
-        this->generateVar(invalidName + "_" + std::to_string(k));
+    z3::expr latestLocalVar = this->generateVar(invalidName, k - 1);
+    z3::expr kthStepInvalid = this->generateVar(invalidName, k);
     return latestLocalVar == kthStepInvalid;
 }
 
@@ -3068,10 +3093,8 @@ BMCBLOCKVCGen::generateOutputs(const BlockEncoding::VarsManager& vm, const int k
     z3::expr sub = this->z3EM->Ctx().bool_val(true);
     for (auto globalVarSubPair : vm.outputsMap) {
         assert(globalVarSubPair.first != globalVarSubPair.second);
-        z3::expr latestLocalVar =
-            this->generateVar(globalVarSubPair.second + "_" + std::to_string(k));
-        z3::expr kthStepVar =
-            this->generateVar(globalVarSubPair.first + "_" + std::to_string(k));
+        z3::expr latestLocalVar = this->generateVar(globalVarSubPair.second, k);
+        z3::expr kthStepVar = this->generateVar(globalVarSubPair.first, k);
         z3::expr varSub = (kthStepVar == latestLocalVar);
         CLEAN_Z3EXPR_CONJUNC(sub, varSub);
     }
@@ -3091,25 +3114,25 @@ BMCBLOCKVCGen::generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty)
     // Inputs are used to connect some global variables updated by last step 
     for (auto var : bep->getFeasibleVM().inputVars) {
         src.push_back(this->generateVar(var));
-        dst.push_back(this->generateVar(var + "_" + std::to_string(k - 1)));
+        dst.push_back(this->generateVar(var, k - 1));
     }
     // Quantified(Local) variables are fresh, just add a tag "_k"
     for (auto var : bep->getFeasibleVM().localVars) {
         src.push_back(this->generateVar(var));
-        dst.push_back(this->generateVar(var + "_" + std::to_string(k)));
+        dst.push_back(this->generateVar(var, k));
     }
     // Buggy Varialbes Substitution
     if (bty != BuggyType::MEMLEAK) {
-        const BlockEncoding::VarsManager& buggyEVM
+        const BlockEncoding::VarsManager& buggyVM
             = (bty == BuggyType::INVALIDDEREF ?
                 bep->getInvalidDerefVM() : bep->getInvalidFreeVM());
-        for (auto var : buggyEVM.inputVars) {
+        for (auto var : buggyVM.inputVars) {
             src.push_back(this->generateVar(var));
-            dst.push_back(this->generateVar(var + "_" + std::to_string(k - 1)));
+            dst.push_back(this->generateVar(var, k - 1));
         }
-        for (auto var : buggyEVM.localVars) {
+        for (auto var : buggyVM.localVars) {
             src.push_back(this->generateVar(var));
-            dst.push_back(this->generateVar(var + "_" + std::to_string(k)));
+            dst.push_back(this->generateVar(var, k));
         }
     }
 

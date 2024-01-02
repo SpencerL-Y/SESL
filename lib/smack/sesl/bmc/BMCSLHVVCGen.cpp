@@ -607,7 +607,7 @@ void SLHVTREncoder::init(VarTypeSetPtr vts) {
             this->blockEncodings[edge] = bep;
         }
     }
-    // this->print(std::cout);
+    this->print(std::cout);
 }
 
 void SLHVTREncoder::print(std::ostream& os) {
@@ -620,17 +620,17 @@ void SLHVTREncoder::print(std::ostream& os) {
     // os << "\n";
     for (auto tr : this->blockEncodings) {
         os << " ---------------------------------------------\n";
-        os << " SLHVBlockEncoding - ";
-        tr.first->print(os); os << '\n';
+        os << " BlockEncoding - ";
+        os << " From : " << tr.first->getFrom() << " To : " << tr.first->getTo() << '\n';
         tr.second->print(os);
     }
     os << "================ Transition Relation Encoding ================\n";
 }
 
-z3::expr BMCSLHVVCGen::generateVar(std::string name, const int k = 0) {
+z3::expr BMCSLHVVCGen::generateVar(std::string name, const int k = -1) {
     SLHVVarType ty = SLHVVarType(this->TrEncoder->getVarType(name));
     std::string var = name;
-    if (k > 0) { var = var + "_" + std::to_string(k); }
+    if (k > -1) { var = var + "_" + std::to_string(k); }
     switch (ty) {
         case SLHVVarType::INT_DAT: return this->z3EM->mk_int(var);
         case SLHVVarType::INT_LOC: return this->z3EM->mk_loc(var);

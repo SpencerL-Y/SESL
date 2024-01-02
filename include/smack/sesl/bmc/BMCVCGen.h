@@ -523,7 +523,7 @@ protected:
     Z3ExprManagerPtr z3EM;
     TREncoderPtr TrEncoder;
     
-    virtual z3::expr generateVar(std::string name, const int k = 0) = 0;
+    virtual z3::expr generateVar(std::string name, const int k = -1) = 0;
     z3::expr generateUnchanged(BlockEncodingPtr bep, VarSetPtr globalVars, const int k);
     z3::expr generateUnchangedInvalid(BlockEncodingPtr bep, BuggyType bty, const int k);
     z3::expr generateOutputs(const BlockEncoding::VarsManager& vm, const int k);

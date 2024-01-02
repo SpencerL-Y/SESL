@@ -3154,7 +3154,7 @@ BMCBLOCKVCGen::generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty)
     if (bty == BuggyType::INVALIDDEREF) {
         buggyOutputs = this->generateOutputs(bep->getInvalidDerefVM(), k);
     } else if (bty == BuggyType::INVALIDFREE) {
-        buggyOutputs = this->generateOutputs(bep->getInvalidDerefVM(), k);
+        buggyOutputs = this->generateOutputs(bep->getInvalidFreeVM(), k);
     }
     z3::expr outputsEncoding = feasibleOutputs && buggyOutputs;
     CLEAN_Z3EXPR_CONJUNC(implicant, outputsEncoding);

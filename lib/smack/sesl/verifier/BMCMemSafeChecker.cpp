@@ -169,14 +169,24 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   //   }
   //   std::cout << ss << '\n';
   // }
-  z3::expr_vector slhvVCs = slhvVCGen.generateVC(1);
-  std::cout << "\nInvalidDeref :\n" << slhvVCs[0] << std::endl;
-  std::cout << "\nInvalidFree :\n" << slhvVCs[1] << std::endl;
-  std::cout << "\nMemLeak :\n" << slhvVCs[2] << std::endl;
-  slhvVCGen.generateSMT2(slhvVCs[0], "../bin/invalidDeref.smt2");
-  slhvVCGen.generateSMT2(slhvVCs[1], "../bin/invalidFree.smt2");
-  slhvVCGen.generateSMT2(slhvVCs[2], "../bin/invalidMemLeak.smt2");
+  
+  std::vector<int> steps;
+  steps.push_back(1);
+  steps.push_back(2);
+  steps.push_back(refinedBlockCFG->getVertexNum());
 
+  for (int i = 0; i < 3; i++) {
+    z3::expr_vector slhvVCs = slhvVCGen.generateVC(steps[i]);
+    // std::cout << "\nInvalidDeref :\n" << slhvVCs[0] << std::endl;
+    // std::cout << "\nInvalidFree :\n" << slhvVCs[1] << std::endl;
+    // std::cout << "\nMemLeak :\n" << slhvVCs[2] << std::endl;
+    std::string suf;
+    if (i < 2) suf = "_" + std::to_string(steps[i]);
+    else suf = "_locsize";
+    slhvVCGen.generateSMT2(slhvVCs[0], "../bin/invalidDeref" + suf + ".smt2");
+    slhvVCGen.generateSMT2(slhvVCs[1], "../bin/invalidFree" + suf + ".smt2");
+    slhvVCGen.generateSMT2(slhvVCs[2], "../bin/invalidMemLeak" + suf + ".smt2");
+  }
   return false;
 }
 

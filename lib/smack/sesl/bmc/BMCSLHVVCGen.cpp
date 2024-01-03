@@ -392,7 +392,7 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
     z3::expr invalidDerefPrime =
-        this->generateLocalVarByName(BlockEncoding::invalid_free);
+        this->generateLocalVarByName(BlockEncoding::invalid_deref);
     this->invalidDerefVM.localVars.insert(invalidDerefPrime.to_string());
     this->invalidDerefVM.outputsMap[BlockEncoding::invalid_deref] =
         invalidDerefPrime.to_string();

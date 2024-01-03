@@ -3204,11 +3204,21 @@ z3::expr BMCBLOCKVCGen::generateKthStepBuggy(const int k, const std::set<int>& l
                 (z3EM->mk_int("loc_" + std::to_string(k)) == u);
             CLEAN_Z3EXPR_DISJUNC(finalLocs, locatesOnU);
         }
-        z3::expr kthHeap = this->z3EM->mk_heap("H_" + std::to_string(k));
-        z3::expr kthAllocHeap = this->z3EM->mk_heap("AH_" + std::to_string(k));
-        z3::expr empHeap = this->z3EM->mk_heap("emp");
-        buggyEncoding = 
-            finalLocs && (kthHeap == empHeap) && (kthAllocHeap == empHeap);
+        z3::expr H = this->z3EM->mk_heap("H_" + std::to_string(k));
+        z3::expr h = this->z3EM->mk_quantified("h");
+        z3::expr lt = this->z3EM->mk_quantified("l");
+        z3::expr loc = this->z3EM->mk_quantified("l");
+        z3::expr data = this->z3EM->mk_quantified("d");
+        z3::expr kthHeap =
+            (H == this->z3EM->mk_sep(h, this->z3EM->mk_pto(lt, loc)))
+            || (H == this->z3EM->mk_sep(h, this->z3EM->mk_pto(lt, data)));
+        
+        z3::expr AH = this->z3EM->mk_heap("AH_" + std::to_string(k));
+        z3::expr ah = this->z3EM->mk_quantified("ah");
+        z3::expr ahlt = this->z3EM->mk_quantified("l");
+        z3::expr ahid = this->z3EM->mk_quantified("d");
+        z3::expr kthAllocHeap = (AH == this->z3EM->mk_sep(ah, this->z3EM->mk_pto(ahlt, ahid)));
+        buggyEncoding = finalLocs && kthHeap && kthAllocHeap;
     }
     return buggyEncoding;
 }

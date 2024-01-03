@@ -143,6 +143,7 @@ z3::expr SLHVZ3ExprManager::mk_loc_arith(
 std::string SLHVZ3ExprManager::to_smt2(z3::expr e) {
     z3::solver sol(this->ctx);
     sol.add(e.simplify());
+    // sol.add(e);
     std::string origSmt2 = sol.to_smt2();
     // std::cout << origSmt2 << '\n';
     std::stringstream ss(origSmt2.c_str());
@@ -272,7 +273,6 @@ z3::expr_vector SLHVBlockEncoding::generateAssignEncoding(RefinedActionPtr act) 
     const VarExpr* var = (const VarExpr*)arg1;
     z3::expr lhs = this->generateLocalVarByName(var->name());
     z3::expr rhs = this->generateExpr(arg2);
-
     this->feasibleVM.localVars.insert(lhs.to_string());
     this->feasibleVM.outputsMap[var->name()] = lhs.to_string();
 
@@ -335,6 +335,7 @@ z3::expr_vector SLHVBlockEncoding::generateAllocAndMallocEncoding(RefinedActionP
     assert(act->getArg1()->isVar());
     const VarExpr* arg1 = (const VarExpr*)act->getArg1();
     z3::expr x = this->generateLocalVarByName(arg1->name());
+    this->feasibleVM.localVars.insert(x.to_string());
     this->feasibleVM.outputsMap[arg1->name()] = x.to_string();
     z3::expr_vector recordHeap = this->generateRecord(slhvcmd.record);
     z3::expr heapEC = (nH == this->z3EM->mk_sep(H, recordHeap[2]));
@@ -371,6 +372,7 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
     assert(act->getArg1()->isVar());
     const VarExpr* arg1 = (const VarExpr*)act->getArg1();
     z3::expr nxt = this->generateLocalVarByName(arg1->name());
+    this->feasibleVM.localVars.insert(nxt.to_string());
     this->feasibleVM.outputsMap[arg1->name()] = nxt.to_string();
     assert(act->getArg2()->isVar());
     const VarExpr* arg2 = (const VarExpr*)act->getArg2();
@@ -385,11 +387,13 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
     // invalidDeref
     z3::expr h0 = this->generateQuantifiedVarByPre("h");
     z3::expr x0 = this->generateQuantifiedVarByPre(arg1->name()[1] == 'p' ? "l" : "d");
+    this->invalidDerefVM.localVars.insert(h0.to_string());
     this->invalidDerefVM.localVars.insert(x0.to_string());
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
     z3::expr invalidDerefPrime =
         this->generateLocalVarByName(BlockEncoding::invalid_free);
+    this->invalidDerefVM.localVars.insert(invalidDerefPrime.to_string());
     this->invalidDerefVM.outputsMap[BlockEncoding::invalid_deref] =
         invalidDerefPrime.to_string();
     
@@ -451,6 +455,7 @@ z3::expr_vector SLHVBlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
     z3::expr invalidDerefPrime = 
         this->generateLocalVarByName(BlockEncoding::invalid_deref);
+    this->invalidDerefVM.localVars.insert(invalidDerefPrime.to_string());
     this->invalidDerefVM.outputsMap[BlockEncoding::invalid_deref] =
         invalidDerefPrime.to_string();
     

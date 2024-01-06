@@ -13,10 +13,15 @@
 
 namespace smack {
 
+typedef std::map<std::string, std::shared_ptr<z3::expr>> AxiomSet;
+
 class ArrayZ3ExprManager : public Z3ExprManager {
 
 private:
 
+    AxiomSet axioms;
+    
+    void setAxioms();
     void initSorts() override;
     void initFunctions() override;
     void initQuantifiedVars() override;
@@ -54,7 +59,6 @@ private:
 
 public:
     ArrayBlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarTypeSetPtr vts);
-
 };
 
 DEFINE_PTR_TYPE(ArrayBlockEncoding);
@@ -62,14 +66,12 @@ DEFINE_PTR_TYPE(ArrayBlockEncoding);
 class ArrayTREncoder : public TREncoder {
 
 private:
-    
+
     void initLogicGlobalVarType();
     void init();
 
 public:
     ArrayTREncoder(Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr rbcfg, VarTypeSetPtr vts);
-
-    void print(std::ostream& os);
 };
 
 DEFINE_PTR_TYPE(ArrayTREncoder);
@@ -83,7 +85,6 @@ private:
 
 public:
     BMCArrayVCGen(BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts);
-
 };
 
 } // namespace smack

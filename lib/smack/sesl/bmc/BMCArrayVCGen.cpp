@@ -9,6 +9,7 @@ ArrayZ3ExprManager::ArrayZ3ExprManager()
     this->initSorts();
     this->initFunctions();
     this->initQuantifiedVars();
+    this->setAxioms();
 }
 
 void ArrayZ3ExprManager::initSorts() {
@@ -71,6 +72,81 @@ void ArrayZ3ExprManager::initQuantifiedVars() {
     // this->quantifiedVarsSorts["d"] = this->sorts[BMCVarType::DAT];
 }
 
+void ArrayZ3ExprManager::setAxioms() {
+    z3::expr h = this->mk_heap("h");
+    z3::expr p = this->mk_int("p");
+    z3::expr s = this->mk_int("s");
+    z3::expr q = this->mk_int("q");
+    z3::expr t = this->mk_int("t");
+    z3::expr x = this->mk_int("x");
+
+    z3::expr epsilon = this->getConstant("epsilon");
+    z3::func_decl malloc = this->getFunc("malloc");
+    z3::func_decl free = this->getFunc("free");
+    z3::func_decl mallocsize = this->getFunc("mallocsize");
+    z3::func_decl accessible = this->getFunc("accessible");
+    z3::func_decl freeable = this->getFunc("freeable");
+    z3::func_decl mallocable = this->getFunc("mallocable");
+    z3::func_decl disjoint = this->getFunc("disjoint");
+    z3::func_decl contained = this->getFunc("contained");
+    z3::func_decl mallocable_size = this->getFunc("mallocable_size");
+    z3::func_decl mallocable_top = this->getFunc("mallocable_top");
+    z3::func_decl heaptop = this->getFunc("heaptop");
+
+    z3::expr disjoint_def = z3::forall(p, s, q, t, disjoint(p, s, q, t) == ((p + s <= q) || (q + t <= p)));
+    z3::expr contained_def = z3::forall(p, s, q, t, contained(p, s, q, t) == (p <= q && q + t <= p + s));
+    z3::expr mallocable_size_def = z3::forall(h, p, s, mallocable_size(h, p, s) == (s != 0));
+    z3::expr axiom_heaptop = z3::forall(
+        h, p, s,
+        (heaptop(epsilon) == 0)
+        && (heaptop(free(h, p)) == heaptop(h))
+        && (heaptop(malloc(h, p, s)) == (p + s)));
+    z3::expr mallocable_top_def = z3::forall(h, p, s, mallocable_top(h, p, s) == (p >= heaptop(h)));
+    z3::expr axiom_mallocable = z3::forall(h, p, s,
+        mallocable(h, p, s) == (mallocable_size(h, p, s) && mallocable_top(h, p, s))
+    );
+    z3::expr axiom_freeable = z3::forall(
+        h, p, s, q,
+        (freeable(epsilon, q) == this->ctx.bool_val(false)) 
+        && implies(mallocable(h, p, s) && p == q, freeable(malloc(h, p, s), q) == this->ctx.bool_val(true))
+        && implies(!(mallocable(h, p, s) && p == q), freeable(malloc(h, p, s), q) == freeable(h, q))
+        && implies(p == q, freeable(free(h, p), q) == this->ctx.bool_val(false))
+        && implies(p != q, freeable(free(h, p), q) == freeable(h, q))
+    );
+    z3::expr axiom_mallocsize = z3::forall(
+        h, p, s, q,
+        mallocsize(epsilon, q) == 0
+        && implies(freeable(h, p) && p == q, mallocsize(free(h, p), q) == 0)
+        && implies(!(freeable(h, p) && p == q), mallocsize(free(h, p), q) == mallocsize(h, q))
+        && implies(mallocable(h, p, s) && p == q, mallocsize(malloc(h, p, s), q) == s)
+        && implies(!(mallocable(h, p, s) && p == q), mallocsize(malloc(h, p, s), q) == mallocsize(h, q))
+    );
+    z3::expr_vector hpsqt(ctx);
+    hpsqt.push_back(h);
+    hpsqt.push_back(p);
+    hpsqt.push_back(s);
+    hpsqt.push_back(q);
+    hpsqt.push_back(t);
+    z3::expr axiom_accessible = z3::forall(
+        hpsqt,
+        (accessible(epsilon, p, s) == this->ctx.bool_val(false))
+        && implies(mallocable(h, p, s) && contained(p, s, q, t), accessible(malloc(h, p, s), q, t) == this->ctx.bool_val(true))
+        && implies(!(mallocable(h, p, s) && contained(p, s, q, t)), accessible(malloc(h, p, s), q, t) == accessible(h, q, t))
+        && implies(!freeable(h, p), accessible(free(h, p), q, t) == accessible(h, q, t))
+        && implies(freeable(h, p) && disjoint(p, mallocsize(h, p), q, t), accessible(free(h, p), q, t) == accessible(h, q, t))
+        && implies(freeable(h, p) && !disjoint(p, mallocsize(h, p), q, t), accessible(free(h, p), q, t) == this->ctx.bool_val(false))
+    );
+    this->axioms["disjoint_def"] = std::make_shared<z3::expr>(disjoint_def);
+    this->axioms["contained_def"] = std::make_shared<z3::expr>(contained_def);
+    this->axioms["mallocable_size_def"] = std::make_shared<z3::expr>(mallocable_size_def);
+    this->axioms["axiom_heaptop"] = std::make_shared<z3::expr>(axiom_heaptop);
+    this->axioms["mallocable_top_def"] = std::make_shared<z3::expr>(mallocable_top_def);
+    this->axioms["axiom_mallocable"] = std::make_shared<z3::expr>(axiom_mallocable);
+    this->axioms["axiom_freeable"] = std::make_shared<z3::expr>(axiom_freeable);
+    this->axioms["axiom_mallocsize"] = std::make_shared<z3::expr>(axiom_mallocsize);
+    this->axioms["axiom_accessible"] = std::make_shared<z3::expr>(axiom_accessible);
+}
+
 z3::expr ArrayZ3ExprManager::mk_loc_arith(
     z3::expr l1, z3::expr l2, BinExpr::Binary op) {
     switch (op) {
@@ -82,6 +158,9 @@ z3::expr ArrayZ3ExprManager::mk_loc_arith(
 
 std::string ArrayZ3ExprManager::to_smt2(z3::expr e) {
     z3::solver sol(this->ctx);
+    for (auto n_axiom : this->axioms) {
+        sol.add(*n_axiom.second);
+    }
     // sol.add(e.simplify());
     sol.add(e);
     return sol.to_smt2();
@@ -387,23 +466,6 @@ void ArrayTREncoder::init() {
         }
     }
     this->print(std::cout);
-}
-
-void ArrayTREncoder::print(std::ostream& os) {
-    os << "================ Transition Relation Encoding ================\n";
-    // os << " Global Location Variable :";
-    // for (auto var : *globalLocVars) os << " " << var;
-    // os << "\n";
-    // os << " Global Data Variable :";
-    // for (auto var : *globalDataVars) os << " " << var;
-    // os << "\n";
-    for (auto tr : this->blockEncodings) {
-        os << " ---------------------------------------------\n";
-        os << " BlockEncoding - ";
-        os << " From : " << tr.first->getFrom() << " To : " << tr.first->getTo() << '\n';
-        tr.second->print(os);
-    }
-    os << "================ Transition Relation Encoding ================\n";
 }
 
 z3::expr BMCArrayVCGen::generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty) {

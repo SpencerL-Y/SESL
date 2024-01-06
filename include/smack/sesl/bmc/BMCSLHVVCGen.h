@@ -73,8 +73,6 @@ private:
 
 public:
     SLHVTREncoder(Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr rbcfg, VarTypeSetPtr vts);
-
-    void print(std::ostream& os);
 };
 
 DEFINE_PTR_TYPE(SLHVTREncoder);

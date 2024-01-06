@@ -569,23 +569,6 @@ void SLHVTREncoder::init() {
     this->print(std::cout);
 }
 
-void SLHVTREncoder::print(std::ostream& os) {
-    os << "================ Transition Relation Encoding ================\n";
-    // os << " Global Location Variable :";
-    // for (auto var : *globalLocVars) os << " " << var;
-    // os << "\n";
-    // os << " Global Data Variable :";
-    // for (auto var : *globalDataVars) os << " " << var;
-    // os << "\n";
-    for (auto tr : this->blockEncodings) {
-        os << " ---------------------------------------------\n";
-        os << " BlockEncoding - ";
-        os << " From : " << tr.first->getFrom() << " To : " << tr.first->getTo() << '\n';
-        tr.second->print(os);
-    }
-    os << "================ Transition Relation Encoding ================\n";
-}
-
 z3::expr BMCSLHVVCGen::generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty) {
     std::set<int> finalLocations = this->TrEncoder->getFinalLocations();
     z3::expr buggyEncoding = this->z3EM->Ctx().bool_val(false);

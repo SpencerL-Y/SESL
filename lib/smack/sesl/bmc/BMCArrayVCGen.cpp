@@ -81,6 +81,8 @@ void ArrayZ3ExprManager::setAxioms() {
     z3::expr x = this->mk_int("x");
 
     z3::expr epsilon = this->getConstant("epsilon");
+    z3::func_decl read = this->getFunc("read");
+    z3::func_decl write = this->getFunc("write");
     z3::func_decl malloc = this->getFunc("malloc");
     z3::func_decl free = this->getFunc("free");
     z3::func_decl mallocsize = this->getFunc("mallocsize");
@@ -93,6 +95,11 @@ void ArrayZ3ExprManager::setAxioms() {
     z3::func_decl mallocable_top = this->getFunc("mallocable_top");
     z3::func_decl heaptop = this->getFunc("heaptop");
 
+    z3::expr axiom_read_and_write = z3::forall(
+        h, p, x, q,
+        z3::implies(p == q, read(write(h, p, x), q) == x)
+        && z3::implies(p != q, read(write(h, p, x), q) == read(h, q))
+    );
     z3::expr disjoint_def = z3::forall(p, s, q, t, disjoint(p, s, q, t) == ((p + s <= q) || (q + t <= p)));
     z3::expr contained_def = z3::forall(p, s, q, t, contained(p, s, q, t) == (p <= q && q + t <= p + s));
     z3::expr mallocable_size_def = z3::forall(h, p, s, mallocable_size(h, p, s) == (s != 0));
@@ -136,6 +143,7 @@ void ArrayZ3ExprManager::setAxioms() {
         && implies(freeable(h, p) && disjoint(p, mallocsize(h, p), q, t), accessible(free(h, p), q, t) == accessible(h, q, t))
         && implies(freeable(h, p) && !disjoint(p, mallocsize(h, p), q, t), accessible(free(h, p), q, t) == this->ctx.bool_val(false))
     );
+    this->axioms["axiom_read_and_write"] = std::make_shared<z3::expr>(axiom_read_and_write);
     this->axioms["disjoint_def"] = std::make_shared<z3::expr>(disjoint_def);
     this->axioms["contained_def"] = std::make_shared<z3::expr>(contained_def);
     this->axioms["mallocable_size_def"] = std::make_shared<z3::expr>(mallocable_size_def);

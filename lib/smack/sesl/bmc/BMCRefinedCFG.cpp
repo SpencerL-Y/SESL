@@ -516,7 +516,7 @@ namespace smack
             os << " Record : " << " Id - "
                 << slhvcmd.record.getID() << " | Fields - ";
             for (auto ftype : slhvcmd.record.getFieldsTypes())
-                os << " " << (ftype == SLHVVarType::INT_LOC ? "Loc" : "Dat");
+                os << " " << (ftype == BMCVarType::LOC ? "Loc" : "Dat");
         }
         os << '\n';
         if (slhvcmd.arg2 != nullptr) {

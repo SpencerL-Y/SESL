@@ -372,6 +372,7 @@ protected:
 
     std::map<int, std::shared_ptr<z3::sort>> sorts;
     std::map<std::string, int> sortsEnumId;
+    std::map<std::string, std::shared_ptr<z3::expr>> constants;
     std::map<std::string, std::shared_ptr<z3::func_decl>> functions;
     std::vector<Record> records;
 
@@ -396,15 +397,16 @@ public:
     
     z3::sort getSort(int ty);
     const int getSortEnumId(std::string sort);
+    z3::expr getConstant(std::string name);
     z3::func_decl getFunc(std::string name);
 
     inline z3::expr mk_constant(std::string name, z3::sort sort);
 
     z3::expr mk_int(std::string var);
     z3::expr mk_bool(std::string var);
+    z3::expr mk_loc(std::string var);
+    z3::expr mk_heap(std::string var);
 
-    virtual z3::expr mk_loc(std::string var) = 0;
-    virtual z3::expr mk_heap(std::string var) = 0;
     virtual z3::expr mk_pto(z3::expr x, z3::expr y) = 0;
     virtual z3::expr mk_sep(z3::expr h1, z3::expr h2) = 0;
     virtual z3::expr mk_loc_arith(z3::expr l1, z3::expr l2, BinExpr::Binary op) = 0;
@@ -450,7 +452,7 @@ protected:
 
     // Variables' types is an "enum", according to the specific theory
     int getVarTypeByName(std::string name);
-    virtual z3::expr generateVarByType(std::string name, int type) = 0;
+    z3::expr generateVarByType(std::string name, int type);
     virtual z3::expr generateNullptr() = 0;
 
     virtual z3::expr getLatestUpdateForGlobalVar(std::string name);
@@ -460,9 +462,11 @@ protected:
     z3::expr generateBinExpr(const BinExpr* e);
     z3::expr generateExpr(const Expr* e);
 
+    // Encoding for each command contains feasible encoding, invalid dereference encoding
+    // and invalid free encoding, in order
     virtual z3::expr_vector generateAssignEncoding(RefinedActionPtr act) = 0;
     virtual z3::expr_vector generateAssumeEncoding(RefinedActionPtr act) = 0;
-    virtual z3::expr_vector generateAllocAndMallocEncoding(RefinedActionPtr act) = 0;
+    virtual z3::expr_vector generateAllocEncoding(RefinedActionPtr act) = 0;
     virtual z3::expr_vector generateLoadEncoding(RefinedActionPtr act) = 0;
     virtual z3::expr_vector generateStoreEncoding(RefinedActionPtr act) = 0;
     virtual z3::expr_vector generateFreeEncoding(RefinedActionPtr act) = 0;
@@ -496,7 +500,8 @@ protected:
     std::map<VarEnumType, VarSetPtr> globalVars;
     std::map<RefinedEdgePtr, BlockEncodingPtr> blockEncodings;
 
-    virtual void init(VarTypeSetPtr vts) = 0;
+    virtual void initLogicGlobalVarType() = 0;
+    virtual void init() = 0;
 
 public:
     TREncoder(Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr rbcfg, VarTypeSetPtr vts);
@@ -523,14 +528,14 @@ protected:
     Z3ExprManagerPtr z3EM;
     TREncoderPtr TrEncoder;
     
-    virtual z3::expr generateVar(std::string name, const int k = -1) = 0;
+    z3::expr generateVar(std::string name, const int k);
     z3::expr generateUnchanged(BlockEncodingPtr bep, VarSetPtr globalVars, const int k);
     z3::expr generateUnchangedInvalid(BlockEncodingPtr bep, BuggyType bty, const int k);
     z3::expr generateOutputs(const BlockEncoding::VarsManager& vm, const int k);
     z3::expr generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty);
-    virtual z3::expr generateInitVC(BuggyType bty) = 0;
     z3::expr generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty);
-    z3::expr generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty);
+    virtual z3::expr generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty) = 0;
+    virtual z3::expr generateInitVC(BuggyType bty) = 0;
     z3::expr generateVC(const int k, BuggyType bty);
 
 public:
@@ -539,6 +544,8 @@ public:
     z3::expr_vector generateVC(int k);
     void generateSMT2(z3::expr e, std::string filename);
 };
+
+DEFINE_PTR_TYPE(BMCBLOCKVCGen);
 
 } // namespace smack
 

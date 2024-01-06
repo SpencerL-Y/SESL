@@ -131,7 +131,7 @@ void RecordManager::print(std::ostream& OS) {
             << " | ByteWidth - " << p.second.getFieldByteWidth() << '\n';
         OS << "  FieldTypes : ";
         for (auto ty : p.second.getFieldsTypes()) {
-            OS << (ty == SLHVVarType::INT_DAT ? " Dat" : " Loc");
+            OS << (ty == BMCVarType::DAT ? " Dat" : " Loc");
         }
         OS << '\n';
     }

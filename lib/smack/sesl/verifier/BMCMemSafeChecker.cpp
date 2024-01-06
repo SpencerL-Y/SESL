@@ -4,7 +4,7 @@
 
 #include "llvm/Analysis/LoopInfo.h"
 #include "smack/sesl/ast/BoogieAst.h"
-#include "smack/sesl/bmc/BMCVCGen.h"
+#include "smack/sesl/bmc/BMCArrayVCGen.h"
 #include "smack/sesl/bmc/BMCSLHVVCGen.h"
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 #include "smack/sesl/bmc/BMCPreAnalysis.h"
@@ -123,6 +123,30 @@ void BMCMemSafeChecker::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
   AU.addRequired<SmackModuleGenerator>();
 }
 
+BMCBLOCKVCGenPtr BMCMemSafeChecker::generateVCGen(
+  std::string logic, BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts) {
+  if (logic == "SLHV") {
+    return std::make_shared<BMCSLHVVCGen>(rbcfg, rm, vts);
+  } else if (logic == "Array") {
+    return std::make_shared<BMCArrayVCGen>(rbcfg, rm, vts);
+  }
+}
+
+void BMCMemSafeChecker::generateVC(BMCBLOCKVCGenPtr gen, const std::vector<int>& steps) {
+  for (int i = 0; i < 3; i++) {
+    z3::expr_vector vcs = gen->generateVC(steps[i]);
+    std::cout << "\nInvalidDeref :\n" << vcs[0] << std::endl;
+    std::cout << "\nInvalidFree :\n" << vcs[1] << std::endl;
+    std::cout << "\nMemLeak :\n" << vcs[2] << std::endl;
+    std::string suf;
+    if (i < 2) suf = "_" + std::to_string(steps[i]);
+    else suf = "_locsize_" + std::to_string(steps[i]);
+    gen->generateSMT2(vcs[0], "../bin/outputs/invalidDeref" + suf + ".smt2");
+    gen->generateSMT2(vcs[1], "../bin/outputs/invalidFree" + suf + ".smt2");
+    gen->generateSMT2(vcs[2], "../bin/outputs/invalidMemLeak" + suf + ".smt2");
+  }
+}
+
 bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
   recordManager = smackGen.getRM();
@@ -143,50 +167,25 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   refinedBlockCFG->print(std::cout);
   BMCSLHVPreAnalysisPtr slhvPreAnalysis = std::make_shared<BMCSLHVPreAnalysis>(recordManager, pimSet);
   slhvPreAnalysis->refineSLHVCmds(refinedBlockCFG);
+  // slhvPreAnalysis->print(std::cout);
 
   recordManager->print(std::cout);
   this->setSLHVCmdRecords(refinedBlockCFG);
   refinedBlockCFG->print(std::cout);
 
-  BMCSLHVVCGen slhvVCGen(
-    refinedBlockCFG,
-    recordManager,
-    slhvPreAnalysis->getVarTypeSet()
-  );
-  // std::cout << " ========================== SLHV Var Type ==========\n";
-  // for (auto p : *slhvPreAnalysis->getVarTypeSet()) {
-  //   std::cout << p.first << " ";
-  //   std::string ss;
-  //   switch (p.second)
-  //   {
-  //   case SLHVVarType::INT_DAT: ss = "Dat"; break;
-  //   case SLHVVarType::INT_LOC: ss = "Loc"; break;
-  //   case SLHVVarType::INT_HEAP: ss = "Heap"; break;
-  //   case SLHVVarType::SLHV_BOOL: ss = "Bool"; break;
-  //   default:
-  //     assert(false);
-  //     break;
-  //   }
-  //   std::cout << ss << '\n';
-  // }
-  
   std::vector<int> steps;
   steps.push_back(1);
   steps.push_back(2);
   steps.push_back(refinedBlockCFG->getVertexNum());
 
-  for (int i = 0; i < 3; i++) {
-    z3::expr_vector slhvVCs = slhvVCGen.generateVC(steps[i]);
-    // std::cout << "\nInvalidDeref :\n" << slhvVCs[0] << std::endl;
-    // std::cout << "\nInvalidFree :\n" << slhvVCs[1] << std::endl;
-    // std::cout << "\nMemLeak :\n" << slhvVCs[2] << std::endl;
-    std::string suf;
-    if (i < 2) suf = "_" + std::to_string(steps[i]);
-    else suf = "_locsize";
-    slhvVCGen.generateSMT2(slhvVCs[0], "../bin/invalidDeref" + suf + ".smt2");
-    slhvVCGen.generateSMT2(slhvVCs[1], "../bin/invalidFree" + suf + ".smt2");
-    slhvVCGen.generateSMT2(slhvVCs[2], "../bin/invalidMemLeak" + suf + ".smt2");
-  }
+  BMCBLOCKVCGenPtr gen = this->generateVCGen(
+    "Array",
+    refinedBlockCFG,
+    recordManager,
+    slhvPreAnalysis->getVarTypeSet()
+  );
+  this->generateVC(gen, steps);
+
   return false;
 }
 

@@ -6,6 +6,7 @@
 
 #include "smack/sesl/ast/BoogieAst.h"
 #include "smack/SmackModuleGenerator.h"
+#include "smack/sesl/bmc/BMCVCGen.h"
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 
 namespace smack {
@@ -23,6 +24,9 @@ private:
 
   Record getPtrRecord(const VarExpr* vexpr);
   void setSLHVCmdRecords(BMCRefinedBlockCFGPtr RefinedBlockCFG);
+
+  BMCBLOCKVCGenPtr generateVCGen(std::string logic, BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts);
+  void generateVC(BMCBLOCKVCGenPtr gen, const std::vector<int>& steps);
 
 public:
   static char ID;

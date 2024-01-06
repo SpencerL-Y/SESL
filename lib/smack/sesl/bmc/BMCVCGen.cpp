@@ -2742,23 +2742,35 @@ const int Z3ExprManager::getSortEnumId(std::string sort) {
     return this->sortsEnumId.at(sort);
 }
 
+z3::expr Z3ExprManager::getConstant(std::string name) {
+    assert(this->constants.find(name) != this->constants.end());
+    return *this->constants.at(name);
+}
+
 z3::func_decl Z3ExprManager::getFunc(std::string name) {
     assert(this->functions.find(name) != this->functions.end());
     return *this->functions.at(name);
 }
 
 z3::expr Z3ExprManager::mk_constant(std::string name, z3::sort sort) {
+    assert(!name.empty());
     return ctx.constant(name.c_str(), sort);
 }
 
 z3::expr Z3ExprManager::mk_int(std::string var) {
-    assert(!var.empty());
     return this->mk_constant(var, this->ctx.int_sort());
 }
 
 z3::expr Z3ExprManager::mk_bool(std::string var) {
-    assert(!var.empty());
     return this->mk_constant(var, this->ctx.bool_sort());
+}
+
+z3::expr Z3ExprManager::mk_loc(std::string var) {
+    return this->mk_constant(var, this->getSort(BMCVarType::LOC));
+}
+
+z3::expr Z3ExprManager::mk_heap(std::string var) {
+    return this->mk_constant(var, this->getSort(BMCVarType::HEAP));
 }
 
 z3::expr Z3ExprManager::mk_fresh(std::string var, z3::sort sort) {
@@ -2811,6 +2823,19 @@ BlockEncoding::BlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarType
 int BlockEncoding::getVarTypeByName(std::string name) {
     assert(this->varsTypeMap->find(name) != this->varsTypeMap->end());
     return this->varsTypeMap->at(name);
+}
+
+z3::expr BlockEncoding::generateVarByType(std::string name, int type) {
+    assert(type < 4);
+    BMCVarType ty = (BMCVarType)type;
+    (*this->varsTypeMap)[name] = type;
+    switch (ty) {
+        case BMCVarType::DAT: return this->z3EM->mk_int(name);
+        case BMCVarType::LOC: return this->z3EM->mk_loc(name);
+        case BMCVarType::HEAP: return this->z3EM->mk_heap(name);
+        case BMCVarType::BOOLEAN: return this->z3EM->mk_bool(name);
+        default: assert(false);
+    }
 }
 
 z3::expr BlockEncoding::getLatestUpdateForGlobalVar(std::string name) {
@@ -2915,7 +2940,7 @@ void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
                 break;
             case ConcreteAction::ActType::ALLOC:
             case ConcreteAction::ActType::MALLOC:
-                actEncodings = this->generateAllocAndMallocEncoding(act);
+                actEncodings = this->generateAllocEncoding(act);
                 break;
             case ConcreteAction::ActType::LOAD:
                 actEncodings = this->generateLoadEncoding(act);
@@ -2934,11 +2959,11 @@ void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
         CLEAN_Z3EXPR_CONJUNC(this->feasibleEncoding, actEncodings[0]);
         CLEAN_Z3EXPR_CONJUNC(this->invalidDerefEncoding, actEncodings[1]);
         CLEAN_Z3EXPR_CONJUNC(this->invalidFreeEncoding, actEncodings[2]);
-        // std::cout << " ------------------------------------------------------------\n";
-        // act->print(std::cout);
-        // std::cout << "\nFeasible encoding : \n" << actEncodings[0] << "\n";
-        // std::cout << "\nInvalidDeref encoding : \n" << actEncodings[1] << "\n";
-        // std::cout << "\nInvalidFree encoding : \n" << actEncodings[2] << "\n";
+        std::cout << " ------------------------------------------------------------\n";
+        act->print(std::cout);
+        std::cout << "\nFeasible encoding : \n" << actEncodings[0] << "\n";
+        std::cout << "\nInvalidDeref encoding : \n" << actEncodings[1] << "\n";
+        std::cout << "\nInvalidFree encoding : \n" << actEncodings[2] << "\n";
     }
 }
 
@@ -3052,6 +3077,19 @@ void TREncoder::print(std::ostream& os) {
         tr.second->print(os);
     }
     os << "================ Transition Relation Encoding ================\n";
+}
+
+z3::expr BMCBLOCKVCGen::generateVar(std::string name, const int k = -1) {
+    BMCVarType ty = BMCVarType(this->TrEncoder->getVarType(name));
+    std::string var = name;
+    if (k > -1) { var = var + "_" + std::to_string(k); }
+    switch (ty) {
+        case BMCVarType::DAT: return this->z3EM->mk_int(var);
+        case BMCVarType::LOC: return this->z3EM->mk_loc(var);
+        case BMCVarType::HEAP: return this->z3EM->mk_heap(var);
+        case BMCVarType::BOOLEAN: return this->z3EM->mk_bool(var);
+        default: assert(false);
+    }
 }
 
 z3::expr
@@ -3184,43 +3222,6 @@ BMCBLOCKVCGen::generateOneStepVC(int k, const std::set<int>& locations, BuggyTyp
         }
     }
     return vc;
-}
-
-
-z3::expr BMCBLOCKVCGen::generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty) {
-    std::set<int> finalLocations = this->TrEncoder->getFinalLocations();
-    z3::expr buggyEncoding = this->z3EM->Ctx().bool_val(false);
-    if (bty == BuggyType::INVALIDDEREF) {
-        buggyEncoding = this->z3EM
-            ->mk_bool(BlockEncoding::invalid_deref + "_" + std::to_string(k));
-    } else if (bty == BuggyType::INVALIDFREE) {
-        buggyEncoding = this->z3EM
-            ->mk_bool(BlockEncoding::invalid_free + "_" + std::to_string(k));
-    } else {
-        z3::expr finalLocs = z3EM->Ctx().bool_val(false);
-        for (int u : locations) {
-            if (finalLocations.find(u) == finalLocations.end()) { continue; }
-            z3::expr locatesOnU = 
-                (z3EM->mk_int("loc_" + std::to_string(k)) == u);
-            CLEAN_Z3EXPR_DISJUNC(finalLocs, locatesOnU);
-        }
-        z3::expr H = this->z3EM->mk_heap("H_" + std::to_string(k));
-        z3::expr h = this->z3EM->mk_quantified("h");
-        z3::expr lt = this->z3EM->mk_quantified("l");
-        z3::expr loc = this->z3EM->mk_quantified("l");
-        z3::expr data = this->z3EM->mk_quantified("d");
-        z3::expr kthHeap =
-            (H == this->z3EM->mk_sep(h, this->z3EM->mk_pto(lt, loc)))
-            || (H == this->z3EM->mk_sep(h, this->z3EM->mk_pto(lt, data)));
-        
-        z3::expr AH = this->z3EM->mk_heap("AH_" + std::to_string(k));
-        z3::expr ah = this->z3EM->mk_quantified("ah");
-        z3::expr ahlt = this->z3EM->mk_quantified("l");
-        z3::expr ahid = this->z3EM->mk_quantified("d");
-        z3::expr kthAllocHeap = (AH == this->z3EM->mk_sep(ah, this->z3EM->mk_pto(ahlt, ahid)));
-        buggyEncoding = finalLocs && kthHeap && kthAllocHeap;
-    }
-    return buggyEncoding;
 }
 
 z3::expr BMCBLOCKVCGen::generateVC(const int k, BuggyType bty) {

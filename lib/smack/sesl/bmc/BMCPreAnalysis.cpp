@@ -366,7 +366,7 @@ namespace smack
                     assert(stepWidth > 0 && byteSize % stepWidth == 0);
                     FieldsTypes ftypes;
                     for (int i = 0; i < byteSize / stepWidth; i++) {
-                        ftypes.push_back(SLHVVarType::INT_DAT);
+                        ftypes.push_back(BMCVarType::DAT);
                     }
                     std::string name = varType + "_" + std::to_string(ftypes.size());
                     Record record = Record(this->recordManager->getNewId(), stepWidth, ftypes);
@@ -420,47 +420,47 @@ namespace smack
         }
     }
 
-    SLHVVarType BMCSLHVPreAnalysis::getVarsSLHVTypeFromExpr(const Expr* e) {
+    BMCVarType BMCSLHVPreAnalysis::getVarsSLHVTypeFromExpr(const Expr* e) {
         switch (e->getType()) {
             case ExprType::BIN: {
                 const BinExpr* be = (const BinExpr*)e;
-                SLHVVarType lhsTy = this->getVarsSLHVTypeFromExpr(be->getLhs());
-                SLHVVarType rhsTy = this->getVarsSLHVTypeFromExpr(be->getRhs());
+                BMCVarType lhsTy = this->getVarsSLHVTypeFromExpr(be->getLhs());
+                BMCVarType rhsTy = this->getVarsSLHVTypeFromExpr(be->getRhs());
                 switch (be->getOp())  {
                     case BinExpr::Binary::Plus:
                     case BinExpr::Binary::Minus:
                     case BinExpr::Binary::Times: {
                         if (lhsTy == rhsTy) return lhsTy;
-                        assert(lhsTy == SLHVVarType::INT_LOC || 
-                            rhsTy == SLHVVarType::INT_LOC);
-                        return SLHVVarType::INT_LOC;
+                        assert(lhsTy == BMCVarType::LOC || 
+                            rhsTy == BMCVarType::LOC);
+                        return BMCVarType::LOC;
                     }
                     case BinExpr::Binary::Eq:
                     case BinExpr::Binary::Neq:
                     case BinExpr::Binary::Lt:
                     case BinExpr::Binary::Gt:
                     case BinExpr::Binary::Lte:
-                    case BinExpr::Binary::Gte: return SLHVVarType::SLHV_BOOL;
+                    case BinExpr::Binary::Gte: return BMCVarType::BOOLEAN;
                     default: { assert(false && "unsupported operation!!!");  }
                 }
             }
-            case ExprType::BOOL: return SLHVVarType::SLHV_BOOL;
-            case ExprType::INT: return SLHVVarType::INT_DAT;
+            case ExprType::BOOL: return BMCVarType::BOOLEAN;
+            case ExprType::INT: return BMCVarType::DAT;
             case ExprType::NOT:
                 return this->getVarsSLHVTypeFromExpr(((NotExpr*)e)->getExpr());
             case ExprType::VAR: {
                 const VarExpr* var = (const VarExpr*)e;
                 if (this->varTypeSet->find(var->name()) == this->varTypeSet->end()) {
-                    SLHVVarType ty;
-                    if (var->name()[1] == 'p') { ty = SLHVVarType::INT_LOC; }
-                    else if(var->name()[1] == 'i') { ty = SLHVVarType::INT_DAT; }
+                    BMCVarType ty;
+                    if (var->name()[1] == 'p') { ty = BMCVarType::LOC; }
+                    else if(var->name()[1] == 'i') { ty = BMCVarType::DAT; }
                     else {
                         std::cout << " ????????????????? => ";
                         std::cout << var->name() << '\n';
                     }
                     (*this->varTypeSet)[var->name()] = ty;
                 }
-                return SLHVVarType(this->varTypeSet->at(var->name()));
+                return BMCVarType(this->varTypeSet->at(var->name()));
             }
             default: assert(false);
         }
@@ -476,14 +476,14 @@ namespace smack
                     this->getVarsSLHVTypeFromExpr(act->getArg2());
                 }
                 const VarExpr* x = (const VarExpr*)act->getArg1();
-                (*this->varTypeSet)[x->name()] = SLHVVarType::INT_LOC;
+                (*this->varTypeSet)[x->name()] = BMCVarType::LOC;
                 break;
             }
             case ConcreteAction::ActType::LOAD: {
                 const VarExpr* x = (const VarExpr*)act->getArg1();
-                SLHVVarType ty;
-                if (x->name()[1] == 'p') { ty = SLHVVarType::INT_LOC; }
-                else if (x->name()[1] == 'i') { ty = SLHVVarType::INT_DAT; }
+                BMCVarType ty;
+                if (x->name()[1] == 'p') { ty = BMCVarType::LOC; }
+                else if (x->name()[1] == 'i') { ty = BMCVarType::DAT; }
                 else assert(false);
                 (*this->varTypeSet)[x->name()] = ty;
                 break;
@@ -492,17 +492,17 @@ namespace smack
                 if (act->getArg1() != nullptr) {
                     assert(act->getArg1()->isVar());
                     const VarExpr* x = (const VarExpr*)act->getArg1();
-                    SLHVVarType ty = this->getVarsSLHVTypeFromExpr(act->getArg2());
+                    BMCVarType ty = this->getVarsSLHVTypeFromExpr(act->getArg2());
                     if (x->name()[1] == 'p') {
-                        assert(ty == SLHVVarType::INT_LOC);
+                        assert(ty == BMCVarType::LOC);
                     } else if (x->name()[1] == 'i') {
-                        assert(ty == SLHVVarType::INT_DAT);
+                        assert(ty == BMCVarType::DAT);
                     }
                     (*this->varTypeSet)[x->name()] = ty;
                 } else if (act->getArg3()->isVar()) {
                     const VarExpr* x = (const VarExpr*)act->getArg3();
-                    SLHVVarType ty = this->getVarsSLHVTypeFromExpr(act->getArg4());
-                    if (x->name()[1] == 'i') { ty = SLHVVarType::INT_DAT; }
+                    BMCVarType ty = this->getVarsSLHVTypeFromExpr(act->getArg4());
+                    if (x->name()[1] == 'i') { ty = BMCVarType::DAT; }
                     (*this->varTypeSet)[x->name()] = ty;
                 } else if (act->getArg3() != nullptr) {
                     this->getVarsSLHVTypeFromExpr(act->getArg3());
@@ -514,13 +514,7 @@ namespace smack
     BMCSLHVPreAnalysis::BMCSLHVPreAnalysis(RecordManagerPtr rm, PIMSetPtr ps)
         : recordManager(rm), pimSet(ps),
           varTypeSet(std::make_shared<VarTypeSet>()),
-          consVarMap() {
-        (*varTypeSet)["H"] = SLHVVarType::INT_HEAP;
-        (*varTypeSet)["AH"] = SLHVVarType::INT_HEAP;
-        (*varTypeSet)["$0.ref"] = SLHVVarType::INT_LOC;
-        (*varTypeSet)["invalidDeref"] = SLHVVarType::SLHV_BOOL;
-        (*varTypeSet)["invalidFree"] = SLHVVarType::SLHV_BOOL;
-    }
+          consVarMap() {}
 
     void BMCSLHVPreAnalysis::refineSLHVCmds(BMCRefinedBlockCFGPtr refinedBlockCFG) {
         this->computeConstantVar(refinedBlockCFG);
@@ -551,6 +545,23 @@ namespace smack
 
     VarTypeSetPtr BMCSLHVPreAnalysis::getVarTypeSet() {
         return this->varTypeSet;
+    }
+    
+    void BMCSLHVPreAnalysis::print(std::ostream& os) {
+        std::cout << " ====================== Variable Type ======================\n";
+        for (auto p : *this->varTypeSet) {
+            std::cout << p.first << " ";
+            std::string ss;
+            switch (p.second) {
+                case BMCVarType::DAT: ss = "Dat"; break;
+                case BMCVarType::LOC: ss = "Loc"; break;
+                case BMCVarType::HEAP: ss = "Heap"; break;
+                case BMCVarType::BOOLEAN: ss = "Bool"; break;
+                default: assert(false);
+            }
+            std::cout << ss << '\n';
+        }
+        std::cout << " ====================== Variable Type ======================\n";
     }
 
 } // namespace smack

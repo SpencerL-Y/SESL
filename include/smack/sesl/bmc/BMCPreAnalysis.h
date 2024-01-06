@@ -78,7 +78,7 @@ namespace smack
             void computeConstantVar(BMCRefinedBlockCFGPtr refinedBlockCFG);
             void setArrayRecord(BMCRefinedBlockCFGPtr refinedBlockCFG);
             void convertByteOffsetToField(BMCRefinedBlockCFGPtr refinedBlockCFG);
-            SLHVVarType getVarsSLHVTypeFromExpr(const Expr* e);
+            BMCVarType getVarsSLHVTypeFromExpr(const Expr* e);
             void setVarsSLHVType(RefinedActionPtr act);
 
         public:
@@ -86,6 +86,8 @@ namespace smack
 
             void refineSLHVCmds(BMCRefinedBlockCFGPtr refinedBlockCFG);
             VarTypeSetPtr getVarTypeSet();
+
+            void print(std::ostream& os);
     };
 
     typedef std::shared_ptr<BMCSLHVPreAnalysis> BMCSLHVPreAnalysisPtr;

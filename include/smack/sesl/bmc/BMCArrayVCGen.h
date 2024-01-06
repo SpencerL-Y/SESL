@@ -1,5 +1,5 @@
-#ifndef BMCSLHVVCGEN_H
-#define BMCSLHVVCGEN_H
+#ifndef BMCARRAYVCGEN_H
+#define BMCARRAYVCGEN_H
 
 #include <cstring>
 #include <iostream>
@@ -13,7 +13,7 @@
 
 namespace smack {
 
-class SLHVZ3ExprManager : public Z3ExprManager {
+class ArrayZ3ExprManager : public Z3ExprManager {
 
 private:
 
@@ -21,28 +21,23 @@ private:
     void initFunctions() override;
     void initQuantifiedVars() override;
 
-    inline std::shared_ptr<z3::func_decl> decl_datatype(BMCVarType slhvVarType);
-    inline std::string decl_hvar(std::string var);
-    inline std::string decl_locvar(std::string var);
-    inline std::string decl_int(std::string var);
-    inline std::string decl_bool(std::string var);
-    bool is_removed(std::string cmd);
-
 public:
-    SLHVZ3ExprManager();
+    ArrayZ3ExprManager();
 
-    z3::expr mk_pto(z3::expr x, z3::expr y);
-    z3::expr mk_sep(z3::expr h1, z3::expr h2);
     z3::expr mk_loc_arith(z3::expr l1, z3::expr l2, BinExpr::Binary op);
+    
+    // Points-to  and seperation conjunction are not contained in array theory
+    z3::expr mk_pto(z3::expr x, z3::expr y) { assert(false); }
+    z3::expr mk_sep(z3::expr h1, z3::expr h2) { assert(false); }
 
     std::string to_smt2(z3::expr e);
 
     void print(std::ostream& os);
 };
 
-DEFINE_PTR_TYPE(SLHVZ3ExprManager);
+DEFINE_PTR_TYPE(ArrayZ3ExprManager);
 
-class SLHVBlockEncoding : public BlockEncoding{
+class ArrayBlockEncoding : public BlockEncoding{
 
 private:
 
@@ -58,28 +53,28 @@ private:
     z3::expr_vector generateFreeEncoding(RefinedActionPtr act);
 
 public:
-    SLHVBlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarTypeSetPtr vts);
+    ArrayBlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarTypeSetPtr vts);
 
 };
 
-DEFINE_PTR_TYPE(SLHVBlockEncoding);
+DEFINE_PTR_TYPE(ArrayBlockEncoding);
 
-class SLHVTREncoder : public TREncoder {
+class ArrayTREncoder : public TREncoder {
 
 private:
-
+    
     void initLogicGlobalVarType();
     void init();
 
 public:
-    SLHVTREncoder(Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr rbcfg, VarTypeSetPtr vts);
+    ArrayTREncoder(Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr rbcfg, VarTypeSetPtr vts);
 
     void print(std::ostream& os);
 };
 
-DEFINE_PTR_TYPE(SLHVTREncoder);
+DEFINE_PTR_TYPE(ArrayTREncoder);
 
-class BMCSLHVVCGen : public BMCBLOCKVCGen{
+class BMCArrayVCGen : public BMCBLOCKVCGen{
 
 private:
     
@@ -87,7 +82,7 @@ private:
     z3::expr generateInitVC(BuggyType bty);
 
 public:
-    BMCSLHVVCGen(BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts);
+    BMCArrayVCGen(BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts);
 
 };
 

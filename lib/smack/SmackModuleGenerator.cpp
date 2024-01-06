@@ -60,7 +60,7 @@ namespace smack {
 
         SDEBUG(errs() << "Analyzing structures...\n");
         // TODO: remove i8
-        FieldsTypes defR; defR.push_back(SLHVVarType::INT_DAT);
+        FieldsTypes defR; defR.push_back(BMCVarType::DAT);
         recordManager->add("i8", Record(recordManager->getNewId(), 1, defR));
         llvm::DataLayout dl(&M);
         for (StructType* sty : M.getIdentifiedStructTypes()) {
@@ -72,9 +72,9 @@ namespace smack {
             for (unsigned i = 0; i < sty->getNumElements(); i++) {
                 llvm::Type* lt = sty->getElementType(i);
                 if (lt->isPointerTy()) 
-                    ftypes.push_back(SLHVVarType::INT_LOC);
+                    ftypes.push_back(BMCVarType::LOC);
                 else
-                    ftypes.push_back(SLHVVarType::INT_DAT);
+                    ftypes.push_back(BMCVarType::DAT);
             }
             recordManager->add("%" + name, Record(id, width, ftypes));
         }

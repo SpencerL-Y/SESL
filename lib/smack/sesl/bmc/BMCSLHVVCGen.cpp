@@ -12,45 +12,54 @@ SLHVZ3ExprManager::SLHVZ3ExprManager()
 }
 
 void SLHVZ3ExprManager::initSorts() {
-    this->sorts[SLHVVarType::INT_LOC] =
+    this->sorts[BMCVarType::LOC] =
         std::make_shared<z3::sort>(this->ctx.uninterpreted_sort("IntLoc"));
-    this->sorts[SLHVVarType::INT_HEAP] =
+    this->sorts[BMCVarType::HEAP] =
         std::make_shared<z3::sort>(this->ctx.uninterpreted_sort("IntHeap"));
-    this->sorts[SLHVVarType::INT_DAT] =
+    this->sorts[BMCVarType::DAT] =
         std::make_shared<z3::sort>(this->ctx.int_sort());
-    this->sorts[SLHVVarType::SLHV_BOOL] =
+    this->sorts[BMCVarType::BOOLEAN] =
         std::make_shared<z3::sort>(this->ctx.bool_sort());
-    this->sortsEnumId["IntLoc"] = SLHVVarType::INT_LOC;
-    this->sortsEnumId["IntHeap"] = SLHVVarType::INT_HEAP;
-    this->sortsEnumId[this->ctx.int_sort().to_string()] = SLHVVarType::INT_DAT;
-    this->sortsEnumId[this->ctx.bool_sort().to_string()] = SLHVVarType::SLHV_BOOL;
+    this->sortsEnumId["IntLoc"] = BMCVarType::LOC;
+    this->sortsEnumId["IntHeap"] = BMCVarType::HEAP;
+    this->sortsEnumId[this->ctx.int_sort().to_string()] = BMCVarType::DAT;
+    this->sortsEnumId[this->ctx.bool_sort().to_string()] = BMCVarType::BOOLEAN;
+
+    this->constants["nil"] =
+        std::make_shared<z3::expr>(
+            this->mk_constant("nil", *this->sorts[BMCVarType::LOC])
+        );
+    this->constants["emp"] =
+        std::make_shared<z3::expr>(
+            this->mk_constant("emp", *this->sorts[BMCVarType::HEAP])
+        );
 }
 
 void SLHVZ3ExprManager::initFunctions() {
-    z3::sort intHeap = this->getSort(SLHVVarType::INT_HEAP);
-    z3::sort intLoc = this->getSort(SLHVVarType::INT_LOC);
+    z3::sort intHeap = this->getSort(BMCVarType::HEAP);
+    z3::sort intLoc = this->getSort(BMCVarType::LOC);
     this->functions["uplus"] = 
         std::make_shared<z3::func_decl>(ctx.function("uplus", intHeap, intHeap, intHeap));
     this->functions["locadd"] = 
         std::make_shared<z3::func_decl>(ctx.function("locadd", intLoc, ctx.int_sort(), intLoc));
-    this->functions["pt_loc"] = this->decl_datatype(SLHVVarType::INT_LOC);
-    this->functions["pt_data"] = this->decl_datatype(SLHVVarType::INT_DAT);
+    this->functions["pt_loc"] = this->decl_datatype(BMCVarType::LOC);
+    this->functions["pt_data"] = this->decl_datatype(BMCVarType::DAT);
 }
 
 void SLHVZ3ExprManager::initQuantifiedVars() {
     this->quantifiedVarsCounts["l"] = 0;
-    this->quantifiedVarsSorts["l"] = this->sorts[SLHVVarType::INT_LOC];
+    this->quantifiedVarsSorts["l"] = this->sorts[BMCVarType::LOC];
     this->quantifiedVarsCounts["h"] = 0;
-    this->quantifiedVarsSorts["h"] = this->sorts[SLHVVarType::INT_HEAP];
+    this->quantifiedVarsSorts["h"] = this->sorts[BMCVarType::HEAP];
     this->quantifiedVarsCounts["ah"] = 0;
-    this->quantifiedVarsSorts["ah"] = this->sorts[SLHVVarType::INT_HEAP];
+    this->quantifiedVarsSorts["ah"] = this->sorts[BMCVarType::HEAP];
     this->quantifiedVarsCounts["d"] = 0;
-    this->quantifiedVarsSorts["d"] = this->sorts[SLHVVarType::INT_DAT];
+    this->quantifiedVarsSorts["d"] = this->sorts[BMCVarType::DAT];
 }
 
-std::shared_ptr<z3::func_decl> SLHVZ3ExprManager::decl_datatype(SLHVVarType slhvVarType) {
-    assert(slhvVarType != SLHVVarType::INT_HEAP);
-    int id = (slhvVarType == SLHVVarType::INT_LOC ? 0 : 1);
+std::shared_ptr<z3::func_decl> SLHVZ3ExprManager::decl_datatype(BMCVarType slhvVarType) {
+    assert(slhvVarType != BMCVarType::HEAP);
+    int id = (slhvVarType == BMCVarType::LOC ? 0 : 1);
     z3::symbol recordSortName =
         ctx.str_symbol(("pt_record_" + std::to_string(id)).c_str());
     z3::constructors ptCS(ctx);
@@ -61,7 +70,7 @@ std::shared_ptr<z3::func_decl> SLHVZ3ExprManager::decl_datatype(SLHVVarType slhv
     std::vector<z3::sort> fields;
     names.push_back(ctx.str_symbol(id == 0 ? "loc" : "data"));
     if (id == 0) {
-        fields.push_back(this->getSort(SLHVVarType::INT_LOC));
+        fields.push_back(this->getSort(BMCVarType::LOC));
     } else {
         fields.push_back(ctx.int_sort());
     }
@@ -73,8 +82,8 @@ std::shared_ptr<z3::func_decl> SLHVZ3ExprManager::decl_datatype(SLHVVarType slhv
     this->sortsEnumId[ptSortName] = sortEnumId;
     return std::make_shared<z3::func_decl>(
         z3::function("pt",
-            this->getSort(SLHVVarType::INT_LOC),
-            recordSort, this->getSort(SLHVVarType::INT_HEAP))
+            this->getSort(BMCVarType::LOC),
+            recordSort, this->getSort(BMCVarType::HEAP))
     );
 }
 
@@ -107,14 +116,6 @@ bool SLHVZ3ExprManager::is_removed(std::string cmd) {
            cmd.find("emp") != std::string::npos));
 }
 
-z3::expr SLHVZ3ExprManager::mk_loc(std::string var) {
-    return this->mk_constant(var, this->getSort(SLHVVarType::INT_LOC));
-}
-
-z3::expr SLHVZ3ExprManager::mk_heap(std::string var) {
-    return this->mk_constant(var, this->getSort(SLHVVarType::INT_HEAP));
-}
-
 z3::expr SLHVZ3ExprManager::mk_pto(z3::expr lt, z3::expr t) {
     std::string ptName = (t.get_sort().is_int() ? "pt_data" : "pt_loc");
     // TODO eliminate datatype
@@ -127,15 +128,15 @@ z3::expr SLHVZ3ExprManager::mk_pto(z3::expr lt, z3::expr t) {
 }
 
 z3::expr SLHVZ3ExprManager::mk_sep(z3::expr h1, z3::expr h2) {
-    assert(z3::eq(h1.get_sort(), this->getSort(SLHVVarType::INT_HEAP)));
-    assert(z3::eq(h2.get_sort(), this->getSort(SLHVVarType::INT_HEAP)));
+    assert(z3::eq(h1.get_sort(), this->getSort(BMCVarType::HEAP)));
+    assert(z3::eq(h2.get_sort(), this->getSort(BMCVarType::HEAP)));
     return this->getFunc("uplus")(h1, h2);
 }
 
 z3::expr SLHVZ3ExprManager::mk_loc_arith(
     z3::expr l1, z3::expr l2, BinExpr::Binary op) {
     assert(op == BinExpr::Binary::Plus);
-    assert(z3::eq(l1.get_sort(), this->getSort(SLHVVarType::INT_LOC)));
+    assert(z3::eq(l1.get_sort(), this->getSort(BMCVarType::LOC)));
     assert(z3::eq(l2.get_sort(), ctx.int_sort()));
     return this->getFunc("locadd")(l1, l2);
 }
@@ -183,7 +184,7 @@ void SLHVZ3ExprManager::print(std::ostream& os) {
     for (auto record : records) {
         os << "   " << record.getID() << " ---> ";
         for (auto field : record.getFieldsTypes())
-            os << (field == SLHVVarType::INT_LOC ? "Loc" : "Data") << '\n';
+            os << (field == BMCVarType::LOC ? "Loc" : "Data") << '\n';
     }
 }
 
@@ -202,7 +203,7 @@ z3::expr_vector SLHVBlockEncoding::generateRecord(Record& record) {
     for (int i = 0; i < record.getFieldsTypes().size(); i++) {
         z3::expr xl = this->generateQuantifiedVarByPre("l");
         z3::expr xf = this->generateQuantifiedVarByPre(
-            record.getFieldsTypes()[i] == SLHVVarType::INT_DAT ? "d" : "l"
+            record.getFieldsTypes()[i] == BMCVarType::DAT ? "d" : "l"
         );
         this->feasibleVM.localVars.insert(xl.to_string());
         this->feasibleVM.localVars.insert(xf.to_string());
@@ -225,21 +226,8 @@ z3::expr_vector SLHVBlockEncoding::generateRecord(Record& record) {
     return recordHeap;
 }
 
-z3::expr SLHVBlockEncoding::generateVarByType(std::string name, int type) {
-    assert(type < 4);
-    SLHVVarType ty = (SLHVVarType)type;
-    (*this->varsTypeMap)[name] = type;
-    switch (ty) {
-        case SLHVVarType::INT_DAT: return this->z3EM->mk_int(name);
-        case SLHVVarType::INT_LOC: return this->z3EM->mk_loc(name);
-        case SLHVVarType::INT_HEAP: return this->z3EM->mk_heap(name);
-        case SLHVVarType::SLHV_BOOL: return this->z3EM->mk_bool(name);
-        default: assert(false);
-    }
-}
-
 z3::expr SLHVBlockEncoding::generateNullptr() {
-    return this->z3EM->mk_loc("nil");
+    return this->z3EM->getConstant("nil");
 }
 
 z3::expr SLHVBlockEncoding::generateArithExpr(
@@ -321,7 +309,7 @@ z3::expr_vector SLHVBlockEncoding::generateAssumeEncoding(RefinedActionPtr act) 
     return encoding;
 }
 
-z3::expr_vector SLHVBlockEncoding::generateAllocAndMallocEncoding(RefinedActionPtr act) {
+z3::expr_vector SLHVBlockEncoding::generateAllocEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
     z3::expr H = this->getLatestUpdateForGlobalVar("H");
     z3::expr nH = this->generateLocalVarByName("H");
@@ -371,9 +359,9 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
 
     assert(act->getArg1()->isVar());
     const VarExpr* arg1 = (const VarExpr*)act->getArg1();
-    z3::expr nxt = this->generateLocalVarByName(arg1->name());
-    this->feasibleVM.localVars.insert(nxt.to_string());
-    this->feasibleVM.outputsMap[arg1->name()] = nxt.to_string();
+    z3::expr xt = this->generateLocalVarByName(arg1->name());
+    this->feasibleVM.localVars.insert(xt.to_string());
+    this->feasibleVM.outputsMap[arg1->name()] = xt.to_string();
     assert(act->getArg2()->isVar());
     const VarExpr* arg2 = (const VarExpr*)act->getArg2();
     z3::expr xs = this->getLatestUpdateForGlobalVar(arg2->name());
@@ -382,7 +370,7 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
     
     z3::expr feasibleEC = 
         (H == this->z3EM->mk_sep(h1, this->z3EM->mk_pto(xs, x1)))
-        && nxt == x1;
+        && xt == x1;
 
     // invalidDeref
     z3::expr h0 = this->generateQuantifiedVarByPre("h");
@@ -401,9 +389,9 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
         (h0 == this->z3EM->mk_sep(H, this->z3EM->mk_pto(xs, x0))
         || xs == this->generateNullptr()) && invalidDerefPrime;
     z3::expr memSafeEC = feasibleEC && (invalidDerefPrime == invalidDeref);
-    z3::expr faultTolerantEc =
+    z3::expr faultTolerantEC =
         invalidDeref && (invalidDerefPrime == invalidDeref);
-    z3::expr invalidDerefEC = errorEC || memSafeEC || faultTolerantEc;
+    z3::expr invalidDerefEC = errorEC || memSafeEC || faultTolerantEC;
 
     // invalidFree : feasibleEC || invalidFree
     //           invalidFree' = invalidFree (global update)
@@ -463,9 +451,9 @@ z3::expr_vector SLHVBlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
         (h0 == this->z3EM->mk_sep(H, this->z3EM->mk_pto(xt, x0))
         || xt == this->generateNullptr()) && invalidDerefPrime;
     z3::expr memSafeEC = feasibleEC && (invalidDerefPrime == invalidDeref);
-    z3::expr faultTolerantEc =
+    z3::expr faultTolerantEC =
         invalidDeref && (invalidDerefPrime == invalidDeref);
-    z3::expr invalidDerefEC = errorEC || memSafeEC || faultTolerantEc;
+    z3::expr invalidDerefEC = errorEC || memSafeEC || faultTolerantEC;
 
     // invalidFree : feasibleEC || invalidFree
     z3::expr invalidFree = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
@@ -535,9 +523,9 @@ z3::expr_vector SLHVBlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
         (ahe == this->z3EM->mk_sep(AH, this->z3EM->mk_pto(x, idxvare)))
         && invalidFreePrime;
     z3::expr memSafeEC = feasibleEC && (invalidFreePrime == invalidFree);
-    z3::expr faultTolerantEc =
+    z3::expr faultTolerantEC =
         invalidFree && (invalidFreePrime == invalidFree);
-    z3::expr invalidFreeEC = errorEC || memSafeEC || faultTolerantEc;
+    z3::expr invalidFreeEC = errorEC || memSafeEC || faultTolerantEC;
 
     z3::expr_vector encoding(z3EM->Ctx());
     encoding.push_back(feasibleEC);
@@ -546,69 +534,35 @@ z3::expr_vector SLHVBlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
     return encoding;
 }
 
-bool SLHVBlockEncoding::use_global(std::string var) { 
-    return this->feasibleVM.outputsMap.find(var)
-        != this->feasibleVM.outputsMap.end();
-}
-
-const SLHVBlockEncoding::VarsManager& SLHVBlockEncoding::getFeasibleVM() {
-    return this->feasibleVM;
-}
-
-const SLHVBlockEncoding::VarsManager& SLHVBlockEncoding::getInvalidDerefVM() {
-    return this->invalidDerefVM;
-}
-
-const SLHVBlockEncoding::VarsManager& SLHVBlockEncoding::getInvalidFreeVM() {
-    return this->invalidFreeVM;
-}
-
-z3::expr SLHVBlockEncoding::getFeasibleEncoding() {
-    return this->feasibleEncoding;
-}
-
-z3::expr SLHVBlockEncoding::getInvalidDerefEncoding() {
-    return this->invalidDerefEncoding;
-}
-
-z3::expr SLHVBlockEncoding::getInvalidFreeEncoding() {
-    return this->invalidFreeEncoding;
-}
-
-void SLHVBlockEncoding::print(std::ostream& os) {
-    os << "Feasible Encoding : \n";
-    this->feasibleVM.print(os);
-    os << "Encoding : " << this->feasibleEncoding << "\n\n";
-    os << "InvalidDeref Encoding : \n";
-    this->invalidDerefVM.print(os);
-    os << "Encoding : " << this->invalidDerefEncoding << "\n\n";
-    os << "InvalidFree Encoding : \n";
-    this->invalidFreeVM.print(os);
-    os << "Encoding : " << this->invalidFreeEncoding << "\n\n";
-    os << std::endl;
-}
-
 SLHVTREncoder::SLHVTREncoder(
     Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr rbcfg, VarTypeSetPtr vts)
     : TREncoder(z3EM, rbcfg, vts) {
-    this->globalVars[SLHVVarType::INT_LOC] = std::make_shared<VarSet>();
-    this->globalVars[SLHVVarType::INT_DAT] = std::make_shared<VarSet>();
-    this->globalVars[SLHVVarType::INT_HEAP] = std::make_shared<VarSet>();
-    this->init(vts);
+    this->globalVars[BMCVarType::LOC] = std::make_shared<VarSet>();
+    this->globalVars[BMCVarType::DAT] = std::make_shared<VarSet>();
+    this->globalVars[BMCVarType::HEAP] = std::make_shared<VarSet>();
+    this->init();
 }
 
-void SLHVTREncoder::init(VarTypeSetPtr vts) {
-    for (auto var_ty : *vts) {
-        SLHVVarType ty = SLHVVarType(var_ty.second);
-        if (ty == SLHVVarType::SLHV_BOOL) { continue; }
+void SLHVTREncoder::initLogicGlobalVarType() {
+    (*this->varsTypeMap)["H"] = BMCVarType::HEAP;
+    (*this->varsTypeMap)["AH"] = BMCVarType::HEAP;
+    (*this->varsTypeMap)["$0.ref"] = BMCVarType::LOC;
+    (*this->varsTypeMap)["invalidDeref"] = BMCVarType::BOOLEAN;
+    (*this->varsTypeMap)["invalidFree"] = BMCVarType::BOOLEAN;
+}
+
+void SLHVTREncoder::init() {
+    for (auto var_ty : *this->varsTypeMap) {
+        BMCVarType ty = BMCVarType(var_ty.second);
         this->globalVars[ty]->insert(var_ty.first);
     }
+    this->initLogicGlobalVarType();
     for (int u = 1; u <= this->refinedBlockCFG->getVertexNum(); u++) {
         for(RefinedEdgePtr edge : this->refinedBlockCFG->getEdgesStartFrom(u)) {
             if (this->blockEncodings.find(edge)
                 != this->blockEncodings.end()) continue;
             BlockEncodingPtr bep =
-                std::make_shared<SLHVBlockEncoding>(this->z3EM, edge, vts);
+                std::make_shared<SLHVBlockEncoding>(this->z3EM, edge, this->varsTypeMap);
             this->blockEncodings[edge] = bep;
         }
     }
@@ -632,22 +586,49 @@ void SLHVTREncoder::print(std::ostream& os) {
     os << "================ Transition Relation Encoding ================\n";
 }
 
-z3::expr BMCSLHVVCGen::generateVar(std::string name, const int k = -1) {
-    SLHVVarType ty = SLHVVarType(this->TrEncoder->getVarType(name));
-    std::string var = name;
-    if (k > -1) { var = var + "_" + std::to_string(k); }
-    switch (ty) {
-        case SLHVVarType::INT_DAT: return this->z3EM->mk_int(var);
-        case SLHVVarType::INT_LOC: return this->z3EM->mk_loc(var);
-        case SLHVVarType::INT_HEAP: return this->z3EM->mk_heap(var);
-        case SLHVVarType::SLHV_BOOL: return this->z3EM->mk_bool(var);
-        default: assert(false);
+z3::expr BMCSLHVVCGen::generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty) {
+    std::set<int> finalLocations = this->TrEncoder->getFinalLocations();
+    z3::expr buggyEncoding = this->z3EM->Ctx().bool_val(false);
+    if (bty == BuggyType::INVALIDDEREF) {
+        buggyEncoding = this->z3EM
+            ->mk_bool(BlockEncoding::invalid_deref + "_" + std::to_string(k));
+    } else if (bty == BuggyType::INVALIDFREE) {
+        buggyEncoding = this->z3EM
+            ->mk_bool(BlockEncoding::invalid_free + "_" + std::to_string(k));
+    } else {
+        z3::expr finalLocs = z3EM->Ctx().bool_val(false);
+        for (int u : locations) {
+            if (finalLocations.find(u) == finalLocations.end()) { continue; }
+            z3::expr locatesOnU = 
+                (z3EM->mk_int("loc_" + std::to_string(k)) == u);
+            CLEAN_Z3EXPR_DISJUNC(finalLocs, locatesOnU);
+        }
+        z3::expr H = this->z3EM->mk_heap("H_" + std::to_string(k));
+        z3::expr h = this->z3EM->mk_quantified("h");
+        z3::expr lt = this->z3EM->mk_quantified("l");
+        z3::expr loc = this->z3EM->mk_quantified("l");
+        z3::expr data = this->z3EM->mk_quantified("d");
+        z3::expr kthHeap =
+            (H == this->z3EM->mk_sep(h, this->z3EM->mk_pto(lt, loc)))
+            || (H == this->z3EM->mk_sep(h, this->z3EM->mk_pto(lt, data)));
+        
+        z3::expr AH = this->z3EM->mk_heap("AH_" + std::to_string(k));
+        z3::expr ah = this->z3EM->mk_quantified("ah");
+        z3::expr ahlt = this->z3EM->mk_quantified("l");
+        z3::expr ahid = this->z3EM->mk_quantified("d");
+        z3::expr kthAllocHeap = (AH == this->z3EM->mk_sep(ah, this->z3EM->mk_pto(ahlt, ahid)));
+        buggyEncoding = finalLocs && kthHeap && kthAllocHeap;
     }
+    return buggyEncoding;
 }
 
 z3::expr BMCSLHVVCGen::generateInitVC(BuggyType bty) {
-    z3::expr initHeap = this->z3EM->mk_heap("H_0") == z3EM->mk_heap("emp");
-    z3::expr initAllocHeap = this->z3EM->mk_heap("AH_0") == z3EM->mk_heap("emp");
+    z3::expr initHeap = (
+        this->z3EM->mk_heap("H_0") == this->z3EM->getConstant("emp")
+    );
+    z3::expr initAllocHeap = (
+        this->z3EM->mk_heap("AH_0") == this->z3EM->getConstant("emp")
+    );
     z3::expr initLoc =
         this->z3EM->mk_int("loc_0") == this->TrEncoder->getInitialLocation();
     z3::expr init =initHeap && initAllocHeap && initLoc;

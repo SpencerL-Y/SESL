@@ -28,6 +28,9 @@ operator<<(llvm::raw_ostream &OS, const Ty &T) \
     return OS;                                 \
 }
 
+
+enum BMCVarType { LOC, DAT, HEAP, BOOLEAN };
+
 class PointerInfo {
 
 private:
@@ -105,9 +108,7 @@ public:
 
 typedef std::shared_ptr<PIMSet> PIMSetPtr;
 
-enum SLHVVarType { INT_LOC, INT_DAT, INT_HEAP, SLHV_BOOL };
-
-typedef std::vector<SLHVVarType> FieldsTypes;
+typedef std::vector<BMCVarType> FieldsTypes;
 
 class Record {
 

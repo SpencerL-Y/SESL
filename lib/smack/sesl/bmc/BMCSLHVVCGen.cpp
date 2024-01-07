@@ -552,11 +552,13 @@ void SLHVTREncoder::initLogicGlobalVarType() {
 }
 
 void SLHVTREncoder::init() {
+    this->initLogicGlobalVarType();
     for (auto var_ty : *this->varsTypeMap) {
+        if (var_ty.first == "$0.ref" ||
+            var_ty.second == BMCVarType::BOOLEAN) { continue; }
         BMCVarType ty = BMCVarType(var_ty.second);
         this->globalVars[ty]->insert(var_ty.first);
     }
-    this->initLogicGlobalVarType();
     for (int u = 1; u <= this->refinedBlockCFG->getVertexNum(); u++) {
         for(RefinedEdgePtr edge : this->refinedBlockCFG->getEdgesStartFrom(u)) {
             if (this->blockEncodings.find(edge)

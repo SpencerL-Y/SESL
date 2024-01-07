@@ -174,12 +174,12 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   refinedBlockCFG->print(std::cout);
 
   std::vector<int> steps;
-  steps.push_back(1);
-  steps.push_back(2);
-  steps.push_back(refinedBlockCFG->getVertexNum());
+  steps.push_back(9);
+  // steps.push_back(2);
+  // steps.push_back(refinedBlockCFG->getVertexNum());
 
   BMCBLOCKVCGenPtr gen = this->generateVCGen(
-    "Array",
+    "SLHV",
     refinedBlockCFG,
     recordManager,
     slhvPreAnalysis->getVarTypeSet()

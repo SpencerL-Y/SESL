@@ -84,5 +84,6 @@
         "cstdbool": "cpp",
         "*.ipp": "cpp",
         "hash_map": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

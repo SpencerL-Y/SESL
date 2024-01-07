@@ -1,15 +1,13 @@
 #include <stdlib.h>
 typedef struct {
-    void *lo;
-    void *hi;
+    int* lo;
 } TData;
 
 int main(){
     TData data;
     TData* pdata = &data;
 
-    TData c;
-    pdata->lo = malloc(16);
-    pdata->hi = malloc(24);
+    pdata->lo = malloc(4);
+    *pdata->lo = 10;
     return 0;
 }

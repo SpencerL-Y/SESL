@@ -2816,6 +2816,7 @@ BlockEncoding::BlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarType
       feasibleVM(),
       invalidDerefVM(),
       invalidFreeVM(),
+      guard(z3EM->Ctx().bool_val(true)),
       feasibleEncoding(z3EM->Ctx().bool_val(true)),
       invalidDerefEncoding(z3EM->Ctx().bool_val(true)),
       invalidFreeEncoding(z3EM->Ctx().bool_val(true)) {}
@@ -2904,6 +2905,11 @@ z3::expr BlockEncoding::generateBinExpr(const BinExpr* e) {
     }
 }
 
+z3::expr BlockEncoding::generateGuard(RefinedActionPtr act) {
+    assert(act->getActType() == ConcreteAction::ActType::ASSUME);
+    return this->generateExpr(act->getArg3());
+}
+
 z3::expr BlockEncoding::generateExpr(const Expr* e) {
     switch (e->getType()) {
         case ExprType::BIN:
@@ -2926,6 +2932,7 @@ z3::expr BlockEncoding::generateExpr(const Expr* e) {
 }
 
 void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
+    this->guard = this->generateGuard(edge->getGuard());
     for (RefinedActionPtr act : edge->getRefinedActions()) {
         if (act->getActType() == ConcreteAction::ActType::OTHER ||
             act->getActType() == ConcreteAction::ActType::OTHERPROC) continue;
@@ -2984,6 +2991,10 @@ const BlockEncoding::VarsManager& BlockEncoding::getInvalidFreeVM() {
     return this->invalidFreeVM;
 }
 
+z3::expr BlockEncoding::getGuard() {
+    return this->guard;
+}
+
 z3::expr BlockEncoding::getFeasibleEncoding() {
     return this->feasibleEncoding;
 }
@@ -2997,6 +3008,7 @@ z3::expr BlockEncoding::getInvalidFreeEncoding() {
 }
 
 void BlockEncoding::print(std::ostream& os) {
+    os << "Guard : " << guard << '\n';
     os << "Feasible Encoding : \n";
     this->feasibleVM.print(os);
     os << "Encoding : " << this->feasibleEncoding << "\n\n";
@@ -3145,6 +3157,7 @@ BMCBLOCKVCGen::generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty)
     z3::expr vc(z3EM->Ctx());
     z3::expr premise =
         (this->z3EM->mk_int("loc_" + std::to_string(k - 1)) == edge->getFrom());
+    z3::expr guard = bep->getGuard();
     z3::expr implicant(z3EM->Ctx());
     // block encoding substitution
     z3::expr_vector src(z3EM->Ctx());
@@ -3183,6 +3196,8 @@ BMCBLOCKVCGen::generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty)
         blockEncoding = bep->getFeasibleEncoding();
     }
 
+    guard = guard.substitute(src, dst);
+    CLEAN_Z3EXPR_CONJUNC(premise, guard);
     implicant = blockEncoding.substitute(src, dst);
     // Outputs contains those global variables that are update by current
     // step. For each pair (u, v), "v" is the local variables that conveys

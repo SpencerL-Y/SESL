@@ -123,12 +123,26 @@ namespace smack
         private:
             int from;
             int to;
+            RefinedActionPtr guard;
             std::vector<RefinedActionPtr> refinedActions;
             int edgeId;
         public:
-            RefinedEdge(std::vector<RefinedActionPtr> rfa, int from, int to, int id) : refinedActions(rfa), from(from), to(to), edgeId(id) {}
+            RefinedEdge(std::vector<RefinedActionPtr> rfa, int from, int to, int id) : from(from), to(to), edgeId(id) {
+                if (!rfa.empty() && rfa[0]->getActType() == ConcreteAction::ActType::ASSUME) {
+                    guard = rfa[0];
+                    rfa.erase(rfa.begin());
+                } else {
+                    guard = std::make_shared<RefinedAction>(
+                        ConcreteAction::ActType::ASSUME,
+                        nullptr, nullptr, new BoolLit(true), nullptr, 0, 0, 1, 0,
+                        std::set<std::string>()
+                    );
+                }
+                refinedActions = rfa;
+            }
             int getFrom(){return this->from;}
             int getTo(){return this->to;}
+            RefinedActionPtr getGuard() { return guard; }
             std::vector<RefinedActionPtr> getRefinedActions(){return this->refinedActions;}
             int getEdgeId(){return this->edgeId;}
             void print(std::ostream &os);

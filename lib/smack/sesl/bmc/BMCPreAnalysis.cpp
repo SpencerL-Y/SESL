@@ -327,10 +327,13 @@ namespace smack
                 for (RefinedActionPtr act : edge->getRefinedActions()) {
                     if (act->getActType() == ConcreteAction::ActType::COMMONASSIGN) {
                         if (act->getArg1() == nullptr) continue;
-                        std::string var =
-                            ((const VarExpr*)act->getArg1())->name();
+                        std::string var = ((const VarExpr*)act->getArg1())->name();
                         std::pair<bool, int> res = this->parseConstant(act->getArg2());
                         if (res.first) {
+                            if (this->consVarMap.find(var) != this->consVarMap.end()
+                                && this->consVarMap[var] == res.second) { continue; }
+                            // act->print(std::cout);
+                            // std::cout << var << " " << res.second << '\n';
                             this->consVarMap[var] = res.second;
                             hasChanged = true;
                         }
@@ -538,8 +541,9 @@ namespace smack
                 }
             }
         }
-        this->setArrayRecord(refinedBlockCFG);
-        this->convertByteOffsetToField(refinedBlockCFG);
+        this->print(std::cout);
+        // this->setArrayRecord(refinedBlockCFG);
+        // this->convertByteOffsetToField(refinedBlockCFG);
     }
 
     VarTypeSetPtr BMCSLHVPreAnalysis::getVarTypeSet() {
@@ -547,7 +551,7 @@ namespace smack
     }
     
     void BMCSLHVPreAnalysis::print(std::ostream& os) {
-        std::cout << " ====================== Variable Type ======================\n";
+        std::cout << " ====================== Variable Info ======================\n";
         for (auto p : *this->varTypeSet) {
             std::cout << p.first << " ";
             std::string ss;
@@ -560,7 +564,10 @@ namespace smack
             }
             std::cout << ss << '\n';
         }
-        std::cout << " ====================== Variable Type ======================\n";
+        for (auto p : this->consVarMap) {
+            os << p.first << " " << p.second << "\n";
+        }
+        std::cout << " ====================== Variable Info ======================\n";
     }
 
 } // namespace smack

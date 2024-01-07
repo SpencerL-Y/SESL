@@ -446,6 +446,7 @@ protected:
     VarsManager feasibleVM;
     VarsManager invalidDerefVM;
     VarsManager invalidFreeVM;
+    z3::expr guard;
     z3::expr feasibleEncoding;
     z3::expr invalidDerefEncoding;
     z3::expr invalidFreeEncoding;
@@ -461,6 +462,7 @@ protected:
     virtual z3::expr generateArithExpr(BinExpr::Binary op, z3::expr lhs, z3::expr rhs);
     z3::expr generateBinExpr(const BinExpr* e);
     z3::expr generateExpr(const Expr* e);
+    z3::expr generateGuard(RefinedActionPtr act);
 
     // Encoding for each command contains feasible encoding, invalid dereference encoding
     // and invalid free encoding, in order
@@ -481,6 +483,7 @@ public:
     inline const VarsManager& getFeasibleVM();
     inline const VarsManager& getInvalidDerefVM();
     inline const VarsManager& getInvalidFreeVM();
+    inline z3::expr getGuard();
     inline z3::expr getFeasibleEncoding();
     inline z3::expr getInvalidDerefEncoding();
     inline z3::expr getInvalidFreeEncoding();

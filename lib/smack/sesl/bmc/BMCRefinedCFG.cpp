@@ -505,7 +505,7 @@ namespace smack
         os << " ARG4: ";
         if(this->arg4 != nullptr){
             this->arg4->print(os);
-            os << "(" << this->type4 << ") " << std::endl;
+            os << "(" << this->type4 << ") ";
         } else {
             os << " <NULL>";
         }
@@ -528,8 +528,10 @@ namespace smack
     }
 
     void RefinedEdge::print(std::ostream &os){
-        os << "INFO: [Edge] " << this->getFrom() << " ---> " << this->getTo() << std::endl;
-        os << "INFO: [Actions]" << std::endl;
+        os << "[Edge] " << this->getFrom() << " ---> " << this->getTo() << std::endl;
+        os << "[Guard] : " << std::endl;
+        guard->print(os);
+        os << "[Actions]" << std::endl;
         for(RefinedActionPtr act : this->refinedActions){
             act->print(os);
         }
@@ -650,10 +652,7 @@ namespace smack
         for (int u = 1; u <= this->N; u++) {
             OS << "======================= Vertex : " << u << " =====================\n";
             for (RefinedEdgePtr edge : this->getEdgesStartFrom(u)) {
-                OS << "EDGE --:-- \n" << "From : " << edge->getFrom() << " ---> To : " << edge->getTo() << '\n';
-                for (RefinedActionPtr act : edge->getRefinedActions()) {
-                    act->print(OS);
-                }
+                edge->print(OS);
             }
             OS << "======================= Vertex : " << u << " =====================\n";
         }

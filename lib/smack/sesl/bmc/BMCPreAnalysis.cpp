@@ -454,10 +454,9 @@ namespace smack
                     BMCVarType ty;
                     if (var->name()[1] == 'p') { ty = BMCVarType::LOC; }
                     else if(var->name()[1] == 'i') { ty = BMCVarType::DAT; }
-                    else {
-                        std::cout << " ????????????????? => ";
-                        std::cout << var->name() << '\n';
-                    }
+                    else if (var->name() == "$0.ref") {
+                        return BMCVarType::LOC;
+                    } else { assert(false); }
                     (*this->varTypeSet)[var->name()] = ty;
                 }
                 return BMCVarType(this->varTypeSet->at(var->name()));

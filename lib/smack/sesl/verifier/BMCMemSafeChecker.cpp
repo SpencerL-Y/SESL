@@ -42,11 +42,10 @@ bool BMCMemSafeChecker::support(const Stmt* stmt, PointerInfoManagerPtr pointerI
   else if (stmt->getKind() == Stmt::Kind::CALL) {
     CallStmt* callStmt = (CallStmt*)stmt;
     std::string proc = callStmt->getProc();
-    return proc.find("memcpy") != std::string::npos ||
-           proc.find("alloc") != std::string::npos ||
-           proc.find("malloc") != std::string::npos ||
-           proc.find("free") != std::string::npos ||
-           proc.find("__VERIFIER_nondet_int") != std::string::npos;
+    return proc.find("llvm") == std::string::npos &&
+           proc.find("__SMACK__") == std::string::npos &&
+           proc.find("boogie") == std::string::npos &&
+           proc.find("$initialize") == std::string::npos;
   }
   return true;
 }
@@ -135,9 +134,9 @@ BMCBLOCKVCGenPtr BMCMemSafeChecker::generateVCGen(
 void BMCMemSafeChecker::generateVC(BMCBLOCKVCGenPtr gen, const std::vector<int>& steps) {
   for (int i = 0; i < 3; i++) {
     z3::expr_vector vcs = gen->generateVC(steps[i]);
-    std::cout << "\nInvalidDeref :\n" << vcs[0] << std::endl;
-    std::cout << "\nInvalidFree :\n" << vcs[1] << std::endl;
-    std::cout << "\nMemLeak :\n" << vcs[2] << std::endl;
+    // std::cout << "\nInvalidDeref :\n" << vcs[0] << std::endl;
+    // std::cout << "\nInvalidFree :\n" << vcs[1] << std::endl;
+    if (i == 2) std::cout << "\nMemLeak :\n" << vcs[2] << std::endl;
     std::string suf;
     if (i < 2) suf = "_" + std::to_string(steps[i]);
     else suf = "_locsize_" + std::to_string(steps[i]);

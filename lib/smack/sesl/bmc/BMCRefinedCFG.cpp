@@ -650,7 +650,7 @@ namespace smack
         for (int u = 1; u <= this->N; u++) {
             OS << "======================= Vertex : " << u << " =====================\n";
             for (RefinedEdgePtr edge : this->getEdgesStartFrom(u)) {
-                OS << "From : " << edge->getFrom() << " ---> To : " << edge->getTo() << '\n';
+                OS << "EDGE --:-- \n" << "From : " << edge->getFrom() << " ---> To : " << edge->getTo() << '\n';
                 for (RefinedActionPtr act : edge->getRefinedActions()) {
                     act->print(OS);
                 }

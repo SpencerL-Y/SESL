@@ -567,6 +567,73 @@ namespace smack
                act->getActType() != ConcreteAction::ActType::OTHERPROC;
     }
 
+    inline bool BMCRefinedBlockCFG::isAssumeTrue(RefinedActionPtr act) {
+        return act->getActType() == ConcreteAction::ActType::ASSUME &&
+               act->getArg3()->isValue() && ((const BoolLit*)act->getArg3());
+    }
+
+    void BMCRefinedBlockCFG::simplify() {
+        this->print(std::cout);
+        int n = this->N;
+        CFGGraph graph = this->refinedBlockCFG;
+        this->N = 0;
+        this->refinedBlockCFG.clear();
+
+        std::map<int, int> in, out, self;
+        for (auto edgesSet : graph) {
+            for (RefinedEdgePtr edge : edgesSet) {
+                in[edge->getTo()] = in[edge->getTo()] + 1;
+                out[edge->getFrom()] = out[edge->getFrom()] + 1;
+                if (edge->getFrom() == edge->getTo()) {
+                    self[edge->getFrom()] = self[edge->getFrom()] + 1;
+                }
+            }
+        }
+        std::map<int, int> newLoc;
+        newLoc[this->initVertex] = this->createVertex();
+        std::queue<int> Q;
+        Q.push(this->initVertex);
+        while(!Q.empty()) {
+            int u = Q.front(); Q.pop();
+            assert(newLoc.find(u) != newLoc.end());
+            for (RefinedEdgePtr edge : graph[u - 1]) {
+                std::vector<RefinedEdgePtr> mergedEdges;
+                mergedEdges.push_back(edge);
+                int v = edge->getTo();
+                if (u != v) {
+                    while(in[v] - self[v] == 1 && out[v] - self[v] <= 1) {
+                        RefinedEdgePtr curEdge = graph[v - 1][0];
+                        if (curEdge->getFrom() == curEdge->getTo()) { break; }
+                        mergedEdges.push_back(curEdge);
+                        v = curEdge->getTo();
+                    }
+                }
+                std::vector<RefinedActionPtr> acts;
+                for (RefinedEdgePtr e : mergedEdges) {
+                    if (!this->isAssumeTrue(e->getGuard())) {
+                        acts.push_back(e->getGuard());
+                    }
+                    for (RefinedActionPtr act : e->getRefinedActions()) {
+                        if (this->isAssumeTrue(act)) { continue; }
+                        acts.push_back(act);
+                    }
+                }
+                if (newLoc.find(v) == newLoc.end()) {
+                    Q.push(v);
+                    newLoc[v] = this->createVertex();
+                }
+                this->createEdge(newLoc[u], newLoc[v], acts);
+            }
+        }
+        this->initVertex = newLoc[this->initVertex];
+        std::set<int> finalLocations = this->finalVertices;
+        this->finalVertices.clear();
+        for (auto loc : finalLocations) {
+            assert(newLoc.find(loc) != newLoc.end());
+            this->finalVertices.insert(newLoc[loc]);
+        }
+    }
+
     BMCRefinedBlockCFG::BMCRefinedBlockCFG(CFGPtr cfg) {
         this->N = 0;
         StmtFormatterPtr stmtFormatter =  std::make_shared<StmtFormatter>(cfg);
@@ -598,6 +665,7 @@ namespace smack
                 unionSet.link(blockExit, toBlockEntry);
             }
         }
+
         std::map<int, int> refinedLocMap;
         for (auto stateAct : stateActs) {
             StatePtr state = stateAct.first;
@@ -624,6 +692,7 @@ namespace smack
             }
         }
         this->createFinalLoop();
+        this->simplify();
     }
 
     const int BMCRefinedBlockCFG::getVertexNum() {

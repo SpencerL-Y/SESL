@@ -206,8 +206,9 @@ namespace smack
     };
 
     typedef std::shared_ptr<BMCRefinedCFG> BMCRefinedCFGPtr;
-
+    
     // used by slhv encoding
+    typedef std::vector<std::vector<RefinedEdgePtr>> CFGGraph;
     class BMCRefinedBlockCFG {
         private:
             struct UnionSet {
@@ -222,7 +223,7 @@ namespace smack
 
         private:
             int N;
-            std::vector<std::vector<RefinedEdgePtr>> refinedBlockCFG;
+            CFGGraph refinedBlockCFG;
             int initVertex;
             std::set<int> finalVertices;
 
@@ -230,6 +231,9 @@ namespace smack
             void createEdge(const int from, const int to, std::vector<RefinedActionPtr> acts);
             void createFinalLoop();
             inline bool supported(RefinedActionPtr act);
+
+            inline bool isAssumeTrue(RefinedActionPtr act);
+            void simplify();
 
         public:
             BMCRefinedBlockCFG(CFGPtr cfg);

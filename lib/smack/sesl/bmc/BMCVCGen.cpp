@@ -3081,8 +3081,8 @@ void TREncoder::print(std::ostream& os) {
         std::cout << '\n';
     }
     for (auto tr : this->blockEncodings) {
-        os << " ---------------------------------------------\n";
-        os << " BlockEncoding - ";
+        os << "---------------------------------------------------------\n";
+        os << "BlockEncoding - ";
         // tr.first->print(os); os << '\n';
         os << " From : " << tr.first->getFrom() << " " << " To : "
             << tr.first->getTo() << '\n';

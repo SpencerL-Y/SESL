@@ -330,8 +330,12 @@ namespace smack
                         std::string var = ((const VarExpr*)act->getArg1())->name();
                         std::pair<bool, int> res = this->parseConstant(act->getArg2());
                         if (res.first) {
-                            if (this->consVarMap.find(var) != this->consVarMap.end()
-                                && this->consVarMap[var] == res.second) { continue; }
+                            if (this->consVarMap.find(var) != this->consVarMap.end()) {
+                                if (var[1] != 'M') {
+                                    this->consVarMap.erase(var);
+                                    continue;
+                                }
+                            }
                             // act->print(std::cout);
                             // std::cout << var << " " << res.second << '\n';
                             this->consVarMap[var] = res.second;
@@ -529,6 +533,7 @@ namespace smack
             if (hasVisited.find(u) != hasVisited.end()) { continue; }
             hasVisited.insert(u);
             for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(u)) {
+                this->setVarsSLHVType(edge->getGuard());
                 for (RefinedActionPtr act : edge->getRefinedActions()) {
                     this->setVarsSLHVType(act);
                     if (act->getArg2() == nullptr) continue;
@@ -541,9 +546,8 @@ namespace smack
                 }
             }
         }
-        this->print(std::cout);
-        // this->setArrayRecord(refinedBlockCFG);
-        // this->convertByteOffsetToField(refinedBlockCFG);
+        this->setArrayRecord(refinedBlockCFG);
+        this->convertByteOffsetToField(refinedBlockCFG);
     }
 
     VarTypeSetPtr BMCSLHVPreAnalysis::getVarTypeSet() {

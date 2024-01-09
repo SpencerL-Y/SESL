@@ -123,12 +123,26 @@ namespace smack
         private:
             int from;
             int to;
+            RefinedActionPtr guard;
             std::vector<RefinedActionPtr> refinedActions;
             int edgeId;
         public:
-            RefinedEdge(std::vector<RefinedActionPtr> rfa, int from, int to, int id) : refinedActions(rfa), from(from), to(to), edgeId(id) {}
+            RefinedEdge(std::vector<RefinedActionPtr> rfa, int from, int to, int id) : from(from), to(to), edgeId(id) {
+                if (!rfa.empty() && rfa[0]->getActType() == ConcreteAction::ActType::ASSUME) {
+                    guard = rfa[0];
+                    rfa.erase(rfa.begin());
+                } else {
+                    guard = std::make_shared<RefinedAction>(
+                        ConcreteAction::ActType::ASSUME,
+                        nullptr, nullptr, new BoolLit(true), nullptr, 0, 0, 1, 0,
+                        std::set<std::string>()
+                    );
+                }
+                refinedActions = rfa;
+            }
             int getFrom(){return this->from;}
             int getTo(){return this->to;}
+            RefinedActionPtr getGuard() { return guard; }
             std::vector<RefinedActionPtr> getRefinedActions(){return this->refinedActions;}
             int getEdgeId(){return this->edgeId;}
             void print(std::ostream &os);
@@ -192,8 +206,9 @@ namespace smack
     };
 
     typedef std::shared_ptr<BMCRefinedCFG> BMCRefinedCFGPtr;
-
+    
     // used by slhv encoding
+    typedef std::vector<std::vector<RefinedEdgePtr>> CFGGraph;
     class BMCRefinedBlockCFG {
         private:
             struct UnionSet {
@@ -208,7 +223,7 @@ namespace smack
 
         private:
             int N;
-            std::vector<std::vector<RefinedEdgePtr>> refinedBlockCFG;
+            CFGGraph refinedBlockCFG;
             int initVertex;
             std::set<int> finalVertices;
 
@@ -216,6 +231,9 @@ namespace smack
             void createEdge(const int from, const int to, std::vector<RefinedActionPtr> acts);
             void createFinalLoop();
             inline bool supported(RefinedActionPtr act);
+
+            inline bool isAssumeTrue(RefinedActionPtr act);
+            void simplify();
 
         public:
             BMCRefinedBlockCFG(CFGPtr cfg);

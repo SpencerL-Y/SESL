@@ -419,13 +419,13 @@ z3::expr_vector SLHVBlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
     const VarExpr* arg1 = (const VarExpr*)act->getArg1();
     z3::expr xt = this->getLatestUpdateForGlobalVar(arg1->name());
     z3::expr xs(this->z3EM->Ctx());
-    if (act->getArg2()->isVar()) {
-        const VarExpr* arg2 = (const VarExpr*)act->getArg2();
+    if (slhvcmd.arg2->isVar()) {
+        const VarExpr* arg2 = (const VarExpr*)slhvcmd.arg2;
         xs = this->getLatestUpdateForGlobalVar(arg2->name());
     } else {
-        assert(act->getArg2()->getType() == ExprType::INT);
+        assert(slhvcmd.arg2->getType() == ExprType::INT);
         xs = this->z3EM->Ctx().int_val(
-            ((const IntLit*)act->getArg2())->getVal()
+            ((const IntLit*)slhvcmd.arg2)->getVal()
         );
     }
     z3::expr x1 = this->generateQuantifiedVarByPre(xs.is_int() ? "d" : "l");

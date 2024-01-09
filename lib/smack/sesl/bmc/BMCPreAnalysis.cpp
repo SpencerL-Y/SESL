@@ -327,10 +327,17 @@ namespace smack
                 for (RefinedActionPtr act : edge->getRefinedActions()) {
                     if (act->getActType() == ConcreteAction::ActType::COMMONASSIGN) {
                         if (act->getArg1() == nullptr) continue;
-                        std::string var =
-                            ((const VarExpr*)act->getArg1())->name();
+                        std::string var = ((const VarExpr*)act->getArg1())->name();
                         std::pair<bool, int> res = this->parseConstant(act->getArg2());
                         if (res.first) {
+                            if (this->consVarMap.find(var) != this->consVarMap.end()) {
+                                if (var[1] != 'M') {
+                                    this->consVarMap.erase(var);
+                                    continue;
+                                }
+                            }
+                            // act->print(std::cout);
+                            // std::cout << var << " " << res.second << '\n';
                             this->consVarMap[var] = res.second;
                             hasChanged = true;
                         }
@@ -526,6 +533,7 @@ namespace smack
             if (hasVisited.find(u) != hasVisited.end()) { continue; }
             hasVisited.insert(u);
             for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(u)) {
+                this->setVarsSLHVType(edge->getGuard());
                 for (RefinedActionPtr act : edge->getRefinedActions()) {
                     this->setVarsSLHVType(act);
                     if (act->getArg2() == nullptr) continue;
@@ -547,7 +555,7 @@ namespace smack
     }
     
     void BMCSLHVPreAnalysis::print(std::ostream& os) {
-        std::cout << " ====================== Variable Type ======================\n";
+        std::cout << " ====================== Variable Info ======================\n";
         for (auto p : *this->varTypeSet) {
             std::cout << p.first << " ";
             std::string ss;
@@ -560,7 +568,10 @@ namespace smack
             }
             std::cout << ss << '\n';
         }
-        std::cout << " ====================== Variable Type ======================\n";
+        for (auto p : this->consVarMap) {
+            os << p.first << " " << p.second << "\n";
+        }
+        std::cout << " ====================== Variable Info ======================\n";
     }
 
 } // namespace smack

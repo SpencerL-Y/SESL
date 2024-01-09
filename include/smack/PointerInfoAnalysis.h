@@ -118,7 +118,7 @@ private:
     FieldsTypes fieldsTypes;
 
 public:
-    Record() : ID(0), fieldByteWidth(0) {};
+    Record() : ID(0), fieldByteWidth(0), fieldsTypes() {};
     Record(int id, int w, FieldsTypes f);
 
     const int getID();

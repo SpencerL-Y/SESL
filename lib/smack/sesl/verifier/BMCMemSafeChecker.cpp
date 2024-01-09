@@ -167,7 +167,7 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   refinedBlockCFG->print(std::cout);
   BMCSLHVPreAnalysisPtr slhvPreAnalysis = std::make_shared<BMCSLHVPreAnalysis>(recordManager, pimSet);
   slhvPreAnalysis->refineSLHVCmds(refinedBlockCFG);
-  // slhvPreAnalysis->print(std::cout);
+  slhvPreAnalysis->print(std::cout);
 
   recordManager->print(std::cout);
   this->setSLHVCmdRecords(refinedBlockCFG);

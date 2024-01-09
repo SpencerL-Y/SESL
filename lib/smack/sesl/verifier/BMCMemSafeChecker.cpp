@@ -136,7 +136,8 @@ void BMCMemSafeChecker::generateVC(BMCBLOCKVCGenPtr gen, const std::vector<int>&
     z3::expr_vector vcs = gen->generateVC(steps[i]);
     // std::cout << "\nInvalidDeref :\n" << vcs[0] << std::endl;
     // std::cout << "\nInvalidFree :\n" << vcs[1] << std::endl;
-    if (i == 2) std::cout << "\nMemLeak :\n" << vcs[2] << std::endl;
+    // if (i == 2) 
+      std::cout << "\nMemLeak :\n" << vcs[2] << std::endl;
     std::string suf;
     if (i < 2) suf = "_" + std::to_string(steps[i]);
     else suf = "_locsize_" + std::to_string(steps[i]);

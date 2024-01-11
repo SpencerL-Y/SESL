@@ -460,6 +460,8 @@ protected:
     virtual z3::expr generateLocalVarByName(std::string name);
     virtual z3::expr generateQuantifiedVarByPre(std::string pre);
     virtual z3::expr generateArithExpr(BinExpr::Binary op, z3::expr lhs, z3::expr rhs);
+    bool isXorWithOne(const BinExpr* e);
+    z3::expr generateXorExpr(const BinExpr* e);
     z3::expr generateBinExpr(const BinExpr* e);
     z3::expr generateExpr(const Expr* e);
     z3::expr generateGuard(RefinedActionPtr act);

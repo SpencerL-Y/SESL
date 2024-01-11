@@ -427,100 +427,64 @@ namespace smack
         }
     }
 
-    BMCVarType BMCSLHVPreAnalysis::getVarsSLHVTypeFromExpr(const Expr* e) {
-        switch (e->getType()) {
-            case ExprType::BIN: {
-                const BinExpr* be = (const BinExpr*)e;
-                BMCVarType lhsTy = this->getVarsSLHVTypeFromExpr(be->getLhs());
-                BMCVarType rhsTy = this->getVarsSLHVTypeFromExpr(be->getRhs());
-                switch (be->getOp())  {
-                    case BinExpr::Binary::Plus:
-                    case BinExpr::Binary::Minus:
-                    case BinExpr::Binary::Times: {
-                        if (lhsTy == rhsTy) return lhsTy;
-                        assert(lhsTy == BMCVarType::LOC || 
-                            rhsTy == BMCVarType::LOC);
-                        return BMCVarType::LOC;
-                    }
-                    case BinExpr::Binary::Eq:
-                    case BinExpr::Binary::Neq:
-                    case BinExpr::Binary::Lt:
-                    case BinExpr::Binary::Gt:
-                    case BinExpr::Binary::Lte:
-                    case BinExpr::Binary::Gte: return BMCVarType::BOOLEAN;
-                    default: { assert(false && "unsupported operation!!!");  }
-                }
-            }
-            case ExprType::BOOL: return BMCVarType::BOOLEAN;
-            case ExprType::INT: return BMCVarType::DAT;
-            case ExprType::NOT:
-                return this->getVarsSLHVTypeFromExpr(((NotExpr*)e)->getExpr());
-            case ExprType::VAR: {
-                const VarExpr* var = (const VarExpr*)e;
-                if (this->varTypeSet->find(var->name()) == this->varTypeSet->end()) {
-                    BMCVarType ty;
-                    if (var->name()[1] == 'p') { ty = BMCVarType::LOC; }
-                    else if(var->name()[1] == 'i') { ty = BMCVarType::DAT; }
-                    else if (var->name() == "$0.ref") {
-                        return BMCVarType::LOC;
-                    } else { assert(false); }
-                    (*this->varTypeSet)[var->name()] = ty;
-                }
-                return BMCVarType(this->varTypeSet->at(var->name()));
-            }
-            default: assert(false);
+    void BMCSLHVPreAnalysis::setGlobalVarType(const VarExpr* globalVar, const Expr* e) {
+        assert(globalVar->name()[1] == 'M');
+        if (this->varTypeSet->find(globalVar->name())
+            != this->varTypeSet->end()) {
+            return;
         }
+        int ty;
+        if (e->getType() == ExprType::VAR) {
+            const VarExpr* var = (const VarExpr*)e;
+            if (var->name() == "$0.ref") {
+                ty = BMCVarType::LOC;
+            } else {
+                if (this->varTypeSet->find(var->name())
+                    == this->varTypeSet->end()) {
+                        std::cout << var->name() << " ==== >>>> \n";
+                        return;
+                    }
+                ty = this->varTypeSet->at(var->name());
+            }
+        } else {
+            assert(e->getType() == ExprType::INT);
+            ty = BMCVarType::DAT;
+        }
+        (*this->varTypeSet)[globalVar->name()] = BMCVarType(ty);
     }
 
     void BMCSLHVPreAnalysis::setVarsSLHVType(RefinedActionPtr act) {
-        switch (act->getActType()) {
-            case ConcreteAction::ActType::MALLOC:
-            case ConcreteAction::ActType::ALLOC:
-            case ConcreteAction::ActType::STORE:
-            case ConcreteAction::ActType::FREE: {
-                if (act->getArg2() != nullptr) {
-                    this->getVarsSLHVTypeFromExpr(act->getArg2());
-                }
-                const VarExpr* x = (const VarExpr*)act->getArg1();
-                (*this->varTypeSet)[x->name()] = BMCVarType::LOC;
-                break;
-            }
-            case ConcreteAction::ActType::LOAD: {
-                const VarExpr* x = (const VarExpr*)act->getArg1();
-                BMCVarType ty;
-                if (x->name()[1] == 'p') { ty = BMCVarType::LOC; }
-                else if (x->name()[1] == 'i') { ty = BMCVarType::DAT; }
-                else assert(false);
-                (*this->varTypeSet)[x->name()] = ty;
-                break;
-            }
-            default: {
-                if (act->getArg1() != nullptr) {
-                    assert(act->getArg1()->isVar());
-                    const VarExpr* x = (const VarExpr*)act->getArg1();
-                    BMCVarType ty = this->getVarsSLHVTypeFromExpr(act->getArg2());
-                    if (x->name()[1] == 'p') {
-                        assert(ty == BMCVarType::LOC);
-                    } else if (x->name()[1] == 'i') {
-                        assert(ty == BMCVarType::DAT);
-                    }
-                    (*this->varTypeSet)[x->name()] = ty;
-                } else if (act->getArg3()->isVar()) {
-                    const VarExpr* x = (const VarExpr*)act->getArg3();
-                    BMCVarType ty = this->getVarsSLHVTypeFromExpr(act->getArg4());
-                    if (x->name()[1] == 'i') { ty = BMCVarType::DAT; }
-                    (*this->varTypeSet)[x->name()] = ty;
-                } else if (act->getArg3() != nullptr) {
-                    this->getVarsSLHVTypeFromExpr(act->getArg3());
-                }
-            }
+        if (act->getActType() != ConcreteAction::ActType::COMMONASSIGN ||
+            act->getArg2() == nullptr) { return; }
+        const VarExpr* globalVar = nullptr;
+        const Expr* e;
+        if (act->getArg1()->isVar()) {
+            const VarExpr* var = (const VarExpr*)act->getArg1();
+            if (var->name()[1] == 'M') { globalVar = var; }
+            e = act->getArg2();
         }
+        if (globalVar == nullptr && act->getArg2()->isVar()) {
+            const VarExpr* var = (const VarExpr*)act->getArg2();
+            if (var->name()[1] == 'M') { globalVar = var; }
+            e = act->getArg1();
+        }
+        if (globalVar != nullptr) { this->setGlobalVarType(globalVar, e); }
     }
 
-    BMCSLHVPreAnalysis::BMCSLHVPreAnalysis(RecordManagerPtr rm, PIMSetPtr ps)
+    BMCSLHVPreAnalysis::BMCSLHVPreAnalysis(RecordManagerPtr rm, PIMSetPtr ps, BoogieVarTypeMap boogieVarTypeMap)
         : recordManager(rm), pimSet(ps),
           varTypeSet(std::make_shared<VarTypeSet>()),
-          consVarMap() {}
+          consVarMap() {
+        for (auto var_type : boogieVarTypeMap) {
+            BMCVarType ty;
+            if (var_type.second[0] == 'i') {
+                ty = BMCVarType::DAT;
+            } else if (var_type.second.find("ref") != std::string::npos) {
+                ty = BMCVarType::LOC;
+            } else { assert(false); }
+            (*this->varTypeSet)[var_type.first] = ty;
+        }
+    }
 
     void BMCSLHVPreAnalysis::refineSLHVCmds(BMCRefinedBlockCFGPtr refinedBlockCFG) {
         this->computeConstantVar(refinedBlockCFG);

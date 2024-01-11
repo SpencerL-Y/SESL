@@ -131,19 +131,17 @@ BMCBLOCKVCGenPtr BMCMemSafeChecker::generateVCGen(
   }
 }
 
-void BMCMemSafeChecker::generateVC(BMCBLOCKVCGenPtr gen, const std::vector<int>& steps) {
-  for (int i = 0; i < 3; i++) {
-    z3::expr_vector vcs = gen->generateVC(steps[i]);
-    if (i == 0) std::cout << "\nInvalidDeref :\n" << vcs[0] << std::endl;
-    // std::cout << "\nInvalidFree :\n" << vcs[1] << std::endl;
-    // if (i == 2) std::cout << "\nMemLeak :\n" << vcs[2] << std::endl;
-    std::string suf;
-    if (i < 2) suf = "_" + std::to_string(steps[i]);
-    else suf = "_locsize_" + std::to_string(steps[i]);
-    gen->generateSMT2(vcs[0], "../bin/outputs/invalidDeref" + suf + ".smt2");
-    gen->generateSMT2(vcs[1], "../bin/outputs/invalidFree" + suf + ".smt2");
-    gen->generateSMT2(vcs[2], "../bin/outputs/invalidMemLeak" + suf + ".smt2");
-  }
+void BMCMemSafeChecker::generateVC(BMCBLOCKVCGenPtr gen) {
+  if (this->smt2Path.back() != '/') this->smt2Path += "/";
+  z3::expr_vector vcs = gen->generateVC(this->step);
+  // std::cout << "\nInvalidDeref :\n" << vcs[0] << std::endl;
+  // std::cout << "\nInvalidFree :\n" << vcs[1] << std::endl;
+  // std::cout << "\nMemLeak :\n" << vcs[2] << std::endl;
+  std::cout << "Smt2 files are stored in " << this->smt2Path << '\n';
+  std::string suf = "_" + std::to_string(this->step);
+  gen->generateSMT2(vcs[0], this->smt2Path + "invalidDeref" + suf + ".smt2");
+  gen->generateSMT2(vcs[1], this->smt2Path + "invalidFree" + suf + ".smt2");
+  gen->generateSMT2(vcs[2], this->smt2Path + "invalidMemLeak" + suf + ".smt2");
 }
 
 bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
@@ -172,19 +170,14 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   this->setSLHVCmdRecords(refinedBlockCFG);
   refinedBlockCFG->print(std::cout);
 
-  std::vector<int> steps;
-  steps.push_back(1);
-  steps.push_back(2);
-  steps.push_back(refinedBlockCFG->getVertexNum());
-
   BMCBLOCKVCGenPtr gen = this->generateVCGen(
-    "SLHV",
+    this->theory,
     refinedBlockCFG,
     recordManager,
     slhvPreAnalysis->getVarTypeSet()
   );
-  this->generateVC(gen, steps);
-
+  this->generateVC(gen);
+  
   return false;
 }
 

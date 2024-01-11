@@ -619,6 +619,27 @@ def arguments():
         type=int,
         help="upper bound on minimum loop iterations [default: %(default)s]",
     )
+    
+    verifier_group.add_argument(
+        "--bmc-theory",
+        choices=["SLHV", "Array"],
+        default="SLHV",
+        help="BMC encoding theory",
+    )
+    
+    verifier_group.add_argument(
+        "--bmc-step",
+        metavar="N",
+        default="1",
+        type=int,
+        help="BMC step number [default: %(default)s]",
+    )
+    
+    verifier_group.add_argument(
+        "--bmc-smt2-path",
+        default="../bin/outputs/",
+        help="BMC encoding smt2 file path",
+    )
 
     verifier_group.add_argument(
         "--context-bound",
@@ -836,6 +857,12 @@ def llvm_to_bpl(args):
         cmd += ["-bw" + str(args.bitwidth)]
     if args.svcomp_property:
         cmd += ["-svcomp-property", args.svcomp_property]
+    if args.bmc_step:
+        cmd += ["-bmc-step", str(args.bmc_step)]
+    if args.bmc_smt2_path:
+        cmd += ["-bmc-smt2-path", args.bmc_smt2_path]
+    if args.bmc_theory:
+        cmd += ["-bmc-theory", args.bmc_theory]
     try_command(cmd, console=True)
     annotate_bpl(args)
     memsafety_subproperty_selection(args)

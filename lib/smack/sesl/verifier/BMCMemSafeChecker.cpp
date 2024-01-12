@@ -161,7 +161,7 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   std::cout << "-------------PRINT CFG END-----------" << std::endl;
 
   BMCRefinedBlockCFGPtr refinedBlockCFG = std::make_shared<BMCRefinedBlockCFG>(mainGraph);
-  // refinedBlockCFG->print(std::cout);
+  refinedBlockCFG->print(std::cout);
   BMCSLHVPreAnalysisPtr slhvPreAnalysis = std::make_shared<BMCSLHVPreAnalysis>(recordManager, pimSet, mainGraph->getVarTypes());
   slhvPreAnalysis->refineSLHVCmds(refinedBlockCFG);
   slhvPreAnalysis->print(std::cout);

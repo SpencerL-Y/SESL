@@ -367,16 +367,18 @@ namespace smack
                         this->pimSet->getPIMByPtrVar(var->name())
                             ->getInfoByPtrVar(var->name()).getPto();
                     if (varType.find("struct") != std::string::npos || varType == "i8") { continue; }
+                    std::vector<int> offsets;
                     int stepWidth = 0;
                     if (varType == "i32") stepWidth = 4;
                     else stepWidth = 8;
                     assert(stepWidth > 0 && byteSize % stepWidth == 0);
                     FieldsTypes ftypes;
                     for (int i = 0; i < byteSize / stepWidth; i++) {
+                        offsets.push_back(stepWidth * i);
                         ftypes.push_back(BMCVarType::DAT);
                     }
                     std::string name = varType + "_" + std::to_string(ftypes.size());
-                    Record record = Record(this->recordManager->getNewId(), stepWidth, ftypes);
+                    Record record = Record(this->recordManager->getNewId(), offsets, ftypes);
                     if (!this->recordManager->contains(name)) {
                         this->recordManager->add(name, record);
                     }
@@ -400,24 +402,21 @@ namespace smack
                         assert(be->getLhs()->isVar());
                         assert(be->getRhs()->getType() == ExprType::INT);
                         const VarExpr* base = (const VarExpr*)be->getLhs();
-                        const int offset = ((const IntLit*)be->getRhs())->getVal();
-
+                        const int byteOffset = ((const IntLit*)be->getRhs())->getVal();
                         std::string varType = this->pimSet->getPIMByPtrVar(base->name())
                                 ->getInfoByPtrVar(base->name()).getPto();
-                        int stepWidth = 0;
+                        int fieldId = 0;
                         if (varType.find("struct") != std::string::npos || varType == "i8") {
-                        stepWidth = this->recordManager->getRecord(varType).getFieldByteWidth();
-                        } else if (varType == "i32") stepWidth = 4;
-                        else stepWidth = 8;
-                        assert(stepWidth > 0 && offset % stepWidth == 0);
-
-                        long long newOffset = offset / stepWidth;
+                            fieldId =this->recordManager->getRecord(varType)
+                                .getFieldOffset(byteOffset);
+                        } else if (varType == "i32") fieldId = byteOffset / 4;
+                        else fieldId = byteOffset / 8;
                         switch (be->getOp()) {
                             case BinExpr::Binary::Plus:
-                                slhvcmd.arg2 = Expr::add(base, Expr::lit(newOffset));
+                                slhvcmd.arg2 = Expr::add(base, Expr::lit((unsigned)fieldId));
                                 break;
                             case BinExpr::Binary::Minus:
-                                slhvcmd.arg2 = Expr::substract(base, Expr::lit(newOffset));
+                                slhvcmd.arg2 = Expr::substract(base, Expr::lit((unsigned)fieldId));
                                 break;
                             default: assert(false);
                         }

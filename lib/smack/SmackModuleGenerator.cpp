@@ -60,23 +60,27 @@ namespace smack {
 
         SDEBUG(errs() << "Analyzing structures...\n");
         // TODO: remove i8
-        FieldsTypes defR; defR.push_back(BMCVarType::DAT);
-        recordManager->add("i8", Record(recordManager->getNewId(), 1, defR));
+        std::vector<int> offsets;
+        FieldsTypes ftypes;
+        offsets.push_back(8);
+        ftypes.push_back(BMCVarType::DAT);
+        recordManager->add("i8", Record(recordManager->getNewId(), offsets, ftypes));
         llvm::DataLayout dl(&M);
         for (StructType* sty : M.getIdentifiedStructTypes()) {
             if (sty->isOpaque()) continue;
             std::string name = sty->getName();
             int id = recordManager->getNewId();
-            int width = dl.getTypeStoreSize(sty) / sty->getNumElements();
-            FieldsTypes ftypes;
+            ftypes.clear();
+            offsets.clear();
             for (unsigned i = 0; i < sty->getNumElements(); i++) {
                 llvm::Type* lt = sty->getElementType(i);
+                offsets.push_back(dl.getStructLayout(sty)->getElementOffset(i));
                 if (lt->isPointerTy()) 
                     ftypes.push_back(BMCVarType::LOC);
                 else
                     ftypes.push_back(BMCVarType::DAT);
             }
-            recordManager->add("%" + name, Record(id, width, ftypes));
+            recordManager->add("%" + name, Record(id, offsets, ftypes));
         }
 
         SDEBUG(errs() << "Analyzing functions...\n");

@@ -3284,13 +3284,9 @@ z3::expr BMCBLOCKVCGen::generateVC(const int k, BuggyType bty) {
 
     z3::expr phiTr = phiInit;
     for (int i = 1; i <= k; i++) {
-        if (i > 1) {
-            reachableLocations =
-                this->TrEncoder->getSuccessors(reachableLocations);
-        }
-        assert(reachableLocations.size() > 0);
         if (reachableLocations.empty())  { break; }
         phiTr = phiTr && this->generateOneStepVC(i, reachableLocations, bty);
+        reachableLocations = this->TrEncoder->getSuccessors(reachableLocations);
     }
     return phiTr && this->generateKthStepBuggy(k, reachableLocations, bty);
 }

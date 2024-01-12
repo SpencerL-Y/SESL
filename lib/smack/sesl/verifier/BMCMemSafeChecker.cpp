@@ -174,7 +174,7 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   refinedBlockCFG->print(std::cout);
 
   std::vector<int> steps;
-  steps.push_back(9);
+  steps.push_back(4);
   // steps.push_back(2);
   // steps.push_back(refinedBlockCFG->getVertexNum());
 

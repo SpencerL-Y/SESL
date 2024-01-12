@@ -8,7 +8,7 @@
 (declare-hvar AH_0 IntHeap)
 (declare-hvar H_0 IntHeap)
 (assert
- (let (($x699 (= loc_0 5)))
- (let (($x703 (and (and (= H_0 emp) (= AH_0 emp)) $x699)))
- (and (and $x703 (not invalidDeref_0)) invalidDeref_0))))
+ (let (($x270 (= loc_0 1)))
+ (let (($x273 (and (and (= H_0 emp) (= AH_0 emp)) $x270)))
+ (and (and $x273 (not invalidDeref_0)) invalidDeref_0))))
 (check-sat)

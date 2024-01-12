@@ -131,6 +131,7 @@ namespace smack
         std::cout << "Result: " << std::endl;
         std::cout << vc.to_string() << std::endl;
         z3::solver s(blockVcg->getContext());
+        s.unsat_core();
         s.add(vc);
         bool check = true;
         if(check) {

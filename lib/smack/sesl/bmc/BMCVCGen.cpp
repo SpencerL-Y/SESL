@@ -2819,12 +2819,7 @@ BlockEncoding::BlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarType
       guard(z3EM->Ctx().bool_val(true)),
       feasibleEncoding(z3EM->Ctx().bool_val(true)),
       invalidDerefEncoding(z3EM->Ctx().bool_val(true)),
-      invalidFreeEncoding(z3EM->Ctx().bool_val(true)) {
-    invalidDerefEncoding =
-        this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
-    invalidFreeEncoding =
-        this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
-}
+      invalidFreeEncoding(z3EM->Ctx().bool_val(true)) {}
 
 int BlockEncoding::getVarTypeByName(std::string name) {
     assert(this->varsTypeMap->find(name) != this->varsTypeMap->end());
@@ -2975,6 +2970,13 @@ z3::expr BlockEncoding::generateExpr(const Expr* e) {
 
 void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
     this->guard = this->generateGuard(edge->getGuard());
+    if (edge->getRefinedActions().size() == 0) {
+        this->invalidDerefEncoding =
+            this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
+        this->invalidFreeEncoding =
+            this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
+        return;
+    }
     for (RefinedActionPtr act : edge->getRefinedActions()) {
         if (act->getActType() == ConcreteAction::ActType::OTHER ||
             act->getActType() == ConcreteAction::ActType::OTHERPROC) continue;

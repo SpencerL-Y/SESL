@@ -134,8 +134,8 @@ BMCBLOCKVCGenPtr BMCMemSafeChecker::generateVCGen(
 void BMCMemSafeChecker::generateVC(BMCBLOCKVCGenPtr gen) {
   if (this->smt2Path.back() != '/') this->smt2Path += "/";
   z3::expr_vector vcs = gen->generateVC(this->step);
-  // std::cout << "\nInvalidDeref :\n" << vcs[0] << std::endl;
-  // std::cout << "\nInvalidFree :\n" << vcs[1] << std::endl;
+  std::cout << "\nInvalidDeref :\n" << vcs[0] << std::endl;
+  std::cout << "\nInvalidFree :\n" << vcs[1] << std::endl;
   std::cout << "\nMemLeak :\n" << vcs[2] << std::endl;
   std::cout << "Smt2 files are stored in " << this->smt2Path << '\n';
   std::string suf = "_" + std::to_string(this->step);

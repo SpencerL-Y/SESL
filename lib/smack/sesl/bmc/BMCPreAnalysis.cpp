@@ -405,18 +405,18 @@ namespace smack
                         const int byteOffset = ((const IntLit*)be->getRhs())->getVal();
                         std::string varType = this->pimSet->getPIMByPtrVar(base->name())
                                 ->getInfoByPtrVar(base->name()).getPto();
-                        int fieldId = 0;
+                        int offset = 0;
                         if (varType.find("struct") != std::string::npos || varType == "i8") {
-                            fieldId =this->recordManager->getRecord(varType)
+                            offset =this->recordManager->getRecord(varType)
                                 .getFieldOffset(byteOffset);
-                        } else if (varType == "i32") fieldId = byteOffset / 4;
-                        else fieldId = byteOffset / 8;
+                        } else if (varType == "i32") offset = byteOffset / 4;
+                        else offset = byteOffset / 8;
                         switch (be->getOp()) {
                             case BinExpr::Binary::Plus:
-                                slhvcmd.arg2 = Expr::add(base, Expr::lit((unsigned)fieldId));
+                                slhvcmd.arg2 = Expr::add(base, Expr::lit((long long)offset));
                                 break;
                             case BinExpr::Binary::Minus:
-                                slhvcmd.arg2 = Expr::substract(base, Expr::lit((unsigned)fieldId));
+                                slhvcmd.arg2 = Expr::substract(base, Expr::lit((unsigned)offset));
                                 break;
                             default: assert(false);
                         }
@@ -438,11 +438,8 @@ namespace smack
             if (var->name() == "$0.ref") {
                 ty = BMCVarType::LOC;
             } else {
-                if (this->varTypeSet->find(var->name())
-                    == this->varTypeSet->end()) {
-                        std::cout << var->name() << " ==== >>>> \n";
-                        return;
-                    }
+                assert(this->varTypeSet->find(var->name())
+                    != this->varTypeSet->end());
                 ty = this->varTypeSet->at(var->name());
             }
         } else {

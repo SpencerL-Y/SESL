@@ -114,17 +114,19 @@ class Record {
 
 private:
     int ID;
-    int fieldByteWidth;
+    std::vector<int> fieldByteOffsets;
     FieldsTypes fieldsTypes;
 
 public:
-    Record() : ID(0), fieldByteWidth(0), fieldsTypes() {};
-    Record(int id, int w, FieldsTypes f);
+    Record() : ID(0), fieldByteOffsets(), fieldsTypes() {};
+    Record(int id, std::vector<int> offsets, FieldsTypes f);
 
     const int getID();
-    int getFieldByteWidth();
+    int getFieldOffset(const int bytes);
     int getFieldSize();
     const FieldsTypes& getFieldsTypes();
+
+    void print(std::ostream& os);
 };
 
 typedef std::map<std::string, Record> RecordMap;

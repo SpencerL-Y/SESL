@@ -2970,6 +2970,13 @@ z3::expr BlockEncoding::generateExpr(const Expr* e) {
 
 void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
     this->guard = this->generateGuard(edge->getGuard());
+    if (edge->getRefinedActions().size() == 0) {
+        this->invalidDerefEncoding =
+            this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
+        this->invalidFreeEncoding =
+            this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
+        return;
+    }
     for (RefinedActionPtr act : edge->getRefinedActions()) {
         if (act->getActType() == ConcreteAction::ActType::OTHER ||
             act->getActType() == ConcreteAction::ActType::OTHERPROC) continue;
@@ -3148,7 +3155,7 @@ BMCBLOCKVCGen::generateUnchanged(BlockEncodingPtr bep, VarSetPtr globalVars, con
         if (bep->use_global(var)) continue;
         z3::expr lastStepVar = this->generateVar(var, k - 1);
         z3::expr kthStepVar = this->generateVar(var, k);
-        unchangedEncoding= unchangedEncoding && (lastStepVar == kthStepVar);
+        unchangedEncoding= unchangedEncoding && (kthStepVar == lastStepVar);
     }
     return unchangedEncoding;
 }
@@ -3172,7 +3179,7 @@ BMCBLOCKVCGen::generateUnchangedInvalid(BlockEncodingPtr bep, BuggyType bty, con
     }
     z3::expr latestLocalVar = this->generateVar(invalidName, k - 1);
     z3::expr kthStepInvalid = this->generateVar(invalidName, k);
-    return latestLocalVar == kthStepInvalid;
+    return kthStepInvalid == latestLocalVar;
 }
 
 z3::expr

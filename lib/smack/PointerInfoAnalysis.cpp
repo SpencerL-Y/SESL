@@ -84,16 +84,35 @@ PointerInfoManagerPtr PIMSet::getPIMByPtrVar(std::string pt) {
     return this->getPIM(func);
 }
 
-Record::Record(int id, int w, FieldsTypes f)
-    : ID(id), fieldByteWidth(w), fieldsTypes(f) {}
+Record::Record(int id, std::vector<int> offsets, FieldsTypes f)
+    : ID(id), fieldByteOffsets(offsets), fieldsTypes(f) {
+    assert(offsets.size() == f.size());
+}
 
 const int Record::getID() { return ID; }
 
-int Record::getFieldByteWidth() { return fieldByteWidth; }
+int Record::getFieldOffset(const int bytes) {
+    for (int i = 0; i < fieldByteOffsets.size(); i++) {
+        if (fieldByteOffsets[i] == bytes) {
+            return i;
+        }
+    }
+    assert(false);
+}
 
 int Record::getFieldSize() { return fieldsTypes.size(); }
 
 const FieldsTypes& Record::getFieldsTypes() { return fieldsTypes; }
+
+void Record::print(std::ostream& os) {
+    os << "  ID - " << this->ID;
+    os << "  Fields : ";
+    for (int i = 0; i < this->fieldsTypes.size(); i++) {
+        os << (this->fieldsTypes[i] == BMCVarType::DAT ? " Dat" : " Loc");
+        os << "(Offset: " << this->fieldByteOffsets[i] << ") ";
+    }
+    os << '\n';
+}
 
 void RecordManager::add(std::string name, Record record) {
     assert(!this->contains(name));
@@ -127,36 +146,10 @@ void RecordManager::print(std::ostream& OS) {
     OS << "Number : " << this->recordMap.size() << '\n';
     for (auto p : this->recordMap) {
         OS << "  Name : " << p.first << '\n';
-        OS << "  ID - " << p.second.getID()
-            << " | ByteWidth - " << p.second.getFieldByteWidth() << '\n';
-        OS << "  FieldTypes : ";
-        for (auto ty : p.second.getFieldsTypes()) {
-            OS << (ty == BMCVarType::DAT ? " Dat" : " Loc");
-        }
-        OS << '\n';
+        p.second.print(OS);
     }
     OS << "========================== Records ===================================\n";
 }
-
-// std::string PointerInfoAnalysis::removeOpaque(std::string type) {
-//     if (type.find("struct") == std::string::npos) return type;
-//     if (type.find('.', 8) == std::string::npos) return type;
-//     int pre_end = type.find('.', 8);
-//     int suf_sta = type.size();
-//     while(type[suf_sta - 1] == '*') suf_sta--;
-//     std::string ptype = type.substr(0, pre_end);
-//     if (suf_sta != type.size()) ptype += type.substr(suf_sta);
-//     return ptype;
-// }
-
-// std::string PointerInfoAnalysis::getOrigType(llvm::Type* lt) {
-//     assert(lt->isPointerTy());
-//     std::string name;
-//     llvm::raw_string_ostream rso(name);
-//     lt->print(rso);
-//     name = rso.str();
-//     return removeOpaque(name.substr(0, name.size() - 1));
-// }
 
 std::string PointerInfoAnalysis::getPointerType(llvm::Type* ltype) {
     assert(ltype->isPointerTy());

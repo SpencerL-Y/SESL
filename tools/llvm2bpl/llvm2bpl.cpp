@@ -93,6 +93,24 @@ static llvm::cl::opt<bool> Modular(
     "modular",
     llvm::cl::desc("Enable contracts-based modular deductive verification"),
     llvm::cl::init(false));
+  
+static llvm::cl::opt<std::string>BMCTheory(
+    "bmc-theory",
+    llvm::cl::desc("Set BMC smt2 theory"),
+    llvm::cl::init(""), llvm::cl::value_desc("smt2-theory")
+);
+
+static llvm::cl::opt<int>BMCStep(
+    "bmc-step",
+    llvm::cl::desc("Set BMC step number"),
+    llvm::cl::init(1)
+);
+
+static llvm::cl::opt<std::string>BMCSMT2File(
+    "bmc-smt2-path",
+    llvm::cl::desc("Set BMC smt2 encoding output file path"),
+    llvm::cl::init(""), llvm::cl::value_desc("smt2-path")
+);
 
 std::string filenamePrefix(const std::string &str) {
   return str.substr(0, str.find_last_of("."));
@@ -293,8 +311,9 @@ int main(int argc, char **argv) {
     // pass_manager.add(new smack::BMCCegarVerifier());
     // pass_manager.add(new smack::BplFilePrinter(F->os()));
     // BMC Checker - SLHV
-    pass_manager.add(new smack::BMCMemSafeChecker());
-
+    pass_manager.add(new smack::BMCMemSafeChecker(
+      BMCTheory, BMCStep, BMCSMT2File)
+    );
   }
 
   pass_manager.run(*module.get());

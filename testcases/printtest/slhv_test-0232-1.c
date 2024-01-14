@@ -9,7 +9,7 @@ extern void __assert_perror_fail (int __errnum, const char *__file,
 extern void __assert (const char *__assertion, const char *__file, int __line)
      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__noreturn__));
 
-void reach_error() { ((void) sizeof ((0) ? 1 : 0), __extension__ ({ if (0) ; else __assert_fail ("0", "test-0019_1-1.c", 3, __extension__ __PRETTY_FUNCTION__); })); }
+void reach_error() { ((void) sizeof ((0) ? 1 : 0), __extension__ ({ if (0) ; else __assert_fail ("0", "test-0232-1.c", 3, __extension__ __PRETTY_FUNCTION__); })); }
 typedef unsigned int size_t;
 typedef long int wchar_t;
 
@@ -520,31 +520,35 @@ extern int getsubopt (char **__restrict __optionp,
 extern int getloadavg (double __loadavg[], int __nelem)
      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
 
-typedef struct {
-    int *lo;
-    int *hi;
-} TData;
-static void alloc_data(TData *pdata)
+extern int __VERIFIER_nondet_int(void);
+struct item {
+    struct item *next;
+    struct item *data;
+};
+static void append(struct item **plist)
 {
-    pdata->lo = (int *)malloc(sizeof(int));
-    pdata->hi = (int *)malloc(sizeof(int));
-    *(pdata->lo) = 4;
-    *(pdata->hi) = 8;
+    struct item *item = malloc(sizeof *item);
+    item->next = *plist;
+    item->data = (item->next)
+        ? item->next->data
+        : malloc(sizeof *item);
+    *plist = item;
 }
-static void free_data(TData *data)
+int main()
 {
-    int *lo = data->lo;
-    int *hi = data->hi;
-    if (*lo >= *hi) {
-        free(lo);
-        free(hi);
+    struct item *list = ((void *)0);
+    do
+        append(&list);
+    while (__VERIFIER_nondet_int());
+    if (list) {
+        struct item *next = list->next;
+        free(list);
+        list = next;
     }
-    data->lo = ((void *)0);
-    data->hi = ((void *)0);
-}
-int main() {
-    TData data;
-    alloc_data(&data);
-    free_data(&data);
+    while (list) {
+        struct item *next = list->next;
+        free(list);
+        list = next;
+    }
     return 0;
 }

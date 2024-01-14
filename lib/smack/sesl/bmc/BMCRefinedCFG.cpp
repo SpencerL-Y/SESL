@@ -569,11 +569,11 @@ namespace smack
 
     inline bool BMCRefinedBlockCFG::isAssumeTrue(RefinedActionPtr act) {
         return act->getActType() == ConcreteAction::ActType::ASSUME &&
-               act->getArg3()->isValue() && ((const BoolLit*)act->getArg3());
+               act->getArg3()->isValue() &&
+               ((const BoolLit*)act->getArg3())->getVal();
     }
 
     void BMCRefinedBlockCFG::simplify() {
-        this->print(std::cout);
         int n = this->N;
         CFGGraph graph = this->refinedBlockCFG;
         this->N = 0;

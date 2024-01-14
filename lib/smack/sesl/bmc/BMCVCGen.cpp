@@ -2891,10 +2891,47 @@ z3::expr BlockEncoding::generateArithExpr(BinExpr::Binary op, z3::expr lhs, z3::
     }
 }
 
+bool BlockEncoding::isXorWithOne(const BinExpr* e) {
+    const Expr* lhs = e->getLhs();
+    const Expr* rhs = e->getRhs();
+    if (lhs->getType() != ExprType::BIN ||
+        rhs->getType() != ExprType::BIN) { return false; }
+    const BinExpr* blhs = (const BinExpr*)lhs;
+    const BinExpr* brhs = (const BinExpr*)rhs;
+    if (blhs->getOp() != BinExpr::Binary::And ||
+        brhs->getOp() != BinExpr::Binary::And) { return false; }
+    if (blhs->getLhs()->getType() != ExprType::NOT ||
+        blhs->getRhs()->getType() != ExprType::INT) {return false; }
+    if (brhs->getLhs()->getType() != ExprType::NOT ||
+        brhs->getRhs()->getType() != ExprType::VAR) { return false; }
+    const NotExpr* notlhs = (const NotExpr*)blhs->getLhs();
+    const NotExpr* notrhs = (const NotExpr*)brhs->getLhs();
+    if (notlhs->getExpr()->getType() != ExprType::VAR) { return false; }
+    if (notrhs->getExpr()->getType() != ExprType::INT) { return false; }
+    const IntLit* ilhs = (const IntLit*)blhs->getRhs();
+    const IntLit* irhs = (const IntLit*)notrhs->getExpr();
+    if (ilhs->getVal() != 1 || irhs->getVal() != 1) { return false; }
+    const VarExpr* varlhs = (const VarExpr*)notlhs->getExpr();
+    const VarExpr* varrhs = (const VarExpr*)brhs->getRhs();
+    return varlhs->name() == varrhs->name();
+}
+
+z3::expr BlockEncoding::generateXorExpr(const BinExpr* e) {
+    assert(this->isXorWithOne(e)); 
+    z3::expr var =
+        this->generateExpr(((const BinExpr*)e->getRhs())->getRhs());
+    return var == 0;
+}
+
 z3::expr BlockEncoding::generateBinExpr(const BinExpr* e) {
+    if (e->getOp() == BinExpr::Binary::Or && this->isXorWithOne(e)) {
+        return this->generateXorExpr(e);
+    }
     z3::expr lhs = this->generateExpr(e->getLhs());
     z3::expr rhs = this->generateExpr(e->getRhs());
     switch (e->getOp())  {
+        case BinExpr::Binary::And: return lhs && rhs;
+        case BinExpr::Binary::Or: return lhs || rhs;
         case BinExpr::Binary::Eq: return lhs == rhs;
         case BinExpr::Binary::Neq: return lhs != rhs;
         case BinExpr::Binary::Lt: return lhs < rhs;
@@ -3247,13 +3284,9 @@ z3::expr BMCBLOCKVCGen::generateVC(const int k, BuggyType bty) {
 
     z3::expr phiTr = phiInit;
     for (int i = 1; i <= k; i++) {
-        if (i > 1) {
-            reachableLocations =
-                this->TrEncoder->getSuccessors(reachableLocations);
-        }
-        assert(reachableLocations.size() > 0);
         if (reachableLocations.empty())  { break; }
         phiTr = phiTr && this->generateOneStepVC(i, reachableLocations, bty);
+        reachableLocations = this->TrEncoder->getSuccessors(reachableLocations);
     }
     return phiTr && this->generateKthStepBuggy(k, reachableLocations, bty);
 }

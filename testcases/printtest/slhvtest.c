@@ -9,12 +9,10 @@ int main(){
     TData* pdata = &data;
 
     TData c;
-    pdata->lo = malloc(16);
-    pdata->hi = malloc(24);
+    pdata->lo = malloc(1);
+    pdata->hi = malloc(1);
     void *lo = pdata->lo;
     void *hi = pdata->hi;
-    if(lo == hi){
         free(lo);
         free(hi);
-    }
 }

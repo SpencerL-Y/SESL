@@ -62,6 +62,7 @@ namespace smack
 
     typedef std::shared_ptr<BMCBlockPreAnalysis> BMCBlockPreAnalysisPtr;
 
+    typedef std::unordered_map<std::string, std::string> BoogieVarTypeMap;
     typedef std::map<std::string, int> VarTypeSet;
     typedef std::shared_ptr<VarTypeSet> VarTypeSetPtr;
     
@@ -78,11 +79,11 @@ namespace smack
             void computeConstantVar(BMCRefinedBlockCFGPtr refinedBlockCFG);
             void setArrayRecord(BMCRefinedBlockCFGPtr refinedBlockCFG);
             void convertByteOffsetToField(BMCRefinedBlockCFGPtr refinedBlockCFG);
-            BMCVarType getVarsSLHVTypeFromExpr(const Expr* e);
+            void setGlobalVarType(const VarExpr* globalVar, const Expr* e);
             void setVarsSLHVType(RefinedActionPtr act);
 
         public:
-            BMCSLHVPreAnalysis(RecordManagerPtr rm, PIMSetPtr ps);
+            BMCSLHVPreAnalysis(RecordManagerPtr rm, PIMSetPtr ps, BoogieVarTypeMap boogieVarTypeMap);
 
             void refineSLHVCmds(BMCRefinedBlockCFGPtr refinedBlockCFG);
             VarTypeSetPtr getVarTypeSet();

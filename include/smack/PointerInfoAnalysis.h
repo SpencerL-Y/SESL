@@ -114,14 +114,16 @@ class Record {
 
 private:
     int ID;
+    int byteSize;
     std::vector<int> fieldByteOffsets;
     FieldsTypes fieldsTypes;
 
 public:
-    Record() : ID(0), fieldByteOffsets(), fieldsTypes() {};
-    Record(int id, std::vector<int> offsets, FieldsTypes f);
+    Record() : ID(0), byteSize(0), fieldByteOffsets(), fieldsTypes() {};
+    Record(int id, int bs, std::vector<int> offsets, FieldsTypes f);
 
     const int getID();
+    int getByteSize();
     int getFieldOffset(const int bytes);
     int getFieldSize();
     const FieldsTypes& getFieldsTypes();

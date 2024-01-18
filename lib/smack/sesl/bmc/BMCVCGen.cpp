@@ -2972,8 +2972,10 @@ void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
     this->guard = this->generateGuard(edge->getGuard());
     if (edge->getRefinedActions().size() == 0) {
         this->invalidDerefEncoding =
+            this->z3EM->Ctx().bool_val(true) ||
             this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
         this->invalidFreeEncoding =
+            this->z3EM->Ctx().bool_val(true) ||
             this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
         return;
     }

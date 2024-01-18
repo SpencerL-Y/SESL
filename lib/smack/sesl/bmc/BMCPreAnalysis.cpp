@@ -330,6 +330,7 @@ namespace smack
                         std::string var = ((const VarExpr*)act->getArg1())->name();
                         std::pair<bool, int> res = this->parseConstant(act->getArg2());
                         if (res.first) {
+                            hasChanged = true;
                             if (this->consVarMap.find(var) != this->consVarMap.end()) {
                                 if (var[1] != 'M') {
                                     this->consVarMap.erase(var);
@@ -339,7 +340,11 @@ namespace smack
                             // act->print(std::cout);
                             // std::cout << var << " " << res.second << '\n';
                             this->consVarMap[var] = res.second;
-                            hasChanged = true;
+                        } else {
+                            if (this->consVarMap.find(var) != this->consVarMap.end()) {
+                                this->consVarMap.erase(var);
+                                hasChanged = true;
+                            }
                         }
                     }
                 }
@@ -378,7 +383,12 @@ namespace smack
                         ftypes.push_back(BMCVarType::DAT);
                     }
                     std::string name = varType + "_" + std::to_string(ftypes.size());
-                    Record record = Record(this->recordManager->getNewId(), offsets, ftypes);
+                    Record record = Record(
+                        this->recordManager->getNewId(),
+                        stepWidth,
+                        offsets,
+                        ftypes
+                    );
                     if (!this->recordManager->contains(name)) {
                         this->recordManager->add(name, record);
                     }
@@ -400,23 +410,40 @@ namespace smack
                         const BinExpr* be = (const BinExpr*)slhvcmd.arg2;
                         // do not support pointer arithmetic with variables
                         assert(be->getLhs()->isVar());
-                        assert(be->getRhs()->getType() == ExprType::INT);
                         const VarExpr* base = (const VarExpr*)be->getLhs();
-                        const int byteOffset = ((const IntLit*)be->getRhs())->getVal();
                         std::string varType = this->pimSet->getPIMByPtrVar(base->name())
-                                ->getInfoByPtrVar(base->name()).getPto();
-                        int offset = 0;
-                        if (varType.find("struct") != std::string::npos || varType == "i8") {
-                            offset =this->recordManager->getRecord(varType)
-                                .getFieldOffset(byteOffset);
-                        } else if (varType == "i32") offset = byteOffset / 4;
-                        else offset = byteOffset / 8;
+                                    ->getInfoByPtrVar(base->name()).getPto();
+                        const Expr* fieldOffset = nullptr;
+                        if (be->getRhs()->getType() == ExprType::INT) {
+                            const int byteOffset = ((const IntLit*)be->getRhs())->getVal();
+                            int offset = 0;
+                            if (varType.find("struct") != std::string::npos || varType == "i8") {
+                                offset =this->recordManager->getRecord(varType)
+                                    .getFieldOffset(byteOffset);
+                            } else if (varType == "i32") offset = byteOffset / 4;
+                            else offset = byteOffset / 8;
+                            fieldOffset = Expr::lit((long long)offset);
+                        } else {
+                            assert(varType.find("struct") == std::string::npos);
+                            int stepWidth;
+                            if (varType == "i8") stepWidth = 1;
+                            else if (varType == "i32") stepWidth = 4;
+                            else stepWidth = 8;
+                            assert(be->getRhs()->getType() == ExprType::BIN);
+                            const BinExpr* rbe = (const BinExpr*)be->getRhs();
+                            assert(rbe->getLhs()->getType() == ExprType::VAR);
+                            assert(rbe->getRhs()->getType() == ExprType::INT);
+                            const VarExpr* step = (const VarExpr*)rbe->getLhs();
+                            const IntLit* width = (const IntLit*)rbe->getRhs();
+                            assert(stepWidth == width->getVal());
+                            fieldOffset = step;
+                        }
                         switch (be->getOp()) {
                             case BinExpr::Binary::Plus:
-                                slhvcmd.arg2 = Expr::add(base, Expr::lit((long long)offset));
+                                slhvcmd.arg2 = Expr::add(base, fieldOffset);
                                 break;
                             case BinExpr::Binary::Minus:
-                                slhvcmd.arg2 = Expr::substract(base, Expr::lit((unsigned)offset));
+                                slhvcmd.arg2 = Expr::substract(base,fieldOffset);
                                 break;
                             default: assert(false);
                         }

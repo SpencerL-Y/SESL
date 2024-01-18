@@ -62,14 +62,15 @@ namespace smack {
         // TODO: remove i8
         std::vector<int> offsets;
         FieldsTypes ftypes;
-        offsets.push_back(8);
+        offsets.push_back(0);
         ftypes.push_back(BMCVarType::DAT);
-        recordManager->add("i8", Record(recordManager->getNewId(), offsets, ftypes));
+        recordManager->add("i8", Record(recordManager->getNewId(), 1, offsets, ftypes));
         llvm::DataLayout dl(&M);
         for (StructType* sty : M.getIdentifiedStructTypes()) {
             if (sty->isOpaque()) continue;
             std::string name = sty->getName();
             int id = recordManager->getNewId();
+            int byteSize = dl.getTypeStoreSize(sty);
             ftypes.clear();
             offsets.clear();
             for (unsigned i = 0; i < sty->getNumElements(); i++) {
@@ -80,7 +81,7 @@ namespace smack {
                 else
                     ftypes.push_back(BMCVarType::DAT);
             }
-            recordManager->add("%" + name, Record(id, offsets, ftypes));
+            recordManager->add("%" + name, Record(id, byteSize, offsets, ftypes));
         }
 
         SDEBUG(errs() << "Analyzing functions...\n");

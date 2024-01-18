@@ -520,7 +520,8 @@ z3::expr_vector SLHVBlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
     this->invalidFreeVM.localVars.insert(idxvare.to_string());
     
     z3::expr errorEC =
-        (ahe == this->z3EM->mk_sep(AH, this->z3EM->mk_pto(x, idxvare)))
+        ((x == this->generateNullptr())
+        || (ahe == this->z3EM->mk_sep(AH, this->z3EM->mk_pto(x, idxvare))))
         && invalidFreePrime;
     z3::expr memSafeEC = feasibleEC && (invalidFreePrime == invalidFree);
     z3::expr faultTolerantEC =

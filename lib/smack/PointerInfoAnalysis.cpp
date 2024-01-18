@@ -84,12 +84,14 @@ PointerInfoManagerPtr PIMSet::getPIMByPtrVar(std::string pt) {
     return this->getPIM(func);
 }
 
-Record::Record(int id, std::vector<int> offsets, FieldsTypes f)
-    : ID(id), fieldByteOffsets(offsets), fieldsTypes(f) {
+Record::Record(int id, int bs, std::vector<int> offsets, FieldsTypes f)
+    : ID(id), byteSize(bs), fieldByteOffsets(offsets), fieldsTypes(f) {
     assert(offsets.size() == f.size());
 }
 
 const int Record::getID() { return ID; }
+
+int Record::getByteSize() { return this->byteSize; }
 
 int Record::getFieldOffset(const int bytes) {
     for (int i = 0; i < fieldByteOffsets.size(); i++) {
@@ -97,7 +99,8 @@ int Record::getFieldOffset(const int bytes) {
             return i;
         }
     }
-    assert(false);
+    assert(bytes >= this->byteSize && bytes % this->byteSize == 0);
+    return (bytes / this->byteSize) * this->getFieldSize();
 }
 
 int Record::getFieldSize() { return fieldsTypes.size(); }
@@ -244,7 +247,7 @@ void PointerInfoAnalysis::visitCallInst(llvm::CallInst &I) {
     llvm::errs() << "pointer type analysis: visit call \n";
     llvm::errs() << "  " << I << '\n';
     llvm::Function* func = I.getCalledFunction();
-    if (func->getName() != "malloc") { return; }
+    if (func == nullptr || func->getName() != "malloc") { return; }
 
     if (!naming->hasName(I)) return;
     std::string vname = naming->get(I);

@@ -143,8 +143,8 @@ z3::expr SLHVZ3ExprManager::mk_loc_arith(
 
 std::string SLHVZ3ExprManager::to_smt2(z3::expr e) {
     z3::solver sol(this->ctx);
-    sol.add(e.simplify());
-    // sol.add(e);
+    // sol.add(e.simplify());
+    sol.add(e);
     std::string origSmt2 = sol.to_smt2();
     // std::cout << origSmt2 << '\n';
     std::stringstream ss(origSmt2.c_str());
@@ -520,7 +520,8 @@ z3::expr_vector SLHVBlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
     this->invalidFreeVM.localVars.insert(idxvare.to_string());
     
     z3::expr errorEC =
-        (ahe == this->z3EM->mk_sep(AH, this->z3EM->mk_pto(x, idxvare)))
+        ((x == this->generateNullptr())
+        || (ahe == this->z3EM->mk_sep(AH, this->z3EM->mk_pto(x, idxvare))))
         && invalidFreePrime;
     z3::expr memSafeEC = feasibleEC && (invalidFreePrime == invalidFree);
     z3::expr faultTolerantEC =

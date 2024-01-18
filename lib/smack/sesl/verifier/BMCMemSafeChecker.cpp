@@ -126,7 +126,7 @@ BMCBLOCKVCGenPtr BMCMemSafeChecker::generateVCGen(
   std::string logic, BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts) {
   if (logic == "SLHV") {
     return std::make_shared<BMCSLHVVCGen>(rbcfg, rm, vts);
-  } else if (logic == "Array") {
+  } else if (logic == "ARRAY") {
     return std::make_shared<BMCArrayVCGen>(rbcfg, rm, vts);
   }
 }

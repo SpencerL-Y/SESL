@@ -40,6 +40,8 @@ llvm::raw_ostream &dbgs();
   if(OPEN_SDEBUG) \
     SMACK_DEBUG_WITH_TYPE(DEBUG_TYPE, X)
 
+#define SLHVDEBUG(X) if (OPEN_SLHV_DEBUG) X;
+
 } // namespace smack
 
 #endif

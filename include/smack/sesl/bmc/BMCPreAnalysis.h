@@ -74,7 +74,7 @@ namespace smack
             VarTypeSetPtr varTypeSet;
             std::map<std::string, int> consVarMap;
 
-            std::pair<bool, int> parseConstant(const Expr* e);
+            std::pair<bool, int> parseConstant(const Expr* e, std::map<std::string, int>& globalVarVal);
             const Expr* constructExprByConstants(const Expr* e);
             void computeConstantVar(BMCRefinedBlockCFGPtr refinedBlockCFG);
             void setArrayRecord(BMCRefinedBlockCFGPtr refinedBlockCFG);

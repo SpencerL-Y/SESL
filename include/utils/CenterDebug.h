@@ -25,6 +25,8 @@
 #define OPEN_STORE_SPLIT 0
 #define OPEN_BMC_DEBUG 1
 
+#define OPEN_SLHV_DEBUG 1
+
 const bool hasColor = true;
 
 

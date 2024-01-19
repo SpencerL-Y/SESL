@@ -94,11 +94,11 @@ Record BMCMemSafeChecker::getPtrRecord(const VarExpr* vexpr) {
 }
 
 void BMCMemSafeChecker::setSLHVCmdRecords(BMCRefinedBlockCFGPtr refinedBlockCFG) {
-  std::cout << "\n ------------------- Set SLHVCmd Record ---------------------------\n";
+  SLHVDEBUG(std::cout << "\n ------------------- Set SLHVCmd Record ---------------------------\n");
   for (int u = 1; u <= refinedBlockCFG->getVertexNum(); u++) {
     for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(u)) {
-      std::cout << "=============" << " From: " << edge->getFrom()
-        << " To: " << edge->getTo() << " ==================== \n";
+      SLHVDEBUG(std::cout << "=============" << " From: " << edge->getFrom()
+        << " To: " << edge->getTo() << " ==================== \n");
       for(RefinedActionPtr refAct : edge->getRefinedActions()) {
         switch (refAct->getActType()) {    
           case ConcreteAction::ActType::ALLOC :
@@ -114,7 +114,7 @@ void BMCMemSafeChecker::setSLHVCmdRecords(BMCRefinedBlockCFGPtr refinedBlockCFG)
       }
     }
   }
-  std::cout << "\n ------------------- Set SLHVCmd Record ---------------------------\n";
+  SLHVDEBUG(std::cout << "\n ------------------- Set SLHVCmd Record ---------------------------\n");
 }
 
 void BMCMemSafeChecker::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
@@ -134,9 +134,9 @@ BMCBLOCKVCGenPtr BMCMemSafeChecker::generateVCGen(
 void BMCMemSafeChecker::generateVC(BMCBLOCKVCGenPtr gen) {
   if (this->smt2Path.back() != '/') this->smt2Path += "/";
   z3::expr_vector vcs = gen->generateVC(this->step);
-  std::cout << "\nInvalidDeref :\n" << vcs[0] << std::endl;
-  std::cout << "\nInvalidFree :\n" << vcs[1] << std::endl;
-  std::cout << "\nMemLeak :\n" << vcs[2] << std::endl;
+  SLHVDEBUG(std::cout << "\nInvalidDeref :\n" << vcs[0] << std::endl);
+  SLHVDEBUG(std::cout << "\nInvalidFree :\n" << vcs[1] << std::endl);
+  SLHVDEBUG(std::cout << "\nMemLeak :\n" << vcs[2] << std::endl);
   std::cout << "Smt2 files are stored in " << this->smt2Path << '\n';
   std::string suf = "_" + std::to_string(this->step);
   gen->generateSMT2(vcs[0], this->smt2Path + "invalidDeref" + suf + ".smt2");
@@ -154,21 +154,19 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   CFGUtil cfgUtil(program);
   CFGPtr mainGraph = cfgUtil.getMainCFG();
   StatePtr state = mainGraph->getEntryState();
-  std::cout << "-------------PRINT CFG-----------" << std::endl;
-  mainGraph->printCFG();
-  mainGraph->printVarInfo();
-  std::cout << std::endl;
-  std::cout << "-------------PRINT CFG END-----------" << std::endl;
+  SLHVDEBUG(std::cout << "-------------PRINT CFG-----------" << std::endl);
+  SLHVDEBUG(mainGraph->printCFG());
+  SLHVDEBUG(mainGraph->printVarInfo());
+  SLHVDEBUG(std::cout << "\n-------------PRINT CFG END-----------" << std::endl);
 
   BMCRefinedBlockCFGPtr refinedBlockCFG = std::make_shared<BMCRefinedBlockCFG>(mainGraph);
-  // refinedBlockCFG->print(std::cout);
+  // SLHVDEBUG(refinedBlockCFG->print(std::cout));
   BMCSLHVPreAnalysisPtr slhvPreAnalysis = std::make_shared<BMCSLHVPreAnalysis>(recordManager, pimSet, mainGraph->getVarTypes());
   slhvPreAnalysis->refineSLHVCmds(refinedBlockCFG);
-  slhvPreAnalysis->print(std::cout);
-
-  recordManager->print(std::cout);
+  SLHVDEBUG(slhvPreAnalysis->print(std::cout));
+  SLHVDEBUG(recordManager->print(std::cout));
   this->setSLHVCmdRecords(refinedBlockCFG);
-  refinedBlockCFG->print(std::cout);
+  SLHVDEBUG(refinedBlockCFG->print(std::cout));
 
   BMCBLOCKVCGenPtr gen = this->generateVCGen(
     this->theory,

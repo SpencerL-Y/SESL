@@ -223,13 +223,15 @@ namespace smack
         return true;
     }
 
-    std::pair<bool, int> BMCSLHVPreAnalysis::parseConstant(const Expr* e) {
+    std::pair<bool, int> BMCSLHVPreAnalysis::parseConstant(const Expr* e, std::map<std::string, int>& globalVarVal) {
         switch (e->getType()) {
             case ExprType::BIN: {
                 const BinExpr* be = (const BinExpr*)e;
                 if (!be->isArith()) { return std::make_pair(false, 0); }
-                std::pair<bool, int> resL = this->parseConstant(be->getLhs());
-                std::pair<bool, int> resR = this->parseConstant(be->getRhs());
+                std::pair<bool, int> resL =
+                    this->parseConstant(be->getLhs(), globalVarVal);
+                std::pair<bool, int> resR =
+                    this->parseConstant(be->getRhs(), globalVarVal);
                 if (!resL.first || !resR.first) { return std::make_pair(false, 0); }
                 int num;
                 switch (be->getOp()) {
@@ -257,6 +259,8 @@ namespace smack
                 const VarExpr* var = (const VarExpr*)e;
                 if (this->consVarMap.find(var->name()) != this->consVarMap.end()) {
                     return std::make_pair(true, this->consVarMap.at(var->name()));
+                } else if (globalVarVal.find(var->name()) != globalVarVal.end()) {
+                    return std::make_pair(true, globalVarVal.at(var->name()));
                 }
                 return std::make_pair(false, 0);
             }
@@ -318,40 +322,49 @@ namespace smack
     }
     
     void BMCSLHVPreAnalysis::computeConstantVar(BMCRefinedBlockCFGPtr refinedBlockCFG) {
-        std::queue<int> Q;
-        Q.push(refinedBlockCFG->getInitVertex());
+        struct Node {
+            int u;
+            std::map<std::string, int> globalVarVal;
+        };
+        std::queue<Node> Q;
+        Q.push(Node {
+            refinedBlockCFG->getInitVertex(),
+            std::map<std::string, int>()
+        });
+        std::set<std::string> none_consts;
         while(!Q.empty()) {
-            int u = Q.front(); Q.pop();
+            Node cur = Q.front(); Q.pop();
             bool hasChanged = false;
-            for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(u)) {
+            for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(cur.u)) {
+                Node nxt; nxt.u = edge->getTo();
+                nxt.globalVarVal = cur.globalVarVal;
                 for (RefinedActionPtr act : edge->getRefinedActions()) {
                     if (act->getActType() == ConcreteAction::ActType::COMMONASSIGN) {
                         if (act->getArg1() == nullptr) continue;
                         std::string var = ((const VarExpr*)act->getArg1())->name();
-                        std::pair<bool, int> res = this->parseConstant(act->getArg2());
-                        if (res.first) {
-                            hasChanged = true;
-                            if (this->consVarMap.find(var) != this->consVarMap.end()) {
-                                if (var[1] != 'M') {
-                                    this->consVarMap.erase(var);
-                                    continue;
-                                }
+                        if (none_consts.find(var) != none_consts.end()) { continue; }
+                        std::pair<bool, int> res = this->parseConstant(act->getArg2(), nxt.globalVarVal);
+                        if (var[1] == 'M') {
+                            if (res.first) {
+                                hasChanged = true;
+                                nxt.globalVarVal[var] = res.second;
                             }
-                            // act->print(std::cout);
-                            // std::cout << var << " " << res.second << '\n';
-                            this->consVarMap[var] = res.second;
-                        } else {
+                        } else  {
                             if (this->consVarMap.find(var) != this->consVarMap.end()) {
+                                none_consts.insert(var);
                                 this->consVarMap.erase(var);
                                 hasChanged = true;
+                                continue;
+                            }
+                            if (res.first) {
+                                hasChanged = true;
+                                this->consVarMap[var] = res.second;
                             }
                         }
                     }
                 }
-            }
-            if (!hasChanged) { continue; }
-            for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(u)) {
-                Q.push(edge->getTo());
+                if (!hasChanged) { continue; }
+                Q.push(nxt);
             }
         }
     }

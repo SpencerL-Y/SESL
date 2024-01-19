@@ -143,10 +143,8 @@ z3::expr SLHVZ3ExprManager::mk_loc_arith(
 
 std::string SLHVZ3ExprManager::to_smt2(z3::expr e) {
     z3::solver sol(this->ctx);
-    // sol.add(e.simplify());
     sol.add(e);
     std::string origSmt2 = sol.to_smt2();
-    // std::cout << origSmt2 << '\n';
     std::stringstream ss(origSmt2.c_str());
     
     std::string smt2 = "(set-logic SLHV)\n" +
@@ -569,7 +567,7 @@ void SLHVTREncoder::init() {
             this->blockEncodings[edge] = bep;
         }
     }
-    this->print(std::cout);
+    SLHVDEBUG(this->print(std::cout));
 }
 
 z3::expr BMCSLHVVCGen::generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty) {
@@ -629,7 +627,6 @@ z3::expr BMCSLHVVCGen::generateInitVC(BuggyType bty) {
 BMCSLHVVCGen::BMCSLHVVCGen(
     BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts) {
     this->z3EM = std::make_shared<SLHVZ3ExprManager>();
-    // rm->print(std::cout);
     for (auto p : rm->getRecordMap()) { this->z3EM->addRecord(p.second); }
     this->TrEncoder = std::make_shared<SLHVTREncoder>(z3EM, rbcfg, vts);
 }

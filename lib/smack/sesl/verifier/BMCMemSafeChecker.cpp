@@ -139,9 +139,9 @@ void BMCMemSafeChecker::generateVC(BMCBLOCKVCGenPtr gen) {
   SLHVDEBUG(std::cout << "\nMemLeak :\n" << vcs[2] << std::endl);
   std::cout << "Smt2 files are stored in " << this->smt2Path << '\n';
   std::string suf = "_" + std::to_string(this->step);
-  gen->generateSMT2(vcs[0], this->smt2Path + "invalidDeref" + suf + ".smt2");
-  gen->generateSMT2(vcs[1], this->smt2Path + "invalidFree" + suf + ".smt2");
-  gen->generateSMT2(vcs[2], this->smt2Path + "invalidMemLeak" + suf + ".smt2");
+  gen->generateSMT2(vcs[0], this->smt2Path + "InvalidDeref" + suf + ".smt2");
+  gen->generateSMT2(vcs[1], this->smt2Path + "InvalidFree" + suf + ".smt2");
+  gen->generateSMT2(vcs[2], this->smt2Path + "MemLeak" + suf + ".smt2");
 }
 
 bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {

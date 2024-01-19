@@ -1,9 +1,9 @@
 #ifndef BMCMEMSAFECHECKER_H
 #define BMCMEMSAFECHECKER_H
 #include "llvm/Pass.h"
-#include "utils/CenterDebug.h"
 #include <memory>
 
+#include "smack/Debug.h"
 #include "smack/sesl/ast/BoogieAst.h"
 #include "smack/SmackModuleGenerator.h"
 #include "smack/sesl/bmc/BMCVCGen.h"

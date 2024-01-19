@@ -2982,7 +2982,6 @@ void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
     for (RefinedActionPtr act : edge->getRefinedActions()) {
         if (act->getActType() == ConcreteAction::ActType::OTHER ||
             act->getActType() == ConcreteAction::ActType::OTHERPROC) continue;
-        // act->print(std::cout);
         z3::expr_vector actEncodings(z3EM->Ctx());
         switch (act->getActType()) {
             case ConcreteAction::ActType::ASSUME:
@@ -3012,11 +3011,11 @@ void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
         CLEAN_Z3EXPR_CONJUNC(this->feasibleEncoding, actEncodings[0]);
         CLEAN_Z3EXPR_CONJUNC(this->invalidDerefEncoding, actEncodings[1]);
         CLEAN_Z3EXPR_CONJUNC(this->invalidFreeEncoding, actEncodings[2]);
-        std::cout << " ------------------------------------------------------------\n";
-        act->print(std::cout);
-        std::cout << "\nFeasible encoding : \n" << actEncodings[0] << "\n";
-        std::cout << "\nInvalidDeref encoding : \n" << actEncodings[1] << "\n";
-        std::cout << "\nInvalidFree encoding : \n" << actEncodings[2] << "\n";
+        SLHVDEBUG(std::cout << " ------------------------------------------------------------\n");
+        SLHVDEBUG(act->print(std::cout));
+        SLHVDEBUG(std::cout << "\nFeasible encoding : \n" << actEncodings[0] << "\n");
+        SLHVDEBUG(std::cout << "\nInvalidDeref encoding : \n" << actEncodings[1] << "\n");
+        SLHVDEBUG(std::cout << "\nInvalidFree encoding : \n" << actEncodings[2] << "\n");
     }
 }
 

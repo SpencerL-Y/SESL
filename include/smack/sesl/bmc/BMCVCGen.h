@@ -10,6 +10,7 @@
 #include <set>
 #include <vector>
 #include "z3++.h"
+#include "smack/Debug.h"
 #include "smack/sesl/bmc/BMCRefinedCFG.h"
 #include "smack/sesl/bmc/StmtFormatter.h"
 #include "smack/sesl/bmc/BMCPreAnalysis.h"

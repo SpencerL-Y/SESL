@@ -1,0 +1,1300 @@
+[1/2] Linking CXX executable llvm2bpl
+[1/2] Install the project...
+-- Install configuration: "Debug"
+-- Installing: /usr/local/bin/llvm2bpl
+-- Set runtime path of "/usr/local/bin/llvm2bpl" to ""
+-- Up-to-date: /usr/local/bin/sesl
+-- Up-to-date: /usr/local/bin/sesl-svcomp.sh
+-- Up-to-date: /usr/local/bin/scripts
+-- Up-to-date: /usr/local/bin/scripts/findMemorySafetyCases.py
+-- Up-to-date: /usr/local/bin/scripts/frontend.py
+-- Up-to-date: /usr/local/bin/scripts/MemorySafetyTasks.txt
+-- Up-to-date: /usr/local/bin/scripts/reach.py
+-- Up-to-date: /usr/local/bin/scripts/top.py
+-- Up-to-date: /usr/local/bin/scripts/utils.py
+-- Up-to-date: /usr/local/bin/scripts/versions.py
+-- Up-to-date: /usr/local/lib/libSeaDsaAnalysis.a
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+['../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c']
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+SESL program verifier version 1.0.2
+Running clang -c -emit-llvm -g -gcolumn-info -w -Xclang -disable-O0-optnone -I/usr/local/share/smack/include -DMEMORY_MODEL_NO_REUSE_IMPLS -o /home/clexma/Desktop/Disk_D/Tools/SESL/SESL/build/cmp-freed-ptr_invalidfree-1qsk9lku.bc ../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c
+Running llvm-link -o /home/clexma/Desktop/Disk_D/Tools/SESL/SESL/build/a-kf5_zlwm.bc /home/clexma/Desktop/Disk_D/Tools/SESL/SESL/build/cmp-freed-ptr_invalidfree-1qsk9lku.bc
+Running llvm-link -o /home/clexma/Desktop/Disk_D/Tools/SESL/SESL/build/b-szy9gl27.bc /home/clexma/Desktop/Disk_D/Tools/SESL/SESL/build/a-kf5_zlwm.bc
+Running llvm2bpl /home/clexma/Desktop/Disk_D/Tools/SESL/SESL/build/b-szy9gl27.bc -bpl ../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.bpl -c ../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c -warn-type unsound -sea-dsa=ci -source-loc-syms -entry-points main -ll ../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree_IR.ll -mem-mod-impls -llvm-assumes=none -sh-mem-leak -add-line-info -bw32 -svcomp-property ../../sv-benchmarks/c/properties/valid-memsafety.prp -bmc-step 1 -bmc-smt2-path ../bin/outputs/ -bmc-theory SLHV
+We are now translating the program to boogie...
+ Analyzing globals...
+ Analyzing structures...
+ Analyzing functions...
+ Analyzing function: main
+ globalDecl: main
+ Analyzing function body: main
+ Generating body for main
+ visitBasicBlock
+ visitDbgValue
+ visitDbgValue
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitDbgValue
+ visitCast
+ visitCast not vector
+ visitCall
+ smackrep call
+ visitCall
+ smackrep call
+ visitCast
+ visitCast not vector
+ visitDbgValue
+ visitCmp
+ visitBranch
+ visitBasicBlock
+ visitCast
+ visitCast not vector
+ visitCall
+ smackrep call
+ visitBranch
+ visitBasicBlock
+ visitCast
+ visitCast not vector
+ visitCall
+ smackrep call
+ visitReturn
+ 
+ Analyzing pointer info in main
+ ; Function Attrs: noinline nounwind uwtable
+ define dso_local i32 @main() #0 !dbg !7 {
+   call void @llvm.dbg.value(metadata %struct.T* null, metadata !11, metadata !DIExpression()), !dbg !16, !verifier.code !17
+   call void @llvm.dbg.value(metadata %struct.T* null, metadata !18, metadata !DIExpression()), !dbg !16, !verifier.code !17
+   %1 = call noalias i8* @malloc(i64 8) #3, !dbg !19, !verifier.code !17
+   %2 = bitcast i8* %1 to %struct.T*, !dbg !19, !verifier.code !17
+   call void @llvm.dbg.value(metadata %struct.T* %2, metadata !18, metadata !DIExpression()), !dbg !16, !verifier.code !17
+   %3 = bitcast %struct.T* %2 to i8*, !dbg !20, !verifier.code !17
+   call void @free(i8* %3) #3, !dbg !21, !verifier.code !17
+   %4 = call noalias i8* @malloc(i64 8) #3, !dbg !22, !verifier.code !17
+   %5 = bitcast i8* %4 to %struct.T*, !dbg !22, !verifier.code !17
+   call void @llvm.dbg.value(metadata %struct.T* %5, metadata !11, metadata !DIExpression()), !dbg !16, !verifier.code !17
+   %6 = icmp eq %struct.T* %5, %2, !dbg !23, !verifier.code !17
+   br i1 %6, label %7, label %9, !dbg !25, !verifier.code !17
+ 
+ 7:                                                ; preds = %0
+   %8 = bitcast %struct.T* %5 to i8*, !dbg !26, !verifier.code !17
+   call void @free(i8* %8) #3, !dbg !28, !verifier.code !17
+   br label %9, !dbg !29, !verifier.code !17
+ 
+ 9:                                                ; preds = %7, %0
+   %10 = bitcast %struct.T* %5 to i8*, !dbg !30, !verifier.code !17
+   call void @free(i8* %10) #3, !dbg !31, !verifier.code !17
+   ret i32 0, !dbg !32, !verifier.code !17
+ }
+ 
+ pointer type analysis: visit call 
+     call void @llvm.dbg.value(metadata %struct.T* null, metadata !11, metadata !DIExpression()), !dbg !16, !verifier.code !17
+ pointer type analysis: visit call 
+     call void @llvm.dbg.value(metadata %struct.T* null, metadata !18, metadata !DIExpression()), !dbg !16, !verifier.code !17
+ pointer type analysis: visit call 
+     %1 = call noalias i8* @malloc(i64 8) #3, !dbg !19, !verifier.code !17
+ $p0
+  Type : i8*
+ pointer type analysis: visit bitcast 
+     %2 = bitcast i8* %1 to %struct.T*, !dbg !19, !verifier.code !17
+ $p1
+  Type : %struct.T*
+ pointer type analysis: visit call 
+     call void @llvm.dbg.value(metadata %struct.T* %2, metadata !18, metadata !DIExpression()), !dbg !16, !verifier.code !17
+ pointer type analysis: visit bitcast 
+     %3 = bitcast %struct.T* %2 to i8*, !dbg !20, !verifier.code !17
+ $p2
+  Type : %struct.T*
+ pointer type analysis: visit call 
+     call void @free(i8* %3) #3, !dbg !21, !verifier.code !17
+ pointer type analysis: visit call 
+     %4 = call noalias i8* @malloc(i64 8) #3, !dbg !22, !verifier.code !17
+ $p3
+  Type : i8*
+ pointer type analysis: visit bitcast 
+     %5 = bitcast i8* %4 to %struct.T*, !dbg !22, !verifier.code !17
+ $p4
+  Type : %struct.T*
+ pointer type analysis: visit call 
+     call void @llvm.dbg.value(metadata %struct.T* %5, metadata !11, metadata !DIExpression()), !dbg !16, !verifier.code !17
+ pointer type analysis: visit unsurpported instruction 
+     %6 = icmp eq %struct.T* %5, %2, !dbg !23, !verifier.code !17
+ pointer type analysis: visit unsurpported instruction 
+     br i1 %6, label %7, label %9, !dbg !25, !verifier.code !17
+ pointer type analysis: visit bitcast 
+     %8 = bitcast %struct.T* %5 to i8*, !dbg !26, !verifier.code !17
+ $p6
+  Type : %struct.T*
+ pointer type analysis: visit call 
+     call void @free(i8* %8) #3, !dbg !28, !verifier.code !17
+ pointer type analysis: visit unsurpported instruction 
+     br label %9, !dbg !29, !verifier.code !17
+ pointer type analysis: visit bitcast 
+     %10 = bitcast %struct.T* %5 to i8*, !dbg !30, !verifier.code !17
+ $p7
+  Type : %struct.T*
+ pointer type analysis: visit call 
+     call void @free(i8* %10) #3, !dbg !31, !verifier.code !17
+ pointer type analysis: visit unsurpported instruction 
+     ret i32 0, !dbg !32, !verifier.code !17
+ $p0 -->  Type : %struct.T*
+ $p3 -->  Type : %struct.T*
+ 
+ insert initial SH to main
+ Analyzing function: llvm.dbg.declare
+ globalDecl: llvm.dbg.declare
+ Analyzing function: malloc
+ globalDecl: malloc
+ Analyzing function: free_
+ globalDecl: free_
+ Analyzing function: llvm.dbg.value
+ globalDecl: llvm.dbg.value
+ Analyzing function: __SMACK_static_init
+ globalDecl: __SMACK_static_init
+ Analyzing function body: __SMACK_static_init
+ Generating body for __SMACK_static_init
+ visitBasicBlock
+ visitReturn
+ 
+ Start Analyzing Prelude: main
+ 
+ Start Analyzing Prelude: llvm.dbg.declare
+ 
+ Start Analyzing Prelude: malloc
+ 
+ Start Analyzing Prelude: free_
+ 
+ Start Analyzing Prelude: llvm.dbg.value
+ 
+ Start Analyzing Prelude: __SMACK_static_init
+ 
+ Start Analyzing Prelude: boogie_si_record_ref
+ 
+ Start Analyzing Prelude: $initialize
+ 
+ const main: ref;
+ axiom (main == $sub.ref(0, 1032));
+ procedure main()
+   returns ($r: i32)
+ {
+   var $p0: ref8;
+   var $p1: ref;
+   var $p2: ref8;
+   var $p3: ref8;
+   var $p4: ref;
+   var $i5: i1;
+   var $p6: ref8;
+   var $p7: ref8;
+ $bb0:
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 10, 9} true;
+   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 10, 9} true;
+   call $p0 := malloc(8);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 10, 9} true;
+   $p1 := $bitcast.ref.ref($p0);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 11, 10} true;
+   $p2 := $bitcast.ref.ref($p1);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 11, 5} true;
+   call free_($p2);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 12, 9} true;
+   call $p3 := malloc(8);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 12, 9} true;
+   $p4 := $bitcast.ref.ref($p3);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 13, 12} true;
+   $i5 := $eq.ref($p4, $p1);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 13, 10} true;
+   assume {:branchcond $i5} true;
+   goto $bb1, $bb2;
+ $bb1:
+   assume ($i5 == 1);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 15, 14} true;
+   $p6 := $bitcast.ref.ref($p4);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 15, 9} true;
+   call free_($p6);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 16, 5} true;
+   goto $bb3;
+ $bb2:
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 13, 10} true;
+   assume !(($i5 == 1));
+   goto $bb3;
+ $bb3:
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 17, 10} true;
+   $p7 := $bitcast.ref.ref($p4);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 17, 5} true;
+   call free_($p7);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 18, 5} true;
+   $r := 0;
+   return;
+ }
+ const llvm.dbg.declare: ref;
+ axiom (llvm.dbg.declare == $sub.ref(0, 2064));
+ procedure llvm.dbg.declare($p0: ref, $p1: ref, $p2: ref);
+ const malloc: ref;
+ axiom (malloc == $sub.ref(0, 3096));
+ procedure malloc($i0: i64)
+   returns ($r: ref8)
+ {
+   call $r := $malloc($i0);
+ }
+ const free_: ref;
+ axiom (free_ == $sub.ref(0, 4128));
+ procedure free_($p0: ref8)
+ {
+   call $free($p0);
+ }
+ const llvm.dbg.value: ref;
+ axiom (llvm.dbg.value == $sub.ref(0, 5160));
+ procedure llvm.dbg.value($p0: ref, $p1: ref, $p2: ref);
+ const __SMACK_static_init: ref;
+ axiom (__SMACK_static_init == $sub.ref(0, 6192));
+ procedure __SMACK_static_init()
+ {
+ $bb0:
+   return;
+ }
+ procedure boogie_si_record_ref(x: ref);
+ procedure $initialize()
+ {
+   call __SMACK_static_init();
+   return;
+ }
+ 
+  Refine function main
+ 
+  before deletion ------------------------ 
+ $bb0:
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 10, 9} true;
+   call {:cexpr "smack:entry:main"} boogie_si_record_ref(main);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 10, 9} true;
+   call $p0 := malloc(8);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 10, 9} true;
+   $p1 := $bitcast.ref.ref($p0);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 11, 10} true;
+   $p2 := $bitcast.ref.ref($p1);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 11, 5} true;
+   call free_($p2);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 12, 9} true;
+   call $p3 := malloc(8);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 12, 9} true;
+   $p4 := $bitcast.ref.ref($p3);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 13, 12} true;
+   $i5 := $eq.ref($p4, $p1);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 13, 10} true;
+   assume {:branchcond $i5} true;
+   goto $bb1, $bb2;
+  after deletion ------------------------ 
+ $bb0:
+   call $p0 := malloc(8);
+   $p1 := $bitcast.ref.ref($p0);
+   $p2 := $bitcast.ref.ref($p1);
+   call free_($p2);
+   call $p3 := malloc(8);
+   $p4 := $bitcast.ref.ref($p3);
+   $i5 := $eq.ref($p4, $p1);
+   goto $bb1, $bb2;
+  before deletion ------------------------ 
+ $bb1:
+   assume ($i5 == 1);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 15, 14} true;
+   $p6 := $bitcast.ref.ref($p4);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 15, 9} true;
+   call free_($p6);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 16, 5} true;
+   goto $bb3;
+  after deletion ------------------------ 
+ $bb1:
+   assume ($i5 == 1);
+   $p6 := $bitcast.ref.ref($p4);
+   call free_($p6);
+   goto $bb3;
+  before deletion ------------------------ 
+ $bb2:
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 13, 10} true;
+   assume !(($i5 == 1));
+   goto $bb3;
+  after deletion ------------------------ 
+ $bb2:
+   assume !(($i5 == 1));
+   goto $bb3;
+  before deletion ------------------------ 
+ $bb3:
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 17, 10} true;
+   $p7 := $bitcast.ref.ref($p4);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 17, 5} true;
+   call free_($p7);
+   assume {:sourceloc "../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.c", 18, 5} true;
+   $r := 0;
+   return;
+  after deletion ------------------------ 
+ $bb3:
+   $p7 := $bitcast.ref.ref($p4);
+   call free_($p7);
+   $r := 0;
+   return;
+  Refine function llvm.dbg.declare
+ 
+  Refine function malloc
+ 
+  Refine function free_
+ 
+  Refine function llvm.dbg.value
+ 
+  Refine function __SMACK_static_init
+ 
+  Refine function boogie_si_record_ref
+ 
+  Refine function $initialize
+ Verifying globals
+ Adding procedure: main
+ Empty block name founded in proc main
+ Empty block name founded in proc main
+ Empty block name founded in proc main
+ Empty block name founded in proc main
+ Adding procedure: llvm.dbg.declare
+ Empty blocks of proc llvm.dbg.declare
+ Adding procedure: malloc
+ Empty block name founded in proc malloc
+ Adding procedure: free_
+ Empty block name founded in proc free_
+ Adding procedure: llvm.dbg.value
+ Empty blocks of proc llvm.dbg.value
+ Adding procedure: __SMACK_static_init
+ Empty block name founded in proc __SMACK_static_init
+ Adding procedure: boogie_si_record_ref
+ Empty blocks of proc boogie_si_record_ref
+ Adding procedure: $initialize
+ Empty block name founded in proc $initialize
+ Adding static init...
+ inlining procedure: main
+ inlining procedure: __SMACK_static_init
+ processing return block $bb0___SMACK_static_init_0
+ Add goto relation: $bb5_main_0 -> $bb4_main_0
+ Splitting return block
+ -------------------- PRINT RENAMED IR --------------------
+ procedure main()
+   returns ($r_main0: i32)
+ {
+   var $p0_main0: ref8;
+   var $p1_main0: ref;
+   var $p2_main0: ref8;
+   var $p3_main0: ref8;
+   var $p4_main0: ref;
+   var $i5_main0: i1;
+   var $p6_main0: ref8;
+   var $p7_main0: ref8;
+   var $r_main0: i32;
+ $bb0_main_0:
+   goto $bb6_main_0;
+ $bb1_main_0:
+   assume ($i5_main0 == 1);
+   $p6_main0 := $bitcast.ref.ref($p4_main0);
+   call free_($p6_main0);
+   goto $bb3_main_0;
+ $bb2_main_0:
+   assume !(($i5_main0 == 1));
+   goto $bb3_main_0;
+ $bb3_main_0:
+   $p7_main0 := $bitcast.ref.ref($p4_main0);
+   call free_($p7_main0);
+   $r_main0 := 0;
+   return;
+ $bb5_main_0:
+   call {:call_end} {:__SMACK_static_init_0} boogie_si_record_ref();
+   goto $bb4_main_0;
+ $bb6_main_0:
+   call {:call_start} {:__SMACK_static_init_0} boogie_si_record_ref();
+   goto $bb0___SMACK_static_init_0;
+ $bb4_main_0:
+   call $p0_main0 := malloc(8);
+   $p1_main0 := $bitcast.ref.ref($p0_main0);
+   $p2_main0 := $bitcast.ref.ref($p1_main0);
+   call free_($p2_main0);
+   call $p3_main0 := malloc(8);
+   $p4_main0 := $bitcast.ref.ref($p3_main0);
+   $i5_main0 := $eq.ref($p4_main0, $p1_main0);
+   goto $bb1_main_0, $bb2_main_0;
+ $bb0___SMACK_static_init_0:
+   goto $bb5_main_0;
+ }
+ -------------------- PRINT INTERPROC INLINE ORDER--------------------
+ In $bb3_main_0
+ [0mpop: $bb3_main_0
+ [0mpop finished
+ [0mIn $bb1_main_0
+ [0mpop: $bb1_main_0
+ [0mpop finished
+ [0mIn $bb2_main_0
+ [0mpop: $bb2_main_0
+ [0mpop finished
+ [0mIn $bb4_main_0
+ [0mpop: $bb4_main_0
+ [0mpop finished
+ [0mIn $bb5_main_0
+ [0mpop: $bb5_main_0
+ [0mpop finished
+ [0mIn $bb0___SMACK_static_init_0
+ [0mpop: $bb0___SMACK_static_init_0
+ [0mpop finished
+ [0mIn $bb6_main_0
+ [0mpop: $bb6_main_0
+ [0mpop finished
+ [0mIn $bb0_main_0
+ [0mpop: $bb0_main_0
+ [0mpop finished
+ [0m-------------PRINT CFG-----------
+ INFO: Begin printing cfg...
+ --------------------------States Information--------------------------
+ --------------------------[State]$bb0___SMACK_static_init_0
+ INFO: [Scc Info]sccId: 6stateNumInScc: 1
+ INFO: [Stmt Info]
+ goto $bb5_main_0;
+ --------------------------[State]$bb4_main_0
+ INFO: [Scc Info]sccId: 4stateNumInScc: 1
+ INFO: [Stmt Info]
+ call $p0_main0 := malloc(8);
+ $p1_main0 := $bitcast.ref.ref($p0_main0);
+ $p2_main0 := $bitcast.ref.ref($p1_main0);
+ call free_($p2_main0);
+ call $p3_main0 := malloc(8);
+ $p4_main0 := $bitcast.ref.ref($p3_main0);
+ $i5_main0 := $eq.ref($p4_main0, $p1_main0);
+ goto $bb1_main_0, $bb2_main_0;
+ --------------------------[State]$bb6_main_0
+ INFO: [Scc Info]sccId: 7stateNumInScc: 1
+ INFO: [Stmt Info]
+ call {:call_start} {:__SMACK_static_init_0} boogie_si_record_ref();
+ goto $bb0___SMACK_static_init_0;
+ --------------------------[State]$bb3_main_0
+ INFO: [Scc Info]sccId: 1stateNumInScc: 1
+ INFO: [Stmt Info]
+ $p7_main0 := $bitcast.ref.ref($p4_main0);
+ call free_($p7_main0);
+ $r_main0 := 0;
+ return;
+ --------------------------[State]$bb2_main_0
+ INFO: [Scc Info]sccId: 3stateNumInScc: 1
+ INFO: [Stmt Info]
+ assume !(($i5_main0 == 1));
+ /* condition-false */
+ goto $bb3_main_0;
+ --------------------------[State]$bb1_main_0
+ INFO: [Scc Info]sccId: 2stateNumInScc: 1
+ INFO: [Stmt Info]
+ assume ($i5_main0 == 1);
+ /* condition-true */
+ $p6_main0 := $bitcast.ref.ref($p4_main0);
+ call free_($p6_main0);
+ goto $bb3_main_0;
+ --------------------------[State]$bb5_main_0
+ INFO: [Scc Info]sccId: 5stateNumInScc: 1
+ INFO: [Stmt Info]
+ call {:call_end} {:__SMACK_static_init_0} boogie_si_record_ref();
+ goto $bb4_main_0;
+ --------------------------[State]$bb0_main_0
+ INFO: [Scc Info]sccId: 8stateNumInScc: 1
+ INFO: [Stmt Info]
+ goto $bb6_main_0;
+ --------------------------Edges Information--------------------------
+ INFO: [Edge] from: $bb0___SMACK_static_init_0 to: $bb5_main_0
+ guard: <null>
+ [EdgeEnd]
+ INFO: [Edge] from: $bb4_main_0 to: $bb2_main_0
+ guard: <null>
+ [EdgeEnd]
+ INFO: [Edge] from: $bb4_main_0 to: $bb1_main_0
+ guard: <null>
+ [EdgeEnd]
+ INFO: [Edge] from: $bb6_main_0 to: $bb0___SMACK_static_init_0
+ guard: <null>
+ [EdgeEnd]
+ INFO: [Edge] from: $bb2_main_0 to: $bb3_main_0
+ guard: assume !(($i5_main0 == 1));[EdgeEnd]
+ INFO: [Edge] from: $bb1_main_0 to: $bb3_main_0
+ guard: assume ($i5_main0 == 1);[EdgeEnd]
+ INFO: [Edge] from: $bb5_main_0 to: $bb4_main_0
+ guard: <null>
+ [EdgeEnd]
+ INFO: [Edge] from: $bb0_main_0 to: $bb6_main_0
+ guard: <null>
+ [EdgeEnd]
+ $p6_main0 ref8 fresh 0
+ $i5_main0 i1 fresh 0
+ $p7_main0 ref8 fresh 0
+ $p4_main0 ref fresh 0
+ $r_main0 i32 fresh 0
+ $p2_main0 ref8 fresh 0
+ $p1_main0 ref fresh 0
+ $p3_main0 ref8 fresh 0
+ $p0_main0 ref8 fresh 0
+ 
+ -------------PRINT CFG END-----------
+  ====================== Variable Info ======================
+ $i5_main0 Dat
+ $p0_main0 Loc
+ $p1_main0 Loc
+ $p2_main0 Loc
+ $p3_main0 Loc
+ $p4_main0 Loc
+ $p6_main0 Loc
+ $p7_main0 Loc
+ $r_main0 Dat
+  ====================== Variable Info ======================
+ ========================== Records ===================================
+ Number : 2
+   Name : %struct.T
+   ID - 2  Fields :  Loc(Offset: 0) 
+   Name : i8
+   ID - 1  Fields :  Dat(Offset: 0) 
+ ========================== Records ===================================
+ 
+  ------------------- Set SLHVCmd Record ---------------------------
+ ============= From: 1 To: 2 ==================== 
+ ============= From: 2 To: 3 ==================== 
+ ============= From: 2 To: 3 ==================== 
+ ============= From: 3 To: 4 ==================== 
+ ============= From: 4 To: 4 ==================== 
+ 
+  ------------------- Set SLHVCmd Record ---------------------------
+ 
+ ---------------------- BMCRefinedBlockCFG -------------------------
+ Initial Vertex : 1
+ Final Vertices : 4
+ ======================= Vertex : 1 =====================
+ [Edge] 1 ---> 2
+ [Guard] : 
+ RefinedAction: ASSUME	 ARG1:  <NULL> ARG2:  <NULL> ARG3: true(1) 
+  ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+ [Actions]
+ RefinedAction: MALLOC	 ARG1: $p0_main0(8) 
+  ARG2: 8(0) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration :  Record :  Id - 2 | Fields -  Loc
+      SLHV Arg2 : 8
+ RefinedAction: ASSIGN	 ARG1: $p1_main0(8) 
+  ARG2: $p0_main0(8) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : $p0_main0
+ RefinedAction: ASSIGN	 ARG1: $p2_main0(8) 
+  ARG2: $p1_main0(8) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : $p1_main0
+ RefinedAction: FREE	 ARG1: $p2_main0(8) 
+  ARG2:  <NULL> ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+ RefinedAction: MALLOC	 ARG1: $p3_main0(8) 
+  ARG2: 8(0) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration :  Record :  Id - 2 | Fields -  Loc
+      SLHV Arg2 : 8
+ RefinedAction: ASSIGN	 ARG1: $p4_main0(8) 
+  ARG2: $p3_main0(8) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : $p3_main0
+ RefinedAction: ASSIGN	 ARG1:  <NULL> ARG2:  <NULL> ARG3: $i5_main0(1) 
+  ARG4: ($p4_main0 == $p1_main0)(1) 
+  |-- SLHV Target Configuration : 
+ ======================= Vertex : 1 =====================
+ ======================= Vertex : 2 =====================
+ [Edge] 2 ---> 3
+ [Guard] : 
+ RefinedAction: ASSUME	 ARG1:  <NULL> ARG2:  <NULL> ARG3: ($i5_main0 == 1)(1) 
+  ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+ [Actions]
+ RefinedAction: ASSIGN	 ARG1: $p6_main0(8) 
+  ARG2: $p4_main0(8) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : $p4_main0
+ RefinedAction: FREE	 ARG1: $p6_main0(8) 
+  ARG2:  <NULL> ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+ [Edge] 2 ---> 3
+ [Guard] : 
+ RefinedAction: ASSUME	 ARG1:  <NULL> ARG2:  <NULL> ARG3: !(($i5_main0 == 1))(1) 
+  ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+ [Actions]
+ ======================= Vertex : 2 =====================
+ ======================= Vertex : 3 =====================
+ [Edge] 3 ---> 4
+ [Guard] : 
+ RefinedAction: ASSUME	 ARG1:  <NULL> ARG2:  <NULL> ARG3: true(1) 
+  ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+ [Actions]
+ RefinedAction: ASSIGN	 ARG1: $p7_main0(8) 
+  ARG2: $p4_main0(8) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : $p4_main0
+ RefinedAction: FREE	 ARG1: $p7_main0(8) 
+  ARG2:  <NULL> ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+ RefinedAction: ASSIGN	 ARG1: $r_main0(0) 
+  ARG2: 0(0) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : 0
+ ======================= Vertex : 3 =====================
+ ======================= Vertex : 4 =====================
+ [Edge] 4 ---> 4
+ [Guard] : 
+ RefinedAction: ASSUME	 ARG1:  <NULL> ARG2:  <NULL> ARG3: true(1) 
+  ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+ [Actions]
+ ======================= Vertex : 4 =====================
+ ---------------------- BMCRefinedBlockCFG -------------------------
+  ------------------------------------------------------------
+ RefinedAction: MALLOC	 ARG1: $p0_main0(8) 
+  ARG2: 8(0) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration :  Record :  Id - 2 | Fields -  Loc
+      SLHV Arg2 : 8
+ 
+ Feasible encoding : 
+ (let ((a!1 (= H1 (uplus H (pt l1 (Pt_R_0 l2)))))
+       (a!2 (= AH1 (uplus AH (pt l1 (Pt_R_1 2))))))
+   (and a!1 (= $p0_main01 l1) a!2))
+ 
+ InvalidDeref encoding : 
+ (let ((a!1 (= H1 (uplus H (pt l1 (Pt_R_0 l2)))))
+       (a!2 (= AH1 (uplus AH (pt l1 (Pt_R_1 2))))))
+   (or (and a!1 (= $p0_main01 l1) a!2) invalidDeref))
+ 
+ InvalidFree encoding : 
+ (let ((a!1 (= H1 (uplus H (pt l1 (Pt_R_0 l2)))))
+       (a!2 (= AH1 (uplus AH (pt l1 (Pt_R_1 2))))))
+   (or (and a!1 (= $p0_main01 l1) a!2) invalidFree))
+  ------------------------------------------------------------
+ RefinedAction: ASSIGN	 ARG1: $p1_main0(8) 
+  ARG2: $p0_main0(8) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : $p0_main0
+ 
+ Feasible encoding : 
+ (= $p1_main01 $p0_main01)
+ 
+ InvalidDeref encoding : 
+ (or (= $p1_main01 $p0_main01) invalidDeref)
+ 
+ InvalidFree encoding : 
+ (or (= $p1_main01 $p0_main01) invalidFree)
+  ------------------------------------------------------------
+ RefinedAction: ASSIGN	 ARG1: $p2_main0(8) 
+  ARG2: $p1_main0(8) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : $p1_main0
+ 
+ Feasible encoding : 
+ (= $p2_main01 $p1_main01)
+ 
+ InvalidDeref encoding : 
+ (or (= $p2_main01 $p1_main01) invalidDeref)
+ 
+ InvalidFree encoding : 
+ (or (= $p2_main01 $p1_main01) invalidFree)
+  ------------------------------------------------------------
+ RefinedAction: FREE	 ARG1: $p2_main0(8) 
+  ARG2:  <NULL> ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+ 
+ Feasible encoding : 
+ (let ((a!1 (= AH1 (uplus ah1 (pt $p2_main01 (Pt_R_1 d1)))))
+       (a!2 (= H1 (uplus h1 (pt l3 (Pt_R_0 l4)))))
+       (a!3 (= H1 (uplus h1 (pt l5 (Pt_R_1 d2))))))
+   (and a!1
+        (= AH2 ah1)
+        (=> (= d1 2) (and a!2 (= $p2_main01 l3) (= H2 h1)))
+        (=> (= d1 1) (and a!3 (= $p2_main01 l5) (= H2 h1)))))
+ 
+ InvalidDeref encoding : 
+ (let ((a!1 (= AH1 (uplus ah1 (pt $p2_main01 (Pt_R_1 d1)))))
+       (a!2 (= H1 (uplus h1 (pt l3 (Pt_R_0 l4)))))
+       (a!3 (= H1 (uplus h1 (pt l5 (Pt_R_1 d2))))))
+ (let ((a!4 (and a!1
+                 (= AH2 ah1)
+                 (=> (= d1 2) (and a!2 (= $p2_main01 l3) (= H2 h1)))
+                 (=> (= d1 1) (and a!3 (= $p2_main01 l5) (= H2 h1))))))
+   (or a!4 invalidDeref)))
+ 
+ InvalidFree encoding : 
+ (let ((a!1 (= ah2 (uplus AH1 (pt $p2_main01 (Pt_R_1 d3)))))
+       (a!2 (= AH1 (uplus ah1 (pt $p2_main01 (Pt_R_1 d1)))))
+       (a!3 (= H1 (uplus h1 (pt l3 (Pt_R_0 l4)))))
+       (a!4 (= H1 (uplus h1 (pt l5 (Pt_R_1 d2))))))
+ (let ((a!5 (and a!2
+                 (= AH2 ah1)
+                 (=> (= d1 2) (and a!3 (= $p2_main01 l3) (= H2 h1)))
+                 (=> (= d1 1) (and a!4 (= $p2_main01 l5) (= H2 h1)))
+                 (= invalidFree1 invalidFree))))
+   (or (and (or (= $p2_main01 nil) a!1) invalidFree1)
+       a!5
+       (and invalidFree (= invalidFree1 invalidFree)))))
+  ------------------------------------------------------------
+ RefinedAction: MALLOC	 ARG1: $p3_main0(8) 
+  ARG2: 8(0) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration :  Record :  Id - 2 | Fields -  Loc
+      SLHV Arg2 : 8
+ 
+ Feasible encoding : 
+ (let ((a!1 (= H3 (uplus H2 (pt l6 (Pt_R_0 l7)))))
+       (a!2 (= AH3 (uplus AH2 (pt l6 (Pt_R_1 2))))))
+   (and a!1 (= $p3_main01 l6) a!2))
+ 
+ InvalidDeref encoding : 
+ (let ((a!1 (= H3 (uplus H2 (pt l6 (Pt_R_0 l7)))))
+       (a!2 (= AH3 (uplus AH2 (pt l6 (Pt_R_1 2))))))
+   (or (and a!1 (= $p3_main01 l6) a!2) invalidDeref))
+ 
+ InvalidFree encoding : 
+ (let ((a!1 (= H3 (uplus H2 (pt l6 (Pt_R_0 l7)))))
+       (a!2 (= AH3 (uplus AH2 (pt l6 (Pt_R_1 2))))))
+   (or (and a!1 (= $p3_main01 l6) a!2) invalidFree1))
+  ------------------------------------------------------------
+ RefinedAction: ASSIGN	 ARG1: $p4_main0(8) 
+  ARG2: $p3_main0(8) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : $p3_main0
+ 
+ Feasible encoding : 
+ (= $p4_main01 $p3_main01)
+ 
+ InvalidDeref encoding : 
+ (or (= $p4_main01 $p3_main01) invalidDeref)
+ 
+ InvalidFree encoding : 
+ (or (= $p4_main01 $p3_main01) invalidFree1)
+  ------------------------------------------------------------
+ RefinedAction: ASSIGN	 ARG1:  <NULL> ARG2:  <NULL> ARG3: $i5_main0(1) 
+  ARG4: ($p4_main0 == $p1_main0)(1) 
+  |-- SLHV Target Configuration : 
+ 
+ Feasible encoding : 
+ (or (and (= $p4_main01 $p1_main01) (= $i5_main01 1))
+     (and (not (= $p4_main01 $p1_main01)) (= $i5_main01 0)))
+ 
+ InvalidDeref encoding : 
+ (or (and (= $p4_main01 $p1_main01) (= $i5_main01 1))
+     (and (not (= $p4_main01 $p1_main01)) (= $i5_main01 0))
+     invalidDeref)
+ 
+ InvalidFree encoding : 
+ (or (and (= $p4_main01 $p1_main01) (= $i5_main01 1))
+     (and (not (= $p4_main01 $p1_main01)) (= $i5_main01 0))
+     invalidFree1)
+  ------------------------------------------------------------
+ RefinedAction: ASSIGN	 ARG1: $p6_main0(8) 
+  ARG2: $p4_main0(8) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : $p4_main0
+ 
+ Feasible encoding : 
+ (= $p6_main01 $p4_main0)
+ 
+ InvalidDeref encoding : 
+ (or (= $p6_main01 $p4_main0) invalidDeref)
+ 
+ InvalidFree encoding : 
+ (or (= $p6_main01 $p4_main0) invalidFree)
+  ------------------------------------------------------------
+ RefinedAction: FREE	 ARG1: $p6_main0(8) 
+  ARG2:  <NULL> ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+ 
+ Feasible encoding : 
+ (let ((a!1 (= AH (uplus ah3 (pt $p6_main01 (Pt_R_1 d4)))))
+       (a!2 (= H (uplus h2 (pt l8 (Pt_R_0 l9)))))
+       (a!3 (= H (uplus h2 (pt l10 (Pt_R_1 d5))))))
+   (and a!1
+        (= AH4 ah3)
+        (=> (= d4 2) (and a!2 (= $p6_main01 l8) (= H4 h2)))
+        (=> (= d4 1) (and a!3 (= $p6_main01 l10) (= H4 h2)))))
+ 
+ InvalidDeref encoding : 
+ (let ((a!1 (= AH (uplus ah3 (pt $p6_main01 (Pt_R_1 d4)))))
+       (a!2 (= H (uplus h2 (pt l8 (Pt_R_0 l9)))))
+       (a!3 (= H (uplus h2 (pt l10 (Pt_R_1 d5))))))
+ (let ((a!4 (and a!1
+                 (= AH4 ah3)
+                 (=> (= d4 2) (and a!2 (= $p6_main01 l8) (= H4 h2)))
+                 (=> (= d4 1) (and a!3 (= $p6_main01 l10) (= H4 h2))))))
+   (or a!4 invalidDeref)))
+ 
+ InvalidFree encoding : 
+ (let ((a!1 (= ah4 (uplus AH (pt $p6_main01 (Pt_R_1 d6)))))
+       (a!2 (= AH (uplus ah3 (pt $p6_main01 (Pt_R_1 d4)))))
+       (a!3 (= H (uplus h2 (pt l8 (Pt_R_0 l9)))))
+       (a!4 (= H (uplus h2 (pt l10 (Pt_R_1 d5))))))
+ (let ((a!5 (and a!2
+                 (= AH4 ah3)
+                 (=> (= d4 2) (and a!3 (= $p6_main01 l8) (= H4 h2)))
+                 (=> (= d4 1) (and a!4 (= $p6_main01 l10) (= H4 h2)))
+                 (= invalidFree2 invalidFree))))
+   (or (and (or (= $p6_main01 nil) a!1) invalidFree2)
+       a!5
+       (and invalidFree (= invalidFree2 invalidFree)))))
+  ------------------------------------------------------------
+ RefinedAction: ASSIGN	 ARG1: $p7_main0(8) 
+  ARG2: $p4_main0(8) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : $p4_main0
+ 
+ Feasible encoding : 
+ (= $p7_main01 $p4_main0)
+ 
+ InvalidDeref encoding : 
+ (or (= $p7_main01 $p4_main0) invalidDeref)
+ 
+ InvalidFree encoding : 
+ (or (= $p7_main01 $p4_main0) invalidFree)
+  ------------------------------------------------------------
+ RefinedAction: FREE	 ARG1: $p7_main0(8) 
+  ARG2:  <NULL> ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+ 
+ Feasible encoding : 
+ (let ((a!1 (= AH (uplus ah5 (pt $p7_main01 (Pt_R_1 d7)))))
+       (a!2 (= H (uplus h3 (pt l11 (Pt_R_0 l12)))))
+       (a!3 (= H (uplus h3 (pt l13 (Pt_R_1 d8))))))
+   (and a!1
+        (= AH5 ah5)
+        (=> (= d7 2) (and a!2 (= $p7_main01 l11) (= H5 h3)))
+        (=> (= d7 1) (and a!3 (= $p7_main01 l13) (= H5 h3)))))
+ 
+ InvalidDeref encoding : 
+ (let ((a!1 (= AH (uplus ah5 (pt $p7_main01 (Pt_R_1 d7)))))
+       (a!2 (= H (uplus h3 (pt l11 (Pt_R_0 l12)))))
+       (a!3 (= H (uplus h3 (pt l13 (Pt_R_1 d8))))))
+ (let ((a!4 (and a!1
+                 (= AH5 ah5)
+                 (=> (= d7 2) (and a!2 (= $p7_main01 l11) (= H5 h3)))
+                 (=> (= d7 1) (and a!3 (= $p7_main01 l13) (= H5 h3))))))
+   (or a!4 invalidDeref)))
+ 
+ InvalidFree encoding : 
+ (let ((a!1 (= ah6 (uplus AH (pt $p7_main01 (Pt_R_1 d9)))))
+       (a!2 (= AH (uplus ah5 (pt $p7_main01 (Pt_R_1 d7)))))
+       (a!3 (= H (uplus h3 (pt l11 (Pt_R_0 l12)))))
+       (a!4 (= H (uplus h3 (pt l13 (Pt_R_1 d8))))))
+ (let ((a!5 (and a!2
+                 (= AH5 ah5)
+                 (=> (= d7 2) (and a!3 (= $p7_main01 l11) (= H5 h3)))
+                 (=> (= d7 1) (and a!4 (= $p7_main01 l13) (= H5 h3)))
+                 (= invalidFree3 invalidFree))))
+   (or (and (or (= $p7_main01 nil) a!1) invalidFree3)
+       a!5
+       (and invalidFree (= invalidFree3 invalidFree)))))
+  ------------------------------------------------------------
+ RefinedAction: ASSIGN	 ARG1: $r_main0(0) 
+  ARG2: 0(0) 
+  ARG3:  <NULL> ARG4:  <NULL>
+  |-- SLHV Target Configuration : 
+      SLHV Arg2 : 0
+ 
+ Feasible encoding : 
+ (= $r_main01 0)
+ 
+ InvalidDeref encoding : 
+ (or (= $r_main01 0) invalidDeref)
+ 
+ InvalidFree encoding : 
+ (or (= $r_main01 0) invalidFree3)
+ ================ Transition Relation Encoding ================
+  Global Variables : Category : 0 -- $p0_main0 $p1_main0 $p2_main0 $p3_main0 $p4_main0 $p6_main0 $p7_main0
+  Category : 1 -- $i5_main0 $r_main0
+  Category : 2 -- AH H
+ ---------------------------------------------------------
+ BlockEncoding -  From : 1  To : 2
+ Guard : true
+ Feasible Encoding : 
+    Inputs:  AH H
+    Local Variables:  $i5_main01 $p0_main01 $p1_main01 $p2_main01 $p3_main01 $p4_main01 AH1 AH2 AH3 H1 H2 H3 d1 d2 h1 l1 l2 l3 l4 l5 l6 l7
+    Outputs:  ($i5_main0, $i5_main01) ($p0_main0, $p0_main01) ($p1_main0, $p1_main01) ($p2_main0, $p2_main01) ($p3_main0, $p3_main01) ($p4_main0, $p4_main01) (AH, AH3) (H, H3)
+ Encoding : (let ((a!1 (= H1 (uplus H (pt l1 (Pt_R_0 l2)))))
+       (a!2 (= AH1 (uplus AH (pt l1 (Pt_R_1 2)))))
+       (a!3 (= AH1 (uplus ah1 (pt $p2_main01 (Pt_R_1 d1)))))
+       (a!4 (= H1 (uplus h1 (pt l3 (Pt_R_0 l4)))))
+       (a!5 (= H1 (uplus h1 (pt l5 (Pt_R_1 d2)))))
+       (a!6 (= H3 (uplus H2 (pt l6 (Pt_R_0 l7)))))
+       (a!7 (= AH3 (uplus AH2 (pt l6 (Pt_R_1 2)))))
+       (a!8 (or (and (= $p4_main01 $p1_main01) (= $i5_main01 1))
+                (and (not (= $p4_main01 $p1_main01)) (= $i5_main01 0)))))
+   (and a!1
+        (= $p0_main01 l1)
+        a!2
+        (= $p1_main01 $p0_main01)
+        (= $p2_main01 $p1_main01)
+        a!3
+        (= AH2 ah1)
+        (=> (= d1 2) (and a!4 (= $p2_main01 l3) (= H2 h1)))
+        (=> (= d1 1) (and a!5 (= $p2_main01 l5) (= H2 h1)))
+        a!6
+        (= $p3_main01 l6)
+        a!7
+        (= $p4_main01 $p3_main01)
+        a!8))
+ 
+ InvalidDeref Encoding : 
+    Inputs:  invalidDeref
+    Local Variables: 
+    Outputs: 
+ Encoding : (let ((a!1 (= H1 (uplus H (pt l1 (Pt_R_0 l2)))))
+       (a!2 (= AH1 (uplus AH (pt l1 (Pt_R_1 2)))))
+       (a!3 (= AH1 (uplus ah1 (pt $p2_main01 (Pt_R_1 d1)))))
+       (a!4 (= H1 (uplus h1 (pt l3 (Pt_R_0 l4)))))
+       (a!5 (= H1 (uplus h1 (pt l5 (Pt_R_1 d2)))))
+       (a!7 (= H3 (uplus H2 (pt l6 (Pt_R_0 l7)))))
+       (a!8 (= AH3 (uplus AH2 (pt l6 (Pt_R_1 2)))))
+       (a!9 (or (and (= $p4_main01 $p1_main01) (= $i5_main01 1))
+                (and (not (= $p4_main01 $p1_main01)) (= $i5_main01 0))
+                invalidDeref)))
+ (let ((a!6 (and a!3
+                 (= AH2 ah1)
+                 (=> (= d1 2) (and a!4 (= $p2_main01 l3) (= H2 h1)))
+                 (=> (= d1 1) (and a!5 (= $p2_main01 l5) (= H2 h1))))))
+   (and (or (and a!1 (= $p0_main01 l1) a!2) invalidDeref)
+        (or (= $p1_main01 $p0_main01) invalidDeref)
+        (or (= $p2_main01 $p1_main01) invalidDeref)
+        (or a!6 invalidDeref)
+        (or (and a!7 (= $p3_main01 l6) a!8) invalidDeref)
+        (or (= $p4_main01 $p3_main01) invalidDeref)
+        a!9)))
+ 
+ InvalidFree Encoding : 
+    Inputs:  invalidFree
+    Local Variables:  ah2 d3 invalidFree1
+    Outputs:  (invalidFree, invalidFree1)
+ Encoding : (let ((a!1 (= H1 (uplus H (pt l1 (Pt_R_0 l2)))))
+       (a!2 (= AH1 (uplus AH (pt l1 (Pt_R_1 2)))))
+       (a!3 (= ah2 (uplus AH1 (pt $p2_main01 (Pt_R_1 d3)))))
+       (a!4 (= AH1 (uplus ah1 (pt $p2_main01 (Pt_R_1 d1)))))
+       (a!5 (= H1 (uplus h1 (pt l3 (Pt_R_0 l4)))))
+       (a!6 (= H1 (uplus h1 (pt l5 (Pt_R_1 d2)))))
+       (a!9 (= H3 (uplus H2 (pt l6 (Pt_R_0 l7)))))
+       (a!10 (= AH3 (uplus AH2 (pt l6 (Pt_R_1 2)))))
+       (a!11 (or (and (= $p4_main01 $p1_main01) (= $i5_main01 1))
+                 (and (not (= $p4_main01 $p1_main01)) (= $i5_main01 0))
+                 invalidFree1)))
+ (let ((a!7 (and a!4
+                 (= AH2 ah1)
+                 (=> (= d1 2) (and a!5 (= $p2_main01 l3) (= H2 h1)))
+                 (=> (= d1 1) (and a!6 (= $p2_main01 l5) (= H2 h1)))
+                 (= invalidFree1 invalidFree))))
+ (let ((a!8 (or (and (or (= $p2_main01 nil) a!3) invalidFree1)
+                a!7
+                (and invalidFree (= invalidFree1 invalidFree)))))
+   (and (or (and a!1 (= $p0_main01 l1) a!2) invalidFree)
+        (or (= $p1_main01 $p0_main01) invalidFree)
+        (or (= $p2_main01 $p1_main01) invalidFree)
+        a!8
+        (or (and a!9 (= $p3_main01 l6) a!10) invalidFree1)
+        (or (= $p4_main01 $p3_main01) invalidFree1)
+        a!11))))
+ 
+ 
+ ---------------------------------------------------------
+ BlockEncoding -  From : 2  To : 3
+ Guard : (not (= $i5_main0 1))
+ Feasible Encoding : 
+    Inputs:  $i5_main0
+    Local Variables: 
+    Outputs: 
+ Encoding : true
+ 
+ InvalidDeref Encoding : 
+    Inputs:  invalidDeref
+    Local Variables: 
+    Outputs: 
+ Encoding : (or true invalidDeref)
+ 
+ InvalidFree Encoding : 
+    Inputs:  invalidFree
+    Local Variables: 
+    Outputs: 
+ Encoding : (or true invalidFree)
+ 
+ 
+ ---------------------------------------------------------
+ BlockEncoding -  From : 2  To : 3
+ Guard : (= $i5_main0 1)
+ Feasible Encoding : 
+    Inputs:  $i5_main0 $p4_main0 AH H
+    Local Variables:  $p6_main01 AH4 H4 d4 d5 h2 l10 l8 l9
+    Outputs:  ($p6_main0, $p6_main01) (AH, AH4) (H, H4)
+ Encoding : (let ((a!1 (= AH (uplus ah3 (pt $p6_main01 (Pt_R_1 d4)))))
+       (a!2 (= H (uplus h2 (pt l8 (Pt_R_0 l9)))))
+       (a!3 (= H (uplus h2 (pt l10 (Pt_R_1 d5))))))
+   (and (= $p6_main01 $p4_main0)
+        a!1
+        (= AH4 ah3)
+        (=> (= d4 2) (and a!2 (= $p6_main01 l8) (= H4 h2)))
+        (=> (= d4 1) (and a!3 (= $p6_main01 l10) (= H4 h2)))))
+ 
+ InvalidDeref Encoding : 
+    Inputs:  invalidDeref
+    Local Variables: 
+    Outputs: 
+ Encoding : (let ((a!1 (= AH (uplus ah3 (pt $p6_main01 (Pt_R_1 d4)))))
+       (a!2 (= H (uplus h2 (pt l8 (Pt_R_0 l9)))))
+       (a!3 (= H (uplus h2 (pt l10 (Pt_R_1 d5))))))
+ (let ((a!4 (and a!1
+                 (= AH4 ah3)
+                 (=> (= d4 2) (and a!2 (= $p6_main01 l8) (= H4 h2)))
+                 (=> (= d4 1) (and a!3 (= $p6_main01 l10) (= H4 h2))))))
+   (and (or (= $p6_main01 $p4_main0) invalidDeref) (or a!4 invalidDeref))))
+ 
+ InvalidFree Encoding : 
+    Inputs:  invalidFree
+    Local Variables:  ah4 d6 invalidFree2
+    Outputs:  (invalidFree, invalidFree2)
+ Encoding : (let ((a!1 (= ah4 (uplus AH (pt $p6_main01 (Pt_R_1 d6)))))
+       (a!2 (= AH (uplus ah3 (pt $p6_main01 (Pt_R_1 d4)))))
+       (a!3 (= H (uplus h2 (pt l8 (Pt_R_0 l9)))))
+       (a!4 (= H (uplus h2 (pt l10 (Pt_R_1 d5))))))
+ (let ((a!5 (and a!2
+                 (= AH4 ah3)
+                 (=> (= d4 2) (and a!3 (= $p6_main01 l8) (= H4 h2)))
+                 (=> (= d4 1) (and a!4 (= $p6_main01 l10) (= H4 h2)))
+                 (= invalidFree2 invalidFree))))
+ (let ((a!6 (or (and (or (= $p6_main01 nil) a!1) invalidFree2)
+                a!5
+                (and invalidFree (= invalidFree2 invalidFree)))))
+   (and (or (= $p6_main01 $p4_main0) invalidFree) a!6))))
+ 
+ 
+ ---------------------------------------------------------
+ BlockEncoding -  From : 4  To : 4
+ Guard : true
+ Feasible Encoding : 
+    Inputs: 
+    Local Variables: 
+    Outputs: 
+ Encoding : true
+ 
+ InvalidDeref Encoding : 
+    Inputs:  invalidDeref
+    Local Variables: 
+    Outputs: 
+ Encoding : (or true invalidDeref)
+ 
+ InvalidFree Encoding : 
+    Inputs:  invalidFree
+    Local Variables: 
+    Outputs: 
+ Encoding : (or true invalidFree)
+ 
+ 
+ ---------------------------------------------------------
+ BlockEncoding -  From : 3  To : 4
+ Guard : true
+ Feasible Encoding : 
+    Inputs:  $p4_main0 AH H
+    Local Variables:  $p7_main01 $r_main01 AH5 H5 d7 d8 h3 l11 l12 l13
+    Outputs:  ($p7_main0, $p7_main01) ($r_main0, $r_main01) (AH, AH5) (H, H5)
+ Encoding : (let ((a!1 (= AH (uplus ah5 (pt $p7_main01 (Pt_R_1 d7)))))
+       (a!2 (= H (uplus h3 (pt l11 (Pt_R_0 l12)))))
+       (a!3 (= H (uplus h3 (pt l13 (Pt_R_1 d8))))))
+   (and (= $p7_main01 $p4_main0)
+        a!1
+        (= AH5 ah5)
+        (=> (= d7 2) (and a!2 (= $p7_main01 l11) (= H5 h3)))
+        (=> (= d7 1) (and a!3 (= $p7_main01 l13) (= H5 h3)))
+        (= $r_main01 0)))
+ 
+ InvalidDeref Encoding : 
+    Inputs:  invalidDeref
+    Local Variables: 
+    Outputs: 
+ Encoding : (let ((a!1 (= AH (uplus ah5 (pt $p7_main01 (Pt_R_1 d7)))))
+       (a!2 (= H (uplus h3 (pt l11 (Pt_R_0 l12)))))
+       (a!3 (= H (uplus h3 (pt l13 (Pt_R_1 d8))))))
+ (let ((a!4 (and a!1
+                 (= AH5 ah5)
+                 (=> (= d7 2) (and a!2 (= $p7_main01 l11) (= H5 h3)))
+                 (=> (= d7 1) (and a!3 (= $p7_main01 l13) (= H5 h3))))))
+   (and (or (= $p7_main01 $p4_main0) invalidDeref)
+        (or a!4 invalidDeref)
+        (or (= $r_main01 0) invalidDeref))))
+ 
+ InvalidFree Encoding : 
+    Inputs:  invalidFree
+    Local Variables:  ah6 d9 invalidFree3
+    Outputs:  (invalidFree, invalidFree3)
+ Encoding : (let ((a!1 (= ah6 (uplus AH (pt $p7_main01 (Pt_R_1 d9)))))
+       (a!2 (= AH (uplus ah5 (pt $p7_main01 (Pt_R_1 d7)))))
+       (a!3 (= H (uplus h3 (pt l11 (Pt_R_0 l12)))))
+       (a!4 (= H (uplus h3 (pt l13 (Pt_R_1 d8))))))
+ (let ((a!5 (and a!2
+                 (= AH5 ah5)
+                 (=> (= d7 2) (and a!3 (= $p7_main01 l11) (= H5 h3)))
+                 (=> (= d7 1) (and a!4 (= $p7_main01 l13) (= H5 h3)))
+                 (= invalidFree3 invalidFree))))
+ (let ((a!6 (or (and (or (= $p7_main01 nil) a!1) invalidFree3)
+                a!5
+                (and invalidFree (= invalidFree3 invalidFree)))))
+   (and (or (= $p7_main01 $p4_main0) invalidFree)
+        a!6
+        (or (= $r_main01 0) invalidFree3)))))
+ 
+ 
+ ================ Transition Relation Encoding ================
+ 
+ InvalidDeref :
+ (let ((a!1 (= H1_1 (uplus H_0 (pt l1_1 (Pt_R_0 l2_1)))))
+       (a!2 (= AH1_1 (uplus AH_0 (pt l1_1 (Pt_R_1 2)))))
+       (a!3 (= AH1_1 (uplus ah1 (pt $p2_main01_1 (Pt_R_1 d1_1)))))
+       (a!4 (= H1_1 (uplus h1_1 (pt l3_1 (Pt_R_0 l4_1)))))
+       (a!5 (= H1_1 (uplus h1_1 (pt l5_1 (Pt_R_1 d2_1)))))
+       (a!7 (= H3_1 (uplus H2_1 (pt l6_1 (Pt_R_0 l7_1)))))
+       (a!8 (= AH3_1 (uplus AH2_1 (pt l6_1 (Pt_R_1 2)))))
+       (a!9 (or (and (= $p4_main01_1 $p1_main01_1) (= $i5_main01_1 1))
+                (and (not (= $p4_main01_1 $p1_main01_1)) (= $i5_main01_1 0))
+                invalidDeref_0)))
+ (let ((a!6 (and a!3
+                 (= AH2_1 ah1)
+                 (=> (= d1_1 2) (and a!4 (= $p2_main01_1 l3_1) (= H2_1 h1_1)))
+                 (=> (= d1_1 1) (and a!5 (= $p2_main01_1 l5_1) (= H2_1 h1_1))))))
+ (let ((a!10 (and (or (and a!1 (= $p0_main01_1 l1_1) a!2) invalidDeref_0)
+                  (or (= $p1_main01_1 $p0_main01_1) invalidDeref_0)
+                  (or (= $p2_main01_1 $p1_main01_1) invalidDeref_0)
+                  (or a!6 invalidDeref_0)
+                  (or (and a!7 (= $p3_main01_1 l6_1) a!8) invalidDeref_0)
+                  (or (= $p4_main01_1 $p3_main01_1) invalidDeref_0)
+                  a!9
+                  (= $i5_main0_1 $i5_main01_1)
+                  (= $p0_main0_1 $p0_main01_1)
+                  (= $p1_main0_1 $p1_main01_1)
+                  (= $p2_main0_1 $p2_main01_1)
+                  (= $p3_main0_1 $p3_main01_1)
+                  (= $p4_main0_1 $p4_main01_1)
+                  (= AH_1 AH3_1)
+                  (= H_1 H3_1)
+                  true
+                  true
+                  (= $p6_main0_1 $p6_main0_0)
+                  (= $p7_main0_1 $p7_main0_0)
+                  true
+                  (= $r_main0_1 $r_main0_0)
+                  (= invalidDeref_1 invalidDeref_0)
+                  (= loc_1 2))))
+   (and (= H_0 emp)
+        (= AH_0 emp)
+        (= loc_0 1)
+        (not invalidDeref_0)
+        (=> (= loc_0 1) a!10)
+        invalidDeref_1))))
+ 
+ InvalidFree :
+ (let ((a!1 (= H1_1 (uplus H_0 (pt l1_1 (Pt_R_0 l2_1)))))
+       (a!2 (= AH1_1 (uplus AH_0 (pt l1_1 (Pt_R_1 2)))))
+       (a!3 (= ah2_1 (uplus AH1_1 (pt $p2_main01_1 (Pt_R_1 d3_1)))))
+       (a!4 (= AH1_1 (uplus ah1 (pt $p2_main01_1 (Pt_R_1 d1_1)))))
+       (a!5 (= H1_1 (uplus h1_1 (pt l3_1 (Pt_R_0 l4_1)))))
+       (a!6 (= H1_1 (uplus h1_1 (pt l5_1 (Pt_R_1 d2_1)))))
+       (a!9 (= H3_1 (uplus H2_1 (pt l6_1 (Pt_R_0 l7_1)))))
+       (a!10 (= AH3_1 (uplus AH2_1 (pt l6_1 (Pt_R_1 2)))))
+       (a!11 (or (and (= $p4_main01_1 $p1_main01_1) (= $i5_main01_1 1))
+                 (and (not (= $p4_main01_1 $p1_main01_1)) (= $i5_main01_1 0))
+                 invalidFree1_1)))
+ (let ((a!7 (and a!4
+                 (= AH2_1 ah1)
+                 (=> (= d1_1 2) (and a!5 (= $p2_main01_1 l3_1) (= H2_1 h1_1)))
+                 (=> (= d1_1 1) (and a!6 (= $p2_main01_1 l5_1) (= H2_1 h1_1)))
+                 (= invalidFree1_1 invalidFree_0))))
+ (let ((a!8 (or (and (or (= $p2_main01_1 nil) a!3) invalidFree1_1)
+                a!7
+                (and invalidFree_0 (= invalidFree1_1 invalidFree_0)))))
+ (let ((a!12 (and (or (and a!1 (= $p0_main01_1 l1_1) a!2) invalidFree_0)
+                  (or (= $p1_main01_1 $p0_main01_1) invalidFree_0)
+                  (or (= $p2_main01_1 $p1_main01_1) invalidFree_0)
+                  a!8
+                  (or (and a!9 (= $p3_main01_1 l6_1) a!10) invalidFree1_1)
+                  (or (= $p4_main01_1 $p3_main01_1) invalidFree1_1)
+                  a!11
+                  (= $i5_main0_1 $i5_main01_1)
+                  (= $p0_main0_1 $p0_main01_1)
+                  (= $p1_main0_1 $p1_main01_1)
+                  (= $p2_main0_1 $p2_main01_1)
+                  (= $p3_main0_1 $p3_main01_1)
+                  (= $p4_main0_1 $p4_main01_1)
+                  (= AH_1 AH3_1)
+                  (= H_1 H3_1)
+                  (= invalidFree_1 invalidFree1_1)
+                  true
+                  (= $p6_main0_1 $p6_main0_0)
+                  (= $p7_main0_1 $p7_main0_0)
+                  true
+                  (= $r_main0_1 $r_main0_0)
+                  (= loc_1 2))))
+   (and (= H_0 emp)
+        (= AH_0 emp)
+        (= loc_0 1)
+        (not invalidFree_0)
+        (=> (= loc_0 1) a!12)
+        invalidFree_1)))))
+ 
+ MemLeak :
+ (let ((a!1 (= H1_1 (uplus H_0 (pt l1_1 (Pt_R_0 l2_1)))))
+       (a!2 (= AH1_1 (uplus AH_0 (pt l1_1 (Pt_R_1 2)))))
+       (a!3 (= AH1_1 (uplus ah1 (pt $p2_main01_1 (Pt_R_1 d1_1)))))
+       (a!4 (= H1_1 (uplus h1_1 (pt l3_1 (Pt_R_0 l4_1)))))
+       (a!5 (= H1_1 (uplus h1_1 (pt l5_1 (Pt_R_1 d2_1)))))
+       (a!6 (= H3_1 (uplus H2_1 (pt l6_1 (Pt_R_0 l7_1)))))
+       (a!7 (= AH3_1 (uplus AH2_1 (pt l6_1 (Pt_R_1 2)))))
+       (a!8 (or (and (= $p4_main01_1 $p1_main01_1) (= $i5_main01_1 1))
+                (and (not (= $p4_main01_1 $p1_main01_1)) (= $i5_main01_1 0))))
+       (a!10 (= H_1 (uplus h4 (pt l14 (Pt_R_0 l15)))))
+       (a!11 (= H_1 (uplus h4 (pt l14 (Pt_R_1 d10)))))
+       (a!12 (= AH_1 (uplus ah7 (pt l16 (Pt_R_1 d11))))))
+ (let ((a!9 (and a!1
+                 (= $p0_main01_1 l1_1)
+                 a!2
+                 (= $p1_main01_1 $p0_main01_1)
+                 (= $p2_main01_1 $p1_main01_1)
+                 a!3
+                 (= AH2_1 ah1)
+                 (=> (= d1_1 2) (and a!4 (= $p2_main01_1 l3_1) (= H2_1 h1_1)))
+                 (=> (= d1_1 1) (and a!5 (= $p2_main01_1 l5_1) (= H2_1 h1_1)))
+                 a!6
+                 (= $p3_main01_1 l6_1)
+                 a!7
+                 (= $p4_main01_1 $p3_main01_1)
+                 a!8
+                 (= $i5_main0_1 $i5_main01_1)
+                 (= $p0_main0_1 $p0_main01_1)
+                 (= $p1_main0_1 $p1_main01_1)
+                 (= $p2_main0_1 $p2_main01_1)
+                 (= $p3_main0_1 $p3_main01_1)
+                 (= $p4_main0_1 $p4_main01_1)
+                 (= AH_1 AH3_1)
+                 (= H_1 H3_1)
+                 true
+                 true
+                 (= $p6_main0_1 $p6_main0_0)
+                 (= $p7_main0_1 $p7_main0_0)
+                 true
+                 (= $r_main0_1 $r_main0_0)
+                 (= loc_1 2))))
+   (and (= H_0 emp)
+        (= AH_0 emp)
+        (= loc_0 1)
+        (=> (= loc_0 1) a!9)
+        false
+        (or a!10 a!11)
+        a!12)))
+ Smt2 files are stored in ../bin/outputs/
+ SMACK generated ../testcases/printtest/new_bench/cmp-freed-ptr_invalidfree.bpl

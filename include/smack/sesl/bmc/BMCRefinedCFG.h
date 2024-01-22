@@ -31,6 +31,7 @@ namespace smack
                 LOAD,
                 COARSELOAD,
                 STORE,
+                STORABLE,
                 COARSESTORE,
                 COMMONASSIGN,
                 MEMSET,
@@ -104,6 +105,11 @@ namespace smack
             int getType2(){return this->type2;}
             int getType3(){return this->type3;}
             int getType4(){return this->type4;}
+            void setArg1AndType(const Expr* newArg1, int newType1) {this->arg1 = newArg1; this->type1 = newType1;};
+            void setArg2AndType(const Expr* newArg2, int newType2) {this->arg2 = newArg2; this->type1 = newType2;};
+            void setArg3AndType(const Expr* newArg3, int newType3) {this->arg3 = newArg3; this->type1 = newType3;};
+            void setArg4AndType(const Expr* newArg4, int newType4) {this->arg4 = newArg4; this->type1 = newType4;};
+
             ConcreteAction::ActType getActType(){return this->actType;}
             void setActType(ConcreteAction::ActType type){
                 this->actType = type;

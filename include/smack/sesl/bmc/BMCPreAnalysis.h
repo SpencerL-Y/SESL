@@ -86,6 +86,9 @@ namespace smack
             BMCSLHVPreAnalysis(RecordManagerPtr rm, PIMSetPtr ps, BoogieVarTypeMap boogieVarTypeMap);
 
             void refineSLHVCmds(BMCRefinedBlockCFGPtr refinedBlockCFG);
+
+            void refineSLHVReadWriteSequence(BMCRefinedBlockCFGPtr refinedBlockCFG);
+            
             VarTypeSetPtr getVarTypeSet();
 
             void print(std::ostream& os);

@@ -17,6 +17,7 @@
 
 namespace smack
 {
+    
     using llvm::errs;
     char BMCMemSafeVerifier::ID = 0;
 

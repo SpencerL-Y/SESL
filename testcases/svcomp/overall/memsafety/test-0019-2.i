@@ -526,11 +526,20 @@ typedef struct {
 } TData;
 static void alloc_data(TData *pdata)
 {
-    pdata->lo = malloc(16);
-    pdata->hi = malloc(24);
 }
 static void free_data(TData *data)
 {
+}
+int main() {
+     // h0
+    TData* data = malloc(sizeof(TData));
+//     h1 = h0 + data -> l_0 + (data+1) -> l_1
+    data->lo = malloc(1);
+    data->hi = malloc(1);
+//     h2 = h1 + l_2 -> d_0
+//     h3 = h2 + l_3 -> d_1
+//     Exists h3 = hp + data -> l_0p + (data+1) -> l_1p
+//     h4 = hp data -> l_2 + (data+1) -> l_3
     void *lo = data->lo;
     void *hi = data->hi;
     if (lo == hi) {
@@ -539,10 +548,5 @@ static void free_data(TData *data)
     }
     data->lo = (void *) 0;
     data->hi = (void *) 0;
-}
-int main() {
-    TData data;
-    alloc_data(&data);
-    free_data(&data);
     return 0;
 }

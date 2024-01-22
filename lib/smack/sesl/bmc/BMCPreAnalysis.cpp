@@ -550,6 +550,178 @@ namespace smack
         this->convertByteOffsetToField(refinedBlockCFG);
     }
 
+
+
+    void BMCSLHVPreAnalysis::refineSLHVReadWriteSequence(BMCRefinedBlockCFGPtr refinedBlockCFG) {
+        std::cout << "begin refine read write sequence" << std::endl;
+        // construct equivalent class and refine read write
+        std::queue<int> Q;
+        std::set<int> hasVisited;
+        Q.push(refinedBlockCFG->getInitVertex());
+        while(!Q.empty()) {
+            int u = Q.front(); Q.pop();
+            if (hasVisited.find(u) != hasVisited.end()) { continue; }
+            hasVisited.insert(u);
+            for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(u)) {
+                std::set<RefinedActionPtr> allAssStmts;
+                // remember the name of each term
+                std::map<const Expr*, std::string> term2Name;
+                // compute the term equivalence class with name
+                std::map<std::string, std::string> termName2Root;
+                for(RefinedActionPtr act : edge->getRefinedActions()) {
+                    act->print(std::cout);
+                    if(act->getActType() == ConcreteAction::ActType::COMMONASSIGN) {
+                        allAssStmts.insert(act);
+                    } else if(act->getActType() == ConcreteAction::ActType::LOAD) {
+                        const VarExpr* loadedVar = (const VarExpr*) act->getArg2();
+                        term2Name[loadedVar] = loadedVar->name();
+                    } else if(act->getActType() == ConcreteAction::ActType::STORE) {
+                        const VarExpr* storedVar = (const VarExpr*) act->getArg1();
+                        term2Name[storedVar] = storedVar->name();
+                    }
+                }
+                // construct block equivalence class for variables and terms
+                // collect all ht and vars
+                for(RefinedActionPtr ass : allAssStmts) {
+                    const VarExpr* lhsVar = (const VarExpr*)ass->getArg1();
+                    std::string lhsVarName = lhsVar->name();
+                    term2Name[lhsVar] = lhsVarName;
+                    if(termName2Root.find(lhsVarName) == termName2Root.end()) {
+                        termName2Root[lhsVarName] = lhsVarName;
+                    } else {
+                        // pass
+                    }
+                    const Expr* rhsTerm = ass->getSLHVCmd().arg2;
+                    std::string rhsTermName = "";
+                    if(rhsTerm->isVar()) {
+                        const VarExpr* rhsVar = (const VarExpr*) rhsTerm;
+                        rhsTermName = rhsVar->name();
+                    } else if(rhsTerm->isValue()) {
+                        const IntLit* rhsIntLit = (const IntLit*) rhsTerm;
+                        rhsTermName = std::to_string(rhsIntLit->getVal());
+                    } 
+                    else {
+                        // online consider binary here
+                        const BinExpr* rhsBinExpr = (const BinExpr*) rhsTerm;
+                        const Expr* firstBinExpr = rhsBinExpr->getChilds().front();
+                        const Expr* secondBinExpr = rhsBinExpr->getChilds().back();
+                        if(firstBinExpr->isVar()) {
+                            const VarExpr* firstVar = (const VarExpr*) firstBinExpr;
+                            rhsTermName += firstVar->name();
+                        } else if(firstBinExpr->isValue()) {
+                            const IntLit* firstLit = (const IntLit*) secondBinExpr;
+                            rhsTermName += std::to_string( firstLit->getVal());
+                        } else {
+                            std::cout << "Currently unsupport rhs bin" << std::endl;
+                        }
+                        if(rhsBinExpr->getOp() == BinExpr::Plus) {
+                            rhsTermName += "+";
+                        } else if(rhsBinExpr->getOp() == BinExpr::Minus) {
+                            rhsTermName += "-";
+                        } else {
+                            std::cout << "Currently unsupport rhs bin" << std::endl;
+                        }
+                    }
+                    term2Name[rhsTerm] = rhsTermName;
+
+                    if(termName2Root.find(rhsTermName) == termName2Root.end()) {
+                        termName2Root[rhsTermName] = termName2Root[lhsVarName];
+                    } else {
+                        std::string firstRoot = termName2Root[lhsVarName];
+                        std::string secondRoot = termName2Root[rhsTermName];
+                        if(firstRoot.compare(secondRoot)) {
+                            for(auto item : termName2Root) {
+                                if(!item.second.compare(secondRoot)) {
+                                    termName2Root[item.first] = firstRoot;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // print current equivalence class
+                for(auto item : termName2Root) {
+                    std::cout << item.first << " has root: " << item.second << std::endl;
+                }
+                
+                // RULE 1 read after write:
+                for (int i = 0; i < edge->getRefinedActions().size(); i ++) {
+                    RefinedActionPtr currOutsideAct = edge->getRefinedActions()[i];
+                    if(currOutsideAct->getActType() == ConcreteAction::ActType::STORE) {
+                        const VarExpr* storedAddrVar = (const VarExpr*) currOutsideAct->getArg1();
+                        std::string storedAddrVarName = term2Name[storedAddrVar];
+                        std::string storedAddrRootName = termName2Root[storedAddrVarName];
+                        const Expr* storedTerm = currOutsideAct->getArg2();
+                        int storedType = currOutsideAct->getType2();
+                        for(int j = i + 1; j < edge->getRefinedActions().size(); j ++) {
+                            RefinedActionPtr currInsideAct = edge->getRefinedActions()[j];
+                            // this is currently coarse, can be refined later
+                            if(currInsideAct->getActType() == ConcreteAction::ActType::MALLOC || 
+                               currInsideAct->getActType() == ConcreteAction::ActType::ALLOC  ||
+                               currInsideAct->getActType() == ConcreteAction::ActType::MEMSET ||
+                               currInsideAct->getActType() == ConcreteAction::ActType::STORE  ||
+                               currInsideAct->getActType() == ConcreteAction::ActType::FREE) {
+                                break;
+                            } else if(currInsideAct->getActType() == ConcreteAction::ActType::LOAD) {
+                                const VarExpr* loadDest = (const VarExpr*) currInsideAct->getArg1();
+                                int loadDestType =  currInsideAct->getType1();
+                                const VarExpr* loadedAddrVar = (const VarExpr*) currInsideAct->getArg2();
+                                int loadedAddrVarType =  currInsideAct->getType2();
+                                std::string loadedAddrName = term2Name[loadedAddrVar];
+                                std::string loadedAddrRootName = termName2Root[loadedAddrName];
+                                if(!loadedAddrRootName.compare(storedAddrRootName)) {
+                                    currInsideAct->setActType(ConcreteAction::ActType::COMMONASSIGN);
+                                    currInsideAct->setArg1AndType(loadDest, loadDestType);
+                                    currInsideAct->setArg2AndType(storedTerm, storedType);
+                                    currInsideAct->setSLHVCmdArg2(storedTerm);
+                                }
+                            } else {
+
+                            }
+                        }
+                    } 
+                }
+                // RULE2: 
+                for(int i = 0; i < edge->getRefinedActions().size(); i ++) {
+                    RefinedActionPtr currOutsideAct = edge->getRefinedActions()[i];
+                    if(currOutsideAct->getActType() == ConcreteAction::ActType::STORE) {
+                        bool changed2Storable = false;
+                        const VarExpr* storedAddrVar = (const VarExpr*) currOutsideAct->getArg1();
+                        std::string storedAddrVarName = term2Name[storedAddrVar];
+                        std::string storedAddrRootName = termName2Root[storedAddrVarName];
+                        for(int j = i + 1; j < edge->getRefinedActions().size(); j ++) {
+                            RefinedActionPtr currInsideAct = edge->getRefinedActions()[j];
+                            if(currInsideAct->getActType() == ConcreteAction::ActType::ALLOC ||
+                               currInsideAct->getActType() == ConcreteAction::ActType::MALLOC||
+                               currInsideAct->getActType() == ConcreteAction::ActType::FREE) {
+                                changed2Storable = true;
+                            } else if(currInsideAct->getActType() == ConcreteAction::ActType::LOAD   ||
+                                      currInsideAct->getActType() == ConcreteAction::ActType::MEMSET
+                                      ) {
+                                break;
+                            } else if(currInsideAct->getActType() == ConcreteAction::ActType::STORE) {
+                                const VarExpr* innerStoredAddrVar = (const VarExpr*) currInsideAct->getArg1();
+                                std::string innerStoredAddrVarName = term2Name[innerStoredAddrVar];
+                                std::string innerStoredAddrRootName = termName2Root[innerStoredAddrVarName];
+                                if(!innerStoredAddrRootName.compare(storedAddrRootName)) {
+                                    if(changed2Storable) {
+                                        currOutsideAct->setActType(ConcreteAction::ActType::STORABLE);
+                                    } else {
+                                        currOutsideAct->setActType(ConcreteAction::ActType::NULLSTMT);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (hasVisited.find(edge->getTo()) == hasVisited.end()) {
+                    Q.push(edge->getTo());
+                }
+            }
+        }
+    }
+
     VarTypeSetPtr BMCSLHVPreAnalysis::getVarTypeSet() {
         return this->varTypeSet;
     }

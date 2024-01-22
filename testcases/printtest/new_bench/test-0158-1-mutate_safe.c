@@ -9,8 +9,8 @@ typedef struct {
 int main()
 {
     MTS* data = malloc(sizeof(MTS));
-    data->c = malloc(1);
-    data->p2 = &data;
+    data.c = malloc(1);
+    data.p2 = &data;
     free(data.c);
     free(data);
     return 0;

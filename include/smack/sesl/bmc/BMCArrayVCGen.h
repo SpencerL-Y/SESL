@@ -82,7 +82,7 @@ class BMCArrayVCGen : public BMCBLOCKVCGen{
 private:
     
     z3::expr generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty);
-    z3::expr generateInitVC(BuggyType bty);
+    z3::expr generateInitVC();
 
 public:
     BMCArrayVCGen(BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts);

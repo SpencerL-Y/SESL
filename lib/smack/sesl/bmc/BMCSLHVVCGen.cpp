@@ -676,7 +676,7 @@ z3::expr BMCSLHVVCGen::generateKthStepBuggy(const int k, const std::set<int>& lo
     return buggyEncoding;
 }
 
-z3::expr BMCSLHVVCGen::generateInitVC(BuggyType bty) {
+z3::expr BMCSLHVVCGen::generateInitVC() {
     z3::expr initHeap = (
         this->z3EM->mk_heap("H_0") == this->z3EM->getConstant("emp")
     );
@@ -686,10 +686,10 @@ z3::expr BMCSLHVVCGen::generateInitVC(BuggyType bty) {
     z3::expr initLoc =
         this->z3EM->mk_int("loc_0") == this->TrEncoder->getInitialLocation();
     z3::expr init =initHeap && initAllocHeap && initLoc;
-    if (bty == BuggyType::INVALIDDEREF)
-        return init && !this->z3EM->mk_bool(BlockEncoding::invalid_deref + "_0");
-    else if (bty == BuggyType::INVALIDFREE)
-        return init && !this->z3EM->mk_bool(BlockEncoding::invalid_free + "_0");
+    // if (bty == BuggyType::INVALIDDEREF)
+    //     return init && !this->z3EM->mk_bool(BlockEncoding::invalid_deref + "_0");
+    // else if (bty == BuggyType::INVALIDFREE)
+    //     return init && !this->z3EM->mk_bool(BlockEncoding::invalid_free + "_0");
     return init;
 }
 

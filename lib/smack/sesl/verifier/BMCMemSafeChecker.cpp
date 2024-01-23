@@ -133,15 +133,11 @@ BMCBLOCKVCGenPtr BMCMemSafeChecker::generateVCGen(
 
 void BMCMemSafeChecker::generateVC(BMCBLOCKVCGenPtr gen) {
   if (this->smt2Path.back() != '/') this->smt2Path += "/";
-  z3::expr_vector vcs = gen->generateVC(this->step);
-  SLHVDEBUG(std::cout << "\nInvalidDeref :\n" << vcs[0] << std::endl);
-  SLHVDEBUG(std::cout << "\nInvalidFree :\n" << vcs[1] << std::endl);
-  SLHVDEBUG(std::cout << "\nMemLeak :\n" << vcs[2] << std::endl);
+  z3::expr vc = gen->generateVC(this->step);
+  SLHVDEBUG(std::cout << vc << std::endl);
   std::cout << "Smt2 files are stored in " << this->smt2Path << '\n';
   std::string suf = "_" + std::to_string(this->step);
-  gen->generateSMT2(vcs[0], this->smt2Path + "InvalidDeref" + suf + ".smt2");
-  gen->generateSMT2(vcs[1], this->smt2Path + "InvalidFree" + suf + ".smt2");
-  gen->generateSMT2(vcs[2], this->smt2Path + "MemLeak" + suf + ".smt2");
+  gen->generateSMT2(vc, this->smt2Path + "VC" + suf + ".smt2");
 }
 
 bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {

@@ -358,7 +358,7 @@ namespace smack
     if (X.is_false()) { X = Y; } \
     else if (!Y.is_false()) { X = X || Y; } 
 
-enum BuggyType { INVALIDDEREF, INVALIDFREE, MEMLEAK };
+enum BuggyType { INVALIDDEREF, INVALIDFREE, MEMLEAK, ZERO_ERROR };
 typedef std::set<std::string> VarSet;
 typedef int VarEnumType;
 typedef std::map<std::string, int> VarTypeSet;
@@ -541,13 +541,13 @@ protected:
     z3::expr generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty);
     z3::expr generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty);
     virtual z3::expr generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty) = 0;
-    virtual z3::expr generateInitVC(BuggyType bty) = 0;
-    z3::expr generateVC(const int k, BuggyType bty);
+    virtual z3::expr generateInitVC() = 0;
+    z3::expr generateKStepsVC(const int k);
 
 public:
     BMCBLOCKVCGen() {};
 
-    z3::expr_vector generateVC(int k);
+    z3::expr generateVC(const int k);
     void generateSMT2(z3::expr e, std::string filename);
 };
 

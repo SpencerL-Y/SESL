@@ -264,7 +264,7 @@ z3::expr_vector ArrayBlockEncoding::generateAssumeEncoding(RefinedActionPtr act)
     return encoding;
 }
 
-z3::expr_vector ArrayBlockEncoding::generateAllocEncoding(RefinedActionPtr act) {
+z3::expr_vector ArrayBlockEncoding::generateMallocEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
     z3::expr A = this->getLatestUpdateForGlobalVar("A");
     z3::expr nA = this->generateLocalVarByName("A");
@@ -441,6 +441,10 @@ z3::expr_vector ArrayBlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
     encoding.push_back(invalidDerefEC);
     encoding.push_back(invalidFreeEC);
     return encoding;
+}
+
+z3::expr_vector ArrayBlockEncoding::generateSpecialEncoding(RefinedActionPtr act) {
+    assert(false && "unsupported command!!!");
 }
 
 ArrayTREncoder::ArrayTREncoder(

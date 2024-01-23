@@ -2985,27 +2985,20 @@ void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
         z3::expr_vector actEncodings(z3EM->Ctx());
         switch (act->getActType()) {
             case ConcreteAction::ActType::ASSUME:
-                actEncodings = this->generateAssumeEncoding(act);
-                break;
+                actEncodings = this->generateAssumeEncoding(act); break;
             case ConcreteAction::ActType::COMMONASSIGN:
-                actEncodings = this->generateAssignEncoding(act);
-                break;
+                actEncodings = this->generateAssignEncoding(act); break;
             case ConcreteAction::ActType::ALLOC:
             case ConcreteAction::ActType::MALLOC:
-                actEncodings = this->generateAllocEncoding(act);
-                break;
+                actEncodings = this->generateMallocEncoding(act); break;
             case ConcreteAction::ActType::LOAD:
-                actEncodings = this->generateLoadEncoding(act);
-                break;
+                actEncodings = this->generateLoadEncoding(act); break;
             case ConcreteAction::ActType::STORE:
-                actEncodings = this->generateStoreEncoding(act);
-                break;
+                actEncodings = this->generateStoreEncoding(act); break;
             case ConcreteAction::ActType::FREE:
-                actEncodings = this->generateFreeEncoding(act);
-                break;
+                actEncodings = this->generateFreeEncoding(act); break;
             default:
-                assert(false && "unsupported command!");
-                break;
+                actEncodings = this->generateSpecialEncoding(act);
         }
         assert(actEncodings.size() == 3);
         CLEAN_Z3EXPR_CONJUNC(this->feasibleEncoding, actEncodings[0]);

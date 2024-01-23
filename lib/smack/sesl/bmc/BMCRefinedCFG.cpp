@@ -83,6 +83,8 @@ namespace smack
             os << "OTPROC\t";
         } else if(actType == ActType::STORE){
             os << "STORE\t";
+        } else if(actType == ActType::STORABLE) {
+            os << "STORABLE\t";
         }
     }
 

@@ -52,10 +52,13 @@ private:
     z3::expr generateArithExpr(BinExpr::Binary op, z3::expr lhs, z3::expr rhs) override;
     z3::expr_vector generateAssignEncoding(RefinedActionPtr act);
     z3::expr_vector generateAssumeEncoding(RefinedActionPtr act);
-    z3::expr_vector generateAllocEncoding(RefinedActionPtr act);
+    z3::expr_vector generateMallocEncoding(RefinedActionPtr act);
     z3::expr_vector generateLoadEncoding(RefinedActionPtr act);
     z3::expr_vector generateStoreEncoding(RefinedActionPtr act);
     z3::expr_vector generateFreeEncoding(RefinedActionPtr act);
+    z3::expr_vector generateSpecialEncoding(RefinedActionPtr act);
+
+    z3::expr_vector generateStorableEncoding(RefinedActionPtr act);
 
 public:
     SLHVBlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarTypeSetPtr vts);

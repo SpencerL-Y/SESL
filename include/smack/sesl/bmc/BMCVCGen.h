@@ -471,11 +471,11 @@ protected:
     // and invalid free encoding, in order
     virtual z3::expr_vector generateAssignEncoding(RefinedActionPtr act) = 0;
     virtual z3::expr_vector generateAssumeEncoding(RefinedActionPtr act) = 0;
-    virtual z3::expr_vector generateAllocEncoding(RefinedActionPtr act) = 0;
+    virtual z3::expr_vector generateMallocEncoding(RefinedActionPtr act) = 0;
     virtual z3::expr_vector generateLoadEncoding(RefinedActionPtr act) = 0;
     virtual z3::expr_vector generateStoreEncoding(RefinedActionPtr act) = 0;
     virtual z3::expr_vector generateFreeEncoding(RefinedActionPtr act) = 0;
-
+    virtual z3::expr_vector generateSpecialEncoding(RefinedActionPtr act) = 0;
     void generateEncoding(RefinedEdgePtr edge);
 
 public:

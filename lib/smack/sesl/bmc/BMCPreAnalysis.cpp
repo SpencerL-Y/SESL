@@ -723,6 +723,11 @@ namespace smack
                 }
             }
         }
+        for (int u = 1; u <= refinedBlockCFG->getVertexNum(); u++) {
+            for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(u)) {
+                edge->removeNullstmt();
+            }
+        }
     }
 
     VarTypeSetPtr BMCSLHVPreAnalysis::getVarTypeSet() {

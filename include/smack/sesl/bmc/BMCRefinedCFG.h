@@ -150,6 +150,14 @@ namespace smack
             int getTo(){return this->to;}
             RefinedActionPtr getGuard() { return guard; }
             std::vector<RefinedActionPtr> getRefinedActions(){return this->refinedActions;}
+            void removeNullstmt() {
+                for (std::vector<RefinedActionPtr>::iterator it = this->refinedActions.begin();
+                        it != this->refinedActions.end(); ) {
+                    if ((*it)->getActType() == ConcreteAction::ActType::NULLSTMT) {
+                        it = this->refinedActions.erase(it);
+                    } else { ++it; }
+                }
+            }
             int getEdgeId(){return this->edgeId;}
             void print(std::ostream &os);
     };

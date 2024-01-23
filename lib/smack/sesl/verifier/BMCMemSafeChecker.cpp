@@ -137,7 +137,7 @@ void BMCMemSafeChecker::generateVC(BMCBLOCKVCGenPtr gen) {
   SLHVDEBUG(std::cout << vc << std::endl);
   std::cout << "Smt2 files are stored in " << this->smt2Path << '\n';
   std::string suf = "_" + std::to_string(this->step);
-  gen->generateSMT2(vc, this->smt2Path + "VC" + suf + ".smt2");
+  gen->generateSMT2(vc, this->smt2Path + "Buggy" + suf + ".smt2");
 }
 
 bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {

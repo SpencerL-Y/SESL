@@ -584,6 +584,9 @@ namespace smack
                 // collect all ht and vars
                 for(RefinedActionPtr ass : allAssStmts) {
                     const VarExpr* lhsVar = (const VarExpr*)ass->getArg1();
+                    if(lhsVar == nullptr) {
+                        continue;
+                    }
                     std::string lhsVarName = lhsVar->name();
                     term2Name[lhsVar] = lhsVarName;
                     if(termName2Root.find(lhsVarName) == termName2Root.end()) {

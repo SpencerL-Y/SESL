@@ -539,7 +539,7 @@ namespace smack
         }
     }
 
-    inline int BMCRefinedBlockCFG::createVertex() {
+    int BMCRefinedBlockCFG::createVertex() {
         this->refinedBlockCFG.push_back(std::vector<RefinedEdgePtr>());
         return ++this->N;
     }
@@ -564,12 +564,47 @@ namespace smack
         }
     }
 
-    inline bool BMCRefinedBlockCFG::supported(RefinedActionPtr act) {
+    bool BMCRefinedBlockCFG::supported(RefinedActionPtr act) {
         return act->getActType() != ConcreteAction::ActType::OTHER &&
                act->getActType() != ConcreteAction::ActType::OTHERPROC;
     }
 
-    inline bool BMCRefinedBlockCFG::isAssumeTrue(RefinedActionPtr act) {
+    void BMCRefinedBlockCFG::convertAllocToMalloc() {
+        std::set<std::string> varsToBeFred;
+        std::set<RefinedEdgePtr> finalEdges;
+        for (EdgeSet& edges : this->refinedBlockCFG) {
+            for (RefinedEdgePtr edge : edges) {
+                for (RefinedActionPtr act : edge->getRefinedActions()) {
+                    if (act->getActType() == ConcreteAction::ActType::ALLOC) {
+                        varsToBeFred.insert(
+                            ((const VarExpr*)act->getArg1())->name()
+                        );
+                    }
+                }
+                if (edge->getFrom() != edge->getTo() &&
+                    this->finalVertices.find(edge->getTo())
+                        != this->finalVertices.end()) {
+                    finalEdges.insert(edge);
+                }
+            }
+        }
+        for (std::string var : varsToBeFred) {
+            for (RefinedEdgePtr edge : finalEdges) {
+                edge->appendAction(
+                    std::make_shared<RefinedAction>(
+                        ConcreteAction::ActType::FREE,
+                        new VarExpr(var),
+                        nullptr, nullptr, nullptr,
+                        8, 0, 0, 0,
+                        std::set<std::string>()
+                    )
+                );
+            }
+        }
+        
+    }
+
+    bool BMCRefinedBlockCFG::isAssumeTrue(RefinedActionPtr act) {
         return act->getActType() == ConcreteAction::ActType::ASSUME &&
                act->getArg3()->isValue() &&
                ((const BoolLit*)act->getArg3())->getVal();
@@ -637,6 +672,16 @@ namespace smack
     }
 
     BMCRefinedBlockCFG::BMCRefinedBlockCFG(CFGPtr cfg) {
+        // TODO: remove union set by implement a library
+        struct UnionSet {
+            std::map<int, int> mp;
+            int find(int x) {
+                if (mp.find(x) == mp.end()) { mp[x] = x; }
+                return x == mp[x] ? x : x = this->find(mp[x]);
+            }
+            void link(int x, int y) { mp[this->find(y)] = this->find(x); }
+        };
+
         this->N = 0;
         StmtFormatterPtr stmtFormatter =  std::make_shared<StmtFormatter>(cfg);
 
@@ -695,6 +740,7 @@ namespace smack
         }
         this->createFinalLoop();
         this->simplify();
+        this->convertAllocToMalloc();
     }
 
     const int BMCRefinedBlockCFG::getVertexNum() {
@@ -709,7 +755,7 @@ namespace smack
         return this->finalVertices;
     }
 
-    const std::vector<RefinedEdgePtr>& BMCRefinedBlockCFG::getEdgesStartFrom(const int u) {
+    const EdgeSet& BMCRefinedBlockCFG::getEdgesStartFrom(const int u) {
         assert(u > 0 && u <= this->N);
         return this->refinedBlockCFG[u - 1];
     }

@@ -366,11 +366,14 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
     assert(act->getArg1()->isVar());
     const VarExpr* arg1 = (const VarExpr*)act->getArg1();
     z3::expr xt = this->generateLocalVarByName(arg1->name());
+    BMCVarType xtTy = BMCVarType(this->varsTypeMap->at(arg1->name()));
+    assert(xtTy == BMCVarType::LOC || xtTy == BMCVarType::DAT);
     assert(act->getArg2()->isVar());
     const VarExpr* arg2 = (const VarExpr*)act->getArg2();
     z3::expr xs = this->getLatestUpdateForGlobalVar(arg2->name());
-    z3::expr x1 =
-        this->generateQuantifiedVarByPre(arg1->name()[1] == 'p' ? "l" : "d");
+    z3::expr x1 =this->generateQuantifiedVarByPre(
+        xtTy == BMCVarType::LOC ? "l" : "d"
+    );
     
     z3::expr feasibleEC = 
         (H == this->z3EM->mk_sep(h1, this->z3EM->mk_pto(xs, x1)))
@@ -379,8 +382,9 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
     // invalidDeref
     this->setCurrentUsedVM(BuggyType::INVALIDDEREF);
     z3::expr h0 = this->generateQuantifiedVarByPre("h");
-    z3::expr x0 =
-        this->generateQuantifiedVarByPre(arg1->name()[1] == 'p' ? "l" : "d");
+    z3::expr x0 = this->generateQuantifiedVarByPre(
+        xtTy == BMCVarType::LOC ? "l" : "d"
+    );
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
     z3::expr invalidDerefPrime =

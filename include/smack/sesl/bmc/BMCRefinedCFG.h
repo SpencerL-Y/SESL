@@ -146,6 +146,9 @@ namespace smack
                 }
                 refinedActions = rfa;
             }
+            void appendAction(RefinedActionPtr act) {
+                this->refinedActions.push_back(act);
+            }
             int getFrom(){return this->from;}
             int getTo(){return this->to;}
             RefinedActionPtr getGuard() { return guard; }
@@ -222,31 +225,22 @@ namespace smack
     typedef std::shared_ptr<BMCRefinedCFG> BMCRefinedCFGPtr;
     
     // used by slhv encoding
-    typedef std::vector<std::vector<RefinedEdgePtr>> CFGGraph;
+    typedef std::vector<RefinedEdgePtr> EdgeSet;
+    typedef std::vector<EdgeSet> CFGGraph;
     class BMCRefinedBlockCFG {
-        private:
-            struct UnionSet {
-                std::map<int, int> mp;
-                
-                int find(int x) {
-                    if (mp.find(x) == mp.end()) { mp[x] = x; }
-                    return x == mp[x] ? x : x = this->find(mp[x]);
-                }
-                void link(int x, int y) { mp[this->find(y)] = this->find(x); }
-            };
-
         private:
             int N;
             CFGGraph refinedBlockCFG;
             int initVertex;
             std::set<int> finalVertices;
 
-            inline int createVertex();
+            int createVertex();
             void createEdge(const int from, const int to, std::vector<RefinedActionPtr> acts);
             void createFinalLoop();
-            inline bool supported(RefinedActionPtr act);
+            bool supported(RefinedActionPtr act);
+            void convertAllocToMalloc();
 
-            inline bool isAssumeTrue(RefinedActionPtr act);
+            bool isAssumeTrue(RefinedActionPtr act);
             void simplify();
 
         public:
@@ -255,7 +249,7 @@ namespace smack
             const int getVertexNum();
             const int getInitVertex();
             const std::set<int>& getFinalVertices();
-            const std::vector<RefinedEdgePtr>& getEdgesStartFrom(const int u);
+            const EdgeSet& getEdgesStartFrom(const int u);
 
             void print(ostream& OS);
 

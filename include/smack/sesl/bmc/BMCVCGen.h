@@ -457,6 +457,9 @@ protected:
     z3::expr generateVarByType(std::string name, int type);
     virtual z3::expr generateNullptr() = 0;
 
+    VarsManager* currentUsedVM;
+    void setCurrentUsedVM(BuggyType bty);
+
     virtual z3::expr getLatestUpdateForGlobalVar(std::string name);
     virtual z3::expr generateLocalVarByName(std::string name);
     virtual z3::expr generateQuantifiedVarByPre(std::string pre);

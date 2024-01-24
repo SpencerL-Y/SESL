@@ -63,7 +63,7 @@ namespace smack {
         std::vector<int> offsets;
         FieldsTypes ftypes;
         offsets.push_back(0);
-        ftypes.push_back(BMCVarType::DAT);
+        ftypes.push_back(BMCVarType::LOC);
         recordManager->add("i8", Record(recordManager->getNewId(), 1, offsets, ftypes));
         llvm::DataLayout dl(&M);
         for (StructType* sty : M.getIdentifiedStructTypes()) {

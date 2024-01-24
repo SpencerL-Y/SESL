@@ -243,6 +243,7 @@ z3::expr SLHVBlockEncoding::generateArithExpr(
 }
 
 z3::expr_vector SLHVBlockEncoding::generateAssignEncoding(RefinedActionPtr act) {
+    this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     bool isBoolAssign;
     const Expr* arg1;
     const Expr* arg2;
@@ -259,8 +260,6 @@ z3::expr_vector SLHVBlockEncoding::generateAssignEncoding(RefinedActionPtr act) 
     const VarExpr* var = (const VarExpr*)arg1;
     z3::expr lhs = this->generateLocalVarByName(var->name());
     z3::expr rhs = this->generateExpr(arg2);
-    this->feasibleVM.localVars.insert(lhs.to_string());
-    this->feasibleVM.outputsMap[var->name()] = lhs.to_string();
 
     z3::expr feasibleEC(this->z3EM->Ctx());
     if (!isBoolAssign) {
@@ -272,9 +271,15 @@ z3::expr_vector SLHVBlockEncoding::generateAssignEncoding(RefinedActionPtr act) 
 
     // invalid : feasibleEC || invalid
     //           invalid' = invalid (global update)
+    
+    // invalidDeref
+    this->setCurrentUsedVM(BuggyType::INVALIDDEREF);
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
     z3::expr invalidDerefEC = feasibleEC || invalidDeref;
+
+    // invalidfree
+    this->setCurrentUsedVM(BuggyType::INVALIDFREE);
     z3::expr invalidFree =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
     z3::expr invalidFreeEC = feasibleEC || invalidFree;
@@ -288,14 +293,18 @@ z3::expr_vector SLHVBlockEncoding::generateAssignEncoding(RefinedActionPtr act) 
 
 z3::expr_vector SLHVBlockEncoding::generateAssumeEncoding(RefinedActionPtr act) {
     assert(act->getArg3() != nullptr);
-    
+    this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     z3::expr feasibleEC = this->generateExpr(act->getArg3());
 
     // invalid : feasibleEC || invalid
     //           invalid' = invalid (global update)
+
+    this->setCurrentUsedVM(BuggyType::INVALIDDEREF);
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
     z3::expr invalidDerefEC = feasibleEC || invalidDeref;
+
+    this->setCurrentUsedVM(BuggyType::INVALIDFREE);
     z3::expr invalidFree =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
     z3::expr invalidFreeEC = feasibleEC || invalidFree;
@@ -309,20 +318,15 @@ z3::expr_vector SLHVBlockEncoding::generateAssumeEncoding(RefinedActionPtr act) 
 
 z3::expr_vector SLHVBlockEncoding::generateMallocEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
+    this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     z3::expr H = this->getLatestUpdateForGlobalVar("H");
     z3::expr nH = this->generateLocalVarByName("H");
-    this->feasibleVM.localVars.insert(nH.to_string());
-    this->feasibleVM.outputsMap["H"] = nH.to_string();
     z3::expr AH = this->getLatestUpdateForGlobalVar("AH");
     z3::expr nAH = this->generateLocalVarByName("AH");
-    this->feasibleVM.localVars.insert(nAH.to_string());
-    this->feasibleVM.outputsMap["AH"] = nAH.to_string();
 
     assert(act->getArg1()->isVar());
     const VarExpr* arg1 = (const VarExpr*)act->getArg1();
     z3::expr x = this->generateLocalVarByName(arg1->name());
-    this->feasibleVM.localVars.insert(x.to_string());
-    this->feasibleVM.outputsMap[arg1->name()] = x.to_string();
     z3::expr_vector recordHeap = this->generateRecord(slhvcmd.record);
     z3::expr heapEC = (nH == this->z3EM->mk_sep(H, recordHeap[2]));
     CLEAN_Z3EXPR_CONJUNC(heapEC, recordHeap[1]);
@@ -335,9 +339,13 @@ z3::expr_vector SLHVBlockEncoding::generateMallocEncoding(RefinedActionPtr act) 
 
     // invalid : feasibleEC || invalid
     //           invalid' = invalid (global update)
+
+    this->setCurrentUsedVM(BuggyType::INVALIDDEREF);
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
     z3::expr invalidDerefEC = feasibleEC || invalidDeref;
+
+    this->setCurrentUsedVM(BuggyType::INVALIDFREE);
     z3::expr invalidFree =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
     z3::expr invalidFreeEC = feasibleEC || invalidFree;
@@ -351,39 +359,32 @@ z3::expr_vector SLHVBlockEncoding::generateMallocEncoding(RefinedActionPtr act) 
 
 z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
+    this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     z3::expr H = this->getLatestUpdateForGlobalVar("H");
     z3::expr h1 = this->generateQuantifiedVarByPre("h");
-    this->feasibleVM.localVars.insert(h1.to_string());
 
     assert(act->getArg1()->isVar());
     const VarExpr* arg1 = (const VarExpr*)act->getArg1();
     z3::expr xt = this->generateLocalVarByName(arg1->name());
-    this->feasibleVM.localVars.insert(xt.to_string());
-    this->feasibleVM.outputsMap[arg1->name()] = xt.to_string();
     assert(act->getArg2()->isVar());
     const VarExpr* arg2 = (const VarExpr*)act->getArg2();
     z3::expr xs = this->getLatestUpdateForGlobalVar(arg2->name());
     z3::expr x1 =
         this->generateQuantifiedVarByPre(arg1->name()[1] == 'p' ? "l" : "d");
-    this->feasibleVM.localVars.insert(x1.to_string());
     
     z3::expr feasibleEC = 
         (H == this->z3EM->mk_sep(h1, this->z3EM->mk_pto(xs, x1)))
         && xt == x1;
 
     // invalidDeref
+    this->setCurrentUsedVM(BuggyType::INVALIDDEREF);
     z3::expr h0 = this->generateQuantifiedVarByPre("h");
     z3::expr x0 =
         this->generateQuantifiedVarByPre(arg1->name()[1] == 'p' ? "l" : "d");
-    this->invalidDerefVM.localVars.insert(h0.to_string());
-    this->invalidDerefVM.localVars.insert(x0.to_string());
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
     z3::expr invalidDerefPrime =
         this->generateLocalVarByName(BlockEncoding::invalid_deref);
-    this->invalidDerefVM.localVars.insert(invalidDerefPrime.to_string());
-    this->invalidDerefVM.outputsMap[BlockEncoding::invalid_deref] =
-        invalidDerefPrime.to_string();
     
     z3::expr errorEC = 
         (h0 == this->z3EM->mk_sep(H, this->z3EM->mk_pto(xs, x0))
@@ -395,6 +396,7 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
 
     // invalidFree : feasibleEC || invalidFree
     //           invalidFree' = invalidFree (global update)
+    this->setCurrentUsedVM(BuggyType::INVALIDFREE);
     z3::expr invalidFree =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
     z3::expr invalidFreeEC = feasibleEC || invalidFree;
@@ -408,12 +410,10 @@ z3::expr_vector SLHVBlockEncoding::generateLoadEncoding(RefinedActionPtr act) {
 
 z3::expr_vector SLHVBlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
+    this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     z3::expr H = this->getLatestUpdateForGlobalVar("H");
     z3::expr nH = this->generateLocalVarByName("H");
     z3::expr h1 = this->generateQuantifiedVarByPre("h");
-    this->feasibleVM.localVars.insert(nH.to_string());
-    this->feasibleVM.localVars.insert(h1.to_string());
-    this->feasibleVM.outputsMap["H"] = nH.to_string();
 
     assert(act->getArg1()->isVar());
     const VarExpr* arg1 = (const VarExpr*)act->getArg1();
@@ -429,23 +429,19 @@ z3::expr_vector SLHVBlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
         );
     }
     z3::expr x1 = this->generateQuantifiedVarByPre(xs.is_int() ? "d" : "l");
-    this->feasibleVM.localVars.insert(x1.to_string());
 
     z3::expr feasibleEC =
         (H == this->z3EM->mk_sep(h1, this->z3EM->mk_pto(xt, x1)))
         && (nH == this->z3EM->mk_sep(h1, this->z3EM->mk_pto(xt, xs)));
 
     // invalidDeref
+    this->setCurrentUsedVM(BuggyType::INVALIDDEREF);
     z3::expr h0 = this->generateQuantifiedVarByPre("h");
     z3::expr x0 = this->generateQuantifiedVarByPre(xs.is_int() ? "d" : "l");
-    this->invalidDerefVM.localVars.insert(x0.to_string());
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
     z3::expr invalidDerefPrime = 
         this->generateLocalVarByName(BlockEncoding::invalid_deref);
-    this->invalidDerefVM.localVars.insert(invalidDerefPrime.to_string());
-    this->invalidDerefVM.outputsMap[BlockEncoding::invalid_deref] =
-        invalidDerefPrime.to_string();
     
     z3::expr errorEC = 
         (h0 == this->z3EM->mk_sep(H, this->z3EM->mk_pto(xt, x0))
@@ -456,6 +452,7 @@ z3::expr_vector SLHVBlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
     z3::expr invalidDerefEC = errorEC || memSafeEC || faultTolerantEC;
 
     // invalidFree : feasibleEC || invalidFree
+    this->setCurrentUsedVM(BuggyType::INVALIDFREE);
     z3::expr invalidFree =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
     z3::expr invalidFreeEC = feasibleEC || invalidFree;
@@ -469,19 +466,14 @@ z3::expr_vector SLHVBlockEncoding::generateStoreEncoding(RefinedActionPtr act) {
 
 z3::expr_vector SLHVBlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
+    this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     z3::expr H = this->getLatestUpdateForGlobalVar("H");
     z3::expr nH = this->generateLocalVarByName("H");
     z3::expr h0 = this->generateQuantifiedVarByPre("h");
-    this->feasibleVM.localVars.insert(nH.to_string());
-    this->feasibleVM.localVars.insert(h0.to_string());
-    this->feasibleVM.outputsMap["H"] = nH.to_string();
     z3::expr AH = this->getLatestUpdateForGlobalVar("AH");
     z3::expr nAH = this->generateLocalVarByName("AH");
     z3::expr ah0 = this->generateQuantifiedVarByPre("ah");
     z3::expr idxvar = this->generateQuantifiedVarByPre("d");
-    this->feasibleVM.localVars.insert(nAH.to_string());
-    this->feasibleVM.localVars.insert(idxvar.to_string());
-    this->feasibleVM.outputsMap["AH"] = nAH.to_string();
     assert(act->getArg1()->isVar());
     const VarExpr* arg1 = (const VarExpr*)act->getArg1(); 
     z3::expr x = this->getLatestUpdateForGlobalVar(arg1->name());
@@ -504,22 +496,19 @@ z3::expr_vector SLHVBlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
 
     // invalidDeref : feasibleEC || invalidDeref
     //          invalidDeref' == invalidDeref (global update)
+    this->setCurrentUsedVM(BuggyType::INVALIDDEREF);
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
     z3::expr invalidDerefEC = feasibleEC || invalidDeref;
 
     // invalidFree
+    this->setCurrentUsedVM(BuggyType::INVALIDFREE);
     z3::expr invalidFree =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
     z3::expr invalidFreePrime =
         this->generateLocalVarByName(BlockEncoding::invalid_free);
-    this->invalidFreeVM.localVars.insert(invalidFreePrime.to_string());
-    this->invalidFreeVM.outputsMap[BlockEncoding::invalid_free] =
-        invalidFreePrime.to_string();
     z3::expr ahe = this->generateQuantifiedVarByPre("ah");
     z3::expr idxvare = this->generateQuantifiedVarByPre("d");
-    this->invalidFreeVM.localVars.insert(ahe.to_string());
-    this->invalidFreeVM.localVars.insert(idxvare.to_string());
     
     z3::expr errorEC =
         ((x == this->generateNullptr())
@@ -547,9 +536,9 @@ z3::expr_vector SLHVBlockEncoding::generateSpecialEncoding(RefinedActionPtr act)
 
 z3::expr_vector SLHVBlockEncoding::generateStorableEncoding(RefinedActionPtr act) {
     auto slhvcmd = act->getSLHVCmd();
+    this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     z3::expr H = this->getLatestUpdateForGlobalVar("H");
     z3::expr h1 = this->generateQuantifiedVarByPre("h");
-    this->feasibleVM.localVars.insert(h1.to_string());
 
     assert(act->getArg1()->isVar());
     const VarExpr* arg1 = (const VarExpr*)act->getArg1();
@@ -566,24 +555,19 @@ z3::expr_vector SLHVBlockEncoding::generateStorableEncoding(RefinedActionPtr act
     z3::expr xs = this->generateQuantifiedVarByPre(
         vt == BMCVarType::DAT ? "d" : "l"
     );
-    this->invalidDerefVM.localVars.insert(xs.to_string());
 
     z3::expr feasibleEC = (H == this->z3EM->mk_sep(h1, this->z3EM->mk_pto(xt, xs)));
 
     // invalidDeref
+    this->setCurrentUsedVM(BuggyType::INVALIDDEREF);
     z3::expr h0 = this->generateQuantifiedVarByPre("h");
     z3::expr x0 = this->generateQuantifiedVarByPre(
         vt == BMCVarType::DAT ? "d" : "l"
     );
-    this->invalidDerefVM.localVars.insert(h0.to_string());
-    this->invalidDerefVM.localVars.insert(x0.to_string());
     z3::expr invalidDeref =
         this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_deref);
     z3::expr invalidDerefPrime = 
         this->generateLocalVarByName(BlockEncoding::invalid_deref);
-    this->invalidDerefVM.localVars.insert(invalidDerefPrime.to_string());
-    this->invalidDerefVM.outputsMap[BlockEncoding::invalid_deref] =
-        invalidDerefPrime.to_string();
     z3::expr errorEC = 
         (h0 == this->z3EM->mk_sep(H, this->z3EM->mk_pto(xt, x0))
         || xt == this->generateNullptr()) && invalidDerefPrime;
@@ -593,7 +577,9 @@ z3::expr_vector SLHVBlockEncoding::generateStorableEncoding(RefinedActionPtr act
     z3::expr invalidDerefEC = errorEC || memSafeEC || faultTolerantEC;
 
     // invalidFree
-    z3::expr invalidFree = this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
+    this->setCurrentUsedVM(BuggyType::INVALIDFREE);
+    z3::expr invalidFree =
+        this->getLatestUpdateForGlobalVar(BlockEncoding::invalid_free);
     z3::expr invalidFreeEC = feasibleEC || invalidFree;
     
     z3::expr_vector encoding(z3EM->Ctx());

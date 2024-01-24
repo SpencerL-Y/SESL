@@ -2819,7 +2819,8 @@ BlockEncoding::BlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarType
       guard(z3EM->Ctx().bool_val(true)),
       feasibleEncoding(z3EM->Ctx().bool_val(true)),
       invalidDerefEncoding(z3EM->Ctx().bool_val(true)),
-      invalidFreeEncoding(z3EM->Ctx().bool_val(true)) {}
+      invalidFreeEncoding(z3EM->Ctx().bool_val(true)),
+      currentUsedVM(&feasibleVM) {}
 
 int BlockEncoding::getVarTypeByName(std::string name) {
     assert(this->varsTypeMap->find(name) != this->varsTypeMap->end());
@@ -2839,27 +2840,38 @@ z3::expr BlockEncoding::generateVarByType(std::string name, int type) {
     }
 }
 
+void BlockEncoding::setCurrentUsedVM(BuggyType bty) {
+    if (bty == BuggyType::INVALIDDEREF) {
+        this->currentUsedVM = &(this->invalidDerefVM);
+    } else if(bty == BuggyType::INVALIDFREE) {
+        this->currentUsedVM = &(this->invalidFreeVM);
+    } else {
+        this->currentUsedVM = &(this->feasibleVM);
+    }
+}
+
 z3::expr BlockEncoding::getLatestUpdateForGlobalVar(std::string name) {
     int varTy = this->getVarTypeByName(name);
     VarSet* inputVars;
-    const std::map<std::string, std::string>* outputsMap;
+    // const std::map<std::string, std::string>* outputsMap;
     if (name == "$0.ref") { return this->generateNullptr(); }
-    if (name.find("invalidDeref") != std::string::npos) {
-        inputVars = &this->invalidDerefVM.inputVars;
-        outputsMap = &this->invalidDerefVM.outputsMap;
-    } else if (name.find("invalidFree") != std::string::npos) {
-        inputVars = &this->invalidFreeVM.inputVars;
-        outputsMap = &this->invalidFreeVM.outputsMap;
-    } else {
-        inputVars = &this->feasibleVM.inputVars;
-        outputsMap = &this->feasibleVM.outputsMap;
-    }
+    // if (name.find("invalidDeref") != std::string::npos) {
+    //     inputVars = &this->invalidDerefVM.inputVars;
+    //     outputsMap = &this->invalidDerefVM.outputsMap;
+    // } else if (name.find("invalidFree") != std::string::npos) {
+    //     inputVars = &this->invalidFreeVM.inputVars;
+    //     outputsMap = &this->invalidFreeVM.outputsMap;
+    // } else {
+    //     inputVars = &this->feasibleVM.inputVars;
+    //     outputsMap = &this->feasibleVM.outputsMap;
+    // }
     std::string varName;
-    if (outputsMap->find(name) == outputsMap->end()) {
-        inputVars->insert(name);
+    if (this->currentUsedVM->outputsMap.find(name)
+        == this->currentUsedVM->outputsMap.end()) {
+        this->currentUsedVM->inputVars.insert(name);
         varName = name;
     } else {
-        varName = outputsMap->at(name);
+        varName = this->currentUsedVM->outputsMap.at(name);
     }
     return this->generateVarByType(varName, varTy);
 }
@@ -2869,6 +2881,8 @@ z3::expr BlockEncoding::generateLocalVarByName(std::string name) {
     z3::sort sort = this->z3EM->getSort(ty);
     z3::expr var = this->z3EM->mk_fresh(name, sort);
     (*this->varsTypeMap)[var.to_string()] = ty;
+    this->currentUsedVM->localVars.insert(var.to_string());
+    this->currentUsedVM->outputsMap[name] = var.to_string();
     return var;
 }
 
@@ -2876,6 +2890,7 @@ z3::expr BlockEncoding::generateQuantifiedVarByPre(std::string pre) {
     z3::expr var = this->z3EM->mk_quantified(pre);
     int ty = this->z3EM->getSortEnumId(var.get_sort().to_string());
     (*this->varsTypeMap)[var.to_string()] = ty;
+    this->currentUsedVM->localVars.insert(var.to_string());
     return var;
 }
 

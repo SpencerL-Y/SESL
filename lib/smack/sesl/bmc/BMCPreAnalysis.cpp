@@ -384,7 +384,12 @@ namespace smack
                     std::string varType =
                         this->pimSet->getPIMByPtrVar(var->name())
                             ->getInfoByPtrVar(var->name()).getPto();
-                    if (varType.find("struct") != std::string::npos || varType == "i8") { continue; }
+                    if (varType.back() != '*' && 
+                        (varType.find("struct") != std::string::npos
+                        || varType == "i8")) { continue; }
+                    BMCVarType vt = (
+                        varType.back() == '*' ? BMCVarType::LOC : BMCVarType::DAT
+                    );
                     std::vector<int> offsets;
                     int stepWidth = 0;
                     if (varType == "i32") stepWidth = 4;
@@ -393,7 +398,7 @@ namespace smack
                     FieldsTypes ftypes;
                     for (int i = 0; i < byteSize / stepWidth; i++) {
                         offsets.push_back(stepWidth * i);
-                        ftypes.push_back(BMCVarType::DAT);
+                        ftypes.push_back(vt);
                     }
                     std::string name = varType + "_" + std::to_string(ftypes.size());
                     Record record = Record(

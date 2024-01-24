@@ -90,7 +90,9 @@ Record BMCMemSafeChecker::getPtrRecord(const VarExpr* vexpr) {
     this->pimSet->getPIMByPtrVar(vexpr->name());
   assert(pointerInfoManager->contains(pt));
   PointerInfo pinfo = pointerInfoManager->get(pt);
-  return recordManager->getRecord(pinfo.getPto());
+  std::string ptoTy = pinfo.getPto();
+  if (ptoTy.back() == '*') ptoTy = "i8";
+  return recordManager->getRecord(ptoTy);
 }
 
 void BMCMemSafeChecker::setSLHVCmdRecords(BMCRefinedBlockCFGPtr refinedBlockCFG) {
@@ -154,6 +156,8 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
   SLHVDEBUG(mainGraph->printCFG());
   SLHVDEBUG(mainGraph->printVarInfo());
   SLHVDEBUG(std::cout << "\n-------------PRINT CFG END-----------" << std::endl);
+
+  pimSet->print(std::cout);
 
   BMCRefinedBlockCFGPtr refinedBlockCFG = std::make_shared<BMCRefinedBlockCFG>(mainGraph);
   // SLHVDEBUG(refinedBlockCFG->print(std::cout));

@@ -78,6 +78,7 @@ public:
         {
             std::cout << vp.first << " --> ";
             vp.second.show();
+            std::cout << '\n';
         }
     }
 
@@ -104,6 +105,8 @@ public:
     bool contains(std::string func);
     PointerInfoManagerPtr getPIM(std::string func);
     PointerInfoManagerPtr getPIMByPtrVar(std::string pt);
+
+    void print(std::ostream& os);
 };
 
 typedef std::shared_ptr<PIMSet> PIMSetPtr;

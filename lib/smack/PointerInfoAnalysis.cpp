@@ -18,8 +18,9 @@ std::string PointerInfo::getType() { return type; }
 
 std::string PointerInfo::getPto() {
     assert(!type.empty());
-    std::string ptoTy = type.substr(0, type.size() - 1);
-    return ptoTy.back() == '*' ? "i8" : ptoTy;
+    // std::string ptoTy = type.substr(0, type.size() - 1);
+    // return ptoTy.back() == '*' ? "i8" : ptoTy;
+    return type.substr(0, type.size() - 1);
 }
 
 std::string PointerInfoManager::find(const std::string& pt) {
@@ -82,6 +83,14 @@ PointerInfoManagerPtr PIMSet::getPIM(std::string func) {
 PointerInfoManagerPtr PIMSet::getPIMByPtrVar(std::string pt) {
     std::string func = pt.substr(0, pt.size() - 1).substr(pt.find('_') + 1);
     return this->getPIM(func);
+}
+
+void PIMSet::print(std::ostream& os) {
+    for (auto p : this->pimSet) {
+        os << p.first << ": \n";
+        p.second->show();
+        os << '\n';
+    }
 }
 
 Record::Record(int id, int bs, std::vector<int> offsets, FieldsTypes f)

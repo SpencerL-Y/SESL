@@ -491,7 +491,8 @@ z3::expr_vector SLHVBlockEncoding::generateFreeEncoding(RefinedActionPtr act) {
         z3::expr ithRecordHeap = z3::implies(
             idxvar == record.getID(),
             H == this->z3EM->mk_sep(h0, oneRecordHeap[2]) &&
-            x == oneRecordHeap[0] &&
+            oneRecordHeap[1] &&
+            x == oneRecordHeap[0] && 
             nH == h0
         );
         CLEAN_Z3EXPR_CONJUNC(recordHeap, ithRecordHeap);

@@ -6,6 +6,7 @@
 #include <string>
 #include <unistd.h>
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include "smack/PointerInfoAnalysis.h"
 #include "smack/sesl/cfg/CFG.h"
@@ -243,6 +244,9 @@ namespace smack
             bool isAssumeTrue(RefinedActionPtr act);
             void simplify();
 
+            bool isDAG(int u, bool* path, bool* vis);
+            int getLengthOfLognestPath();
+
         public:
             BMCRefinedBlockCFG(CFGPtr cfg);
 
@@ -250,6 +254,7 @@ namespace smack
             const int getInitVertex();
             const std::set<int>& getFinalVertices();
             const EdgeSet& getEdgesStartFrom(const int u);
+            void generateCFGInfo(std::string file);
 
             void print(ostream& OS);
 

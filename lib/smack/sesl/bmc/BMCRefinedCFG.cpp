@@ -671,6 +671,54 @@ namespace smack
         }
     }
 
+    bool BMCRefinedBlockCFG::isDAG(int u, bool* path, bool* vis) {
+        if (path[u]) { return false; }
+        if (vis[u]) { return true; }
+        vis[u] = true;
+        path[u] = true;
+        for (RefinedEdgePtr edge : this->getEdgesStartFrom(u)) {
+            if (edge->getFrom() == edge->getTo()) { continue; }
+            if (!this->isDAG(edge->getTo(), path, vis)) {
+                return false;
+            }
+        }
+        path[u] = false;
+        return true;
+    }
+    
+    int BMCRefinedBlockCFG::getLengthOfLognestPath() {
+        bool* vis = new bool[this->N + 1];
+        bool* path = new bool[this->N + 1];
+        for (int i = 1; i <= this->N; i++) {
+            vis[i] = path[i] = false;
+        }
+        if (!isDAG(this->initVertex, path, vis)) {
+            delete vis, path;
+            return -1;
+        }
+        delete vis, path;
+
+        int* lens = new int[this->N + 1];
+        for (int i = 1; i <= this->N; i++) { lens[i] = 0; }
+        std::queue<int> Q;
+        Q.push(this->initVertex);
+        int longestLen = 0;
+        while(!Q.empty()) {
+            int u = Q.front(); Q.pop();
+            longestLen = std::max(longestLen, lens[u]);
+            for (RefinedEdgePtr edge : this->getEdgesStartFrom(u)) {
+                if (edge->getFrom() == edge->getTo()) { continue; }
+                int v = edge->getTo();
+                if (lens[v] < lens[u] + 1) {
+                    lens[v] = lens[u] + 1;
+                    Q.push(v);
+                }
+            }
+        }
+        delete lens;
+        return longestLen;
+    }
+
     BMCRefinedBlockCFG::BMCRefinedBlockCFG(CFGPtr cfg) {
         // TODO: remove union set by implement a library
         struct UnionSet {
@@ -758,6 +806,15 @@ namespace smack
     const EdgeSet& BMCRefinedBlockCFG::getEdgesStartFrom(const int u) {
         assert(u > 0 && u <= this->N);
         return this->refinedBlockCFG[u - 1];
+    }
+
+    void BMCRefinedBlockCFG::generateCFGInfo(std::string file) {
+        std::ofstream f(file, std::ios::out);
+        if (f) {
+            f << "Longest path's length: "
+              << this->getLengthOfLognestPath();
+            f.close();
+        }
     }
     
     void BMCRefinedBlockCFG::print(ostream& OS) {

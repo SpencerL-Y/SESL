@@ -1052,7 +1052,6 @@ namespace smack {
                     {Stmt::call(Naming::MALLOC,
                                 {integerToPointer(Expr::id(params.front().first), width)},
                                 {Naming::RET_VAR})}));
-
         } else if (name == "free_") {
             blocks.push_back(Block::block(
                     "", {Stmt::call(Naming::FREE, {Expr::id(params.front().first)})}));
@@ -1124,6 +1123,7 @@ namespace smack {
         assert(f && "Call encountered unresolved function.");
 
         std::string name = naming->get(*f);
+        SDEBUG(errs() << "function name: " << name << "\n";);
         std::list<const Expr *> args;
         std::list<std::string> rets;
 

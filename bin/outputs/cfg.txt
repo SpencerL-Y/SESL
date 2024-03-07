@@ -1,0 +1,1 @@
+Longest path's length: 1

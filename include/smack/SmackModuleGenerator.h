@@ -7,6 +7,7 @@
 #include "llvm/Pass.h"
 #include "llvm/IR/Value.h"
 #include "smack/PointerInfoAnalysis.h"
+#include "seadsa/DsaAnalysis.hh"
 #include <cstring>
 #include <map>
 #include <memory>
@@ -23,6 +24,9 @@ private:
   
   RecordManagerPtr recordManager;
   PIMSetPtr pimSet;
+
+  // DSA Analysis result
+  seadsa::DsaAnalysis *m_dsa;
 
 public:
   static char ID; // Pass identification, replacement for typeid

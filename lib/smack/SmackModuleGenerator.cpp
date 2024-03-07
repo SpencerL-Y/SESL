@@ -16,6 +16,9 @@
 #include "smack/SmackRep.h"
 #include "smack/sesl/cfg/CFG.h"
 #include "smack/sesl/executor/Translator.h"
+#include "seadsa/DsaAnalysis.hh"
+#include "seadsa/Graph.hh"
+#include "seadsa/Global.hh"
 
 #include <stdlib.h>
 #include <iostream>
@@ -34,24 +37,26 @@ namespace smack {
 
     void SmackModuleGenerator::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
         AU.setPreservesAll();
+        // AU.addRequired<seadsa::DsaAnalysis>();
         AU.addRequired<llvm::LoopInfoWrapperPass>();
         AU.addRequired<Regions>();
     }
 
     bool SmackModuleGenerator::runOnModule(llvm::Module &m) {
+        // m_dsa = &getAnalysis<seadsa::DsaAnalysis>();
+        // assert(m_dsa);
         generateProgram(m);
         return false;
     }
 
     void SmackModuleGenerator::generateProgram(llvm::Module &M) {
-
         SDEBUG(errs() << "We are now translating the program to boogie...\n");
         Naming naming;
         SmackRep rep(&M.getDataLayout(), &naming, program, &getAnalysis<Regions>());
 
         std::list<Decl *> &decls = program->getDeclarations();
 
-        SDEBUG(errs() << "Analyzing globals...\n");
+        SDEBUG(errs() << "Analyzing globals...\n";);
 
         for (auto &G : M.globals()) {
             auto ds = rep.globalDecl(&G);
@@ -89,6 +94,9 @@ namespace smack {
 
         for (llvm::Function& F : M) {
 
+            // if(m_dsa->getDsaAnalysis().hasGraph(F)) {
+            //     SDEBUG(errs() << "m_dsa has graph\n";);
+            // }
             // Reset the counters for per-function names
             naming.reset();
 

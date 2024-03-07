@@ -138,6 +138,7 @@ bool Regions::runOnModule(Module &M) {
   // operand, which repeats the aforementioned process. Note that we don't have
   // fancy caching, so a region is created and merged everytime Regions::idx
   // is called.
+  SDEBUG(errs() << "run region analysis\n";);
   if (!SmackOptions::NoMemoryRegionSplitting) {
     Region::init(M, *this);
     visit(M);
@@ -184,7 +185,7 @@ unsigned Regions::idx(Region &R) {
   SDEBUG(errs() << "[regions]   using region: ");
   SDEBUG(R.print(errs()));
   SDEBUG(errs() << "\n");
-
+  SDEBUG(errs() << "current region size: " << regions.size() << "\n";);
   for (r = 0; r < regions.size(); ++r) {
     if (regions[r].overlaps(R)) {
 
@@ -235,19 +236,24 @@ unsigned Regions::idx(Region &R) {
   return r;
 }
 
-void Regions::visitLoadInst(LoadInst &I) { idx(I.getPointerOperand()); }
+void Regions::visitLoadInst(LoadInst &I) {
+  SDEBUG(errs() << "Regions visit LoadInst\n";); idx(I.getPointerOperand()); }
 
-void Regions::visitStoreInst(StoreInst &I) { idx(I.getPointerOperand()); }
+void Regions::visitStoreInst(StoreInst &I) {
+  SDEBUG(errs() << "Regions visit StoreInst\n";); idx(I.getPointerOperand()); }
 
 void Regions::visitAtomicCmpXchgInst(AtomicCmpXchgInst &I) {
+  SDEBUG(errs() << "Regions visit AtomicCmpXchgInst\n";);
   idx(I.getPointerOperand());
 }
 
 void Regions::visitAtomicRMWInst(AtomicRMWInst &I) {
+  SDEBUG(errs() << "Regions visit AtomicRMWInst\n";);
   idx(I.getPointerOperand());
 }
 
 void Regions::visitMemSetInst(MemSetInst &I) {
+  SDEBUG(errs() << "Regions visit MemSetInst\n";);
   unsigned length;
 
   if (auto CI = dyn_cast<ConstantInt>(I.getLength()))
@@ -259,6 +265,7 @@ void Regions::visitMemSetInst(MemSetInst &I) {
 }
 
 void Regions::visitMemTransferInst(MemTransferInst &I) {
+  SDEBUG(errs() << "Regions visit MemTransferInst\n";);
   unsigned length;
 
   if (auto CI = dyn_cast<ConstantInt>(I.getLength()))
@@ -276,8 +283,12 @@ void Regions::visitMemTransferInst(MemTransferInst &I) {
 void Regions::visitCallInst(CallInst &I) {
   Function *F = I.getCalledFunction();
   std::string name = F && F->hasName() ? F->getName().str() : "";
+  SDEBUG(errs() << "Regions visit call inst: " << name << " \n";);
 
-  if (F && F->isDeclaration() && I.getType()->isPointerTy() && name != "malloc")
+  // TODO: malloc should also count in
+  if (F && F->isDeclaration() && I.getType()->isPointerTy() \
+  //&& name != "malloc"
+  )
     idx(&I);
 
   if (name.find("__SMACK_values") != std::string::npos) {

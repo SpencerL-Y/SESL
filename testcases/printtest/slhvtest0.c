@@ -1,13 +1,12 @@
 #include <stdlib.h>
-typedef struct {
-    int* lo;
-} TData;
 
-int main(){
-    TData data;
-    TData* pdata = &data;
 
-    pdata->lo = malloc(4);
-    *pdata->lo = 10;
+int main() {
+    int* mem1 = malloc(3*sizeof(int));
+    int* mem2 = malloc(2*sizeof(int));
+
+    *mem1 = 10;
+    *mem2 = 1;
+    *(mem2 + 1) = 1;
     return 0;
 }

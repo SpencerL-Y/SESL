@@ -25,6 +25,7 @@
 #include "llvm/Target/TargetMachine.h"
 
 #include "seadsa/Info.hh"
+#include "seadsa/DsaAnalysis.hh"
 
 #include "smack/AddTiming.h"
 #include "smack/BplFilePrinter.h"

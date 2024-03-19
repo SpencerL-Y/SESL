@@ -14,7 +14,9 @@
 namespace smack {
 
 void PointerInfo::setType(std::string t) {type = t; }
+void PointerInfo::setLLVMValue(const llvm::Value* v) { llvmValue = v; }
 std::string PointerInfo::getType() { return type; }
+const llvm::Value* PointerInfo::getLLVMValue() { return llvmValue; }
 
 std::string PointerInfo::getPto() {
     assert(!type.empty());
@@ -123,7 +125,6 @@ void Record::print(std::ostream& os) {
         os << (this->fieldsTypes[i] == BMCVarType::DAT ? " Dat" : " Loc");
         os << "(Offset: " << this->fieldByteOffsets[i] << ") ";
     }
-    os << '\n';
 }
 
 void RecordManager::add(std::string name, Record record) {
@@ -201,6 +202,7 @@ void PointerInfoAnalysis::init(llvm::Function* F) {
         if (!ltype->isPointerTy()) continue;
         PointerInfo pinfo;
         pinfo.setType(PointerInfoAnalysis::getPointerType(ltype));
+        // TODO need value during inline
         pointerInfoManager->add(vname, pinfo);
     }
 }
@@ -212,6 +214,7 @@ void PointerInfoAnalysis::visitInstruction(llvm::Instruction &I) {
     std::string vname = naming->get(I);
     PointerInfo pinfo;
     pinfo.setType(PointerInfoAnalysis::getPointerType(I.getType()));
+    pinfo.setLLVMValue(&I);
     pointerInfoManager->add(vname, pinfo);
 }
 
@@ -224,6 +227,7 @@ void PointerInfoAnalysis::visitAllocaInst(llvm::AllocaInst &I) {
 
     PointerInfo pinfo;
     pinfo.setType(PointerInfoAnalysis::getPointerType(I.getType()));
+    pinfo.setLLVMValue(&I);
     pointerInfoManager->add(vname, pinfo);
     
     llvm::errs() << pinfo << "\n";
@@ -246,7 +250,7 @@ void PointerInfoAnalysis::visitBitCastInst(llvm::BitCastInst &I) {
     std::string dstPtType = PointerInfoAnalysis::getPointerType(I.getDestTy());
     
     if (PointerInfoAnalysis::compareType(srcPtType, dstPtType)) {
-        PointerInfo pinfo(dstPtType);
+        PointerInfo pinfo(dstPtType, &I);
         this->pointerInfoManager->update(dstPt, pinfo);
     }
     llvm::errs() << this->pointerInfoManager->get(dstPt) << "\n";
@@ -258,13 +262,14 @@ void PointerInfoAnalysis::visitCallInst(llvm::CallInst &I) {
     llvm::Function* func = I.getCalledFunction();
     if (func == nullptr || func->getName() != "malloc") { return; }
 
-    if (!naming->hasName(I)) return;
-    std::string vname = naming->get(I);
-    llvm::errs() << vname << '\n';
-
     if (func->getName() == "malloc") {
+        if (!naming->hasName(I)) return;
+        std::string vname = naming->get(I);
+        llvm::errs() << vname << '\n';
+        llvm::errs() << &I << " " << regions->idx(&I) << "\n";
         PointerInfo pinfo;
         pinfo.setType(PointerInfoAnalysis::getPointerType(func->getReturnType()));
+        pinfo.setLLVMValue(&I);
         pointerInfoManager->add(vname, pinfo);
         llvm::errs() << pinfo << '\n';
     }

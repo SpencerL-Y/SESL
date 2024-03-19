@@ -2820,6 +2820,7 @@ BlockEncoding::BlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarType
       feasibleEncoding(z3EM->Ctx().bool_val(true)),
       invalidDerefEncoding(z3EM->Ctx().bool_val(true)),
       invalidFreeEncoding(z3EM->Ctx().bool_val(true)),
+      globalHeapRelEncoding(z3EM->Ctx().bool_val(true)),
       currentUsedVM(&feasibleVM) {}
 
 int BlockEncoding::getVarTypeByName(std::string name) {
@@ -3015,7 +3016,7 @@ void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
             default:
                 actEncodings = this->generateSpecialEncoding(act);
         }
-        assert(actEncodings.size() == 3);
+        assert(actEncodings.size() <= 4);
         CLEAN_Z3EXPR_CONJUNC(this->feasibleEncoding, actEncodings[0]);
         CLEAN_Z3EXPR_CONJUNC(this->invalidDerefEncoding, actEncodings[1]);
         CLEAN_Z3EXPR_CONJUNC(this->invalidFreeEncoding, actEncodings[2]);
@@ -3024,6 +3025,12 @@ void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
         SLHVDEBUG(std::cout << "\nFeasible encoding : \n" << actEncodings[0] << "\n");
         SLHVDEBUG(std::cout << "\nInvalidDeref encoding : \n" << actEncodings[1] << "\n");
         SLHVDEBUG(std::cout << "\nInvalidFree encoding : \n" << actEncodings[2] << "\n");
+        SLHVDEBUG(
+            if (actEncodings.size() == 4) {
+                std::cout << "\nGlobal Heap Relationship : \n"
+                    << actEncodings[3] << "\n";
+            }
+        );
     }
 }
 
@@ -3060,6 +3067,10 @@ z3::expr BlockEncoding::getInvalidFreeEncoding() {
     return this->invalidFreeEncoding;
 }
 
+z3::expr BlockEncoding::getGlobalHeapRelEncoding() {
+    return this->globalHeapRelEncoding;
+}
+
 void BlockEncoding::print(std::ostream& os) {
     os << "Guard : " << guard << '\n';
     os << "Feasible Encoding : \n";
@@ -3071,6 +3082,9 @@ void BlockEncoding::print(std::ostream& os) {
     os << "InvalidFree Encoding : \n";
     this->invalidFreeVM.print(os);
     os << "Encoding : " << this->invalidFreeEncoding << "\n\n";
+    if (!this->globalHeapRelEncoding.is_true()) {
+        os << "Global Heap Rel : " << this->globalHeapRelEncoding << "\n\n";
+    }
     os << std::endl;
 }
 
@@ -3204,7 +3218,7 @@ BMCBLOCKVCGen::generateOutputs(const BlockEncoding::VarsManager& vm, const int k
     return sub;
 }
 
-z3::expr
+z3::expr_vector
 BMCBLOCKVCGen::generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty) {
     assert(bty != BuggyType::MEMLEAK);
     BlockEncodingPtr bep = this->TrEncoder->getBlockEncoding(edge);
@@ -3277,7 +3291,13 @@ BMCBLOCKVCGen::generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty)
 
     implicant = implicant &&
         (this->z3EM->mk_int("loc_" + std::to_string(k)) == edge->getTo());
-    return z3::implies(premise, implicant);
+
+    z3::expr_vector bvcs(this->z3EM->Ctx());
+    bvcs.push_back(z3::implies(premise, implicant));
+    z3::expr globalHeapRelEC = bep->getGlobalHeapRelEncoding();
+    globalHeapRelEC = globalHeapRelEC.substitute(src, dst);
+    bvcs.push_back(globalHeapRelEC);
+    return bvcs;
 }
 
 z3::expr
@@ -3286,8 +3306,8 @@ BMCBLOCKVCGen::generateOneStepVC(int k, const std::set<int>& locations, BuggyTyp
     z3::expr vc = z3EM->Ctx().bool_val(true);
     for (int u : locations) {
         for (RefinedEdgePtr edge : this->TrEncoder->getEdgesStartFrom(u)) {
-            z3::expr blockVC = this->generateOneStepBlockVC(edge, k, bty);
-            CLEAN_Z3EXPR_CONJUNC(vc, blockVC);
+            z3::expr_vector blockVCs = this->generateOneStepBlockVC(edge, k, bty);
+            CLEAN_Z3EXPR_CONJUNC(vc, blockVCs[0]);
         }
     }
     return vc;

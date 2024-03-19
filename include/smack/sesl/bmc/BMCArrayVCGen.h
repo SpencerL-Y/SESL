@@ -34,6 +34,8 @@ public:
     // Points-to  and seperation conjunction are not contained in array theory
     z3::expr mk_pto(z3::expr x, z3::expr y) { assert(false); }
     z3::expr mk_sep(z3::expr h1, z3::expr h2) { assert(false); }
+    z3::expr mk_subh(z3::expr ht1, z3::expr ht2) { assert(false); }
+    z3::expr mk_disj(z3::expr ht1, z3::expr ht2) { assert(false); }
 
     std::string to_smt2(z3::expr e);
 

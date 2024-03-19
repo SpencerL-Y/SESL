@@ -513,16 +513,17 @@ namespace smack
         }
         os << std::endl;
         // SLHV
-        os << " |-- SLHV Target Configuration : ";
+        os << " |-- SLHV Target Configuration : \n";
         if (slhvcmd.record.getID() != 0) {
-            os << " Record : " << " Id - "
-                << slhvcmd.record.getID() << " | Fields - ";
-            for (auto ftype : slhvcmd.record.getFieldsTypes())
-                os << " " << (ftype == BMCVarType::LOC ? "Loc" : "Dat");
+            os << "    ";
+            slhvcmd.record.print(os);
+            os << '\n';
         }
-        os << '\n';
+        if (slhvcmd.rep) {
+            os << "    Representative : " << slhvcmd.rep << "\n";
+        }
         if (slhvcmd.arg2 != nullptr) {
-            os << "     SLHV Arg2 : ";
+            os << "    SLHV Arg2 : ";
             slhvcmd.arg2->print(std::cout);
             os << '\n';
         }

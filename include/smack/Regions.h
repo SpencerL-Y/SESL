@@ -56,6 +56,7 @@ public:
   bool isAllocated() const { return allocated; };
   bool bytewiseAccess() const { return bytewise; }
   const Type *getType() const { return type; }
+  const seadsa::Node* getRep() const { return representative; }
 
   void print(raw_ostream &);
 };

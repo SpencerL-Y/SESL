@@ -622,8 +622,8 @@ def arguments():
     
     verifier_group.add_argument(
         "--bmc-theory",
-        choices=["SLHV", "ARRAY"],
-        default="SLHV",
+        choices=["SLHV", "SLHV-DSA", "ARRAY"],
+        default="SLHV-DSA",
         help="BMC encoding theory",
     )
     

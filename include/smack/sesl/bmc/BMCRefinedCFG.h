@@ -75,6 +75,7 @@ namespace smack
         public:
             struct SLHVCmd {
                 const Expr* arg2 = nullptr;
+                const seadsa::Node* rep = nullptr;
                 Record record = Record();
             };
 

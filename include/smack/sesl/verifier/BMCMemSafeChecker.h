@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "smack/Debug.h"
+#include "smack/Regions.h"
 #include "smack/sesl/ast/BoogieAst.h"
 #include "smack/SmackModuleGenerator.h"
 #include "smack/sesl/bmc/BMCVCGen.h"
@@ -14,6 +15,8 @@ namespace smack {
 class BMCMemSafeChecker : public llvm::ModulePass {
 
 private:
+  Regions* regions;
+
   std::string theory;
   int step;
   std::string smt2Path;
@@ -27,6 +30,7 @@ private:
   inline std::string getSuffName(std::string origName);
 
   Record getPtrRecord(const VarExpr* vexpr);
+  const seadsa::Node* getRep(const VarExpr* vexpr);
   void setSLHVCmdRecords(BMCRefinedBlockCFGPtr RefinedBlockCFG);
 
   BMCBLOCKVCGenPtr generateVCGen(std::string logic, BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts);
@@ -34,9 +38,8 @@ private:
 
 public:
   static char ID;
-  BMCMemSafeChecker() : llvm::ModulePass(ID) {}
-  BMCMemSafeChecker(std::string th, int s, std::string path)
-    : llvm::ModulePass(ID), theory(th), step(s), smt2Path(path) {}
+  BMCMemSafeChecker() : llvm::ModulePass(ID), regions(nullptr) {}
+  BMCMemSafeChecker(std::string th, int s, std::string path);
   ~BMCMemSafeChecker() {}
   virtual llvm::StringRef getPassName() const { return "BMCMemSafeChecker"; }
   virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;

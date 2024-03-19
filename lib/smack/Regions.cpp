@@ -112,6 +112,7 @@ void Region::print(raw_ostream &O) {
   if (allocated)
     O << "A";
   O << "}";
+  O << " " << representative << '\n';
 }
 
 char Regions::ID;

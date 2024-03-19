@@ -130,7 +130,8 @@ namespace smack {
                         F.getName().find("SMACK") == std::string::npos) {
                         SDEBUG(errs() << "Analyzing pointer info in " + F.getName() + "\n");
                         pimSet->add(F.getName(), std::make_shared<PointerInfoManager>());
-                        PointerInfoAnalysis ptap(&F, &naming, recordManager, pimSet->getPIM(F.getName()));
+                        PointerInfoAnalysis ptap(&F, &naming, recordManager, pimSet->getPIM(F.getName()),
+                        &getAnalysis<Regions>());
                         ptap.visit(F);
                         SDEBUG(errs() << ptap << '\n');
                     }

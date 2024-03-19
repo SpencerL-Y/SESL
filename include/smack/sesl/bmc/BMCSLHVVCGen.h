@@ -30,6 +30,9 @@ private:
 
 public:
     SLHVZ3ExprManager();
+    
+    z3::expr mk_subh(z3::expr ht1, z3::expr ht2);
+    z3::expr mk_disj(z3::expr ht1, z3::expr ht2);
 
     z3::expr mk_pto(z3::expr x, z3::expr y);
     z3::expr mk_sep(z3::expr h1, z3::expr h2);
@@ -44,28 +47,53 @@ DEFINE_PTR_TYPE(SLHVZ3ExprManager);
 
 class SLHVBlockEncoding : public BlockEncoding{
 
-private:
+protected:
 
     z3::expr_vector generateRecord(Record& record);
 
     z3::expr generateNullptr();
     z3::expr generateArithExpr(BinExpr::Binary op, z3::expr lhs, z3::expr rhs) override;
-    z3::expr_vector generateAssignEncoding(RefinedActionPtr act);
-    z3::expr_vector generateAssumeEncoding(RefinedActionPtr act);
-    z3::expr_vector generateMallocEncoding(RefinedActionPtr act);
-    z3::expr_vector generateLoadEncoding(RefinedActionPtr act);
-    z3::expr_vector generateStoreEncoding(RefinedActionPtr act);
-    z3::expr_vector generateFreeEncoding(RefinedActionPtr act);
-    z3::expr_vector generateSpecialEncoding(RefinedActionPtr act);
-
-    z3::expr_vector generateStorableEncoding(RefinedActionPtr act);
+    z3::expr_vector generateAssignEncoding(RefinedActionPtr act) override;
+    z3::expr_vector generateAssumeEncoding(RefinedActionPtr act) override;
+    virtual z3::expr_vector generateMallocEncoding(RefinedActionPtr act) override;
+    virtual z3::expr_vector generateLoadEncoding(RefinedActionPtr act) override;
+    virtual z3::expr_vector generateStoreEncoding(RefinedActionPtr act) override;
+    virtual z3::expr_vector generateFreeEncoding(RefinedActionPtr act) override;
+    virtual z3::expr_vector generateSpecialEncoding(RefinedActionPtr act) override;
+    virtual z3::expr_vector generateStorableEncoding(RefinedActionPtr act);
 
 public:
-    SLHVBlockEncoding(Z3ExprManagerPtr z3EM, RefinedEdgePtr edge, VarTypeSetPtr vts);
-
+    SLHVBlockEncoding(
+        Z3ExprManagerPtr z3EM,
+        RefinedEdgePtr edge,
+        VarTypeSetPtr vts,
+        bool encode = true
+    );
 };
 
 DEFINE_PTR_TYPE(SLHVBlockEncoding);
+
+class SLHVDSABlockEncoding : public SLHVBlockEncoding {
+
+private:
+    std::shared_ptr<std::map<const seadsa::Node*, int>> rep2GH;
+
+    z3::expr_vector generateMallocEncoding(RefinedActionPtr act) override;
+    z3::expr_vector generateLoadEncoding(RefinedActionPtr act) override;
+    z3::expr_vector generateStoreEncoding(RefinedActionPtr act) override;
+    z3::expr_vector generateFreeEncoding(RefinedActionPtr act) override;
+    z3::expr_vector generateStorableEncoding(RefinedActionPtr act) override;
+
+public:
+    SLHVDSABlockEncoding(
+        Z3ExprManagerPtr z3EM,
+        RefinedEdgePtr edge,
+        VarTypeSetPtr vts,
+        std::shared_ptr<std::map<const seadsa::Node*, int>> rep2GH
+    );
+};
+
+DEFINE_PTR_TYPE(SLHVDSABlockEncoding);
 
 class SLHVTREncoder : public TREncoder {
 
@@ -80,16 +108,49 @@ public:
 
 DEFINE_PTR_TYPE(SLHVTREncoder);
 
+class SLHVDSATREncoder : public TREncoder {
+
+private:
+
+    std::shared_ptr<std::map<const seadsa::Node*, int>> rep2GH;
+    std::set<std::string> globalHeaps;
+
+    void separateGlobalHeap();
+    void initLogicGlobalVarType();
+    void init();
+
+public:
+    SLHVDSATREncoder(Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr rbcfg, VarTypeSetPtr vts);
+
+    const std::set<std::string> getGlobalHeaps();
+};
+
+DEFINE_PTR_TYPE(SLHVDSATREncoder);
+
+
 class BMCSLHVVCGen : public BMCBLOCKVCGen{
 
 private:
     
+    virtual z3::expr generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty);
+    virtual z3::expr generateInitVC();
+
+public:
+    BMCSLHVVCGen(BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts);
+};
+
+class BMCSLHVDSAVCGen : public BMCBLOCKVCGen{
+
+private:
+
+    
+    z3::expr generateSeparatedGlobalHeap(int k);
+    z3::expr generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty) override;
     z3::expr generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty);
     z3::expr generateInitVC();
 
 public:
-    BMCSLHVVCGen(BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts);
-
+    BMCSLHVDSAVCGen(BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts);
 };
 
 } // namespace smack

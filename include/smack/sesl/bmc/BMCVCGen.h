@@ -408,6 +408,9 @@ public:
     z3::expr mk_loc(std::string var);
     z3::expr mk_heap(std::string var);
 
+    virtual z3::expr mk_subh(z3::expr ht1, z3::expr ht2) = 0;
+    virtual z3::expr mk_disj(z3::expr ht1, z3::expr ht2) = 0;
+
     virtual z3::expr mk_pto(z3::expr x, z3::expr y) = 0;
     virtual z3::expr mk_sep(z3::expr h1, z3::expr h2) = 0;
     virtual z3::expr mk_loc_arith(z3::expr l1, z3::expr l2, BinExpr::Binary op) = 0;
@@ -452,6 +455,8 @@ protected:
     z3::expr invalidDerefEncoding;
     z3::expr invalidFreeEncoding;
 
+    z3::expr globalHeapRelEncoding;
+
     // Variables' types is an "enum", according to the specific theory
     int getVarTypeByName(std::string name);
     z3::expr generateVarByType(std::string name, int type);
@@ -493,6 +498,7 @@ public:
     inline z3::expr getFeasibleEncoding();
     inline z3::expr getInvalidDerefEncoding();
     inline z3::expr getInvalidFreeEncoding();
+    inline z3::expr getGlobalHeapRelEncoding();
 
     void print(std::ostream& os);
 };
@@ -530,7 +536,6 @@ public:
 
 DEFINE_PTR_TYPE(TREncoder);
 
-// Rename the 
 class BMCBLOCKVCGen {
 
 protected:
@@ -541,8 +546,8 @@ protected:
     z3::expr generateUnchanged(BlockEncodingPtr bep, VarSetPtr globalVars, const int k);
     z3::expr generateUnchangedInvalid(BlockEncodingPtr bep, BuggyType bty, const int k);
     z3::expr generateOutputs(const BlockEncoding::VarsManager& vm, const int k);
-    z3::expr generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty);
-    z3::expr generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty);
+    z3::expr_vector generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty);
+    virtual z3::expr generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty);
     virtual z3::expr generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty) = 0;
     virtual z3::expr generateInitVC() = 0;
     z3::expr generateKStepsVC(const int k);

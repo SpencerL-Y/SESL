@@ -17,6 +17,9 @@ namespace smack {
 
 char BMCMemSafeChecker::ID(0);
 
+BMCMemSafeChecker::BMCMemSafeChecker(std::string th, int s, std::string path)
+  : llvm::ModulePass(ID), theory(th), step(s), smt2Path(path), regions(nullptr) {}
+
 bool BMCMemSafeChecker::support(const Stmt* stmt, PointerInfoManagerPtr pointerInfoManager) {
   if (stmt->getKind() == Stmt::Kind::ASSUME) {
     AssumeStmt* assumeStmt = (AssumeStmt*)stmt;
@@ -91,16 +94,27 @@ Record BMCMemSafeChecker::getPtrRecord(const VarExpr* vexpr) {
   assert(pointerInfoManager->contains(pt));
   PointerInfo pinfo = pointerInfoManager->get(pt);
   std::string ptoTy = pinfo.getPto();
+  const llvm::Value* v = pinfo.getLLVMValue();
   if (ptoTy.back() == '*') ptoTy = "i8";
   return recordManager->getRecord(ptoTy);
 }
 
+const seadsa::Node* BMCMemSafeChecker::getRep(const VarExpr* vexpr) {
+  std::string pt = this->getOrigName(vexpr->name());
+  PointerInfoManagerPtr pointerInfoManager =
+    this->pimSet->getPIMByPtrVar(vexpr->name());
+  assert(pointerInfoManager->contains(pt));
+  PointerInfo pinfo = pointerInfoManager->get(pt);
+  const llvm::Value* v = pinfo.getLLVMValue();
+  return this->regions->get(this->regions->idx(v)).getRep();
+}
+
 void BMCMemSafeChecker::setSLHVCmdRecords(BMCRefinedBlockCFGPtr refinedBlockCFG) {
-  SLHVDEBUG(std::cout << "\n ------------------- Set SLHVCmd Record ---------------------------\n");
+  // SLHVDEBUG(std::cout << "\n ------------------- Set SLHVCmd Record ---------------------------\n");
   for (int u = 1; u <= refinedBlockCFG->getVertexNum(); u++) {
     for (RefinedEdgePtr edge : refinedBlockCFG->getEdgesStartFrom(u)) {
-      SLHVDEBUG(std::cout << "=============" << " From: " << edge->getFrom()
-        << " To: " << edge->getTo() << " ==================== \n");
+      // SLHVDEBUG(std::cout << "=============" << " From: " << edge->getFrom()
+        // << " To: " << edge->getTo() << " ==================== \n");
       for(RefinedActionPtr refAct : edge->getRefinedActions()) {
         switch (refAct->getActType()) {    
           case ConcreteAction::ActType::ALLOC :
@@ -111,23 +125,47 @@ void BMCMemSafeChecker::setSLHVCmdRecords(BMCRefinedBlockCFGPtr refinedBlockCFG)
               this->getPtrRecord((const VarExpr*)refAct->getArg1()));
             break;
           }
+          
           default: break;
+        }
+        const VarExpr* vexpr = nullptr;
+        switch (refAct->getActType()) {    
+          case ConcreteAction::ActType::ALLOC :
+          case ConcreteAction::ActType::MALLOC :
+          case ConcreteAction::ActType::FREE : 
+          case ConcreteAction::ActType::STORE : {
+            assert(refAct->getArg1()->isVar());
+            vexpr = (const VarExpr*)refAct->getArg1();
+            break;
+          }
+          case ConcreteAction::ActType::LOAD :{
+            assert(refAct->getSLHVCmd().arg2->isVar());
+            vexpr = (const VarExpr*)refAct->getSLHVCmd().arg2;
+            break;
+          }
+          default: break;
+        }
+        if (vexpr) {
+          refAct->getSLHVCmd().rep = this->getRep(vexpr);
         }
       }
     }
   }
-  SLHVDEBUG(std::cout << "\n ------------------- Set SLHVCmd Record ---------------------------\n");
+  // SLHVDEBUG(std::cout << "\n ------------------- Set SLHVCmd Record ---------------------------\n");
 }
 
 void BMCMemSafeChecker::getAnalysisUsage(llvm::AnalysisUsage &AU) const {
   AU.setPreservesAll();
   AU.addRequired<SmackModuleGenerator>();
+  AU.addRequired<Regions>();
 }
 
 BMCBLOCKVCGenPtr BMCMemSafeChecker::generateVCGen(
   std::string logic, BMCRefinedBlockCFGPtr rbcfg, RecordManagerPtr rm, VarTypeSetPtr vts) {
   if (logic == "SLHV") {
     return std::make_shared<BMCSLHVVCGen>(rbcfg, rm, vts);
+  } else if (logic == "SLHV-DSA") {
+    return std::make_shared<BMCSLHVDSAVCGen>(rbcfg, rm, vts);
   } else if (logic == "ARRAY") {
     return std::make_shared<BMCArrayVCGen>(rbcfg, rm, vts);
   }
@@ -143,6 +181,11 @@ void BMCMemSafeChecker::generateVC(BMCBLOCKVCGenPtr gen) {
 }
 
 bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
+  this->regions = &getAnalysis<Regions>();
+  for (unsigned i = 0; i < this->regions->size(); i++) {
+    this->regions->get(i).print(llvm::errs());
+    llvm::errs() << " ---- " << this->regions->get(i).getRep() << '\n';
+  }
   SmackModuleGenerator &smackGen = getAnalysis<SmackModuleGenerator>();
   recordManager = smackGen.getRM();
   pimSet = smackGen.getPIMSet();
@@ -161,15 +204,15 @@ bool BMCMemSafeChecker::runOnModule(llvm::Module &m) {
 
   BMCRefinedBlockCFGPtr refinedBlockCFG = std::make_shared<BMCRefinedBlockCFG>(mainGraph);
   // SLHVDEBUG(refinedBlockCFG->print(std::cout));
-  if (this->smt2Path.back() != '/') this->smt2Path += "/";
-  refinedBlockCFG->generateCFGInfo(this->smt2Path + "cfg.txt");
+  // if (this->smt2Path.back() != '/') this->smt2Path += "/";
+  // refinedBlockCFG->generateCFGInfo(this->smt2Path + "cfg.txt");
   BMCSLHVPreAnalysisPtr slhvPreAnalysis = std::make_shared<BMCSLHVPreAnalysis>(recordManager, pimSet, mainGraph->getVarTypes());
   slhvPreAnalysis->refineSLHVCmds(refinedBlockCFG);
   slhvPreAnalysis->refineSLHVReadWriteSequence(refinedBlockCFG);
   SLHVDEBUG(slhvPreAnalysis->print(std::cout));
   SLHVDEBUG(recordManager->print(std::cout));
   this->setSLHVCmdRecords(refinedBlockCFG);
-  SLHVDEBUG(refinedBlockCFG->print(std::cout));
+  // SLHVDEBUG(refinedBlockCFG->print(std::cout));
 
   BMCBLOCKVCGenPtr gen = this->generateVCGen(
     this->theory,

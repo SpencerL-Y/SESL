@@ -8,6 +8,9 @@
 #include "llvm/IR/InstVisitor.h"
 #include "llvm/IR/Function.h"
 
+#include "smack/Regions.h"
+#include "seadsa/Graph.hh"
+
 #include <iostream>
 #include <set>
 #include <unordered_set>
@@ -35,13 +38,16 @@ class PointerInfo {
 
 private:
     std::string type;
+    const llvm::Value* llvmValue;
 
 public:
-    PointerInfo() : type("") {}
-    PointerInfo(std::string ty) : type(ty) {}
+    PointerInfo() : type(""), llvmValue(nullptr) {}
+    PointerInfo(std::string ty, const llvm::Value* v) : type(ty), llvmValue(v) {}
 
     void setType(std::string t);
+    void setLLVMValue(const llvm::Value* v);
     std::string getType();
+    const llvm::Value* getLLVMValue();
     std::string getPto();
 
     void show() { std::cout << " Type : " << type; }
@@ -122,7 +128,11 @@ private:
     FieldsTypes fieldsTypes;
 
 public:
-    Record() : ID(0), byteSize(0), fieldByteOffsets(), fieldsTypes() {};
+    Record()
+        : ID(0),
+        byteSize(0),
+        fieldByteOffsets(),
+        fieldsTypes() {};
     Record(int id, int bs, std::vector<int> offsets, FieldsTypes f);
 
     const int getID();
@@ -172,6 +182,7 @@ private:
     Naming *naming;
     RecordManagerPtr recordManager;
     PointerInfoManagerPtr pointerInfoManager;
+    Regions* regions;
 
     void init(llvm::Function *F);
 
@@ -183,10 +194,12 @@ public:
         llvm::Function *f,
         Naming *n,
         RecordManagerPtr recordManager,
-        PointerInfoManagerPtr pointerInfoManager)
+        PointerInfoManagerPtr pointerInfoManager,
+        Regions* r)
         : naming(n),
           recordManager(recordManager),
-          pointerInfoManager(pointerInfoManager) {
+          pointerInfoManager(pointerInfoManager),
+          regions(r) {
             this->init(f);
         }
 

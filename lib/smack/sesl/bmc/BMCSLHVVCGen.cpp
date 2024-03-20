@@ -41,8 +41,8 @@ void SLHVZ3ExprManager::initFunctions() {
     z3::sort intLoc = this->getSort(BMCVarType::LOC);
     this->functions["subh"] =
         std::make_shared<z3::func_decl>(ctx.function("subh", intHeap, intHeap, ctx.bool_sort()));
-    this->functions["disj"] =
-        std::make_shared<z3::func_decl>(ctx.function("disj", intHeap, intHeap, ctx.bool_sort()));
+    this->functions["disjh"] =
+        std::make_shared<z3::func_decl>(ctx.function("disjh", intHeap, intHeap, ctx.bool_sort()));
     this->functions["uplus"] =
         std::make_shared<z3::func_decl>(ctx.function("uplus", intHeap, intHeap, intHeap));
     this->functions["locadd"] =
@@ -120,7 +120,7 @@ bool SLHVZ3ExprManager::is_removed(std::string cmd) {
            cmd.find("nil") != std::string::npos ||
            cmd.find("emp") != std::string::npos ||
            cmd.find("subh") != std::string::npos ||
-           cmd.find("disj") != std::string::npos));
+           cmd.find("disjh") != std::string::npos));
 }
 
 z3::expr SLHVZ3ExprManager::mk_subh(z3::expr ht1, z3::expr ht2) {
@@ -129,10 +129,10 @@ z3::expr SLHVZ3ExprManager::mk_subh(z3::expr ht1, z3::expr ht2) {
     return this->getFunc("subh")(ht1, ht2);
 }
 
-z3::expr SLHVZ3ExprManager::mk_disj(z3::expr ht1, z3::expr ht2) {
+z3::expr SLHVZ3ExprManager::mk_disjh(z3::expr ht1, z3::expr ht2) {
     assert(z3::eq(ht1.get_sort(), this->getSort(BMCVarType::HEAP)));
     assert(z3::eq(ht2.get_sort(), this->getSort(BMCVarType::HEAP)));
-    return this->getFunc("disj")(ht1, ht2);
+    return this->getFunc("disjh")(ht1, ht2);
 }
 
 z3::expr SLHVZ3ExprManager::mk_pto(z3::expr lt, z3::expr t) {
@@ -652,7 +652,7 @@ z3::expr_vector SLHVDSABlockEncoding::generateMallocEncoding(RefinedActionPtr ac
     z3::expr feasibleEC = heapEC && auxHeapEC;
     
     // recordHeap[2] * H and recordHeap[2]
-    z3::expr globalHeapRelEC = this->z3EM->mk_disj(H, h) && h == recordHeap[2];
+    z3::expr globalHeapRelEC = this->z3EM->mk_disjh(H, h) && h == recordHeap[2];
     CLEAN_Z3EXPR_CONJUNC(this->globalHeapRelEncoding, globalHeapRelEC);
 
     // invalid : feasibleEC || invalid
@@ -834,7 +834,7 @@ z3::expr_vector SLHVDSABlockEncoding::generateFreeEncoding(RefinedActionPtr act)
     }
     z3::expr feasibleEC = allocHeap && recordHeap;
     z3::expr globalHeapRelEC =
-        this->z3EM->mk_subh(h1, H) && this->z3EM->mk_disj(h0, h1)
+        this->z3EM->mk_subh(h1, H) && this->z3EM->mk_disjh(h0, h1)
         && this->z3EM->mk_subh(ah0, AH) && this->z3EM->mk_subh(ah0, nAH);
     CLEAN_Z3EXPR_CONJUNC(this->globalHeapRelEncoding, globalHeapRelEC);
 
@@ -855,7 +855,7 @@ z3::expr_vector SLHVDSABlockEncoding::generateFreeEncoding(RefinedActionPtr act)
     z3::expr idxvare = this->generateQuantifiedVarByPre("d");
     
     z3::expr errorEC =
-        (this->z3EM->mk_disj(this->z3EM->mk_pto(x, idxvare), AH) 
+        (this->z3EM->mk_disjh(this->z3EM->mk_pto(x, idxvare), AH) 
         || (x == this->generateNullptr()))
         && invalidFreePrime;
     z3::expr memSafeEC = feasibleEC && (invalidFreePrime == invalidFree);
@@ -907,7 +907,7 @@ z3::expr_vector SLHVDSABlockEncoding::generateStorableEncoding(RefinedActionPtr 
     z3::expr invalidDerefPrime = 
         this->generateLocalVarByName(BlockEncoding::invalid_deref);
     z3::expr errorEC = 
-        (this->z3EM->mk_disj(this->z3EM->mk_pto(xt, x0), H)
+        (this->z3EM->mk_disjh(this->z3EM->mk_pto(xt, x0), H)
         || xt == this->generateNullptr()) && invalidDerefPrime;
     z3::expr memSafeEC = feasibleEC && (invalidDerefPrime == invalidDeref);
     z3::expr faultTolerantEC =

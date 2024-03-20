@@ -617,7 +617,7 @@ SLHVDSABlockEncoding::SLHVDSABlockEncoding(
     Z3ExprManagerPtr z3EM,
     RefinedEdgePtr edge,
     VarTypeSetPtr vts,
-    std::shared_ptr<std::map<const seadsa::Node*, int>> rep2GH)
+    Rep2GHMapPtr rep2GH)
     : rep2GH(rep2GH),
       SLHVBlockEncoding(z3EM, edge, vts, false) {
     this->generateEncoding(edge);
@@ -627,9 +627,10 @@ z3::expr_vector SLHVDSABlockEncoding::generateMallocEncoding(RefinedActionPtr ac
     auto slhvcmd = act->getSLHVCmd();
     this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     assert(this->rep2GH->count(slhvcmd.rep) == 1);
+    const RepInfo& repInfo = this->rep2GH->at(slhvcmd.rep);
     z3::expr H =
         this->getLatestUpdateForGlobalVar(
-            "H" + std::to_string(this->rep2GH->at(slhvcmd.rep))
+            "H" + std::to_string(repInfo.first)
         );
     z3::expr nH = this->generateLocalVarByName("H");
     z3::expr AH = this->getLatestUpdateForGlobalVar("AH");
@@ -679,9 +680,10 @@ z3::expr_vector SLHVDSABlockEncoding::generateLoadEncoding(RefinedActionPtr act)
     auto slhvcmd = act->getSLHVCmd();
     this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     assert(this->rep2GH->count(slhvcmd.rep) == 1);
+    const RepInfo& repInfo = this->rep2GH->at(slhvcmd.rep);
     z3::expr H =
         this->getLatestUpdateForGlobalVar(
-            "H" + std::to_string(this->rep2GH->at(slhvcmd.rep))
+            "H" + std::to_string(repInfo.first)
         );
     assert(act->getArg1()->isVar());
     const VarExpr* arg1 = (const VarExpr*)act->getArg1();
@@ -733,9 +735,10 @@ z3::expr_vector SLHVDSABlockEncoding::generateStoreEncoding(RefinedActionPtr act
     auto slhvcmd = act->getSLHVCmd();
     this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     assert(this->rep2GH->count(slhvcmd.rep) == 1);
+    const RepInfo& repInfo = this->rep2GH->at(slhvcmd.rep);
     z3::expr H =
         this->getLatestUpdateForGlobalVar(
-            "H" + std::to_string(this->rep2GH->at(slhvcmd.rep))
+            "H" + std::to_string(repInfo.first)
         );
     z3::expr nH = this->generateLocalVarByName("H");
     z3::expr h1 = this->generateQuantifiedVarByPre("h");
@@ -795,9 +798,10 @@ z3::expr_vector SLHVDSABlockEncoding::generateFreeEncoding(RefinedActionPtr act)
     auto slhvcmd = act->getSLHVCmd();
     this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     assert(this->rep2GH->count(slhvcmd.rep) == 1);
+    const RepInfo& repInfo = this->rep2GH->at(slhvcmd.rep);
     z3::expr H =
         this->getLatestUpdateForGlobalVar(
-            "H" + std::to_string(this->rep2GH->at(slhvcmd.rep))
+            "H" + std::to_string(repInfo.first)
         );
     z3::expr nH = this->generateLocalVarByName("H");
     z3::expr h0 = this->generateQuantifiedVarByPre("h");
@@ -814,8 +818,9 @@ z3::expr_vector SLHVDSABlockEncoding::generateFreeEncoding(RefinedActionPtr act)
         (AH == this->z3EM->mk_sep(ah0, this->z3EM->mk_pto(x, idxvar)))
         && nAH == ah0;
     z3::expr recordHeap = this->z3EM->Ctx().bool_val(true);
-    // TODO: reduce the number
     for (Record record : this->z3EM->getRecords()) {
+        if (repInfo.second.find(record.getID())
+            == repInfo.second.end()) { continue; }
         z3::expr_vector oneRecordHeap = this->generateRecord(record);
         z3::expr ithRecordHeap = z3::implies(
             idxvar == record.getID(),
@@ -870,9 +875,10 @@ z3::expr_vector SLHVDSABlockEncoding::generateStorableEncoding(RefinedActionPtr 
     auto slhvcmd = act->getSLHVCmd();
     this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     assert(this->rep2GH->count(slhvcmd.rep) == 1);
+    const RepInfo& repInfo = this->rep2GH->at(slhvcmd.rep);
     z3::expr H =
         this->getLatestUpdateForGlobalVar(
-            "H" + std::to_string(this->rep2GH->at(slhvcmd.rep))
+            "H" + std::to_string(repInfo.first)
         );
     assert(act->getArg1()->isVar());
     const VarExpr* arg1 = (const VarExpr*)act->getArg1();
@@ -961,7 +967,7 @@ void SLHVTREncoder::init() {
 
 SLHVDSATREncoder::SLHVDSATREncoder(
     Z3ExprManagerPtr z3EM, BMCRefinedBlockCFGPtr rbcfg, VarTypeSetPtr vts)
-    : rep2GH(std::make_shared<std::map<const seadsa::Node*, int>>()),
+    : rep2GH(std::make_shared<Rep2GHMap>()),
       globalHeaps(), TREncoder(z3EM, rbcfg, vts) {
     this->globalVars[BMCVarType::LOC] = std::make_shared<VarSet>();
     this->globalVars[BMCVarType::DAT] = std::make_shared<VarSet>();
@@ -978,10 +984,13 @@ void SLHVDSATREncoder::separateGlobalHeap() {
                 const seadsa::Node* rep = act->getSLHVCmd().rep;
                 if (rep == nullptr) continue;
                 if (rep2GH->count(rep) == 0) {
-                    (*rep2GH)[rep] = id;
+                    (*rep2GH)[rep] = std::make_pair(id, std::set<int>());
                     this->globalHeaps.insert(
                         this->z3EM->mk_heap("H" + std::to_string(id++)).to_string()
                     );
+                }
+                if (act->getSLHVCmd().record.getID() > 0) {
+                    (*rep2GH)[rep].second.insert(act->getSLHVCmd().record.getID());
                 }
             }
         }

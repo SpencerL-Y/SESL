@@ -3139,9 +3139,9 @@ BlockEncodingPtr TREncoder::getBlockEncoding(RefinedEdgePtr e) {
 
 void TREncoder::print(std::ostream& os) {
     os << "================ Transition Relation Encoding ================\n";
-    os << " Global Variables :";
+    os << " Global Variables :\n";
     for (auto cat_vars : this->globalVars) {
-        std::cout << " Category : " << cat_vars.first << " --";
+        std::cout << "   Category : " << cat_vars.first << " --";
         for(auto var : *cat_vars.second) {
             std::cout << " " << var;
         }
@@ -3268,8 +3268,8 @@ BMCBLOCKVCGen::generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty)
     CLEAN_Z3EXPR_CONJUNC(premise, guard);
     implicant = blockEncoding.substitute(src, dst);
     // Outputs contains those global variables that are update by current
-    // step. For each pair (u, v), "v" is the local variables that conveys
-    // the changes of original global variable "u"
+    // step. For each pair (u, v), "v" is the local variable that updates
+    // global variable "u"
     z3::expr feasibleOutputs = this->generateOutputs(bep->getFeasibleVM(), k);
     z3::expr buggyOutputs = this->z3EM->Ctx().bool_val(true);
     if (bty == BuggyType::INVALIDDEREF) {

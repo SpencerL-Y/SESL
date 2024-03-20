@@ -73,10 +73,14 @@ public:
 
 DEFINE_PTR_TYPE(SLHVBlockEncoding);
 
+typedef std::pair<int, std::set<int>> RepInfo;
+typedef std::map<const seadsa::Node*, RepInfo> Rep2GHMap;
+DEFINE_PTR_TYPE(Rep2GHMap);
+
 class SLHVDSABlockEncoding : public SLHVBlockEncoding {
 
 private:
-    std::shared_ptr<std::map<const seadsa::Node*, int>> rep2GH;
+    Rep2GHMapPtr rep2GH;
 
     z3::expr_vector generateMallocEncoding(RefinedActionPtr act) override;
     z3::expr_vector generateLoadEncoding(RefinedActionPtr act) override;
@@ -89,7 +93,7 @@ public:
         Z3ExprManagerPtr z3EM,
         RefinedEdgePtr edge,
         VarTypeSetPtr vts,
-        std::shared_ptr<std::map<const seadsa::Node*, int>> rep2GH
+        Rep2GHMapPtr rep2GH
     );
 };
 
@@ -112,7 +116,7 @@ class SLHVDSATREncoder : public TREncoder {
 
 private:
 
-    std::shared_ptr<std::map<const seadsa::Node*, int>> rep2GH;
+    Rep2GHMapPtr rep2GH;
     std::set<std::string> globalHeaps;
 
     void separateGlobalHeap();

@@ -1110,7 +1110,7 @@ z3::expr BMCSLHVDSAVCGen::generateSeparatedGlobalHeap(int k) {
             separatedGlobalHeaps = Hi;
         } else {
             separatedGlobalHeaps =
-                this->z3EM->mk_sep(separatedGlobalHeaps, Hi);
+                this->z3EM->mk_sep(Hi, separatedGlobalHeaps);
         }
     }
     return H == separatedGlobalHeaps;

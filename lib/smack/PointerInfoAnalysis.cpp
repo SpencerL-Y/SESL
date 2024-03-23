@@ -202,7 +202,7 @@ void PointerInfoAnalysis::init(llvm::Function* F) {
         if (!ltype->isPointerTy()) continue;
         PointerInfo pinfo;
         pinfo.setType(PointerInfoAnalysis::getPointerType(ltype));
-        // TODO need value during inline
+        pinfo.setLLVMValue(arg);
         pointerInfoManager->add(vname, pinfo);
     }
 }
@@ -215,6 +215,7 @@ void PointerInfoAnalysis::visitInstruction(llvm::Instruction &I) {
     PointerInfo pinfo;
     pinfo.setType(PointerInfoAnalysis::getPointerType(I.getType()));
     pinfo.setLLVMValue(&I);
+    llvm::errs() << &I << "\n";
     pointerInfoManager->add(vname, pinfo);
 }
 
@@ -228,8 +229,8 @@ void PointerInfoAnalysis::visitAllocaInst(llvm::AllocaInst &I) {
     PointerInfo pinfo;
     pinfo.setType(PointerInfoAnalysis::getPointerType(I.getType()));
     pinfo.setLLVMValue(&I);
+    llvm::errs() << &I << "\n";
     pointerInfoManager->add(vname, pinfo);
-    
     llvm::errs() << pinfo << "\n";
 }
 
@@ -249,10 +250,15 @@ void PointerInfoAnalysis::visitBitCastInst(llvm::BitCastInst &I) {
     std::string srcPtType = PointerInfoAnalysis::getPointerType(I.getSrcTy());
     std::string dstPtType = PointerInfoAnalysis::getPointerType(I.getDestTy());
     
+    PointerInfo pinfo;
+    pinfo.setLLVMValue(&I);
     if (PointerInfoAnalysis::compareType(srcPtType, dstPtType)) {
-        PointerInfo pinfo(dstPtType, &I);
-        this->pointerInfoManager->update(dstPt, pinfo);
+        pinfo.setType(dstPtType);
+    } else {
+        pinfo.setType(srcPtType);
     }
+    this->pointerInfoManager->update(dstPt, pinfo);
+    llvm::errs() << &I << "\n";
     llvm::errs() << this->pointerInfoManager->get(dstPt) << "\n";
 }
 
@@ -270,6 +276,7 @@ void PointerInfoAnalysis::visitCallInst(llvm::CallInst &I) {
         PointerInfo pinfo;
         pinfo.setType(PointerInfoAnalysis::getPointerType(func->getReturnType()));
         pinfo.setLLVMValue(&I);
+        llvm::errs() << &I << "\n";
         pointerInfoManager->add(vname, pinfo);
         llvm::errs() << pinfo << '\n';
     }

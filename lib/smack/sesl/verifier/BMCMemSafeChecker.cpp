@@ -106,6 +106,7 @@ const seadsa::Node* BMCMemSafeChecker::getRep(const VarExpr* vexpr) {
   assert(pointerInfoManager->contains(pt));
   PointerInfo pinfo = pointerInfoManager->get(pt);
   const llvm::Value* v = pinfo.getLLVMValue();
+  assert(v);
   return this->regions->get(this->regions->idx(v)).getRep();
 }
 

@@ -1,0 +1,1 @@
+cd ../build && sudo ninja install && sesl ../testcases/benchmark/$1.c -ll ../testcases/benchmark/$1_IR.ll --bpl ../testcases/benchmark/$1.bpl -t --sh-mem-leak --add-line-info -bw 32 --svcomp-property ../../sv-benchmarks/c/properties/valid-memsafety.prp --bmc-theory SLHV-DSA --bmc-step 4

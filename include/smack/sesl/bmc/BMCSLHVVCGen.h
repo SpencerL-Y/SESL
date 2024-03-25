@@ -36,6 +36,7 @@ public:
 
     z3::expr mk_pto(z3::expr x, z3::expr y);
     z3::expr mk_sep(z3::expr h1, z3::expr h2);
+    z3::expr mk_sep(z3::expr_vector const& heaps);
     z3::expr mk_loc_arith(z3::expr l1, z3::expr l2, BinExpr::Binary op);
 
     std::string to_smt2(z3::expr e);

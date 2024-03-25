@@ -152,6 +152,30 @@ z3::expr SLHVZ3ExprManager::mk_sep(z3::expr h1, z3::expr h2) {
     return this->getFunc("uplus")(h1, h2);
 }
 
+z3::expr SLHVZ3ExprManager::mk_sep(z3::expr_vector const& heaps) {
+    assert(heaps.size() >= 2);
+    for (auto h : heaps) {
+        assert(z3::eq(h.get_sort(), this->getSort(BMCVarType::HEAP)));
+    }
+    const int arity = heaps.size();
+    if (heaps.size() == 2) {
+        return this->mk_sep(heaps[0], heaps[1]);
+    }
+    const string uplus_k = "uplus_" + std::to_string(arity);
+    if (this->functions.count(uplus_k) == 0) {
+        z3::sort_vector domains(this->ctx);
+        z3::sort range(this->ctx);
+        for (auto h : heaps) {
+            domains.push_back(*this->sorts[BMCVarType::HEAP]);
+        }
+        range = *this->sorts[BMCVarType::HEAP];
+        this->functions[uplus_k] = 
+            std::make_shared<z3::func_decl>(
+                ctx.function(uplus_k.c_str(), domains, range));
+    }
+    return (*this->functions[uplus_k])(heaps);
+}
+
 z3::expr SLHVZ3ExprManager::mk_loc_arith(
     z3::expr l1, z3::expr l2, BinExpr::Binary op) {
     assert(op == BinExpr::Binary::Plus);
@@ -215,7 +239,7 @@ z3::expr_vector SLHVBlockEncoding::generateRecord(Record& record) {
     z3::expr_vector recordHeap(z3EM->Ctx());
     z3::expr headLoc(this->z3EM->Ctx());
     z3::expr pure = this->z3EM->Ctx().bool_val(true);
-    z3::expr heap(this->z3EM->Ctx());
+    z3::expr_vector heaps(this->z3EM->Ctx());
     z3::expr lastLoc(this->z3EM->Ctx());
     for (int i = 0; i < record.getFieldsTypes().size(); i++) {
         z3::expr xl = this->generateQuantifiedVarByPre("l");
@@ -227,19 +251,22 @@ z3::expr_vector SLHVBlockEncoding::generateRecord(Record& record) {
         z3::expr pto = this->z3EM->mk_pto(xl, xf);
         if (i == 0) {
             headLoc = xl;
-            heap = pto;
         } else {
             z3::expr diff = 
                 (xl == this->z3EM->mk_loc_arith(
                     lastLoc, z3EM->Ctx().int_val(1), BinExpr::Binary::Plus));
             CLEAN_Z3EXPR_CONJUNC(pure, diff);
-            heap = this->z3EM->mk_sep(heap, pto);
         }
+        heaps.push_back(pto);
         lastLoc = xl;
     }
     recordHeap.push_back(headLoc);
     recordHeap.push_back(pure);
-    recordHeap.push_back(heap);
+    if (heaps.size() > 1) {
+        recordHeap.push_back(this->z3EM->mk_sep(heaps));
+    } else {
+        recordHeap.push_back(heaps[0]);
+    }
     return recordHeap;
 }
 
@@ -1101,19 +1128,14 @@ BMCSLHVDSAVCGen::BMCSLHVDSAVCGen(
 z3::expr BMCSLHVDSAVCGen::generateSeparatedGlobalHeap(int k) {
     const std::set<std::string>& globalHeaps = 
         ((SLHVDSATREncoder*)this->TrEncoder.get())->getGlobalHeaps();
-    z3::expr separatedGlobalHeaps = this->z3EM->Ctx().bool_val(true);
     z3::expr H = this->z3EM->mk_heap("H_" + std::to_string(k));
+    z3::expr_vector sepHeaps(this->z3EM->Ctx());
     for (std::string h : globalHeaps) {
         if (h == "H") { continue; }
         z3::expr Hi = this->z3EM->mk_heap(h + "_" + std::to_string(k));
-        if (separatedGlobalHeaps.is_true()) {
-            separatedGlobalHeaps = Hi;
-        } else {
-            separatedGlobalHeaps =
-                this->z3EM->mk_sep(Hi, separatedGlobalHeaps);
-        }
+        sepHeaps.push_back(Hi);
     }
-    return H == separatedGlobalHeaps;
+    return H == this->z3EM->mk_sep(sepHeaps);
 }
 
 z3::expr

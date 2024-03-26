@@ -2878,9 +2878,11 @@ z3::expr BlockEncoding::getLatestUpdateForGlobalVar(std::string name) {
 }
 
 z3::expr BlockEncoding::generateLocalVarByName(std::string name) {
-    int ty = this->getVarTypeByName(name);
+    // support splitting global heap
+    std::string pre = (name[0] == 'H' ? "H" : name);
+    int ty = this->getVarTypeByName(pre);
     z3::sort sort = this->z3EM->getSort(ty);
-    z3::expr var = this->z3EM->mk_fresh(name, sort);
+    z3::expr var = this->z3EM->mk_fresh(pre, sort);
     (*this->varsTypeMap)[var.to_string()] = ty;
     this->currentUsedVM->localVars.insert(var.to_string());
     this->currentUsedVM->outputsMap[name] = var.to_string();
@@ -3035,7 +3037,7 @@ void BlockEncoding::generateEncoding(RefinedEdgePtr edge) {
 }
 
 bool BlockEncoding::use_global(std::string var) { 
-    return this->feasibleVM.outputsMap.find(var)
+    return var == "H" || this->feasibleVM.outputsMap.find(var)
         != this->feasibleVM.outputsMap.end();
 }
 

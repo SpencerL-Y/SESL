@@ -171,7 +171,7 @@ z3::expr SLHVZ3ExprManager::mk_sep(z3::expr_vector const& heaps) {
         range = *this->sorts[BMCVarType::HEAP];
         this->functions[uplus_k] = 
             std::make_shared<z3::func_decl>(
-                ctx.function(uplus_k.c_str(), domains, range));
+                ctx.function("uplus", domains, range));
     }
     return (*this->functions[uplus_k])(heaps);
 }
@@ -1003,7 +1003,6 @@ SLHVDSATREncoder::SLHVDSATREncoder(
 }
 
 void SLHVDSATREncoder::separateGlobalHeap() {
-    int id = 1;
     this->globalHeaps.insert("H");
     for (int u = 1; u <= this->refinedBlockCFG->getVertexNum(); u++) {
         for (RefinedEdgePtr edge : this->refinedBlockCFG->getEdgesStartFrom(u)) {
@@ -1011,10 +1010,12 @@ void SLHVDSATREncoder::separateGlobalHeap() {
                 const seadsa::Node* rep = act->getSLHVCmd().rep;
                 if (rep == nullptr) continue;
                 if (rep2GH->count(rep) == 0) {
+                    string Hi =
+                        this->z3EM->mk_fresh(
+                            "H", this->z3EM->getSort(BMCVarType::HEAP)).to_string();
+                    const int id = std::stoi(Hi.substr(1));
                     (*rep2GH)[rep] = std::make_pair(id, std::set<int>());
-                    this->globalHeaps.insert(
-                        this->z3EM->mk_heap("H" + std::to_string(id++)).to_string()
-                    );
+                    this->globalHeaps.insert(Hi);
                 }
                 if (act->getSLHVCmd().record.getID() > 0) {
                     (*rep2GH)[rep].second.insert(act->getSLHVCmd().record.getID());

@@ -3356,8 +3356,6 @@ z3::expr BMCBLOCKVCGen::generateKStepsVC(const int k) {
         && this->generateKthStepBuggy(k, reachableLocations, BuggyType::MEMLEAK);
 
     CLEAN_Z3EXPR_CONJUNC(globalHeapRel, vcs_def[1]);
-    CLEAN_Z3EXPR_CONJUNC(globalHeapRel, vcs_free[1]);
-    CLEAN_Z3EXPR_CONJUNC(globalHeapRel, vcs_memleak[1]);
 
     return phiTr && globalHeapRel && (invalidDeref || invalidFree || memLeak);
 }

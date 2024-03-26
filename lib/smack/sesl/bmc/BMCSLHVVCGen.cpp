@@ -153,7 +153,8 @@ z3::expr SLHVZ3ExprManager::mk_sep(z3::expr h1, z3::expr h2) {
 }
 
 z3::expr SLHVZ3ExprManager::mk_sep(z3::expr_vector const& heaps) {
-    assert(heaps.size() >= 2);
+    assert(heaps.size() > 0);
+    if (heaps.size() == 1) { return heaps[0]; }
     for (auto h : heaps) {
         assert(z3::eq(h.get_sort(), this->getSort(BMCVarType::HEAP)));
     }
@@ -262,11 +263,7 @@ z3::expr_vector SLHVBlockEncoding::generateRecord(Record& record) {
     }
     recordHeap.push_back(headLoc);
     recordHeap.push_back(pure);
-    if (heaps.size() > 1) {
-        recordHeap.push_back(this->z3EM->mk_sep(heaps));
-    } else {
-        recordHeap.push_back(heaps[0]);
-    }
+    recordHeap.push_back(this->z3EM->mk_sep(heaps));
     return recordHeap;
 }
 

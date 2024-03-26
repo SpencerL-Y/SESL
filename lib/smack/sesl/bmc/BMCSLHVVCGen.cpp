@@ -1136,7 +1136,7 @@ z3::expr BMCSLHVDSAVCGen::generateSeparatedGlobalHeap(int k) {
     return H == this->z3EM->mk_sep(sepHeaps);
 }
 
-z3::expr
+z3::expr_vector
 BMCSLHVDSAVCGen::generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty) {
     assert(k > 0 && bty != BuggyType::MEMLEAK);
     z3::expr vc = this->z3EM->Ctx().bool_val(true);
@@ -1148,8 +1148,10 @@ BMCSLHVDSAVCGen::generateOneStepVC(int k, const std::set<int>& locations, BuggyT
             CLEAN_Z3EXPR_CONJUNC(globalVC, blockVCs[1]);
         }
     }
-    CLEAN_Z3EXPR_CONJUNC(vc, globalVC);
-    return vc && this->generateSeparatedGlobalHeap(k);
+    z3::expr_vector vcs(this->z3EM->Ctx());
+    vcs.push_back(vc && this->generateSeparatedGlobalHeap(k));
+    vcs.push_back(globalVC);
+    return vcs;
 }
 
 z3::expr BMCSLHVDSAVCGen::generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty) {

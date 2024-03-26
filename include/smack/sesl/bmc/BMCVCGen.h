@@ -548,7 +548,7 @@ protected:
     z3::expr generateUnchangedInvalid(BlockEncodingPtr bep, BuggyType bty, const int k);
     z3::expr generateOutputs(const BlockEncoding::VarsManager& vm, const int k);
     z3::expr_vector generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty);
-    virtual z3::expr generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty);
+    virtual z3::expr_vector generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty);
     virtual z3::expr generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty) = 0;
     virtual z3::expr generateInitVC() = 0;
     z3::expr generateKStepsVC(const int k);

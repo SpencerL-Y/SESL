@@ -149,7 +149,7 @@ class BMCSLHVDSAVCGen : public BMCBLOCKVCGen{
 private:
 
     z3::expr generateSeparatedGlobalHeap(int k);
-    z3::expr generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty) override;
+    z3::expr_vector generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty) override;
     z3::expr generateKthStepBuggy(const int k, const std::set<int>& locations, BuggyType bty);
     z3::expr generateInitVC();
 

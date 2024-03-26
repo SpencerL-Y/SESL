@@ -3302,7 +3302,7 @@ BMCBLOCKVCGen::generateOneStepBlockVC(RefinedEdgePtr edge, int k, BuggyType bty)
     return bvcs;
 }
 
-z3::expr
+z3::expr_vector
 BMCBLOCKVCGen::generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty) {
     assert(k > 0 && bty != BuggyType::MEMLEAK);
     z3::expr vc = z3EM->Ctx().bool_val(true);
@@ -3312,7 +3312,10 @@ BMCBLOCKVCGen::generateOneStepVC(int k, const std::set<int>& locations, BuggyTyp
             CLEAN_Z3EXPR_CONJUNC(vc, blockVCs[0]);
         }
     }
-    return vc;
+    z3::expr_vector vcs(this->z3EM->Ctx());
+    vcs.push_back(vc);
+    vcs.push_back(this->z3EM->Ctx().bool_val(true));
+    return vcs;
 }
 
 z3::expr BMCBLOCKVCGen::generateKStepsVC(const int k) {
@@ -3322,21 +3325,28 @@ z3::expr BMCBLOCKVCGen::generateKStepsVC(const int k) {
     std::set<int> finalBlocks = this->TrEncoder->getFinalLocations();
 
     z3::expr phiTr = phiInit;
+    z3::expr globalHeapRel = this->z3EM->Ctx().bool_val(true);
     for (int i = 1; i < k; i++) {
         if (reachableLocations.empty())  { break; }
-        phiTr = phiTr
-            && this->generateOneStepVC(i, reachableLocations, BuggyType::ZERO_ERROR);
+        z3::expr_vector vcs =
+            this->generateOneStepVC(i, reachableLocations, BuggyType::ZERO_ERROR);
+        CLEAN_Z3EXPR_CONJUNC(phiTr, vcs[0]);
+        CLEAN_Z3EXPR_CONJUNC(globalHeapRel, vcs[1]);
         reachableLocations = this->TrEncoder->getSuccessors(reachableLocations);
     }
 
-    z3::expr invalidDeref =
-        (!this->generateVar(BlockEncoding::invalid_deref, k - 1)) &&
+    z3::expr_vector vcs_def = 
         this->generateOneStepVC(k, reachableLocations, BuggyType::INVALIDDEREF);
-    z3::expr invalidFree = 
-        (!this->generateVar(BlockEncoding::invalid_free, k - 1)) &&
+    z3::expr_vector vcs_free = 
         this->generateOneStepVC(k, reachableLocations, BuggyType::INVALIDFREE);
-    z3::expr memLeak = 
+    z3::expr_vector vcs_memleak = 
         this->generateOneStepVC(k, reachableLocations, BuggyType::ZERO_ERROR);
+
+    z3::expr invalidDeref =
+        (!this->generateVar(BlockEncoding::invalid_deref, k - 1)) && vcs_def[0];
+    z3::expr invalidFree = 
+        (!this->generateVar(BlockEncoding::invalid_free, k - 1)) && vcs_free[0];
+    z3::expr memLeak = vcs_memleak[0];
     reachableLocations = this->TrEncoder->getSuccessors(reachableLocations);
     invalidDeref = invalidDeref
         && this->generateKthStepBuggy(k, reachableLocations, BuggyType::INVALIDDEREF);
@@ -3345,7 +3355,11 @@ z3::expr BMCBLOCKVCGen::generateKStepsVC(const int k) {
     memLeak = memLeak
         && this->generateKthStepBuggy(k, reachableLocations, BuggyType::MEMLEAK);
 
-    return phiTr && (invalidDeref || invalidFree || memLeak);
+    CLEAN_Z3EXPR_CONJUNC(globalHeapRel, vcs_def[1]);
+    CLEAN_Z3EXPR_CONJUNC(globalHeapRel, vcs_free[1]);
+    CLEAN_Z3EXPR_CONJUNC(globalHeapRel, vcs_memleak[1]);
+
+    return phiTr && globalHeapRel && (invalidDeref || invalidFree || memLeak);
 }
 
 z3::expr BMCBLOCKVCGen::generateVC(const int k) {

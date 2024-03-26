@@ -734,7 +734,7 @@ z3::expr_vector SLHVDSABlockEncoding::generateLoadEncoding(RefinedActionPtr act)
     z3::expr invalidDerefPrime =
         this->generateLocalVarByName(BlockEncoding::invalid_deref);
     z3::expr errorEC = 
-        (this->z3EM->mk_subh(this->z3EM->mk_pto(xs, x0), H)
+        (this->z3EM->mk_disjh(this->z3EM->mk_pto(xs, x0), H)
         || xs == this->generateNullptr()) && invalidDerefPrime;
     z3::expr memSafeEC = feasibleEC && (invalidDerefPrime == invalidDeref);
     z3::expr faultTolerantEC =
@@ -797,7 +797,7 @@ z3::expr_vector SLHVDSABlockEncoding::generateStoreEncoding(RefinedActionPtr act
     z3::expr invalidDerefPrime = 
         this->generateLocalVarByName(BlockEncoding::invalid_deref);
     z3::expr errorEC = 
-        (this->z3EM->mk_subh(this->z3EM->mk_pto(xt, x0), H)
+        (this->z3EM->mk_disjh(this->z3EM->mk_pto(xt, x0), H)
         || xt == this->generateNullptr()) && invalidDerefPrime;
     z3::expr memSafeEC = feasibleEC && (invalidDerefPrime == invalidDeref);
     z3::expr faultTolerantEC =

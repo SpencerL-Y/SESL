@@ -652,11 +652,9 @@ z3::expr_vector SLHVDSABlockEncoding::generateMallocEncoding(RefinedActionPtr ac
     this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     assert(this->rep2GH->count(slhvcmd.rep) == 1);
     const RepInfo& repInfo = this->rep2GH->at(slhvcmd.rep);
-    z3::expr H =
-        this->getLatestUpdateForGlobalVar(
-            "H" + std::to_string(repInfo.first)
-        );
-    z3::expr nH = this->generateLocalVarByName(H.to_string());
+    std::string Hi = "H" + std::to_string(repInfo.first);
+    z3::expr H = this->getLatestUpdateForGlobalVar(Hi);
+    z3::expr nH = this->generateLocalVarByName(Hi);
     z3::expr AH = this->getLatestUpdateForGlobalVar("AH");
     z3::expr nAH = this->generateLocalVarByName("AH");
     z3::expr h = this->generateQuantifiedVarByPre("h");
@@ -760,11 +758,9 @@ z3::expr_vector SLHVDSABlockEncoding::generateStoreEncoding(RefinedActionPtr act
     this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     assert(this->rep2GH->count(slhvcmd.rep) == 1);
     const RepInfo& repInfo = this->rep2GH->at(slhvcmd.rep);
-    z3::expr H =
-        this->getLatestUpdateForGlobalVar(
-            "H" + std::to_string(repInfo.first)
-        );
-    z3::expr nH = this->generateLocalVarByName(H.to_string());
+    std::string Hi = "H" + std::to_string(repInfo.first);
+    z3::expr H = this->getLatestUpdateForGlobalVar(Hi);
+    z3::expr nH = this->generateLocalVarByName(Hi);
     z3::expr h1 = this->generateQuantifiedVarByPre("h");
 
     assert(act->getArg1()->isVar());
@@ -823,11 +819,9 @@ z3::expr_vector SLHVDSABlockEncoding::generateFreeEncoding(RefinedActionPtr act)
     this->setCurrentUsedVM(BuggyType::ZERO_ERROR);
     assert(this->rep2GH->count(slhvcmd.rep) == 1);
     const RepInfo& repInfo = this->rep2GH->at(slhvcmd.rep);
-    z3::expr H =
-        this->getLatestUpdateForGlobalVar(
-            "H" + std::to_string(repInfo.first)
-        );
-    z3::expr nH = this->generateLocalVarByName(H.to_string());
+    std::string Hi = "H" + std::to_string(repInfo.first);
+    z3::expr H = this->getLatestUpdateForGlobalVar(Hi);
+    z3::expr nH = this->generateLocalVarByName(Hi);
     z3::expr h0 = this->generateQuantifiedVarByPre("h");
     z3::expr h1 = this->generateQuantifiedVarByPre("h");
     z3::expr AH = this->getLatestUpdateForGlobalVar("AH");

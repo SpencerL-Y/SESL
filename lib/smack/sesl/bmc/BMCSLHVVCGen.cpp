@@ -1134,7 +1134,7 @@ z3::expr_vector
 BMCSLHVDSAVCGen::generateOneStepVC(int k, const std::set<int>& locations, BuggyType bty) {
     assert(k > 0 && bty != BuggyType::MEMLEAK);
     z3::expr vc = this->z3EM->Ctx().bool_val(true);
-    z3::expr globalVC = this->z3EM->Ctx().bool_val(true);
+    z3::expr globalVC = this->generateSeparatedGlobalHeap(k);
     for (int u : locations) {
         for (RefinedEdgePtr edge : this->TrEncoder->getEdgesStartFrom(u)) {
             z3::expr_vector blockVCs = this->generateOneStepBlockVC(edge, k, bty);
@@ -1142,8 +1142,9 @@ BMCSLHVDSAVCGen::generateOneStepVC(int k, const std::set<int>& locations, BuggyT
             CLEAN_Z3EXPR_CONJUNC(globalVC, blockVCs[1]);
         }
     }
+
     z3::expr_vector vcs(this->z3EM->Ctx());
-    vcs.push_back(vc && this->generateSeparatedGlobalHeap(k));
+    vcs.push_back(vc);
     vcs.push_back(globalVC);
     return vcs;
 }
